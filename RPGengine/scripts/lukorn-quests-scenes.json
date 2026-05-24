@@ -1,0 +1,713 @@
+{
+  "sceneReplacements": {
+    "epilogue": {
+      "id": "epilogue",
+      "location": "Тихий Брод",
+      "text": "Деревня встречает вас как героя — скромно, но тепло. Марта плачет, обнимая Альберта. Гризли виляет хвостом.\n\nНаграда: {gold} зм. Бочка солёной рыбы. И благодарность, которую не измерить монетами.\n\nПрошла неделя. Но письмо Люкорна не даёт вам покоя...",
+      "choices": [
+        {
+          "text": "🗣️ Спросить Альберта о письме Люкорна",
+          "to": "albert_lukorn_talk",
+          "questSet": { "questId": "lukorn_investigation", "stage": "0" },
+          "showIf": {
+            "notHasItem": "lukorn_signet_ring",
+            "flag": "lukorn_investigation_started",
+            "equals": false
+          }
+        },
+        {
+          "text": "🗣️ Поговорить с Альбертом о медальоне",
+          "to": "albert_locket_talk",
+          "showIf": {
+            "notHasItem": "elsa_locket",
+            "flag": "albert_locket_started",
+            "equals": false
+          }
+        },
+        {
+          "text": "🎉 Завершить приключение",
+          "to": "reset",
+          "action": "reset_game"
+        }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "cellar_free": {
+      "id": "cellar_free",
+      "location": "Погреб",
+      "text": "Альберт кивает, дрожа. Вы ломаете прутья.",
+      "choices": [
+        {
+          "text": "🔍 Осмотреть погреб ещё раз",
+          "to": "cellar_search"
+        },
+        {
+          "text": "🗣️ «Расскажи, что случилось»",
+          "to": "albert_backstory"
+        },
+        {
+          "text": "🏚️ Вернуться к мельнице",
+          "to": "mill_arrival"
+        },
+        {
+          "text": "🌲 Вернуться в деревню",
+          "to": "epilogue"
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "Альберт",
+          "text": "Я не забуду этого. Деревня не забудет. Пойдём отсюда..."
+        }
+      ],
+      "combat": null,
+      "flags": {
+        "albertSaved": true,
+        "quest_find_albert": "complete"
+      },
+      "items": [],
+      "gold": 0
+    }
+  },
+  "scenes": {
+    "albert_lukorn_talk": {
+      "id": "albert_lukorn_talk",
+      "location": "Тихий Брод — площадь",
+      "text": "Альберт хмурится, услышав имя Люкорна.",
+      "dialogue": [
+        { "speaker": "Альберт", "text": "Люкорн... Торговец из Северных Ворот. Говорят, он держит половину чёрного рынка в городе. Железо, меха, даже рабы — всё через его руки проходит." },
+        { "speaker": "Альберт", "text": "Корвин работал на него. Мельница была идеальным складом — далеко от города, рядом с рекой для переправки товаров." },
+        { "speaker": "Альберт", "text": "В письме упоминался 'старый дом у северных ворот'. Это должно быть его логово. Но будь осторожен — у Люкорна связи в городской страже." }
+      ],
+      "choices": [
+        {
+          "text": "🗺️ Отправиться к северным воротам",
+          "to": "north_gate_arrival",
+          "questSet": { "questId": "lukorn_investigation", "stage": "1" },
+          "flags": { "lukorn_investigation_started": true }
+        },
+        { "text": "🗣️ Сначала посоветуюсь с Мартой", "to": "marta_lukorn_advice" },
+        { "text": "← Вернуться", "to": "village" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "village_tavern"
+    },
+    "marta_lukorn_advice": {
+      "id": "marta_lukorn_advice",
+      "location": "Таверна «Кривая Подкова»",
+      "text": "Марта слушает внимательно, её лицо темнеет.",
+      "dialogue": [
+        { "speaker": "Марта", "text": "Люкорн... Слышала это имя. Говорят, он платит страже за закрытые глаза. Если пойдёшь к нему — не жди помощи от закона." },
+        { "speaker": "Марта", "text": "Но если найдёшь доказательства — счета, письма, печати — это может его погубить. Городской совет не любит, когда торговцы становятся слишком могущественными." },
+        { "speaker": "Марта", "text": "Возьми это. Старый ключ от канализации под северными воротами. Может пригодиться, если парадный вход охраняется." }
+      ],
+      "choices": [
+        {
+          "text": "✅ Взять ключ и отправиться",
+          "to": "north_gate_arrival",
+          "items": ["sewer_key"],
+          "flags": { "has_sewer_route": true, "lukorn_investigation_started": true },
+          "questSet": { "questId": "lukorn_investigation", "stage": "1" },
+          "showIf": { "notHasItem": "sewer_key" }
+        },
+        {
+          "text": "🗺️ Отправиться (ключ уже есть)",
+          "to": "north_gate_arrival",
+          "showIf": { "hasItem": "sewer_key" }
+        },
+        { "text": "← Вернуться", "to": "village" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "village_tavern"
+    },
+    "north_gate_arrival": {
+      "id": "north_gate_arrival",
+      "location": "Северные ворота — окраина города",
+      "text": "Старые северные ворота полуразрушены. Рядом — несколько заброшенных складов и домов. Один из них выглядит обитаемым: окна заколочены, но из трубы идёт дым.\n\nУ входа стоят двое охранников в кожаных доспехах.",
+      "choices": [
+        { "text": "⚔️ Атаковать охранников", "to": "north_gate_fight" },
+        {
+          "text": "🗣️ Попытаться пройти (Убеждение DC 16)",
+          "skillCheck": {
+            "skill": "persuasion",
+            "dc": 16,
+            "successText": "«Я от Люкорна. Он ждёт меня внутри.» Охранники переглядываются и пропускают.",
+            "successNext": "lukorn_house_interior",
+            "failText": "«Люкорн не предупреждал о посетителях. Уходи, пока цел.»",
+            "failNext": "north_gate_arrival"
+          }
+        },
+        {
+          "text": "🕳️ Пробраться через канализацию",
+          "to": "sewer_entrance",
+          "showIf": { "hasItem": "sewer_key" }
+        },
+        {
+          "text": "🔍 Осмотреть окрестности (Восприятие DC 14)",
+          "skillCheck": {
+            "skill": "perception",
+            "dc": 14,
+            "successText": "Вы замечаете боковую дверь, охраняемую одним человеком.",
+            "successFlags": { "found_side_entrance": true },
+            "successNext": "north_gate_side",
+            "failText": "Ничего особенного. Только главный вход.",
+            "failNext": "north_gate_arrival"
+          }
+        },
+        { "text": "🗺️ Вернуться в деревню", "action": "travel:village_tavern" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "north_gate"
+    },
+    "north_gate_fight": {
+      "id": "north_gate_fight",
+      "location": "Северные ворота",
+      "text": "Вы выхватываете оружие и бросаетесь на охранников!",
+      "choices": [],
+      "dialogue": [],
+      "combat": ["lukorn_guard_a", "lukorn_guard_b"],
+      "nextScene": "lukorn_house_interior",
+      "flags": { "guards_alerted": true },
+      "items": [],
+      "gold": 8
+    },
+    "north_gate_side": {
+      "id": "north_gate_side",
+      "location": "Северные ворота — боковая дверь",
+      "text": "Один охранник скучает у боковой двери. Он не ожидает атаки.",
+      "choices": [
+        {
+          "text": "⚔️ Атаковать внезапно",
+          "to": "side_fight",
+          "showIf": { "flag": "found_side_entrance", "equals": true }
+        },
+        {
+          "text": "🗣️ Отвлечь и проскользнуть (Скрытность DC 13)",
+          "skillCheck": {
+            "skill": "stealth",
+            "dc": 13,
+            "successText": "Вы бросаете камень в сторону. Охранник отвлекается, и вы проскальзываете внутрь.",
+            "successNext": "lukorn_house_interior",
+            "failText": "Охранник замечает вас и поднимает тревогу!",
+            "failNext": "north_gate_fight"
+          }
+        },
+        { "text": "← Вернуться", "to": "north_gate_arrival" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "side_fight": {
+      "id": "side_fight",
+      "location": "Боковая дверь",
+      "text": "Вы нападаете на одинокого охранника!",
+      "choices": [],
+      "dialogue": [],
+      "combat": ["lukorn_guard_c"],
+      "nextScene": "lukorn_house_interior",
+      "flags": {},
+      "items": [],
+      "gold": 4
+    },
+    "sewer_entrance": {
+      "id": "sewer_entrance",
+      "location": "Канализация под северными воротами",
+      "text": "Старая решётка со скрипом открывается. Внутри темно и пахнет сыростью. Крысы разбегаются от света факела.\n\nТуннель ведёт прямо под дом Люкорна.",
+      "choices": [
+        { "text": "🕯️ Идти вперёд", "to": "sewer_tunnel" },
+        { "text": "← Вернуться", "to": "north_gate_arrival" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "sewer_tunnel": {
+      "id": "sewer_tunnel",
+      "location": "Канализация",
+      "text": "Узкий туннель выводит к лестнице наверх. Слышны голоса — вы прямо под домом Люкорна.",
+      "choices": [
+        {
+          "text": "⬆️ Подняться тихо (Скрытность DC 12)",
+          "skillCheck": {
+            "skill": "stealth",
+            "dc": 12,
+            "successText": "Вы выбираетесь в подвал незамеченным.",
+            "successNext": "lukorn_basement",
+            "failText": "Доска скрипит! Кто-то идёт проверить!",
+            "failNext": "sewer_ambush"
+          }
+        },
+        { "text": "⚔️ Подняться с оружием наготове", "to": "sewer_ambush" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "sewer_ambush": {
+      "id": "sewer_ambush",
+      "location": "Канализация — засада",
+      "text": "Из темноты выходит охранник с фонарём!",
+      "choices": [],
+      "dialogue": [],
+      "combat": ["lukorn_guard_d"],
+      "nextScene": "lukorn_basement",
+      "flags": {},
+      "items": [],
+      "gold": 5
+    },
+    "lukorn_basement": {
+      "id": "lukorn_basement",
+      "location": "Дом Люкорна — подвал",
+      "text": "Подвал забит ящиками с крадеными товарами: меха, железные слитки, оружие. На столе — бухгалтерские книги и письма.",
+      "choices": [
+        {
+          "text": "🔍 Осмотреть документы (Расследование DC 11)",
+          "skillCheck": {
+            "skill": "investigation",
+            "dc": 11,
+            "successText": "Вы находите подробные записи о сделках с бандитами и взятках страже.",
+            "successItems": ["lukorn_ledger"],
+            "successFlags": { "has_evidence": true },
+            "successNext": "lukorn_house_interior",
+            "failText": "Документы зашифрованы. Нужен ключ.",
+            "failNext": "lukorn_house_interior"
+          }
+        },
+        { "text": "⬆️ Подняться на первый этаж", "to": "lukorn_house_interior" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 15
+    },
+    "lukorn_house_interior": {
+      "id": "lukorn_house_interior",
+      "location": "Дом Люкорна — первый этаж",
+      "text": "Роскошный кабинет. На стенах — ковры и охотничьи трофеи. За массивным столом сидит тучный мужчина в дорогих одеждах — Люкорн.\n\nОн поднимает глаза от документов, не удивлённый вашим появлением.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "А, герой Тихого Брода. Я ждал тебя. Корвин был полезен, но предсказуем. Ты же... ты представляешь проблему." }
+      ],
+      "choices": [
+        { "text": "⚔️ Ты арестован за связь с бандитами", "to": "lukorn_confrontation" },
+        { "text": "💰 Может, договоримся?", "to": "lukorn_bribe" },
+        {
+          "text": "🗣️ Зачем тебе это? (Проницательность DC 14)",
+          "skillCheck": {
+            "skill": "insight",
+            "dc": 14,
+            "successText": "Люкорн нервно поглядывает на сейф за картиной. Там что-то важное.",
+            "successFlags": { "noticed_safe": true },
+            "successNext": "lukorn_confrontation",
+            "failText": "Он выглядит уверенным. Ничего подозрительного.",
+            "failNext": "lukorn_confrontation"
+          }
+        },
+        {
+          "text": "📜 Показать бухгалтерскую книгу",
+          "to": "lukorn_evidence_show",
+          "showIf": { "hasItem": "lukorn_ledger" }
+        }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "lukorn_house"
+    },
+    "lukorn_confrontation": {
+      "id": "lukorn_confrontation",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Люкорн усмехается.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "Арестован? Кем? Деревенским героем? У меня друзья в городском совете. Стража получает от меня больше, чем от казны." },
+        { "speaker": "Люкорн", "text": "Но... я ценю инициативу. Может, мы можем быть полезны друг другу?" }
+      ],
+      "choices": [
+        { "text": "💰 Что ты предлагаешь?", "to": "lukorn_bribe" },
+        { "text": "⚔️ Я не торгуюсь с преступниками", "to": "lukorn_fight" },
+        {
+          "text": "🗣️ Расскажи о сейфе за картиной",
+          "to": "lukorn_safe_confront",
+          "showIf": { "flag": "noticed_safe", "equals": true }
+        }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_bribe": {
+      "id": "lukorn_bribe",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Люкорн открывает ящик стола и достаёт тяжёлый кошель.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "Двести золотых. Забудь о мельнице, о Корвине, обо мне. Уезжай из Тихого Брода. Купи себе ферму где-нибудь на юге." },
+        { "speaker": "Люкорн", "text": "Или... станешь моим партнёром. Мне нужны люди с твоими... талантами. Пятьсот золотых в месяц. И защита от любых проблем с законом." }
+      ],
+      "choices": [
+        { "text": "💰 Взять 200 золотых и уйти", "to": "lukorn_bribe_accept", "gold": 200, "flags": { "took_bribe": true } },
+        { "text": "🤝 Стать партнёром", "to": "lukorn_partner_ending", "flags": { "joined_lukorn": true } },
+        { "text": "⚔️ Нет. Ты ответишь за свои преступления", "to": "lukorn_fight" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_bribe_accept": {
+      "id": "lukorn_bribe_accept",
+      "location": "Северные ворота",
+      "text": "Вы берёте золото и уходите. Люкорн кивает с удовлетворением.\n\nМесяц спустя вы слышите, что на Тихую реку напали новые бандиты. Деревня разорена. Марта и Альберт мертвы.\n\nВы богаты. Но цена была высока.",
+      "choices": [
+        { "text": "🎭 Конец (плохая концовка)", "to": "reset", "action": "reset_game" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_partner_ending": {
+      "id": "lukorn_partner_ending",
+      "location": "Город — особняк Люкорна",
+      "text": "Вы становитесь правой рукой Люкорна. Богатство, власть, влияние. Но каждую ночь вам снится лицо Марты.\n\nЧерез год вы понимаете: вы стали тем, с кем боролись.",
+      "choices": [
+        { "text": "🎭 Конец (тёмная концовка)", "to": "reset", "action": "reset_game" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_evidence_show": {
+      "id": "lukorn_evidence_show",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Вы бросаете бухгалтерскую книгу на стол. Люкорн бледнеет.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "Где... где ты это взял?! Это... это подделка!" },
+        { "speaker": "Вы", "text": "Твоя собственная рука. Даты, имена, суммы. Городской совет будет в восторге." }
+      ],
+      "choices": [
+        { "text": "⚔️ Сдавайся", "to": "lukorn_surrender" },
+        { "text": "💰 Может, договоримся?", "to": "lukorn_desperate_bribe" },
+        { "text": "⚔️ Атаковать", "to": "lukorn_fight" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_desperate_bribe": {
+      "id": "lukorn_desperate_bribe",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Люкорн в панике.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "Пятьсот! Нет, тысяча золотых! Только сожги эту книгу! Я уеду из города, начну новую жизнь!" }
+      ],
+      "choices": [
+        { "text": "💰 Взять 1000 золотых и отпустить", "to": "lukorn_escape_ending", "gold": 1000, "flags": { "lukorn_escaped": true } },
+        { "text": "⚔️ Нет. Ты ответишь за всё", "to": "lukorn_fight" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_escape_ending": {
+      "id": "lukorn_escape_ending",
+      "location": "Северные ворота",
+      "text": "Люкорн исчезает в ночи. Через неделю вы слышите, что его видели в далёком порту.\n\nДеревня в безопасности, но преступник на свободе. Справедливость не свершилась.",
+      "choices": [
+        { "text": "🎭 Конец (нейтральная концовка)", "to": "reset", "action": "reset_game" }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_surrender": {
+      "id": "lukorn_surrender",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Люкорн опускает голову.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "Хорошо... хорошо. Я сдаюсь. Но знай — я не последний. Есть другие, выше меня. Они не простят предательства." }
+      ],
+      "choices": [
+        {
+          "text": "⛓️ Связать и отвести к Марте",
+          "to": "lukorn_justice_ending",
+          "questSet": { "questId": "lukorn_investigation", "stage": "3" }
+        }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_justice_ending": {
+      "id": "lukorn_justice_ending",
+      "location": "Тихий Брод — площадь",
+      "text": "Вы приводите связанного Люкорна в деревню. Марта отправляет гонца в город с бухгалтерской книгой.\n\nЧерез неделю прибывает отряд городской стражи. Люкорна увозят в кандалах. Городской совет награждает вас за раскрытие преступной сети.\n\nТихий Брод спасён. Справедливость восторжествовала.",
+      "dialogue": [
+        { "speaker": "Марта", "text": "Ты не просто спас Альберта. Ты спас всю деревню. Мы никогда не забудем." }
+      ],
+      "choices": [
+        { "text": "🎭 Конец (хорошая концовка)", "to": "reset", "action": "reset_game" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": ["city_medal"],
+      "gold": 150
+    },
+    "lukorn_safe_confront": {
+      "id": "lukorn_safe_confront",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Люкорн вздрагивает и инстинктивно оглядывается на картину.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "Что? Какой сейф? Ты бредишь!" }
+      ],
+      "choices": [
+        {
+          "text": "🔍 Открыть сейф (Ловкость DC 15)",
+          "skillCheck": {
+            "skill": "dexterity",
+            "dc": 15,
+            "successText": "Вы быстро открываете сейф. Внутри — компрометирующие письма от городского советника!",
+            "successItems": ["councilor_letters"],
+            "successFlags": { "has_blackmail": true },
+            "successNext": "lukorn_blackmail",
+            "failText": "Сейф заперт хитрым замком. Не открывается.",
+            "failNext": "lukorn_confrontation"
+          }
+        },
+        { "text": "⚔️ Атаковать", "to": "lukorn_fight" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_blackmail": {
+      "id": "lukorn_blackmail",
+      "location": "Дом Люкорна — кабинет",
+      "text": "В руках у вас — письма от городского советника, доказывающие коррупцию. Люкорн в ужасе.",
+      "dialogue": [
+        { "speaker": "Люкорн", "text": "Нет! Не эти письма! Если они попадут не в те руки... меня убьют!" }
+      ],
+      "choices": [
+        { "text": "📜 Сдавайся, или я отправлю их советнику", "to": "lukorn_surrender" },
+        { "text": "💰 Тысяча золотых. Сейчас.", "to": "lukorn_desperate_bribe" },
+        { "text": "⚔️ Атаковать", "to": "lukorn_fight" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "lukorn_fight": {
+      "id": "lukorn_fight",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Люкорн вскакивает из-за стола, выхватывая кинжал. Из боковой двери выбегают двое телохранителей!",
+      "choices": [],
+      "dialogue": [],
+      "combat": ["lukorn_boss", "lukorn_bodyguard_a", "lukorn_bodyguard_b"],
+      "nextScene": "lukorn_aftermath",
+      "flags": {},
+      "items": [],
+      "gold": 25
+    },
+    "lukorn_aftermath": {
+      "id": "lukorn_aftermath",
+      "location": "Дом Люкорна — кабинет",
+      "text": "Люкорн повержен. В его сейфе вы находите доказательства преступлений и золото.",
+      "choices": [
+        {
+          "text": "📜 Собрать улики и вернуться к Марте",
+          "to": "lukorn_justice_ending",
+          "questSet": { "questId": "lukorn_investigation", "stage": "3" }
+        }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": ["lukorn_signet_ring", "city_medal"],
+      "gold": 200
+    },
+    "albert_locket_talk": {
+      "id": "albert_locket_talk",
+      "location": "Тихий Брод — площадь",
+      "text": "Альберт сидит на скамье у таверны, гладит Гризли по седой голове. Заметив вас, он встаёт.",
+      "dialogue": [
+        { "speaker": "Альберт", "text": "Ты... ты спас мне жизнь. Я не знаю, как отблагодарить. Но есть одна вещь... старая, глупая." },
+        { "speaker": "Альберт", "text": "Моя жена Эльза... она умерла пять лет назад. Перед смертью она попросила отвезти её к старому дубу у излучины реки. Мы ходили туда, когда были молоды." },
+        { "speaker": "Альберт", "text": "Я нёс её медальон — последний подарок. Но когда возвращался, споткнулся о корень. Цепочка порвалась, медальон укатился в траву. Я искал... искал часами. Но так и не нашёл." },
+        { "speaker": "Альберт", "text": "Если ты когда-нибудь будешь у реки... посмотри у корней старого дуба. Может, он всё ещё там. Это... это всё, что у меня осталось от неё." }
+      ],
+      "choices": [
+        {
+          "text": "✅ Я найду его",
+          "to": "river_bend_search",
+          "questSet": { "questId": "albert_locket", "stage": "0" },
+          "flags": { "albert_locket_started": true }
+        },
+        { "text": "← Вернуться", "to": "village" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "village_tavern"
+    },
+    "albert_backstory": {
+      "id": "albert_backstory",
+      "location": "Погреб",
+      "text": "Альберт садится на мешок, Гризли кладёт голову ему на колени.",
+      "dialogue": [
+        { "speaker": "Альберт", "text": "Корвин пришёл ночью. Сказал, что мельница — идеальный склад. Железо, меха — всё краденое. Я отказался. Он запер меня здесь." },
+        { "speaker": "Альберт", "text": "Три дня. Гризли не отходил. Бандиты боялись его — рычал, не подпускал. А я... я думал о Эльзе. О том, что не успел сказать." },
+        { "speaker": "Альберт", "text": "Спасибо. Ты дал мне ещё один шанс." }
+      ],
+      "choices": [
+        { "text": "🗣️ Что-нибудь ещё могу сделать?", "to": "albert_locket_hint" },
+        { "text": "← Вернуться", "to": "cellar_free" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "albert_locket_hint": {
+      "id": "albert_locket_hint",
+      "location": "Погреб",
+      "text": "Альберт смотрит на медальон на шее — старый, потускневший.",
+      "dialogue": [
+        { "speaker": "Альберт", "text": "Есть одно... но это личное. Моя жена Эльза... я потерял её медальон у старого дуба на реке. Пять лет назад. Если будешь мимо — посмотри. Но это... это не срочно." }
+      ],
+      "choices": [
+        {
+          "text": "✅ Я найду его",
+          "to": "cellar_free",
+          "questSet": { "questId": "albert_locket", "stage": "0" },
+          "flags": { "albert_locket_started": true }
+        },
+        { "text": "← Понял", "to": "cellar_free" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0
+    },
+    "river_bend_search": {
+      "id": "river_bend_search",
+      "location": "Излучина Тихой реки",
+      "text": "Старый дуб стоит у воды — огромный, с узловатыми корнями, уходящими в землю как пальцы великана. Ветви раскинуты широко, создавая тень над берегом.\n\nЗдесь тихо. Только плеск воды и шелест листьев.",
+      "choices": [
+        {
+          "text": "🔍 Осмотреть корни дуба (Восприятие DC 13)",
+          "skillCheck": {
+            "skill": "perception",
+            "dc": 13,
+            "successText": "Среди корней, почти вросший в землю, блестит металл. Вы аккуратно выкапываете серебряный медальон.",
+            "successItems": ["elsa_locket"],
+            "successFlags": { "found_locket": true },
+            "successNext": "river_bend_found",
+            "failText": "Вы осматриваете корни, но находите только камни и старые листья. Может, в другой раз.",
+            "failNext": "river_bend_search"
+          },
+          "showIf": { "notHasItem": "elsa_locket" }
+        },
+        {
+          "text": "🌊 Пройти вдоль берега (Восприятие DC 15)",
+          "skillCheck": {
+            "skill": "perception",
+            "dc": 15,
+            "successText": "Вода вымыла что-то блестящее из-под корней. Серебряный медальон на порванной цепочке!",
+            "successItems": ["elsa_locket"],
+            "successFlags": { "found_locket": true },
+            "successNext": "river_bend_found",
+            "failText": "Только гладкие камни и речной песок. Ничего.",
+            "failNext": "river_bend_search"
+          },
+          "showIf": { "notHasItem": "elsa_locket" }
+        },
+        { "text": "🗺️ Вернуться в деревню", "action": "travel:village_tavern" },
+        {
+          "text": "🗺️ Вернуться к Альберту (с медальоном)",
+          "to": "albert_locket_return",
+          "showIf": { "hasItem": "elsa_locket" }
+        }
+      ],
+      "dialogue": [],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "river_bend"
+    },
+    "river_bend_found": {
+      "id": "river_bend_found",
+      "location": "Излучина Тихой реки",
+      "text": "Вы держите в руках потускневший серебряный медальон. Внутри — крошечный портрет женщины с добрыми глазами. На обороте выгравировано: «Эльза, моё сердце».\n\nПять лет он пролежал в земле. Но теперь он снова в ваших руках.",
+      "dialogue": [],
+      "choices": [
+        { "text": "🗺️ Вернуться к Альберту", "to": "albert_locket_return" },
+        { "text": "🗺️ Остаться у реки", "to": "river_bend_search" }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "river_bend"
+    },
+    "albert_locket_return": {
+      "id": "albert_locket_return",
+      "location": "Тихий Брод — площадь",
+      "text": "Альберт стоит у таверны. Увидев вас, он замирает. Его глаза расширяются.",
+      "dialogue": [
+        { "speaker": "Альберт", "text": "Ты... ты нашёл? Не может быть..." },
+        { "speaker": "Вы", "text": "Он был у корней дуба. Почти врос в землю." },
+        { "speaker": "Альберт", "text": "(берёт медальон дрожащими руками) Эльза... моя Эльза... Спасибо. Ты вернул мне... часть моей жизни." },
+        { "speaker": "Альберт", "text": "Возьми это. Это всё, что у меня есть. Не деньги — благодарность. Но, может, пригодится в пути." }
+      ],
+      "choices": [
+        {
+          "text": "✅ Принять благодарность",
+          "to": "village",
+          "questSet": { "questId": "albert_locket", "stage": "2" },
+          "items": ["alberts_gratitude"],
+          "gold": 20,
+          "reputation": { "rep_village": 5 }
+        }
+      ],
+      "combat": null,
+      "flags": {},
+      "items": [],
+      "gold": 0,
+      "mapLocation": "village_tavern"
+    }
+  }
+}
