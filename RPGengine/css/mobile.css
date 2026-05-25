@@ -1,0 +1,468 @@
+/**
+ * Мобильные стили RPGengine (подключается при body.mobile).
+ * Десктоп не затрагивается — переопределения только с body.mobile.
+ */
+
+/* Отключение hover на тач-устройствах — вместо него :active */
+@media (hover: none) {
+  body.mobile button.choice:hover,
+  body.mobile .dock-icon:hover,
+  body.mobile .inv-item:hover,
+  body.mobile .equip-slot-btn:hover,
+  body.mobile .cc-class-card:hover,
+  body.mobile .cc-race-card:hover,
+  body.mobile .cc-skill-chip:hover,
+  body.mobile .panel-close:hover,
+  body.mobile .combat-enemy-targetable:hover {
+    background: inherit;
+    border-color: inherit;
+    color: inherit;
+    transform: none;
+    box-shadow: inherit;
+  }
+}
+
+body.mobile {
+  font-size: 18px;
+  flex-direction: column;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ========== Сайдбар персонажа: компактно сверху ========== */
+body.mobile #sidebar {
+  width: 100%;
+  min-width: 0;
+  max-height: 38vh;
+  border-right: none;
+  border-bottom: 3px solid var(--border-dark);
+  flex-shrink: 0;
+}
+
+body.mobile #main {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  width: 100%;
+  padding: 12px;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  gap: 10px;
+}
+
+body.mobile .paper-sheet {
+  padding: 14px 16px;
+}
+
+/* ========== Мобильный: sidebar-dock внизу ========== */
+body.mobile .sidebar-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: 100%;
+  height: 56px;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  border: 2px solid var(--border);
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 16px var(--shadow-md);
+  z-index: 9000;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+}
+
+body.mobile .dock-icon {
+  flex: 1;
+  min-width: 56px;
+  max-width: 72px;
+  width: auto;
+  height: 44px;
+  font-size: 24px;
+  border-radius: 10px;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+body.mobile .dock-icon.dock-icon-active {
+  background: var(--paper-dark);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  transform: none;
+}
+
+body.mobile .dock-icon:active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+/* ========== Мобильный: панели overlay — bottom sheet ========== */
+body.mobile .sidebar-panels-wrap {
+  pointer-events: none;
+}
+
+body.mobile .panel-overlay {
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: none;
+  max-height: 60vh;
+  padding: 0;
+  transform: translateY(100%);
+  transition: opacity 220ms ease, transform 220ms ease, visibility 220ms ease;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+
+body.mobile .panel-overlay.panel-active {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+body.mobile .panel-overlay.panel-swiping {
+  transition: none;
+}
+
+body.mobile #panel-abilities.panel-overlay {
+  width: 100%;
+}
+
+body.mobile .panel-overlay-inner {
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 20px 14px 16px;
+  border-radius: 16px 16px 0 0;
+  border-bottom: none;
+  touch-action: pan-y;
+}
+
+/* Ручка для свайпа вниз */
+body.mobile .panel-overlay-inner::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 12px;
+  border-radius: 4px;
+  background: var(--border-dark);
+  opacity: 0.65;
+}
+
+body.mobile .panel-close {
+  top: 10px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+}
+
+body.mobile .panel-close:active {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+}
+
+/* ========== Сцена и выборы ========== */
+body.mobile #game-content,
+body.mobile .scene-container {
+  padding: 0;
+}
+
+body.mobile #scene-title {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+body.mobile #story-text {
+  font-size: 16px;
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+body.mobile .choices-grid,
+body.mobile .choices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+body.mobile button.choice {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  padding: 12px 14px;
+  transform: none !important;
+}
+
+body.mobile button.choice:active {
+  background: var(--paper-dark);
+  border-color: var(--accent);
+}
+
+body.mobile .start-btn {
+  width: 100%;
+  min-height: 48px;
+  font-size: 18px;
+}
+
+/* ========== Бой ========== */
+body.mobile #combat-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+body.mobile .combat-player-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+body.mobile .combat-enemies-title {
+  margin-top: 4px;
+}
+
+body.mobile .combat-enemy {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 80px;
+  padding: 12px;
+}
+
+body.mobile .combat-unit-name {
+  min-width: 0;
+  font-size: 20px;
+}
+
+body.mobile .combat-hp-text {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+body.mobile .hp-bar-bg {
+  height: 20px;
+  width: 100%;
+}
+
+body.mobile .combat-enemy-targetable {
+  outline: 3px solid #c9a227;
+  outline-offset: 2px;
+}
+
+body.mobile .combat-enemy-targetable:active {
+  background: #fff8e1;
+}
+
+/* Умения и действия в бою — полоса над dock */
+body.mobile #game-content:has(#combat-area:not(.hidden)) #choices-area {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  z-index: 8500;
+  max-height: 42vh;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--paper) 96%, transparent);
+  border-top: 2px solid var(--border);
+  box-shadow: 0 -4px 12px var(--shadow-sm);
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+body.mobile #game-content:has(#combat-area:not(.hidden)) #choices-area > b,
+body.mobile #game-content:has(#combat-area:not(.hidden)) #choices-area > div:not(.combat-consumable-row) {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+body.mobile #game-content:has(#combat-area:not(.hidden)) #choices-area button.choice,
+body.mobile #game-content:has(#combat-area:not(.hidden)) #choices-area .combat-consumable-row {
+  flex: 0 0 auto;
+  min-width: 64px;
+  min-height: 48px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+body.mobile #game-content:has(#combat-area:not(.hidden)) #choices-area .combat-consumable-row {
+  flex-wrap: wrap;
+  min-width: 100%;
+}
+
+body.mobile .combat-target-hint {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+/* Отступ под фиксированную панель действий в бою */
+body.mobile #game-card:has(#combat-area:not(.hidden)) {
+  padding-bottom: min(44vh, 320px);
+}
+
+body.mobile .pf2e-actions-indicator {
+  font-size: 17px;
+}
+
+/* ========== Инвентарь (панель) ========== */
+body.mobile #panel-inventory .inv-section-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+body.mobile #panel-inventory .inv-item {
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 64px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+body.mobile #panel-inventory .inv-item .item-name {
+  font-size: 15px;
+  white-space: normal;
+}
+
+body.mobile #panel-inventory .inv-item .item-actions {
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+body.mobile #panel-inventory .inv-btn {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+body.mobile #panel-inventory .equip-slots-panel {
+  margin-bottom: 12px;
+}
+
+body.mobile #panel-inventory .equip-slot-row {
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 10px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+body.mobile #panel-inventory .equip-slot-btn {
+  min-height: 44px;
+  width: 100%;
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+}
+
+body.mobile #panel-inventory .equip-slot-btn:active {
+  background: var(--paper-dark);
+  color: var(--accent);
+}
+
+/* ========== Создание персонажа ========== */
+body.mobile .screen.char-creator-screen {
+  padding: 12px 12px calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+body.mobile .cc-class-grid,
+body.mobile .cc-race-grid,
+body.mobile .cc-gender-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+body.mobile .cc-class-card,
+body.mobile .cc-race-card,
+body.mobile .cc-gender-card {
+  min-height: 56px;
+  padding: 12px;
+}
+
+body.mobile .cc-skills-wrap {
+  gap: 10px;
+}
+
+body.mobile .cc-skill-chip,
+body.mobile .cc-ability-chip {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
+  font-size: 15px;
+}
+
+body.mobile .cc-nav-row {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--paper) 96%, transparent);
+  border-top: 2px solid var(--border);
+  box-shadow: 0 -4px 12px var(--shadow-sm);
+  z-index: 8000;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.mobile .cc-nav-row .start-btn,
+body.mobile .cc-nav-row .btn {
+  width: 100%;
+  min-height: 56px;
+  font-size: 18px;
+}
+
+body.mobile .cc-stat-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Кампания / имя */
+body.mobile .campaign-picker-inner {
+  padding: 16px;
+}
+
+body.mobile .campaign-grid {
+  grid-template-columns: 1fr;
+}
+
+body.mobile .name-entry input {
+  width: 100%;
+  min-height: 48px;
+  font-size: 18px;
+}
+
+/* Модалки */
+body.mobile .modal-box {
+  width: calc(100vw - 24px);
+  max-height: 85vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.mobile .levelup-choices {
+  flex-direction: column;
+}
+
+body.mobile .levelup-choices .choice {
+  min-height: 48px;
+}

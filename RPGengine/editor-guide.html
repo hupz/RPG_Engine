@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Полное руководство — JSON RPG Editor</title>
+  <style>
+    :root {
+      --accent: #6d4c41;
+      --accent2: #8d6e63;
+      --paper: #faf6f0;
+      --card: #fff;
+      --ink: #2a2218;
+      --muted: #5d5247;
+      --border: #d7cbb8;
+      --ok: #2e7d32;
+      --warn: #e65100;
+      --info: #1565c0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.65;
+      margin: 0;
+      padding: 24px 16px 100px;
+      background: linear-gradient(180deg, var(--paper) 0%, #e8dcc8 100%);
+      color: var(--ink);
+      font-size: 16px;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      padding: 28px 36px;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+      border: 1px solid var(--border);
+    }
+    h1 { color: var(--accent); font-size: 1.9rem; margin: 0 0 12px; line-height: 1.25; }
+    .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 24px; }
+    h2 {
+      color: var(--accent);
+      font-size: 1.38rem;
+      margin: 40px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+      scroll-margin-top: 16px;
+    }
+    h3 { color: var(--accent2); font-size: 1.14rem; margin: 24px 0 10px; }
+    h4 { font-size: 1rem; margin: 18px 0 8px; }
+    p { margin: 10px 0; }
+    ul, ol { margin: 8px 0 14px; padding-left: 1.4em; }
+    li { margin: 5px 0; }
+    a { color: var(--accent); }
+    code, .path {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.9em;
+      background: #f0ebe3;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    pre {
+      background: #2d2620;
+      color: #f5e6d3;
+      padding: 16px 18px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      border-left: 4px solid var(--accent);
+      margin: 14px 0;
+    }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.94rem; }
+    th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; vertical-align: top; }
+    th { background: #f3eadc; }
+    .toc {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0 32px;
+      columns: 2;
+      column-gap: 28px;
+    }
+    @media (max-width: 720px) { .toc { columns: 1; } }
+    .toc ol { margin: 8px 0 0; padding-left: 1.2em; }
+    .toc ol ol { margin-top: 4px; font-size: 0.92em; color: var(--muted); }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .tip, .warn, .example {
+      padding: 14px 18px;
+      border-radius: 0 10px 10px 0;
+      margin: 16px 0;
+    }
+    .tip { background: #e8f5e9; border-left: 5px solid var(--ok); }
+    .warn { background: #fff3e0; border-left: 5px solid var(--warn); }
+    .example { background: #e3f2fd; border-left: 5px solid var(--info); }
+    .example strong { display: block; margin-bottom: 6px; color: var(--info); }
+    .steps {
+      background: #f7f2ea;
+      border-radius: 10px;
+      padding: 14px 18px 14px 12px;
+      margin: 12px 0;
+    }
+    .steps ol { margin: 8px 0 0; }
+    .steps strong { color: var(--accent); }
+    hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+    .kbd {
+      display: inline-block;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 0.88em;
+      background: #f5f5f5;
+    }
+    nav.top { margin-bottom: 16px; font-size: 0.95rem; }
+    .part-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-top: 48px;
+      margin-bottom: -8px;
+    }
+    .ability-catalog { font-size: 0.88rem; }
+    .ability-catalog th { font-size: 0.82rem; }
+    .ability-catalog td { line-height: 1.45; }
+    .ability-catalog .ab-id { font-family: ui-monospace, Consolas, monospace; font-size: 0.82em; white-space: nowrap; }
+    .changelog-list li { margin: 8px 0; }
+    .hint {
+      background: #e3f2fd;
+      border-left: 5px solid var(--info);
+      padding: 14px 18px;
+      border-radius: 0 10px 10px 0;
+      margin: 16px 0;
+      font-size: 0.94rem;
+    }
+    .guide-api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+      margin: 14px 0;
+    }
+    .guide-api-table th,
+    .guide-api-table td {
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border);
+    }
+    .guide-api-table th {
+      border-bottom: 2px solid var(--border);
+      background: #f3eadc;
+    }
+    .guide-api-table tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <nav class="top">
+      <a href="editor.html">← Редактор</a> ·
+      <a href="index.html">Игра</a> ·
+      <a href="#toc">Содержание</a>
+    </nav>
+
+    <h1>Полное руководство по конструктору JSON RPG</h1>
+    <p class="subtitle">
+      Документация уровня коммерческого продукта для авторов <strong>без программирования</strong>.
+      Описаны все вкладки редактора, визуальный конструктор условий, квесты, флаги, классы, умения, карта, бой и экспорт готовой игры.
+      JSON во вкладке «JSON» нужен только для редких полей — основной сюжет собирается в формах.
+    </p>
+
+    <div class="toc" id="toc">
+      <strong>Содержание</strong>
+      <ol>
+        <li><a href="#intro">1. Введение: что вы создаёте</a></li>
+        <li><a href="#changelog">2. Обновления движка</a></li>
+        <li><a href="#files">3. Файлы и поток данных</a></li>
+        <li><a href="#start">4. Запуск редактора и игры</a></li>
+        <li><a href="#ui">5. Интерфейс редактора</a></li>
+        <li><a href="#workflow">6. Создание игры с нуля</a></li>
+        <li><a href="#tutorial">7. Практикум: мини-кампания</a></li>
+        <li><a href="#json-root">8. Структура game_data.json</a></li>
+        <li><a href="#json-tab">9. Вкладка JSON</a></li>
+        <li><a href="#meta">10. Метаданные проекта</a></li>
+        <li><a href="#rule-systems">11. Системы правил (D&amp;D 5e / PF2e)</a></li>
+        <li><a href="#scenes">12. Сцены</a></li>
+        <li><a href="#states">13. Состояния локации</a></li>
+        <li><a href="#choices">14. Выборы</a></li>
+        <li><a href="#conditions">15. Конструктор условий</a></li>
+        <li><a href="#questset">16. Смена стадии квеста (questSet)</a></li>
+        <li><a href="#flags">17. Флаги и память игры</a></li>
+        <li><a href="#quests">18. Квестовая система</a></li>
+        <li><a href="#classes">19. Классы персонажа</a>
+          <ol>
+            <li><a href="#dnd-skill-choices">19.4 Навыки D&amp;D 5e (skillChoices)</a></li>
+            <li><a href="#pf2e-skill-choices">19.5 Навыки PF2e (fixedSkills)</a></li>
+          </ol>
+        </li>
+        <li><a href="#races">20. Расы и родословные</a></li>
+        <li><a href="#char-creator">21. Создатель персонажа</a>
+          <ol>
+            <li><a href="#skills-ingame">21.5 Навыки в игре и проверки</a></li>
+          </ol>
+        </li>
+        <li><a href="#abilities">22. Умения и эффекты</a></li>
+        <li><a href="#ability-catalog">23. Каталог умений (демо)</a></li>
+        <li><a href="#progression">24. Прогрессия и уровни</a></li>
+        <li><a href="#items">25. Предметы и экипировка</a>
+          <ol>
+            <li><a href="#accessories">25.1 Аксессуары</a></li>
+            <li><a href="#consumables-target">25.2 Расходники: цель и бой</a></li>
+            <li><a href="#cursed-items">25.3 Проклятые предметы</a></li>
+            <li><a href="#enhancement">25.4 Заточка</a></li>
+          </ol>
+        </li>
+        <li><a href="#combat-systems">26. Бой: концентрация и ячейки</a>
+          <ol>
+            <li><a href="#combat-ui">26.4 Интерфейс боя</a></li>
+            <li><a href="#combat-loot">26.5 Добыча после победы</a></li>
+          </ol>
+        </li>
+        <li><a href="#enemies">27. Враги и масштабирование</a>
+          <ol>
+            <li><a href="#enemy-loot">27.3 Таблица добычи (loot)</a></li>
+          </ol>
+        </li>
+        <li><a href="#npcs">28. Справочник NPC</a></li>
+        <li><a href="#special">29. Специальные сцены (special)</a>
+          <ol>
+            <li><a href="#shop-system">29.5 Универсальная лавка (shop)</a></li>
+          </ol>
+        </li>
+        <li><a href="#map">30. Карта путешествий</a></li>
+        <li><a href="#graph">31. Карта сюжета (граф)</a></li>
+        <li><a href="#audio">32. Звуки</a></li>
+        <li><a href="#theme">33. Тема интерфейса</a></li>
+        <li><a href="#play-ui">34. Интерфейс для игрока</a></li>
+        <li><a href="#validate">35. Проверка проекта</a></li>
+        <li><a href="#export">36. Сохранение и экспорт</a></li>
+        <li><a href="#faq">37. Частые ошибки и FAQ</a></li>
+        <li><a href="#checklist">38. Чеклист перед релизом</a></li>
+        <li><a href="#glossary">39. Справочник навыков</a>
+          <ol>
+            <li><a href="#glossary-dnd">39.1 D&amp;D 5e</a></li>
+            <li><a href="#glossary-pf2e">39.2 Pathfinder 2e</a></li>
+            <li><a href="#glossary-formulas">39.3 Формулы броска</a></li>
+          </ol>
+        </li>
+        <li><a href="#plugin-api">40. Plugin API для special-сцен</a></li>
+        <li><a href="#custom-systems">41. Собственные системы правил</a></li>
+      </ol>
+    </div>
+
+    <p class="part-title">Часть I. Основы</p>
+
+    <h2 id="intro">1. Введение: что вы создаёте</h2>
+    <p>JSON RPG Editor — визуальный конструктор текстовой RPG на базе <strong>D&amp;D 5e</strong> с опциональной поддержкой <strong>Pathfinder 2e</strong> (отдельные классы и родословные в том же файле данных). Вся игра — один <code>game_data.json</code>, в котором описаны:</p>
+    <ul>
+      <li><strong>Сцены</strong> — экраны с текстом, диалогами, кнопками и опционально боем.</li>
+      <li><strong>Выборы</strong> — куда ведёт игрок, проверки навыков, скрытые ветки по условиям.</li>
+      <li><strong>Расы и классы</strong> — создатель персонажа: сначала раса, затем класс; бонусы расы (ASI или PF2e Boosts), подсказки из <code>ui_hints</code>.</li>
+      <li><strong>Умения и прогрессия</strong> — бой, ресурсы, уровни 1–10, ASI, концентрация, ячейки заклинаний.</li>
+      <li><strong>Флаги и квесты</strong> — память сюжета (<code>flags</code>) и журнал со стадиями (<code>questStages</code>, <code>questSet</code>).</li>
+      <li><strong>Репутация и торговля</strong> — числовые флаги <code>rep_*</code>, скидки в лавке.</li>
+      <li><strong>Расходники</strong> — лечение, урон по врагам, свитки с <code>useAbility</code>; в бою — выпадающий список предметов.</li>
+      <li><strong>Добыча с врагов</strong> — таблица <code>loot</code>, окно награды после победы.</li>
+      <li><strong>Торговля</strong> — лавка Джека, универсальная лавка <code>special: shop</code> + <code>shopConfig</code>.</li>
+      <li><strong>Заточка и проклятия</strong> — кузница <code>blacksmith</code>, снятие проклятия у священника <code>temple_priest</code>.</li>
+      <li><strong>Карта мира</strong> — быстрые переходы между открытыми локациями.</li>
+    </ul>
+    <p>Редактор (<code>editor.html</code>) меняет JSON. Игра (<code>index.html</code>) читает те же данные и запускает сюжет. Вам не нужно писать код, если вы используете встроенные механики: условия, квесты, бой, предметы, проверки навыков.</p>
+
+    <p class="part-title">Новое в движке</p>
+
+    <h2 id="changelog">2. Обновления движка (после первой версии руководства)</h2>
+    <p>Краткий список механик, уже работающих в <code>index.html</code> и описанных ниже подробнее.</p>
+    <ul class="changelog-list">
+      <li><strong>Визуальный конструктор условий</strong> — правила showIf/hideIf/states без ручного JSON (вкладка сцен, превью условий).</li>
+      <li><strong>Квесты по стадиям</strong> — <code>questSet</code> на выборе, журнал «Текущие задания», правило «Стадия квеста» в условиях.</li>
+      <li><strong>Ячейки заклинаний</strong> — у мага и паладина (с 2 уровня) ресурс отображается точками по кругам; у воина — «ярость» (очки энергии).</li>
+      <li><strong>Расходники с умением</strong> — у предмета поле <code>useAbility</code> (ID из <code>progression.abilities</code>), например свиток огненного шара.</li>
+      <li><strong>Репутация</strong> — числовые флаги <code>rep_village</code> и др.; влияние на цены; статусы «Вражда / Нейтралитет / Дружба / Герой» в сайдбаре; условия <code>min</code> / <code>max</code> на флаг.</li>
+      <li><strong>Концентрация (D&amp;D 5e)</strong> — одно длительное заклинание; проверка Телосложения при уроне; индикатор <code>[C]</code> в бою.</li>
+      <li><strong>Зелье фокусировки</strong> — преимущество на проверки концентрации 1 час (лавка Джека, 22 зм).</li>
+      <li><strong>Прогрессия до 10 уровня</strong> — при повышении выбор 1 умения из 2–3 вариантов; на 4, 8 и 10 уровнях — ASI (+2 к одной характеристике или +1 к двум).</li>
+      <li><strong>Создатель персонажа</strong> — раса → класс → характеристики (Point Buy или PF2e Boosts) → навыки → бонусное умение 1 уровня.</li>
+      <li><strong>Расы (D&amp;D 5e)</strong> — вкладка <strong>🧬 Расы</strong>: ASI, черты, языки; бонусы применяются после Point Buy (потолок 20).</li>
+      <li><strong>Родословные (PF2e)</strong> — расы с <code>system: "pf2e"</code>, фиксированные и свободные Boosts, обязательное наследие (<code>heritages</code>), ОЗ от расы.</li>
+      <li><strong>Классы D&amp;D</strong> — воин, маг, паладин, плут, жрец, следопыт; классы PF2e — <code>pf2e_*</code> с полем <code>system: "pf2e"</code>.</li>
+      <li><strong>Подсказки UI</strong> — блок <code>ui_hints</code> для классов и характеристик в создателе персонажа.</li>
+      <li><strong>Дополнительные квесты</strong> — в демо-модуле: «Тень Люкорна» (<code>lukorn_investigation</code>), «Медальон Эльзы» (<code>albert_locket</code>).</li>
+      <li><strong>Plugin API для special</strong> — <code>SpecialSceneRegistry</code>, JSON в <code>plugins.specialScenes</code>, свои обработчики в отдельных JS без правки <code>engine.js</code>.</li>
+      <li><strong>Аксессуары</strong> — кольца (2 слота), ожерелье, серьги; бонусы в <code>bonuses</code>.</li>
+      <li><strong>Расходники с целью</strong> — <code>use.target</code>: себя, один враг, все враги; выбор цели в бою.</li>
+      <li><strong>Добыча (loot)</strong> — у врага таблица выпадения; после боя — модальное окно «Добыча».</li>
+      <li><strong>Универсальная лавка</strong> — <code>special: shop</code>, покупка/продажа, репутация, настройка в редакторе сцены.</li>
+      <li><strong>Заточка</strong> — <code>enhancement</code> на предмете, сцена <code>blacksmith</code>; уровень хранится в сохранении.</li>
+      <li><strong>Проклятые предметы</strong> — секция «Проклятие» во вкладке Предметы; эффекты, снятие у священника; без ручного JSON.</li>
+      <li><strong>Навыки D&amp;D 5e</strong> — у класса <code>skillChoices</code> (сколько выбрать и из какого списка); отдельный шаг в создателе; владения в <code>state.proficiencies.skills</code>; бонус мастерства в проверках (§19.4, §39).</li>
+      <li><strong>Навыки PF2e</strong> — <code>fixedSkills</code> + выбор из пула с рангом <code>trained</code>; ранги T/E/M/L в <code>state.skills</code>; Skill Increase на чётных уровнях (§19.5, §24, §39).</li>
+      <li><strong>Dock в игре</strong> — иконки 🎒 ⚡ 📍 🔊 📁 справа внизу (на телефоне — снизу); панели поверх сюжета, не сдвигают текст (§34.2).</li>
+    </ul>
+    <div class="tip">Патч <code>js/patch-progression.js</code> при загрузке данных подставляет таблицы уровней 2–10, ASI и ячейки — правки в JSON можно дублировать в редакторе или оставить патчу. После правок <code>game_data.json</code> выполните <code>node scripts/sync-data-js.js</code>, чтобы обновить <code>js/data.js</code>.</div>
+
+    <h2 id="files">3. Файлы и поток данных</h2>
+    <table>
+      <tr><th>Файл / папка</th><th>Назначение</th></tr>
+      <tr><td><code>editor.html</code></td><td>Редактор для авторов.</td></tr>
+      <tr><td><code>editor-guide.html</code></td><td>Это руководство.</td></tr>
+      <tr><td><code>index.html</code></td><td>Игра для игроков.</td></tr>
+      <tr><td><code>data/game_data.json</code></td><td>Основной файл проекта в репозитории.</td></tr>
+      <tr><td><code>js/data.js</code></td><td>Встроенная копия JSON для запуска по <code>file://</code> (переменная <code>GAME_DATA_INLINE</code>).</td></tr>
+      <tr><td><code>js/engine.js</code></td><td>Движок: сцены, бой, сохранения, квесты, расы, карта.</td></tr>
+      <tr><td><code>js/character-creator.js</code></td><td>Экран создания персонажа: Point Buy / PF2e Boosts, выбор навыков (D&amp;D и PF2e).</td></tr>
+      <tr><td><code>js/systems/</code></td><td>Модули правил: <code>dnd5e.js</code>, <code>pathfinder2e.js</code>, реестр систем.</td></tr>
+      <tr><td><code>js/conditions.js</code></td><td>Проверка условий показа выборов и состояний.</td></tr>
+      <tr><td><code>js/quests.js</code></td><td>Нормализация и логика квестов.</td></tr>
+      <tr><td><code>js/editor/editor-races.js</code></td><td>Вкладка «Расы» в редакторе.</td></tr>
+      <tr><td><code>scripts/sync-data-js.js</code></td><td>Синхронизация <code>game_data.json</code> → <code>js/data.js</code>.</td></tr>
+      <tr><td><code>js/special-scenes.js</code></td><td>Plugin API special-сцен: <code>SpecialSceneRegistry</code>, JSON-плагины.</td></tr>
+      <tr><td><code>js/sidebar-dock.js</code></td><td>Dock в игре: иконки и overlay-панели (инвентарь, умения, локация, звук, меню).</td></tr>
+      <tr><td><code>js/editor/editor-items-curse.js</code></td><td>Редактор: проклятые предметы (вкладка Предметы).</td></tr>
+      <tr><td><code>js/editor/editor-class-skills.js</code></td><td>Редактор: секции навыков класса (D&amp;D <code>skillChoices</code>, PF2e <code>fixedSkills</code>).</td></tr>
+      <tr><td><code>js/mobile-layout.js</code>, <code>css/mobile.css</code></td><td>Мобильная вёрстка игры (dock снизу, bottom sheet).</td></tr>
+      <tr><td><code>js/editor/editor-special.js</code></td><td>Редактор: <code>shopConfig</code> для лавки.</td></tr>
+      <tr><td><code>scripts/sync-data-js.js</code></td><td>Синхронизация <code>game_data.json</code> → <code>js/data.js</code>.</td></tr>
+      <tr><td><code>js/patch-progression.js</code></td><td>Таблицы уровней 2–10, ASI, ячейки, <code>level1BonusChoices</code>.</td></tr>
+      <tr><td><code>js/combat-effects.js</code></td><td>Концентрация, статусы, зелье фокусировки в бою.</td></tr>
+      <tr><td><code>css/editor.css</code></td><td>Стили конструктора условий в редакторе.</td></tr>
+      <tr><td><code>audio/</code></td><td>Звуковые файлы из каталога в JSON.</td></tr>
+    </table>
+    <h3>Как данные попадают в игру</h3>
+    <div class="steps">
+      <ol>
+        <li>Вы редактируете проект в <code>editor.html</code>.</li>
+        <li>Нажимаете <strong>Сохранить JSON</strong> — скачивается <code>game_data.json</code>.</li>
+        <li>Для теста: положите файл в <code>data/</code> и выполните <code>node scripts/sync-data-js.js</code> <em>или</em> в игре нажмите <strong>Загрузить контент JSON</strong> и выберите файл.</li>
+        <li>Для игроков: <strong>Экспорт игры</strong> — папка с <code>index.html</code> и уже вшитым <code>js/data.js</code>.</li>
+      </ol>
+    </div>
+
+    <h2 id="start">4. Запуск редактора и игры</h2>
+    <h3>Редактор</h3>
+    <div class="steps">
+      <ol>
+        <li>Откройте <code>editor.html</code> в <strong>Chrome</strong> или <strong>Edge</strong>.</li>
+        <li>Для кнопки <strong>Экспорт игры</strong> (запись папки на диск) удобен локальный сервер, например <strong>Live Server</strong> в VS Code — адрес вида <code>http://127.0.0.1:5500/...</code>, не <code>file://</code>.</li>
+        <li>Нажмите <strong>Загрузить JSON</strong> и выберите <code>data/game_data.json</code> или свой экспорт.</li>
+      </ol>
+    </div>
+    <h3>Игра</h3>
+    <div class="steps">
+      <ol>
+        <li>Откройте <code>index.html</code>.</li>
+        <li>После правок в редакторе обновите данные (см. §3) или загрузите JSON вручную в игре.</li>
+        <li>Сохранение прогресса игрока — кнопки в сайдбаре игры (браузерное хранилище).</li>
+      </ol>
+    </div>
+
+    <h2 id="ui">5. Интерфейс редактора</h2>
+    <h3>Шапка</h3>
+    <table>
+      <tr><th>Кнопка</th><th>Действие</th></tr>
+      <tr><td><strong>Новый проект</strong></td><td>Шаблон с пустыми справочниками и сценой <code>start</code>.</td></tr>
+      <tr><td><strong>Загрузить JSON</strong></td><td>Открыть <code>game_data.json</code>.</td></tr>
+      <tr><td><strong>Сохранить JSON</strong></td><td>Скачать текущий проект.</td></tr>
+      <tr><td><strong>Экспорт игры</strong></td><td>Папка для игроков: <code>index.html</code>, <code>css/</code>, <code>js/</code> без редактора + сгенерированный <code>data.js</code>.</td></tr>
+      <tr><td><strong>Проверить проект</strong></td><td>Линтер: битые ссылки, тупики, подсказки по условиям.</td></tr>
+      <tr><td><strong>Руководство</strong></td><td>Открывает <code>editor-guide.html</code> (если кнопка есть в вашей версии).</td></tr>
+    </table>
+    <h3>Левая колонка</h3>
+    <ul>
+      <li><strong>Список сцен</strong> — клик открывает сцену справа.</li>
+      <li><strong>+ Новая сцена</strong> — диалог ID → локация → текст.</li>
+      <li><strong>Статистика</strong> — счётчики сцен, квестов, NPC, врагов и т.д.</li>
+      <li><strong>Проект → ✏️ Мета</strong> — название, автор, описание.</li>
+    </ul>
+    <h3>Вкладки (слева направо)</h3>
+    <table>
+      <tr><th>Вкладка</th><th>Что настраивается</th></tr>
+      <tr><td>🎬 Сцены</td><td>Текст, выборы, бой, награды, states, special, mapLocation.</td></tr>
+      <tr><td>📜 Квесты</td><td>Квесты, стадии, награды, скрытые квесты.</td></tr>
+      <tr><td>👥 NPC</td><td>Список слева + карточка справа; <strong>+ Добавить NPC</strong>.</td></tr>
+      <tr><td>⚔️ Враги</td><td>Список слева + параметры и добыча справа; <strong>+ Добавить врага</strong>, чекбокс «Босс».</td></tr>
+      <tr><td>🎒 Предметы</td><td>Список слева; оружие, броня, аксессуары, расходники, проклятие, заточка.</td></tr>
+      <tr><td>🏅 Классы</td><td>Классы героев (D&amp;D и PF2e), стартовый инвентарь, умения, поле <code>system</code> для PF2e.</td></tr>
+      <tr><td>🧬 Расы</td><td>Расы D&amp;D (ASI, черты) и родословные PF2e (Boosts, наследия, ОЗ).</td></tr>
+      <tr><td>✨ Умения</td><td>Глобальный пул (<code>progression.abilities</code>): список слева, редактор умения справа.</td></tr>
+      <tr><td>🔊 Звуки</td><td>Каталог <code>audio.catalog</code>.</td></tr>
+      <tr><td>🎨 Тема</td><td>Цвета и шрифты UI.</td></tr>
+      <tr><td>🗺️ Карта</td><td>Точки <code>worldMap</code>: список слева, hub-сцена и условия справа.</td></tr>
+      <tr><td>🕸️ Карта сюжета</td><td>Визуальный граф переходов между сценами (Mermaid).</td></tr>
+      <tr><td>📈 Прогрессия</td><td>Опыт, уровни, масштабирование врагов.</td></tr>
+      <tr><td>📋 JSON</td><td>Весь проект целиком — поиск, редкие поля.</td></tr>
+    </table>
+
+    <p class="part-title">Часть II. Создание игры</p>
+
+    <h2 id="workflow">6. Создание игры с нуля: пошаговый план</h2>
+    <div class="steps">
+      <ol>
+        <li><strong>Новый проект</strong> — введите название игры.</li>
+        <li><strong>Мета</strong> — при PF2e-кампании укажите <code>meta.system: "pf2e"</code> (§11).</li>
+        <li><strong>Расы</strong> — хотя бы одна раса под выбранную систему (§20).</li>
+        <li><strong>Классы</strong> — минимум один класс с тем же <code>system</code>, что у проекта (§19).</li>
+        <li><strong>Предметы</strong> — оружие, зелья, ключи (ID понадобятся в наградах и условиях).</li>
+        <li><strong>Враги</strong> — если планируется бой.</li>
+        <li><strong>Сцены</strong> — цепочка от <code>start</code>: текст + выборы «Переход».</li>
+        <li><strong>Стартовый экран</strong> — сцены выбора класса с <code>action: select_class:ИД</code> и сцена имени с <code>start_game</code>.</li>
+        <li><strong>Квесты</strong> — создайте квест, стадии 0, 1, 2…; на выборах укажите <strong>questSet</strong> для смены стадии.</li>
+        <li><strong>Условия</strong> — конструктор «Показать если» на кнопках (флаги, предметы, стадия квеста).</li>
+        <li><strong>Карта</strong> — точки и <code>mapLocation</code> на сценах.</li>
+        <li><strong>Тема и звуки</strong> — по желанию.</li>
+        <li><strong>Проверить проект</strong> → исправить замечания.</li>
+        <li><strong>Экспорт игры</strong> или <strong>Сохранить JSON</strong> → пройти игру в <code>index.html</code> с нуля.</li>
+      </ol>
+    </div>
+
+    <h2 id="tutorial">7. Практикум: мини-кампания «Пропавшая реликвия» (пошагово)</h2>
+    <p>Ниже — полный цикл без кода: от пустого проекта до играбельной ветки с квестом, условием и наградой. Повторяйте действия в редакторе параллельно с чтением.</p>
+
+    <h3>Шаг A. Подготовка данных</h3>
+    <div class="steps">
+      <ol>
+        <li><strong>Новый проект</strong> → название «Реликвия».</li>
+        <li><strong>Классы</strong> → класс <code>hero</code>, название «Герой», ОЗ 20, КД 14, ресурс «Энергия» max 2.</li>
+        <li><strong>Предметы</strong> → <code>old_key</code> (misc), <code>relic</code> (misc), <code>heal_potion</code> (consumable).</li>
+        <li><strong>Квесты</strong> → ID <code>relic_quest</code>, стадия 0: log «Священник просит вернуть реликвию», hint «Поговорите в храме»; стадия 1: hint «Найдите реликвию в склепе»; стадия 2: finish ✓, log «Реликвия возвращена».</li>
+      </ol>
+    </div>
+
+    <h3>Шаг B. Сцены сюжета</h3>
+    <div class="steps">
+      <ol>
+        <li>Сцена <code>class_pick</code> — текст «Выберите путь», выбор <code>select_class:hero</code>.</li>
+        <li>Сцена <code>name_entry</code> — кнопка <code>start_game</code> → <code>temple</code> (после создателя персонажа в игре).</li>
+        <li>Сцена <code>temple</code> — текст «Священник ждёт у алтаря».
+          <ul>
+            <li>Выбор «Принять поручение» → <code>crypt_entrance</code>, блок <strong>questSet</strong>: квест <code>relic_quest</code>, стадия <code>0</code>.</li>
+            <li>Выбор «Уйти» → <code>village</code> (без квеста).</li>
+          </ul>
+        </li>
+        <li>Сцена <code>crypt_entrance</code> — showIf: стадия квеста <code>relic_quest</code> = <code>0</code> или <code>1</code> (режим «Любое» с двумя правилами questStage, либо одна стадия 1 после принятия).
+          <ul>
+            <li>Выбор «В склеп» → <code>crypt_inside</code> только если <strong>нет предмета</strong> <code>relic</code> (правило «Нет предмета»).</li>
+          </ul>
+        </li>
+        <li>Сцена <code>crypt_inside</code> — skillCheck Восприятие DC 12: успех → флаг <code>found_niche</code>, предмет <code>old_key</code>; провал → остаётесь без ключа.</li>
+        <li>Сцена <code>relic_room</code> — showIf: флаг <code>found_niche</code> = true И hasItem <code>old_key</code>. Выбор «Взять реликвию» → <code>temple</code>, questSet стадия <code>1</code>, награда предмет <code>relic</code> на сцене (items).</li>
+        <li>Сцена <code>temple</code> — второй выбор «Сдать реликвию» — showIf: hasItem <code>relic</code> + questStage <code>1</code>; questSet стадия <code>2</code>; золото 50.</li>
+      </ol>
+    </div>
+
+    <h3>Шаг C. Проверка</h3>
+    <div class="steps">
+      <ol>
+        <li>На сцене <code>temple</code> откройте <strong>Превью видимости</strong>: без реликвии кнопка «Сдать» скрыта; с реликвией и стадией 1 — видна.</li>
+        <li><strong>Проверить проект</strong> → исправьте битые <code>to</code>.</li>
+        <li><strong>Карта сюжета</strong> — убедитесь, что нет изолированных узлов.</li>
+        <li>Сохраните JSON → откройте игру → пройдите путь от класса до сдачи реликвии.</li>
+      </ol>
+    </div>
+    <div class="tip">Этот практикум использует только формы редактора: квесты, questSet, конструктор условий, skillCheck. JSON понадобится только для consumable <code>use</code>, если хотите лечащее зелье.</div>
+
+    <h2 id="json-root">8. Структура game_data.json</h2>
+    <p>Корневые разделы файла:</p>
+    <table>
+      <tr><th>Ключ</th><th>Содержание</th></tr>
+      <tr><td><code>meta</code></td><td>Название, автор, версия, <code>system</code> (dnd5e / pf2e / generic).</td></tr>
+      <tr><td><code>races</code></td><td>Расы D&amp;D и родословные PF2e (ASI или abilityBoosts, наследия).</td></tr>
+      <tr><td><code>ui_hints</code></td><td>Подсказки в игре и в создателе (<code>class_*</code>, <code>stat_*</code>, ОЗ, карта…).</td></tr>
+      <tr><td><code>reputation</code></td><td>Метаданные фракций для блока «Отношения» (<code>rep_*</code>).</td></tr>
+      <tr><td><code>startingFlags</code></td><td>Стартовые флаги (в т.ч. <code>rep_village: 0</code>).</td></tr>
+      <tr><td><code>statusEffects</code></td><td>Яд, кровотечение, оглушение — для умений <code>apply_status</code>.</td></tr>
+      <tr><td><code>audio</code></td><td><code>catalog</code> + <code>defaults</code>.</td></tr>
+      <tr><td><code>enemyScaling</code></td><td>Усиление врагов по уровню игрока.</td></tr>
+      <tr><td><code>progression</code></td><td>Уровни, опыт, глобальный пул умений.</td></tr>
+      <tr><td><code>classes</code></td><td>Играбельные классы.</td></tr>
+      <tr><td><code>items</code></td><td>Предметы.</td></tr>
+      <tr><td><code>enemies</code></td><td>Враги.</td></tr>
+      <tr><td><code>npcs</code></td><td>Справочник NPC.</td></tr>
+      <tr><td><code>quests</code></td><td>Квесты.</td></tr>
+      <tr><td><code>scenes</code></td><td>Все сцены (основной граф сюжета).</td></tr>
+      <tr><td><code>theme</code></td><td>Оформление.</td></tr>
+      <tr><td><code>worldMap</code></td><td>Точки быстрого перемещения.</td></tr>
+      <tr><td><code>plugins</code></td><td>Расширения без правки ядра: <code>plugins.specialScenes</code> (JSON-обработчики).</td></tr>
+    </table>
+
+    <h2 id="json-tab">9. Вкладка JSON: когда она нужна</h2>
+    <p>Вкладка <strong>JSON</strong> показывает весь проект. Для сюжета она <strong>не обязательна</strong>. Используйте её, когда:</p>
+    <ul>
+      <li>Нужно скопировать фрагмент сцены или квеста между проектами.</li>
+      <li>Поле ещё не вынесено в форму: <code>repeatRewards</code>, <code>use</code> у зелья, <code>content</code> у книги, <code>ui_hints</code>, <code>statusEffects</code>.</li>
+      <li>Ищете опечатку в ID по всему файлу (Ctrl+F).</li>
+    </ul>
+    <div class="warn">После ручного редактирования JSON не нажимайте «Сохранить» в браузере на вкладке — данные живут в памяти редактора. Ошибка синтаксиса (лишняя запятая) может сломать экспорт. Проверяйте валидность и снова <strong>Загрузите JSON</strong>, если что-то пошло не так.</div>
+
+    <h3>9.1 Диалоги на сцене</h3>
+    <p>Кнопка <strong>+ Добавить</strong> в секции диалогов. Каждая строка: <strong>Говорящий</strong> + <strong>Текст</strong>. В игре реплики идут после основного абзаца, отдельными блоками.</p>
+    <div class="example">
+      <strong>Пример диалога</strong>
+<pre><code>"dialogue": [
+  { "speaker": "Марта", "text": "Опять чужаки… Чего вам?" },
+  { "speaker": "Вы", "text": "Ищу дорогу к мельнице." }
+]</code></pre>
+    </div>
+    <p>Имя говорящего — произвольная строка; связь со вкладкой NPC не обязательна, но удобно писать те же имена, что в справочнике NPC.</p>
+
+    <h2 id="meta">10. Метаданные проекта</h2>
+    <p>Слева внизу блок <strong>Проект</strong> → <strong>✏️ Мета</strong>. Заполняются:</p>
+    <ul>
+      <li><code>meta.title</code> — название (заголовок окна при экспорте).</li>
+      <li><code>meta.author</code> — автор.</li>
+      <li><code>meta.description</code> — краткое описание.</li>
+      <li><code>meta.version</code> — версия (при новом проекте «1.0»).</li>
+      <li><code>meta.system</code> — активная система правил для создателя и боя (см. §11). Если поле пустое, движок выводит систему из содержимого JSON (наличие PF2e-классов/рас).</li>
+    </ul>
+
+    <h2 id="rule-systems">11. Системы правил (D&amp;D 5e / Pathfinder 2e)</h2>
+    <p>Один проект может содержать <strong>оба набора</strong> классов и рас, но в игре активна одна система — из <code>meta.system</code>:</p>
+    <table>
+      <tr><th>Значение <code>meta.system</code></th><th>Поведение</th></tr>
+      <tr><td><code>dnd5e</code> (по умолчанию)</td><td>Point Buy 27 очков, владения навыков (<code>skillChoices</code>), бонус мастерства в проверках, расы без <code>system: "pf2e"</code>.</td></tr>
+      <tr><td><code>pf2e</code></td><td>Ability Boosts, ранги навыков (T/E/M/L), Skill Increase на чётных уровнях, наследие обязательно, классы/расы с <code>system: "pf2e"</code>.</td></tr>
+      <tr><td><code>generic</code></td><td>Упрощённые правила, если в проекте нет заклинаний (редко для готовых модулей).</td></tr>
+    </table>
+    <h3>11.1 Как разделить контент в JSON</h3>
+    <ul>
+      <li><strong>Классы PF2e</strong> — ID вида <code>pf2e_fighter</code>, поле <code>"system": "pf2e"</code> в объекте класса.</li>
+      <li><strong>Родословные PF2e</strong> — ID вида <code>human_pf2e</code>, поле <code>"system": "pf2e"</code> в объекте расы.</li>
+      <li><strong>Классы и расы D&amp;D</strong> — поле <code>system</code> отсутствует или не равно <code>pf2e</code>.</li>
+    </ul>
+    <div class="warn">Не меняйте ID базовых классов демо (<code>warrior</code>, <code>wizard</code>, <code>paladin</code>) — на них завязаны сцены <code>select_class</code>. Новые классы D&amp;D добавляйте отдельными ID (<code>rogue</code>, <code>cleric</code>, <code>ranger</code>).</div>
+    <h3>11.2 Новый проект и шаблон PF2e</h3>
+    <p>При создании проекта движок и редактор подставляют <code>meta.system</code> по содержимому. Для чистой PF2e-кампании задайте <code>meta.system: "pf2e"</code> в метаданных или используйте шаблон PF2e в редакторе (если доступен в вашей сборке).</p>
+
+    <p class="part-title">Часть III. Сцены и повествование</p>
+
+    <h2 id="scenes">12. Сцены: полный разбор полей</h2>
+    <p>Сцена — один «экран» игры. ID сцены — латиница без пробелов (<code>tavern_main</code>, <code>forest_path</code>).</p>
+
+    <h3>12.1 Как создать сцену</h3>
+    <div class="steps">
+      <ol>
+        <li>Вкладка <strong>Сцены</strong> → слева <strong>+ Новая сцена</strong>.</li>
+        <li>Введите <strong>ID</strong> (например <code>village_square</code>).</li>
+        <li>В диалогах укажите <strong>локацию</strong> (заголовок в игре) и <strong>текст</strong>.</li>
+        <li>В форме сцены добавьте <strong>Выборы</strong> (см. §14).</li>
+      </ol>
+    </div>
+
+    <div class="example">
+      <strong>Пример: простая сцена с двумя выходами</strong>
+<pre><code>{
+  "location": "Деревенская площадь",
+  "text": "Вы стоите у колодца. На севере тропа в лес, на востоке — таверна.",
+  "choices": [
+    { "text": "В таверну", "to": "tavern", "icon": "🍺" },
+    { "text": "В лес", "to": "forest_gate", "icon": "🌲" }
+  ]
+}</code></pre>
+    </div>
+
+    <h3>12.2 Поля формы сцены</h3>
+    <table>
+      <tr><th>Поле</th><th>В игре</th></tr>
+      <tr><td>ID сцены</td><td>Имя для ссылок <code>to</code>, <code>nextScene</code>.</td></tr>
+      <tr><td>Локация</td><td>Строка «где вы» в сайдбаре.</td></tr>
+      <tr><td>Текст</td><td>Основной абзац.</td></tr>
+      <tr><td>Диалоги</td><td>Реплики <code>{ speaker, text }</code> под основным текстом.</td></tr>
+      <tr><td>Выборы</td><td>Кнопки внизу карточки.</td></tr>
+      <tr><td>Бой</td><td>Список ID врагов; после победы — <strong>Сцена после победы</strong>.</td></tr>
+      <tr><td>Флаги сцены</td><td>При <strong>первом</strong> визите (с наградами) выставляются флаги.</td></tr>
+      <tr><td>Предметы / Золото</td><td>Награда при первом визите. Повторно не выдаётся, если не <code>repeatRewards: true</code> (JSON).</td></tr>
+      <tr><td>mapLocation</td><td>Привязка к точке карты; первый визит открывает быстрый переход.</td></tr>
+      <tr><td>special</td><td>Особая логика (лавка, торг…) — §29.</td></tr>
+    </table>
+
+    <h3>12.3 Сцена с боем</h3>
+    <div class="steps">
+      <ol>
+        <li>На вкладке <strong>Враги</strong> создайте врага (например <code>bandit</code>).</li>
+        <li>В сцене секция <strong>Бой</strong> → добавьте врага.</li>
+        <li>Укажите <strong>Сцена после победы</strong> — обязательно, иначе «Проверить проект» выдаст ошибку.</li>
+      </ol>
+    </div>
+    <div class="example">
+      <strong>Пример: бой и награда</strong>
+<pre><code>{
+  "location": "Засада на дороге",
+  "text": "Из кустов выскакивают разбойники!",
+  "combat": ["bandit", "bandit"],
+  "nextScene": "road_after_fight",
+  "gold": 15,
+  "items": ["healing_potion"],
+  "flags": { "cleared_road": true }
+}</code></pre>
+    </div>
+
+    <h3>12.4 Награды и повторный визит</h3>
+    <p>При первом входе на сцену движок выдаёт <code>items</code>, <code>gold</code> и применяет <code>flags</code>. При повторном визите награды не дублируются.</p>
+    <p>Чтобы выдавать снова (фарм), во вкладке JSON у сцены добавьте: <code>"repeatRewards": true</code>.</p>
+
+    <h2 id="states">13. Состояния локации (states)</h2>
+    <p>Одна и та же сцена может выглядеть по-разному в зависимости от прогресса — без дублирования десятка сцен. Блок <strong>🔄 Состояния локации</strong> появляется под текстом сцены.</p>
+    <h3>Как это работает</h3>
+    <ol>
+      <li>Движок проверяет <code>states[]</code> <strong>сверху вниз</strong>.</li>
+      <li>Для каждого элемента вычисляется <strong>condition</strong> (визуальный конструктор — как у showIf).</li>
+      <li>Первое истинное состояние подменяет: <code>text</code>, <code>location</code>, <code>audio</code>, <code>choices</code>, <code>special</code>.</li>
+      <li>Если ни одно не подошло — используется <strong>default</strong> (галочка Fallback) или базовые поля сцены.</li>
+      <li>Бой, флаги сцены, предметы при входе <strong>не</strong> меняются states — только отображение.</li>
+    </ol>
+
+    <div class="example">
+      <strong>Пример: деревня до и после пожара</strong>
+<pre><code>"states": [
+  {
+    "id": "burning",
+    "condition": {
+      "all": [
+        { "flag": "village_on_fire", "equals": true }
+      ]
+    },
+    "text": "Деревня охвачена пламенем. Жители бегут к реке.",
+    "choices": [
+      { "text": "Помочь тушить", "to": "fight_fire", "icon": "🔥" }
+    ]
+  },
+  {
+    "id": "peaceful",
+    "default": true,
+    "text": "Тихая площадь. Пахнет свежим хлебом."
+  }
+]</code></pre>
+    </div>
+    <div class="steps">
+      <ol>
+        <li>Откройте сцену → <strong>+ Добавить</strong> в блоке состояний.</li>
+        <li>Задайте <strong>ID состояния</strong> и <strong>Условие (condition)</strong> в конструкторе (например флаг = true).</li>
+        <li>Заполните override-текст и при необходимости свои выборы.</li>
+        <li>У одного состояния отметьте <strong>Fallback (default)</strong> — оно покажется, если другие условия ложны.</li>
+      </ol>
+    </div>
+
+    <h2 id="choices">14. Выборы: переход, проверка, действие</h2>
+    <p>В карточке сцены секция <strong>Выборы</strong> → <strong>+ Добавить</strong>. У каждого выбора: текст, иконка, тип.</p>
+
+    <h3>14.1 Тип «Переход» (goto)</h3>
+    <p>Игрок нажимает кнопку и попадает на сцену из поля <strong>Сцена</strong> (<code>to</code>).</p>
+    <div class="example">
+      <strong>Пример</strong>
+<pre><code>{ "text": "В погреб", "to": "cellar", "icon": "🪜" }</code></pre>
+    </div>
+
+    <h3>14.2 Тип «Проверка навыка» (skillCheck)</h3>
+    <table>
+      <tr><th>Поле</th><th>Описание</th></tr>
+      <tr><td>Навык</td><td>Латиница: <code>perception</code>, <code>persuasion</code>… (§39).</td></tr>
+      <tr><td>DC</td><td>Сложность (число).</td></tr>
+      <tr><td>Один раз</td><td>После попытки выбор скрывается (если задан doneFlag).</td></tr>
+      <tr><td>Успех / провал — текст</td><td>Сообщение после броска.</td></tr>
+      <tr><td>Успех → сцена / Провал → сцена</td><td>Куда вести после «Продолжить».</td></tr>
+      <tr><td>Флаги при успехе (JSON)</td><td>Например <code>{"found_key": true}</code>.</td></tr>
+      <tr><td>Предметы</td><td>ID через запятую при успехе.</td></tr>
+      <tr><td>doneFlag</td><td>Флаг «уже использовано»; если пусто — авто <code>sc_ИДсцены_номер</code>.</td></tr>
+      <tr><td>Владение (D&amp;D)</td><td>На кнопке проверки — зелёная ✓, если навык в <code>proficiencies.skills</code>. Бонус = мод. характеристики + бонус мастерства (§39.3).</td></tr>
+      <tr><td>Ранг (PF2e)</td><td>На кнопке — буква ранга (T/E/M/L) цветом. Бонус = уровень + мод. характеристики + бонус ранга (§39.3).</td></tr>
+    </table>
+    <p>Бросок: <strong>1d20 + бонус навыка</strong> против DC. Результат и переход — по полям успех/провал.</p>
+    <div class="example">
+      <strong>Пример: осмотр сундука (Восприятие DC 14)</strong>
+<pre><code>{
+  "text": "Осмотреть замок",
+  "icon": "🔍",
+  "skillCheck": {
+    "skill": "perception",
+    "dc": 14,
+    "once": true,
+    "successText": "Вы замечаете царапину — ключ подходит с другой стороны.",
+    "failText": "Замок кажется цельным.",
+    "successNext": "chest_open",
+    "failNext": "attic",
+    "successFlags": { "noticed_trap": true },
+    "successItems": ["rusty_key"],
+    "doneFlag": "sc_attic_0"
+  }
+}</code></pre>
+    </div>
+
+    <h3>14.3 Тип «Действие» (action)</h3>
+    <p>В поле <code>action</code> — команда движка (строка):</p>
+    <table>
+      <tr><th>action</th><th>Эффект</th></tr>
+      <tr><td><code>start_game</code></td><td>Начать игру после ввода имени.</td></tr>
+      <tr><td><code>reset_game</code></td><td>Сброс к выбору класса.</td></tr>
+      <tr><td><code>select_class:warrior</code></td><td>Выбор класса; после — создатель персонажа (§21).</td></tr>
+      <tr><td><code>travel:forest_trail</code></td><td>Переход на hub-сцену точки карты <code>forest_trail</code>.</td></tr>
+    </table>
+    <div class="example">
+      <strong>Пример: экран выбора класса</strong>
+<pre><code>{
+  "text": "Играть за воина",
+  "icon": "⚔️",
+  "action": "select_class:warrior"
+}</code></pre>
+    </div>
+
+    <h3>14.4 Кнопка «один раз» (doneFlag)</h3>
+    <p>Поле <strong>doneFlag</strong> у обычного перехода: после нажатия в сохранении ставится флаг, выбор скрывается или помечается ✓. Автоимя: <code>ch_ИДсцены_индекс</code>.</p>
+
+    <h2 id="conditions">15. Конструктор условий (showIf / hideIf)</h2>
+    <p>В каждом выборе два блока: <strong>Показать если</strong> и <strong>Скрыть если</strong>. Это визуальный конструктор — <strong>не нужно писать JSON вручную</strong>.</p>
+
+    <h3>15.1 Режим группы</h3>
+    <ul>
+      <li><strong>Все (И)</strong> — каждое правило должно выполниться (<code>all</code>).</li>
+      <li><strong>Любое (ИЛИ)</strong> — достаточно одного (<code>any</code>).</li>
+    </ul>
+
+    <h3>15.2 Типы правил</h3>
+    <table>
+      <tr><th>В конструкторе</th><th>Значение</th><th>Пример использования</th></tr>
+      <tr><td>Флаг = значение</td><td><code>flag</code> + <code>equals</code></td><td>Квест принят: <code>accepted_quest</code> = true.</td></tr>
+      <tr><td>Репутация ≥ / ≤</td><td><code>flag</code> + <code>min</code> или <code>max</code></td><td><code>rep_village</code> min 10 — дружелюбная деревня; max −20 — враг.</td></tr>
+      <tr><td>Флаг выключен</td><td><code>notFlag</code></td><td>Дверь ещё не открыта.</td></tr>
+      <tr><td>Есть предмет</td><td><code>hasItem</code></td><td>Нужен ключ в инвентаре.</td></tr>
+      <tr><td>Нет предмета</td><td><code>notHasItem</code></td><td>Ещё не взяли артефакт.</td></tr>
+      <tr><td>Золото ≥</td><td><code>goldMin</code></td><td>Достаточно монет для взятки.</td></tr>
+      <tr><td>Выбор использован</td><td><code>choiceUsed</code></td><td>Уже нажимали эту ветку (<code>ch_*</code> / <code>sc_*</code>).</td></tr>
+      <tr><td>Выбор не использован</td><td><code>choiceNotUsed</code></td><td>Секрет доступен один раз.</td></tr>
+      <tr><td>Класс</td><td><code>class</code></td><td>Только для мага.</td></tr>
+      <tr><td>Стадия квеста</td><td><code>questStage</code></td><td>Квест на нужном этапе (рекомендуется вместо ручных флагов квеста).</td></tr>
+    </table>
+
+    <h3>15.3 Как добавить условие</h3>
+    <div class="steps">
+      <ol>
+        <li>Раскройте выбор → блок <strong>Показать если</strong>.</li>
+        <li>Выпадающий <strong>+ Правило</strong> → выберите тип.</li>
+        <li>Заполните второй/третий селектор (флаг, предмет, квест+стадия…).</li>
+        <li>При необходимости добавьте ещё правила и переключите <strong>Все (И)</strong> / <strong>Любое (ИЛИ)</strong>.</li>
+        <li>Внизу формы — <strong>Превью видимости</strong>: задайте тестовые флаги, золото, инвентарь, стадии квестов и посмотрите ✅/⛔ на кнопках.</li>
+      </ol>
+    </div>
+
+    <div class="example">
+      <strong>Пример: кнопка видна только с ключом И при стадии квеста 1 (И)</strong>
+<pre><code>"showIf": {
+  "mode": "all",
+  "all": [
+    { "hasItem": "cellar_key" },
+    { "questStage": { "questId": "find_albert", "stage": "1" } }
+  ]
+}</code></pre>
+    </div>
+
+    <div class="example">
+      <strong>Пример: скрыть кнопку, если выбор уже использован</strong>
+<pre><code>"hideIf": {
+  "all": [
+    { "choiceUsed": "ch_tavern_2" }
+  ]
+}</code></pre>
+    </div>
+
+    <h3>15.4 Примеры по каждому типу правила</h3>
+    <table>
+      <tr><th>Тип в UI</th><th>Что выбрать в конструкторе</th><th>Когда нажмут кнопку</th></tr>
+      <tr><td>Флаг = значение</td><td>Флаг <code>door_open</code>, значение <code>true</code></td><td>Дверь уже открыта другой сценой.</td></tr>
+      <tr><td>Флаг выключен</td><td><code>boss_defeated</code></td><td>Босс ещё жив.</td></tr>
+      <tr><td>Есть предмет</td><td><code>silver_key</code></td><td>Ключ в инвентаре.</td></tr>
+      <tr><td>Нет предмета</td><td><code>relic</code></td><td>Реликвию ещё не подняли.</td></tr>
+      <tr><td>Золото ≥</td><td>100</td><td>Хватает монет на взятку.</td></tr>
+      <tr><td>Выбор использован</td><td><code>ch_market_1</code></td><td>Уже торговались (doneFlag).</td></tr>
+      <tr><td>Выбор не использован</td><td><code>sc_riddle_0</code></td><td>Загадку ещё не пробовали.</td></tr>
+      <tr><td>Класс</td><td><code>wizard</code></td><td>Только маг видит руну.</td></tr>
+      <tr><td>Стадия квеста</td><td>Квест + стадия <code>2</code></td><td>Задание на нужном этапе журнала.</td></tr>
+      <tr><td>Репутация ≥</td><td>Флаг <code>rep_village</code> + min (JSON)</td><td>Дружелюбные NPC.</td></tr>
+      <tr><td>Репутация ≤</td><td>Флаг <code>rep_village</code> + max (JSON)</td><td>Враги деревни.</td></tr>
+    </table>
+
+    <h3>15.5 Сложные условия (И + ИЛИ)</h3>
+    <div class="example">
+      <strong>ИЛИ: виден рогатый путь ИЛИ есть пропуск</strong>
+<pre><code>"showIf": {
+  "mode": "any",
+  "any": [
+    { "flag": "saw_horned_gate", "equals": true },
+    { "hasItem": "guild_pass" }
+  ]
+}</code></pre>
+    </div>
+    <p>В UI: режим <strong>Любое (ИЛИ)</strong>, два правила разных типов.</p>
+
+    <div class="example">
+      <strong>Пример: репутация (часто в JSON)</strong>
+<pre><code>"showIf": {
+  "flag": "rep_village",
+  "min": 10
+}</code></pre>
+      <p>Враждебная лавка: <code>"flag": "rep_village", "max": -20</code> на сцене или выборе.</p>
+    </div>
+
+    <h2 id="questset">16. Смена стадии квеста на выборе (questSet)</h2>
+    <p>Чтобы продвинуть квест без ручного флага, в карточке выбора есть блок <strong>📜 При выборе — стадия квеста</strong>.</p>
+    <div class="steps">
+      <ol>
+        <li>Нажмите <strong>+ При смене стадии квеста</strong>.</li>
+        <li>Выберите <strong>квест</strong> и <strong>стадию</strong> из списков (стадии из вкладки Квесты).</li>
+        <li>Игрок при нажатии этой кнопки получит новую стадию в журнале.</li>
+      </ol>
+    </div>
+    <div class="example">
+      <strong>Пример: взять квест у NPC</strong>
+<pre><code>{
+  "text": "Я помогу найти мельника",
+  "to": "village_after_quest",
+  "questSet": { "questId": "find_albert", "stage": "0" }
+}</code></pre>
+    </div>
+    <div class="example">
+      <strong>Пример: завершить квест (стадия с finish: true)</strong>
+<pre><code>{
+  "text": "Сдать отчёт",
+  "to": "reward_scene",
+  "questSet": { "questId": "find_albert", "stage": "3" }
+}</code></pre>
+    </div>
+    <div class="tip">Связывайте видимость других кнопок с правилом <strong>Стадия квеста</strong> в showIf, а не с отдельными флагами <code>quest_*</code> — так проще сопровождать сюжет.</div>
+    <p>На выборе можно задать изменение репутации (в JSON вкладки сцены):</p>
+<pre><code>"reputation": { "rep_village": 5 }</code></pre>
+    <p>При нажатии кнопки движок вызовет <code>changeReputation</code> и запишет в журнал при заметном изменении.</p>
+
+    <h2 id="flags">17. Флаги и память игры</h2>
+    <p><strong>Флаги</strong> (<code>state.flags</code>) — память сюжета: <code>true</code>/<code>false</code>, числа, строки. Для <strong>репутации</strong> используйте числа (например <code>rep_village: 0</code> в <code>startingFlags</code>). <strong>Стадии квестов</strong> — отдельно в <code>state.questStages</code>.</p>
+
+    <h3>17.1 Откуда берутся флаги</h3>
+    <table>
+      <tr><th>Источник</th><th>Как задаётся</th></tr>
+      <tr><td>Сцена → Флаги</td><td>При первом визите на сцену с наградами.</td></tr>
+      <tr><td>Успех skillCheck</td><td>Поле «Флаги при успехе (JSON)».</td></tr>
+      <tr><td>doneFlag выбора</td><td>После нажатия кнопки (один раз).</td></tr>
+      <tr><td>skillCheck doneFlag</td><td>После любой попытки проверки.</td></tr>
+      <tr><td>special-сцены</td><td>Встроенная логика (лавка, погреб…).</td></tr>
+      <tr><td>Награда квеста</td><td><code>rewards.reputation</code> может добавить флаг репутации.</td></tr>
+    </table>
+
+    <h3>17.2 Где используются флаги</h3>
+    <ul>
+      <li>Конструктор <strong>Показать если / Скрыть если</strong> на выборах.</li>
+      <li>Условия <strong>states</strong> сцены.</li>
+      <li>Legacy-условие точки на карте (<code>showIf.flag</code>).</li>
+      <li>Правила <strong>Выбор использован</strong> — ссылаются на <code>ch_*</code> или <code>sc_*</code>.</li>
+    </ul>
+
+    <div class="example">
+      <strong>Пример: выдать флаг при входе на сцену</strong>
+<pre><code>"flags": {
+  "talked_to_marta": true,
+  "tavern_visited": true
+}</code></pre>
+    </div>
+
+    <div class="example">
+      <strong>Пример: показать выбор только после разговора</strong>
+<pre><code>"showIf": {
+  "all": [{ "flag": "talked_to_marta", "equals": true }]
+}</code></pre>
+    </div>
+
+    <h3>17.3 Именование флагов</h3>
+    <p>Используйте понятные латинские имена: <code>door_unlocked</code>, <code>accepted_miller_quest</code>. Редактор подсказывает известные флаги из всего проекта (каталог в селектах конструктора).</p>
+
+    <h3>17.4 Репутация (<code>rep_*</code>)</h3>
+    <p>В демо-модуле «Мельница на Тихой реке»:</p>
+    <ul>
+      <li>Стартовое значение: <code>startingFlags.rep_village: 0</code> в <code>game_data.json</code>.</li>
+      <li>Метаданные фракции: <code>reputation.rep_village</code> (название «Деревня», иконка).</li>
+      <li>Блок <strong>Отношения</strong> в сайдбаре — только если флаг уже есть в сохранении; статусы без цифр: Вражда (&lt;−10), Нейтралитет, Дружба, Герой (≥25).</li>
+      <li>Лавка Джека: цена × (1 − rep/100), скидка до 30%, наценка до 50%; при <code>rep_village ≤ −20</code> — отказ в торговле (сцена <code>jack_buy</code> / special <code>shop_jack</code>).</li>
+    </ul>
+    <p>В редакторе для условий числового флага пока удобнее вкладка <strong>JSON</strong> на выборе: <code>"min": 10</code> или <code>"max": -20</code> рядом с <code>flag</code>.</p>
+
+    <h2 id="quests">18. Квестовая система</h2>
+    <p>Квесты живут во вкладке <strong>📜 Квесты</strong>. В игре отображаются в <strong>Журнале заданий</strong> по полям <code>log</code> (текст записи) и <code>hint</code> (подсказка «что делать»).</p>
+
+    <h3>18.1 Создание квеста</h3>
+    <div class="steps">
+      <ol>
+        <li><strong>+ Новый квест</strong> → введите ID (<code>find_albert</code>).</li>
+        <li>Заполните <strong>название</strong> и описание.</li>
+        <li><strong>+ Стадия</strong> — стадии нумеруются 0, 1, 2… (в JSON ключи строки <code>"0"</code>, <code>"1"</code>).</li>
+        <li>У каждой стадии: <strong>log</strong>, <strong>hint</strong>, галочка <strong>Завершение квеста (finish)</strong> на финальной стадии.</li>
+        <li>Опционально: награда XP, скрытый квест (<code>hidden</code>).</li>
+      </ol>
+    </div>
+
+    <div class="example">
+      <strong>Пример квеста в JSON (после сохранения из редактора)</strong>
+<pre><code>"find_albert": {
+  "title": "Пропавший мельник",
+  "hidden": false,
+  "rewards": { "exp": 150, "gold": 25 },
+  "stages": {
+    "0": {
+      "log": "Марта просит найти мельника Альберта.",
+      "hint": "Поговорите с трактирщицей и осмотрите мельницу.",
+      "finish": false
+    },
+    "1": {
+      "log": "Вы нашли следы у амбара.",
+      "hint": "Осмотрите амбар и погреб.",
+      "finish": false
+    },
+    "3": {
+      "log": "Альберт спасён. Деревня благодарна.",
+      "hint": "",
+      "finish": true
+    }
+  }
+}</code></pre>
+    </div>
+
+    <h3>18.2 Как продвигать квест в сюжете</h3>
+    <p><strong>Рекомендуемый способ:</strong> на выборе кнопки укажите <strong>questSet</strong> (§16). Стадия попадёт в <code>state.questStages[questId]</code>.</p>
+    <p><strong>Условия:</strong> на других кнопках используйте правило <strong>Стадия квеста</strong> в showIf — «квест X на стадии 1».</p>
+    <p><strong>На карте:</strong> у точки <code>worldMap</code> можно задать показ только при нужной стадии квеста (вкладка Карта).</p>
+
+    <h3>18.3 Скрытые квесты</h3>
+    <p>Если у квеста <code>hidden: true</code>, он не виден в журнале, пока стадия не станет известной игроку (логика движка). Удобно для сюжетных сюрпризов.</p>
+
+    <h3>18.4 Завершение и награды</h3>
+    <p>Стадия с <code>finish: true</code> помечает квест завершённым. Награда <code>rewards.exp</code> / <code>gold</code> / <code>items</code> может выдаваться движком при переходе на финальную стадию (см. логику в <code>engine.js</code> для вашей версии).</p>
+
+    <h3>18.5 Квесты в демо «Мельница на Тихой реке»</h3>
+    <p>В готовом модуле пять квестов — их можно изучать как образцы:</p>
+    <table>
+      <tr><th>ID</th><th>Название</th><th>Назначение</th></tr>
+      <tr><td><code>find_albert</code></td><td>Пропавший мельник</td><td>Основная линия модуля.</td></tr>
+      <tr><td><code>lost_bag</code></td><td>Потерянная сумка</td><td>Побочное задание.</td></tr>
+      <tr><td><code>bandit_lair</code></td><td>Логово разбойников</td><td>Боевая ветка.</td></tr>
+      <tr><td><code>lukorn_investigation</code></td><td>Тень Люкорна</td><td>Расследование, несколько стадий и враги.</td></tr>
+      <tr><td><code>albert_locket</code></td><td>Медальон Эльзы</td><td>Сюжетная ветка с предметами и сценами погреба.</td></tr>
+    </table>
+    <p>Для ветвления используйте <strong>questSet</strong> и правило <strong>Стадия квеста</strong> в условиях; отдельные флаги <code>quest_*</code> для каждого шага не нужны.</p>
+
+    <p class="part-title">Часть IV. Персонажи и бой</p>
+
+    <h2 id="classes">19. Классы персонажа</h2>
+    <div class="steps">
+      <ol>
+        <li>Вкладка <strong>🏅 Классы</strong> → <strong>+ Новый класс</strong>.</li>
+        <li><strong>ID</strong> — латиница (<code>wizard</code>, <code>warrior</code>); тот же ID в <code>select_class:warrior</code>.</li>
+        <li><strong>system</strong> — для PF2e укажите <code>pf2e</code> (класс виден только при <code>meta.system: "pf2e"</code>).</li>
+        <li><strong>Название, иконка</strong> — для UI.</li>
+        <li><strong>ОЗ, КД, атака, урон, инициатива</strong> — базовый бой.</li>
+        <li><strong>Характеристики</strong> str–cha — стартовые (создатель персонажа может их изменить).</li>
+        <li><strong>Ресурс</strong> — ярость, ячейки, мана: имя, максимум, описание.</li>
+        <li><strong>Стартовое оружие</strong> — из предметов типа weapon.</li>
+        <li><strong>Стартовый инвентарь</strong> — галочки предметов.</li>
+        <li><strong>Способности</strong> — умения этого класса (из пула или локальные).</li>
+      </ol>
+    </div>
+
+    <div class="example">
+      <strong>Пример минимального класса</strong>
+<pre><code>"fighter": {
+  "name": "Воин",
+  "icon": "⚔️",
+  "hp": 24,
+  "ac": 16,
+  "atkBonus": 5,
+  "dmgRoll": "1d10",
+  "dmgBonus": 3,
+  "initBonus": 1,
+  "stats": { "str": 16, "dex": 12, "con": 14, "int": 10, "wis": 10, "cha": 10 },
+  "resource": { "name": "Ярость", "max": 2, "desc": "Трата на мощные удары." },
+  "startingItems": ["longsword", "healing_potion"],
+  "abilities": []
+}</code></pre>
+    </div>
+
+    <h3>19.1 Классы D&amp;D 5e в демо</h3>
+    <p>Шесть играбельных классов без поля <code>system</code> (или с системой по умолчанию): <code>warrior</code>, <code>wizard</code>, <code>paladin</code>, <code>rogue</code>, <code>cleric</code>, <code>ranger</code>. Подсказки в создателе — ключи <code>ui_hints.class_warrior</code> … <code>class_ranger</code>.</p>
+
+    <h3>19.2 Классы Pathfinder 2e</h3>
+    <p>Четыре класса с <code>"system": "pf2e"</code>: <code>pf2e_fighter</code>, <code>pf2e_cleric</code>, <code>pf2e_rogue</code>, <code>pf2e_wizard</code>. Отображаются только при активной PF2e-системе (§11).</p>
+
+    <h3>19.3 Стартовый экран в сюжете</h3>
+    <p>Нужны сцены:</p>
+    <ol>
+      <li>Экран с кнопками <code>select_class:ИД</code> для каждого класса вашей системы.</li>
+      <li>Сцена ввода имени (в демо — отдельная логика).</li>
+      <li>Кнопка <code>start_game</code> → переход на первую игровую сцену (<code>start</code> или свою).</li>
+    </ol>
+
+    <h3 id="dnd-skill-choices">19.4 Навыки D&amp;D 5e (<code>skillChoices</code>)</h3>
+    <p>Во вкладке <strong>🏅 Классы</strong> → секция <strong>🎯 Навыки класса</strong> (модуль <code>editor-class-skills.js</code>).</p>
+    <table>
+      <tr><th>Поле</th><th>Описание</th></tr>
+      <tr><td><code>skillChoices.count</code></td><td>Сколько навыков игрок выбирает на 1 уровне (например, 2 у <code>warrior</code>, 4 у <code>rogue</code>).</td></tr>
+      <tr><td><code>skillChoices.from</code></td><td>Массив ID навыков из §39.1 или строка <code>"any"</code> — все навыки D&amp;D 5e.</td></tr>
+    </table>
+    <p>Устаревшее поле <code>skills</code> (текст «Атлетика, Восприятие…») сохранено для старых модулей. Для новых проектов используйте только <code>skillChoices</code>.</p>
+    <p>Навыки из <code>races.*.bonusSkills</code> даются <strong>сверх лимита</strong> <code>count</code> и не требуют выбора на шаге навыков.</p>
+    <div class="example">
+      <strong>Пример: воин (warrior)</strong>
+<pre><code>"skillChoices": {
+  "count": 2,
+  "from": [
+    "acrobatics", "animal_handling", "athletics", "history",
+    "insight", "intimidation", "perception", "survival"
+  ]
+}</code></pre>
+    </div>
+
+    <h3 id="pf2e-skill-choices">19.5 Навыки PF2e (<code>fixedSkills</code>, ранги)</h3>
+    <p>Для классов с <code>"system": "pf2e"</code> в той же секции редактора:</p>
+    <table>
+      <tr><th>Поле</th><th>Описание</th></tr>
+      <tr><td><code>fixedSkills</code></td><td>Массив ID навыков, которые класс получает автоматически (например, <code>athletics</code> у <code>pf2e_fighter</code>).</td></tr>
+      <tr><td><code>skillChoices.count</code></td><td>Сколько дополнительных навыков выбирает игрок.</td></tr>
+      <tr><td><code>skillChoices.from</code></td><td>Пул навыков PF2e (§39.2).</td></tr>
+      <tr><td><code>skillChoices.rank</code></td><td>Стартовый ранг выбранных навыков — обычно <code>"trained"</code>.</td></tr>
+      <tr><td><code>keyAbility</code></td><td>Ключевая характеристика класса (для справки в UI и подсказок).</td></tr>
+    </table>
+    <p>В сохранении навыки хранятся в <code>state.skills</code> как пары <code>id → rank</code> (<code>untrained</code>, <code>trained</code>, <code>expert</code>, <code>master</code>, <code>legendary</code>). На чётных уровнях игрок повышает один навык на ступень (§24).</p>
+    <div class="example">
+      <strong>Пример: pf2e_fighter</strong>
+<pre><code>"keyAbility": "str",
+"fixedSkills": ["athletics"],
+"skillChoices": {
+  "count": 3,
+  "from": ["acrobatics", "intimidation", "medicine", "survival", "crafting"],
+  "rank": "trained"
+}</code></pre>
+    </div>
+
+    <h2 id="races">20. Расы и родословные (Ancestry)</h2>
+    <p>Вкладка <strong>🧬 Расы</strong> редактирует объект <code>races</code> в JSON. В создателе персонажа порядок: <strong>сначала раса, затем класс</strong>.</p>
+
+    <h3>20.1 Расы D&amp;D 5e</h3>
+    <p>В демо: <code>human</code>, <code>elf</code>, <code>dwarf</code>, <code>halfling</code>, <code>dragonborn</code>, <code>tiefling</code>. Основные поля:</p>
+    <table>
+      <tr><th>Поле</th><th>Смысл</th></tr>
+      <tr><td><code>asi</code></td><td>Бонусы к характеристикам (+1 к str, dex…). Применяются <strong>после</strong> Point Buy; итог не выше 20.</td></tr>
+      <tr><td><code>traits</code></td><td>Черты расы: пассивные или активные (могут стать умениями при финализации).</td></tr>
+      <tr><td><code>bonusSkills</code></td><td>Дополнительные владения навыков (ID из §39.1); не расходуют лимит <code>skillChoices.count</code>.</td></tr>
+      <tr><td><code>languages</code>, <code>speed</code></td><td>Языки и скорость (для справки в UI).</td></tr>
+    </table>
+    <div class="example">
+      <strong>Пример ASI человека</strong>
+<pre><code>"human": {
+  "name": "Человек",
+  "asi": { "str": 1, "dex": 1, "con": 1, "int": 1, "wis": 1, "cha": 1 },
+  "traits": [{ "id": "human_versatility", "name": "Универсальность", "type": "passive" }]
+}</code></pre>
+    </div>
+
+    <h3>20.2 Родословные PF2e</h3>
+    <p>Расы с <code>"system": "pf2e"</code>: <code>human_pf2e</code>, <code>elf_pf2e</code>, <code>dwarf_pf2e</code>, <code>halfling_pf2e</code>, <code>gnome_pf2e</code>. Вместо Point Buy — <strong>Ability Boosts</strong>:</p>
+    <ul>
+      <li><code>abilityBoosts</code> — фиксированные ключи (<code>str</code>, <code>free</code>…); <code>free</code> игрок распределяет в создателе.</li>
+      <li><code>heritages</code> — список наследий; <strong>одно обязательно</strong> (например «Универсал», «Учёный»).</li>
+      <li><code>hp</code>, <code>size</code> — бонус ОЗ от родословной и размер.</li>
+    </ul>
+    <p>В сохранении: <code>raceKey</code>, <code>heritageId</code>, <code>pf2eFixedBoosts</code>, <code>pf2eFreeBoosts</code>. Старые сохранения без <code>raceKey</code> не получают ASI расы автоматически.</p>
+
+    <h3>20.3 Редактор рас</h3>
+    <div class="steps">
+      <ol>
+        <li><strong>+ Новая раса</strong> — тип зависит от <code>meta.system</code> (D&amp;D или PF2e).</li>
+        <li>Заполните имя, иконку, описание, бонусы и черты.</li>
+        <li>Для PF2e добавьте хотя бы одно <strong>наследие</strong> в списке heritages.</li>
+        <li>Сохраните JSON и проверьте создатель в <code>index.html</code>.</li>
+      </ol>
+    </div>
+
+    <h2 id="char-creator">21. Создатель персонажа в игре</h2>
+    <p>После <code>select_class</code> (класс уже выбран на сцене) открывается пошаговый мастер <code>character-creator.js</code>.</p>
+
+    <h3>21.1 D&amp;D 5e</h3>
+    <ol>
+      <li><strong>Раса</strong> — сетка доступных рас; отображаются бонусы ASI к характеристикам.</li>
+      <li><strong>Класс</strong> — подтверждение или смена (только классы текущей системы).</li>
+      <li><strong>Point Buy</strong> — 27 очков, характеристики 8–15; затем применяется ASI расы (макс. 20).</li>
+      <li><strong>Навыки</strong> — отдельный шаг: выбор из <code>skillChoices</code> (до <code>count</code> штук) + автоматически <code>bonusSkills</code> расы (не входят в лимит).</li>
+      <li><strong>Умение 1 уровня</strong> — одно из <code>level1BonusChoices</code>.</li>
+      <li><strong>Имя</strong> и финализация.</li>
+    </ol>
+
+    <h3>21.2 Pathfinder 2e</h3>
+    <ol>
+      <li><strong>Раса и наследие</strong> (heritage) — обязательны.</li>
+      <li><strong>Класс</strong> — только <code>pf2e_*</code>.</li>
+      <li><strong>Ability Boosts</strong> — фиксированные и свободные бусты вместо Point Buy (потолок 18 на 1 уровне).</li>
+      <li><strong>Навыки (PF2e)</strong> — сначала <code>fixedSkills</code> класса, затем выбор из <code>skillChoices</code>; каждому навыку присваивается ранг (обычно <code>trained</code>).</li>
+      <li><strong>Умение 1 уровня</strong> из <code>level1BonusChoices</code>, имя, финализация.</li>
+    </ol>
+
+    <h3>21.3 Подсказки (<code>ui_hints</code>)</h3>
+    <p>В JSON можно задать тексты для панелей при наведении / выборе:</p>
+    <ul>
+      <li><code>class_warrior</code>, <code>class_wizard</code>, <code>class_paladin</code>, <code>class_rogue</code>, <code>class_cleric</code>, <code>class_ranger</code> — описание классов.</li>
+      <li><code>stat_str</code> … <code>stat_cha</code> — пояснения характеристик.</li>
+      <li>Также: <code>hp</code>, <code>ac</code>, <code>inventory</code>, <code>travel</code> и др. для сайдбара игры.</li>
+    </ul>
+    <p>Редактируются во вкладке <strong>JSON</strong> или при копировании из демо-модуля.</p>
+
+    <h3>21.4 Умения и ОЗ при создании</h3>
+    <ul>
+      <li><strong>Базовые умения</strong> — из <code>classes.*.abilities</code> (воин: Второе дыхание, Всплеск, Блок щитом; маг: снаряд, щит, пылающие руки…).</li>
+      <li><strong>Дополнительное умение</strong> — одно из <code>level1BonusChoices</code> (патч <code>patch-progression.js</code> или JSON класса).</li>
+      <li>Активные черты расы (<code>traits</code> type active) могут попасть в список умений.</li>
+      <li>ОЗ: кость класса + мод. ТЕЛ (D&amp;D) или логика PF2e с <code>races.*.hp</code>.</li>
+    </ul>
+
+    <h3 id="skills-ingame">21.5 Навыки в игре и проверки</h3>
+    <p>В сайдбаре блок <strong>Владения</strong> (D&amp;D) или список навыков с рангом и итоговым бонусом (PF2e), например «Атлетика (T +5)».</p>
+    <ul>
+      <li>При проверке навыка на выборе сцены (§14.2) движок бросает 1d20 + бонус и сравнивает с DC.</li>
+      <li>D&amp;D: зелёная ✓ на кнопке, если навык в <code>state.proficiencies.skills</code>.</li>
+      <li>PF2e: цветная метка ранга (U/T/E/M/L) на кнопке проверки.</li>
+      <li>На чётных уровнях PF2e после ASI/умения может открыться окно <strong>Увеличение навыка</strong> — повысить один навык на одну ступень ранга (§24).</li>
+    </ul>
+
+    <h2 id="abilities">22. Умения и эффекты</h2>
+    <h3>22.1 Глобальный пул (вкладка ✨ Умения)</h3>
+    <p>Шаблоны в <code>progression.abilities</code>. Во вкладке <strong>Умения</strong> — список слева, форма выбранного умения справа, <strong>+ Добавить умение</strong> внизу списка (как у квестов и предметов). Умения из пула выдаются при повышении уровня (выбор из <code>choices</code>) и могут дублироваться в <code>classes.*.abilities</code> как стартовые. ID везде должен совпадать.</p>
+
+    <h3>22.2 Поля умения</h3>
+    <table>
+      <tr><th>Поле</th><th>Смысл</th></tr>
+      <tr><td>id, name, icon, desc</td><td>Отображение в бою и при level-up.</td></tr>
+      <tr><td>cost</td><td>Цена: ярость / очки божественности или <strong>ячейка круга</strong> (если задан <code>spellLevel</code>).</td></tr>
+      <tr><td>spellLevel</td><td>Круг заклинания (1–5). Списывает ячейку этого круга, не «cost».</td></tr>
+      <tr><td>concentration: true</td><td>Длительное заклинание: одно активное; проверка Тел при уроне (§26).</td></tr>
+      <tr><td>combatOnly / oncePerCombat</td><td>Только в бою / один раз за бой.</td></tr>
+      <tr><td>usage</td><td><code>combat</code>, <code>exploration</code>, <code>both</code> — вне боя или везде.</td></tr>
+      <tr><td>effect.type</td><td>damage, heal, buff, apply_status, magic_missile, smite, extra_attack, custom…</td></tr>
+      <tr><td>targeting.scope</td><td><code>single</code>, <code>all_enemies</code>, <code>self</code>.</td></tr>
+      <tr><td>passive</td><td>Блок <code>acBonus</code>, <code>maxHpBonus</code>, <code>atkBonus</code>, <code>resourceMaxBonus</code>.</td></tr>
+      <tr><td>soundCast / soundHit</td><td>ID из каталога <code>audio.catalog</code>.</td></tr>
+    </table>
+
+    <h3>22.3 Типы эффектов</h3>
+    <table>
+      <tr><th>Тип</th><th>Когда использовать</th></tr>
+      <tr><td>damage</td><td>Кубики урона, тип (fire, cold, radiant…), опционально savingThrow.</td></tr>
+      <tr><td>heal</td><td>Восстановление ОЗ (<code>2d4+2</code>).</td></tr>
+      <tr><td>buff</td><td>buffType: ac / atk / dmg + value.</td></tr>
+      <tr><td>apply_status</td><td>Яд, оглушение, реген — из <code>statusEffects</code>.</td></tr>
+      <tr><td>magic_missile</td><td>Автопопадание, несколько стрел.</td></tr>
+      <tr><td>smite</td><td>Бонус урона к следующему удару.</td></tr>
+      <tr><td>extra_attack</td><td>Дополнительная атака в ход.</td></tr>
+      <tr><td>custom</td><td>Сообщение в журнал (социальное / разведка).</td></tr>
+      <tr><td>passive</td><td>Постоянные бонусы при получении умения.</td></tr>
+    </table>
+
+    <div class="example">
+      <strong>Пример: заклинание с концентрацией</strong>
+<pre><code>{
+  "id": "mirror_image",
+  "name": "Зеркальный образ",
+  "cost": 2,
+  "spellLevel": 2,
+  "concentration": true,
+  "icon": "🪞",
+  "combatOnly": true,
+  "effect": {
+    "type": "apply_status",
+    "targeting": { "scope": "self" },
+    "addEffect": { "id": "fortified", "duration": 3, "attribute": "ac", "value": 2 }
+  }
+}</code></pre>
+    </div>
+
+    <h2 id="ability-catalog">23. Каталог умений в «Мельница на Тихой реке»</h2>
+    <p>Ниже — все умения, уже включённые в <code>data/game_data.json</code> на момент обновления руководства. <strong>Базовые</strong> выдаются при создании персонажа; остальные — из пула при level-up или как <strong>бонус на 1 уровне</strong> (см. <code>level1BonusChoices</code> в патче).</p>
+    <p class="tip">Свиток огненного шара — не умение персонажа, а предмет с <code>useAbility: "scroll_fireball"</code> (§25).</p>
+
+    <h3>⚔️ Воин — базовые (всегда с 1 уровня)</h3>
+    <table class="ability-catalog">
+      <tr><th>ID</th><th>Название</th><th>Тип</th><th>Цена</th><th>Описание</th></tr>
+      <tr><td class="ab-id">second_wind</td><td>🌬️ Второе дыхание</td><td>актив</td><td>1</td><td>Раз за бой: лечение 1к10+2 ОЗ.</td></tr>
+      <tr><td class="ab-id">action_surge</td><td>⚡ Всплеск действий</td><td>актив</td><td>1</td><td>Раз за бой: дополнительная атака в ход.</td></tr>
+      <tr><td class="ab-id">shield_block</td><td>🛡️ Блок щитом</td><td>актив</td><td>1</td><td>+4 КД до начала вашего следующего хода.</td></tr>
+    </table>
+
+    <h3>⚔️ Воин — пул и бонус на 1 уровень</h3>
+    <table class="ability-catalog">
+      <tr><th>ID</th><th>Название</th><th>Тип</th><th>Цена</th><th>Конц.</th><th>Описание</th></tr>
+      <tr><td class="ab-id">warrior_cleave</td><td>🪓 Рассечение</td><td>актив</td><td>1</td><td>—</td><td>2к8 урона одной цели.</td></tr>
+      <tr><td class="ab-id">warrior_endurance</td><td>💪 Стойкость</td><td>пассив</td><td>—</td><td>—</td><td>+6 макс. ОЗ.</td></tr>
+      <tr><td class="ab-id">warrior_rally</td><td>📯 Боевой клич</td><td>актив</td><td>1</td><td>—</td><td>Лечение 1к8+2 (вне боя / в бой).</td></tr>
+      <tr><td class="ab-id">warrior_parry</td><td>⚔️ Парирование</td><td>актив</td><td>1</td><td>—</td><td>+3 КД до следующего хода.</td></tr>
+      <tr><td class="ab-id">warrior_whirlwind</td><td>🌪️ Вихрь клинка</td><td>актив</td><td>2</td><td>—</td><td>2к6 всем врагам, раз за бой.</td></tr>
+      <tr><td class="ab-id">warrior_armor_mastery</td><td>🛡️ Мастер брони</td><td>пассив</td><td>—</td><td>—</td><td>+2 КД.</td></tr>
+      <tr><td class="ab-id">shield_master</td><td>🛡️ Мастер щита</td><td>пассив</td><td>—</td><td>—</td><td>+1 КД (со щитом).</td></tr>
+      <tr><td class="ab-id">death_strike</td><td>💀 Смертельный удар</td><td>актив</td><td>2</td><td>—</td><td>Раз за бой: 3к10 по одной цели.</td></tr>
+      <tr><td class="ab-id">warrior_intimidate</td><td>😠 Устрашающий вид</td><td>социал.</td><td>0</td><td>—</td><td>Вне боя: подсказка для Устрашения.</td></tr>
+    </table>
+
+    <h3>🔮 Маг — базовые</h3>
+    <table class="ability-catalog">
+      <tr><th>ID</th><th>Название</th><th>Круг</th><th>Цена</th><th>Конц.</th><th>Описание</th></tr>
+      <tr><td class="ab-id">magic_missile</td><td>✨ Магический снаряд</td><td>1</td><td>1</td><td>—</td><td>3к4+3, автопопадание.</td></tr>
+      <tr><td class="ab-id">shield_spell</td><td>🔰 Щит (заклинание)</td><td>1</td><td>1</td><td>да</td><td>+5 КД, концентрация.</td></tr>
+      <tr><td class="ab-id">burning_hands</td><td>🔥 Пылающие руки</td><td>1</td><td>1</td><td>—</td><td>3к6 огня по всем врагам.</td></tr>
+      <tr><td class="ab-id">detect_magic</td><td>👁️ Обнаружение магии</td><td>—</td><td>1</td><td>—</td><td>Вне боя: ауры магии.</td></tr>
+    </table>
+
+    <h3>🔮 Маг — пул и бонус</h3>
+    <table class="ability-catalog">
+      <tr><th>ID</th><th>Название</th><th>Круг</th><th>Цена</th><th>Конц.</th><th>Описание</th></tr>
+      <tr><td class="ab-id">wizard_arcane_bolt</td><td>⚡ Чародейский заряд</td><td>1</td><td>1</td><td>—</td><td>1к12+3 урона.</td></tr>
+      <tr><td class="ab-id">wizard_meditation</td><td>🧘 Медитация</td><td>пассив</td><td>—</td><td>—</td><td>+1 макс. ячейка 1 круга.</td></tr>
+      <tr><td class="ab-id">wizard_venom</td><td>☠️ Ядовитый укол</td><td>1</td><td>1</td><td>—</td><td>1к4 + яд 3 хода.</td></tr>
+      <tr><td class="ab-id">wizard_ward</td><td>🛡️ Магический щит</td><td>1</td><td>1</td><td>да</td><td>Реген 3 хода на себе.</td></tr>
+      <tr><td class="ab-id">wizard_scorch</td><td>🔥 Ожог</td><td>2</td><td>1</td><td>—</td><td>2к6 огня, спасброс.</td></tr>
+      <tr><td class="ab-id">wizard_frost</td><td>❄️ Ледяной луч</td><td>2</td><td>1</td><td>—</td><td>1к10+4, шанс оглушения.</td></tr>
+      <tr><td class="ab-id">hold_person</td><td>🔒 Удержание личности</td><td>2</td><td>2</td><td>да</td><td>Паралич врага, концентрация.</td></tr>
+      <tr><td class="ab-id">mirror_image</td><td>🪞 Зеркальный образ</td><td>2</td><td>2</td><td>да</td><td>+2 КД на 3 хода.</td></tr>
+      <tr><td class="ab-id">wizard_empower</td><td>✨ Усиление</td><td>пассив</td><td>—</td><td>—</td><td>+1 к атаке.</td></tr>
+      <tr><td class="ab-id">wizard_counterspell</td><td>🌀 Контрзаклинание</td><td>3</td><td>2</td><td>да</td><td>+5 КД, концентрация.</td></tr>
+      <tr><td class="ab-id">fireball</td><td>🔥 Огненный шар</td><td>3</td><td>3</td><td>—</td><td>8к6 огня всем врагам.</td></tr>
+      <tr><td class="ab-id">cone_of_cold</td><td>❄️ Конус холода</td><td>5</td><td>3</td><td>—</td><td>8к8 холода всем врагам.</td></tr>
+      <tr><td class="ab-id">scroll_fireball</td><td>📜 Огненный шар (свиток)</td><td>—</td><td>0</td><td>—</td><td>Только через предмет; 4к6 огня.</td></tr>
+    </table>
+
+    <h3>✝️ Паладин — базовые</h3>
+    <table class="ability-catalog">
+      <tr><th>ID</th><th>Название</th><th>Тип</th><th>Цена</th><th>Конц.</th><th>Описание</th></tr>
+      <tr><td class="ab-id">lay_on_hands</td><td>💚 Лечение руками</td><td>актив</td><td>1</td><td>—</td><td>1к8+2 ОЗ.</td></tr>
+      <tr><td class="ab-id">divine_smite</td><td>⚡ Божественное кара</td><td>актив</td><td>1</td><td>—</td><td>+2к8 к удару (нежить/демоны +3к8).</td></tr>
+      <tr><td class="ab-id">divine_sense</td><td>👁️ Божественное чувство</td><td>социал.</td><td>1</td><td>—</td><td>Вне боя: нежить и святыни.</td></tr>
+      <tr><td class="ab-id">shield_of_faith</td><td>🛡️ Щит веры</td><td>актив</td><td>1</td><td>да</td><td>+2 КД, концентрация.</td></tr>
+    </table>
+
+    <h3>✝️ Паладин — пул и бонус</h3>
+    <table class="ability-catalog">
+      <tr><th>ID</th><th>Название</th><th>Тип</th><th>Цена</th><th>Конц.</th><th>Описание</th></tr>
+      <tr><td class="ab-id">paladin_bless</td><td>🙏 Благословение</td><td>актив</td><td>1</td><td>—</td><td>2к4+2 ОЗ.</td></tr>
+      <tr><td class="ab-id">paladin_holy_armor</td><td>🛡️ Святая броня</td><td>пассив</td><td>—</td><td>—</td><td>+2 КД.</td></tr>
+      <tr><td class="ab-id">paladin_divine_shield</td><td>🛡️ Божественный щит</td><td>актив</td><td>1</td><td>да</td><td>+2 КД, концентрация.</td></tr>
+      <tr><td class="ab-id">paladin_radiant_strike</td><td>☀️ Сияющий удар</td><td>актив</td><td>1</td><td>—</td><td>Кара +1к8 на удар.</td></tr>
+      <tr><td class="ab-id">paladin_aura</td><td>💚 Аура стойкости</td><td>пассив</td><td>—</td><td>—</td><td>+4 макс. ОЗ.</td></tr>
+      <tr><td class="ab-id">paladin_divine_wrath</td><td>⚡ Гнев небес</td><td>актив</td><td>2</td><td>—</td><td>2к8 урона, раз за бой.</td></tr>
+      <tr><td class="ab-id">paladin_faith_shield</td><td>🔰 Щит веры (усил.)</td><td>актив</td><td>1</td><td>да</td><td>+3 КД, концентрация.</td></tr>
+      <tr><td class="ab-id">aura_of_protection</td><td>🔰 Аура защиты</td><td>пассив</td><td>—</td><td>—</td><td>+1 КД и +4 макс. ОЗ.</td></tr>
+      <tr><td class="ab-id">extra_attack_paladin</td><td>⚔️ Дополнительная атака</td><td>актив</td><td>1</td><td>—</td><td>Ещё одна атака в ход.</td></tr>
+      <tr><td class="ab-id">turn_undead</td><td>✨ Изгнание нечисти</td><td>актив</td><td>1</td><td>—</td><td>2к8 излучения по всем врагам.</td></tr>
+    </table>
+
+    <h2 id="progression">24. Прогрессия и уровни (1–10, ASI)</h2>
+    <p>Вкладка <strong>📈 Прогрессия</strong> и патч <code>js/patch-progression.js</code> задают поведение в игре.</p>
+    <ul>
+      <li><strong>maxLevel: 10</strong>, опыт: <code>0, 80, 180, 320, 500, 750, 1100, 1550, 2100, 2800</code> (пороги уровней).</li>
+      <li>На уровнях <strong>2–10</strong> у каждого класса в <code>progression.levels</code> — массив <code>choices</code>: 2–3 ID умений; игрок <strong>обязан выбрать одно</strong> в модальном окне.</li>
+      <li>На уровнях <strong>4, 8 и 10</strong> — флаг <code>asi: true</code>: сначала окно ASI (+2 к одной характеристике или +1 к двум), затем выбор умения (если есть choices).</li>
+      <li>Ячейки заклинаний мага/паладина и ярость воина обновляются по таблицам в патче при каждом уровне.</li>
+      <li><strong>PF2e — Skill Increase:</strong> на <strong>чётных</strong> уровнях (2, 4, 6, 8, 10) после повышения уровня игрок выбирает один навык и повышает его ранг (trained → expert → master → legendary). История — в <code>state.skillIncreases</code>.</li>
+    </ul>
+    <div class="example">
+      <strong>Пример: уровень 4 воина в JSON класса</strong>
+<pre><code>"4": {
+  "asi": true,
+  "choices": ["warrior_armor_mastery", "death_strike"]
+}</code></pre>
+    </div>
+    <div class="warn">Старые сохранения (например, 3 уровень) не теряют умения; новые выборы появятся только при следующем повышении уровня.</div>
+
+    <h2 id="items">25. Предметы и экипировка</h2>
+    <div class="steps">
+      <ol>
+        <li>Вкладка <strong>🎒 Предметы</strong> → слева список (☠️ у проклятых) → справа карточка.</li>
+        <li><strong>+ Новый предмет</strong> → ID латиницей.</li>
+        <li>Тип: <strong>weapon</strong>, <strong>armor</strong>, <strong>shield</strong>, <strong>accessory</strong>, <strong>consumable</strong>, readable, misc, key, quest.</li>
+        <li>Для оружия/брони/щита: урон или КД, блок <strong>Бонусы (JSON)</strong>, опционально <strong>Заточка</strong>.</li>
+        <li>Для расходника — блок <strong>Использование (use)</strong> (см. §25.2).</li>
+        <li>Секция <strong>☠️ Проклятие</strong> — только через форму (§25.3).</li>
+      </ol>
+    </div>
+    <p>В игре: инвентарь в dock 🎒 → <strong>Надеть/Снять</strong>. КД, урон, ОЗ и характеристики пересчитываются с учётом всех слотов и заточки. Проклятые надетые вещи нельзя снять вручную — только у священника (§25.3).</p>
+    <p>У предмета в JSON можно задать <code>price</code> — базовая цена для универсальной лавки (<code>special: shop</code>).</p>
+
+    <div class="example">
+      <strong>Пример: зелье лечения</strong>
+<pre><code>"healing_potion": {
+  "name": "Зелье лечения",
+  "type": "consumable",
+  "use": { "effect": "heal", "formula": "2d4+2" }
+}</code></pre>
+    </div>
+    <div class="example">
+      <strong>Пример: свиток с умением (useAbility)</strong>
+<pre><code>"fireball_scroll": {
+  "name": "Свиток Огненного шара",
+  "type": "consumable",
+  "icon": "📜",
+  "useAbility": "scroll_fireball"
+}</code></pre>
+      <p>Умение <code>scroll_fireball</code> должно существовать в <code>progression.abilities</code>. В бою — кнопка «Использовать»; не тратит ячейки класса; предмет сгорает.</p>
+    </div>
+    <div class="example">
+      <strong>Пример: зелье фокусировки</strong>
+<pre><code>"focus_potion": {
+  "name": "Зелье фокусировки",
+  "type": "consumable",
+  "use": { "effect": "focus_potion", "durationHours": 1 }
+}</code></pre>
+      <p>Преимущество на проверки удержания концентрации 1 час; продаётся у Джека (22 зм).</p>
+    </div>
+
+    <h3 id="accessories">25.1. Аксессуары (кольца, ожерелье, серьги)</h3>
+    <p>Тип предмета <code>accessory</code>. В редакторе:</p>
+    <ul>
+      <li><strong>Слот</strong>: <code>ring</code> (кольцо 1 / кольцо 2), <code>necklace</code>, <code>earrings</code>.</li>
+      <li><strong>Бонусы (JSON)</strong> — те же поля, что у оружия: <code>maxHpBonus</code>, <code>acBonus</code>, <code>atkBonus</code>, <code>dmgBonus</code>, <code>str</code>…<code>cha</code>.</li>
+      <li>Иконка (emoji) — отображается в инвентаре и слотах.</li>
+    </ul>
+    <p>В игре четыре слота аксессуаров в панели экипировки (🎒). Два кольца — разные слоты <code>ring1</code> и <code>ring2</code>.</p>
+    <div class="example">
+      <strong>Пример: кольцо жизни</strong>
+<pre><code>"ring_of_vitality": {
+  "name": "Кольцо жизни",
+  "type": "accessory",
+  "slot": "ring",
+  "icon": "💍",
+  "bonuses": { "maxHpBonus": 10, "con": 1 }
+}</code></pre>
+    </div>
+
+    <h3 id="consumables-target">25.2. Расходники: цель использования и бой</h3>
+    <p>У типа <code>consumable</code> в редакторе появляется блок <strong>Использование (use)</strong>:</p>
+    <table>
+      <tr><th>Поле</th><th>Значение</th></tr>
+      <tr><td><code>effect</code></td><td><code>heal</code>, <code>damage</code>, <code>focus_potion</code>, <code>rest_material</code>, <code>message</code></td></tr>
+      <tr><td><code>target</code></td><td><strong>self</strong> — себя; <strong>ally</strong> — союзник (пока как self); <strong>single_enemy</strong> — один враг в бою; <strong>all_enemies</strong> — все живые враги</td></tr>
+      <tr><td><code>formula</code> / <code>amount</code></td><td>Кубики урона/лечения, например <code>2d4+2</code></td></tr>
+      <tr><td><code>label</code></td><td>Текст кнопки («Выпить», «Бросить»…)</td></tr>
+    </table>
+    <p><strong>Вне боя:</strong> кнопка в инвентаре (🎒). Для <code>single_enemy</code> без боя предмет не сработает.</p>
+    <p><strong>В бою:</strong> под кнопками атаки — выпадающий список «🎒 Предмет» и <strong>Использовать</strong>; для цели «один враг» — фаза выбора цели (как у умения), кнопка «Отмена» / Escape.</p>
+    <div class="example">
+      <strong>Пример: бомба по одному врагу</strong>
+<pre><code>"throwable_bomb": {
+  "name": "Бомба",
+  "type": "consumable",
+  "icon": "💣",
+  "use": {
+    "effect": "damage",
+    "formula": "2d6",
+    "target": "single_enemy",
+    "label": "Бросить"
+  }
+}</code></pre>
+    </div>
+
+    <h3 id="cursed-items">25.3. Проклятые предметы</h3>
+    <p>Настраивается <strong>только в редакторе</strong> (секция «Проклятие» на карточке предмета), без ручного JSON.</p>
+    <div class="steps">
+      <ol>
+        <li>Включить чекбокс <strong>Проклятый предмет</strong>.</li>
+        <li><strong>Эффекты</strong> — выбрать из списка и «Добавить эффект»: <code>silence</code>, <code>weakness</code>, <code>poison_touch</code>, <code>bloodlust</code>, <code>haunted</code> (минимум один).</li>
+        <li><strong>Стоимость снятия (зм)</strong> — плата священнику.</li>
+        <li><strong>Сцена снятия</strong> — ID сцены с <code>special: temple_priest</code> (обязательно для сохранения).</li>
+      </ol>
+    </div>
+    <p>Поля в JSON (если смотрите вкладку JSON): <code>cursed</code>, <code>curseEffects[]</code>, <code>curseRemoveCost</code>, <code>curseRemoveScene</code>. Старые предметы без полей считаются обычными.</p>
+    <p><strong>В игре:</strong></p>
+    <ul>
+      <li>При надевании — сообщение в журнале, эффекты в панели умений (⚡). Например <code>silence</code> блокирует заклинания с <code>spellLevel ≥ 1</code>.</li>
+      <li>Снять через инвентарь нельзя — кнопка «⚠️ Проклято».</li>
+      <li>Священник (<code>temple_priest</code>) снимает проклятие с <strong>надетых</strong> вещей за золото; предмет попадает в инвентарь, но остаётся <code>cursed: true</code> — при повторном надевании эффекты вернутся.</li>
+      <li>Проклятое нельзя продать в лавке.</li>
+    </ul>
+    <div class="example">
+      <strong>Пример + тестовая сцена</strong>
+<pre><code>"silent_knight_armor": {
+  "name": "Латы безмолвного рыцаря",
+  "type": "armor",
+  "ac": 18,
+  "bonuses": { "maxHpBonus": 15, "atkBonus": 2 },
+  "cursed": true,
+  "curseEffects": ["silence"],
+  "curseRemoveCost": 50,
+  "curseRemoveScene": "temple_priest"
+}</code></pre>
+      <p>Сцена: <code>"special": "temple_priest"</code>, <code>exitScene</code> — куда уйти после храма. В демо есть <code>dev_cursed_armor</code> (выдаёт латы и золото).</p>
+    </div>
+
+    <h3 id="enhancement">25.4. Заточка (кузница)</h3>
+    <p>На карточке оружия/брони/щита — блок <strong>⚒️ Заточка</strong>:</p>
+    <table>
+      <tr><th>Поле</th><th>Смысл</th></tr>
+      <tr><td><code>enhancement</code></td><td>Стартовый уровень в шаблоне (обычно 0)</td></tr>
+      <tr><td><code>enhancementMax</code></td><td>Максимум (+N), по умолчанию 3</td></tr>
+      <tr><td><code>enhancementCost</code></td><td>Цены за уровни через запятую, напр. <code>100, 300, 900</code></td></tr>
+    </table>
+    <p>Фактический уровень заточки хранится в <strong>сохранении</strong> (<code>itemEnhancements</code>), не в JSON проекта — у каждого игрока свой прогресс.</p>
+    <p><strong>Сцена кузницы:</strong> <code>special: "blacksmith"</code>. Игрок видит надетое оружие/броню/щит и кнопки «Закалить за N зм». Усиливает atk/dmg/ac по правилам движка (+1 за уровень заточки).</p>
+    <p>Тест в демо: сцена <code>dev_blacksmith</code>, предмет <code>test_sword</code>.</p>
+
+    <h2 id="combat-systems">26. Бой: концентрация, ячейки, интерфейс</h2>
+    <h3>26.1 Ячейки заклинаний и ярость</h3>
+    <p>В сайдбаре под ресурсом класса:</p>
+    <ul>
+      <li><strong>Маг</strong> — точки по кругам (1–5), тратятся при <code>spellLevel</code> умения.</li>
+      <li><strong>Паладин</strong> — полукастер: ячейки с 2 уровня.</li>
+      <li><strong>Воин</strong> — «Ярость» (очки энергии), тратятся по полю <code>cost</code>.</li>
+    </ul>
+    <p>Восстанавливаются при отдыхе (полностью с припасами, частично без).</p>
+
+    <h3>26.2 Концентрация</h3>
+    <p>Умения с <code>concentration: true</code> (щит веры, удержание личности, зеркальный образ…):</p>
+    <ul>
+      <li>Только одно активное заклинание; новое снимает старое.</li>
+      <li>При получении урона — спасброс Телосложения (DC 10 или половина урона).</li>
+      <li>В бою: метка <code>[C] Название</code>; при провале — «Концентрация потеряна!»</li>
+      <li>Концентрация сбрасывается в конце боя.</li>
+    </ul>
+
+    <h3>26.3 Статус-эффекты</h3>
+    <p>Яд, кровотечение, оглушение, реген — вкладка данных <code>statusEffects</code> и эффект <code>apply_status</code> в умениях.</p>
+
+    <h3 id="combat-ui">26.4. Интерфейс боя (обновление)</h3>
+    <p>Центральная зона боя показывает:</p>
+    <ul>
+      <li>Полоски ОЗ врагов, кнопки <strong>Атаковать [имя]</strong>.</li>
+      <li>Умения класса (если хватает ресурса/ячейки и нет блокировки проклятием).</li>
+      <li>Строка <strong>🎒 Предмет</strong> — расходники с <code>use</code>, пригодные в бою (§25.2).</li>
+      <li>Для PF2e — индикатор оставшихся действий (◆).</li>
+      <li>Концентрация <code>[C]</code>, статусы на врагах.</li>
+    </ul>
+    <p>Умения с выбором цели (один враг) и расходники <code>single_enemy</code> переводят бой в фазу <strong>выбора цели</strong>; подсказка над выборами, «Отмена» сбрасывает фазу.</p>
+    <p>Удобный доступ к умениям вне длинного сайдбара — dock <strong>⚡</strong> (панель шире ~400px, описание переносится).</p>
+
+    <h3 id="combat-loot">26.5. Добыча после победы</h3>
+    <p>После уничтожения всех врагов движок бросает таблицы <code>loot</code> каждого участника боя, затем показывает модальное окно <strong>«Добыча»</strong>. Игрок нажимает <strong>Забрать</strong> — предметы и золото попадают в инвентарь/кошелёк, затем переход на <code>nextScene</code> сцены.</p>
+    <p>Награды сцены (<code>items</code>, <code>gold</code> на самой сцене) по-прежнему выдаются при входе на <code>nextScene</code>, не в окне добычи.</p>
+    <p>Настройка таблицы — §27.3.</p>
+
+    <h2 id="enemies">27. Враги, бой, масштабирование</h2>
+    <h3>27.1 Создание врага</h3>
+    <p>Вкладка <strong>Враги</strong> — слева список всех врагов, справа карточка выбранного: имя, ОЗ, КД, бонус атаки, кубик урона, ловкость (инициатива), опыт. Чекбокс <strong>Босс</strong> — усиленное масштабирование ОЗ. Внизу списка — <strong>+ Добавить врага</strong>.</p>
+
+    <h3>27.2 Масштабирование по уровню игрока</h3>
+    <p>Вкладка <strong>Прогрессия</strong> → блок <strong>Масштабирование врагов</strong> (<code>enemyScaling</code>):</p>
+    <ul>
+      <li><strong>ОЗ за уровень</strong> — множитель для обычных врагов.</li>
+      <li><strong>ОЗ за уровень (босс)</strong> — для врагов с <code>boss: true</code>.</li>
+      <li><strong>Бонус атаки за чётный уровень</strong> игрока.</li>
+      <li><strong>Таблица +КД</strong> — на 5, 10 уровне и т.д.</li>
+    </ul>
+    <p>На 1 уровне игрока враги без усиления; дальше параметры растут автоматически в бою.</p>
+
+    <h3 id="enemy-loot">27.3. Таблица добычи (loot)</h3>
+    <p>На карточке врага (вкладка <strong>Враги</strong>) — секция <strong>Добыча (loot)</strong>:</p>
+    <table>
+      <tr><th>Колонка</th><th>Описание</th></tr>
+      <tr><td>Предмет</td><td>ID из <code>items</code> или <code>gold</code> для монет</td></tr>
+      <tr><td>Шанс</td><td>0–1 (например <code>0.5</code> = 50%)</td></tr>
+      <tr><td>min / max</td><td>Сколько штук (или зм) при успешном броске</td></tr>
+    </table>
+    <p><strong>+ Добавить строку</strong> / ❌ удалить. Каждая строка бросается отдельно; одинаковые предметы суммируются в окне добычи.</p>
+    <div class="example">
+      <strong>Пример: крыса с хвостом и золотом</strong>
+<pre><code>"rat": {
+  "name": "Гигантская крыса",
+  "hp": 7,
+  "loot": [
+    { "item": "rat_tail", "chance": 0.6, "min": 1, "max": 1 },
+    { "item": "gold", "chance": 0.3, "min": 2, "max": 8 }
+  ]
+}</code></pre>
+      <p>Боевая сцена должна перечислить этого врага в <code>combat</code>. После победы — модальное окно (§26.5).</p>
+    </div>
+
+    <h2 id="npcs">28. Справочник NPC</h2>
+    <p>Вкладка <strong>NPC</strong> — слева список персонажей, справа карточка (имя, иконка, описание, локация, отношение). <strong>+ Добавить NPC</strong> внизу списка. Движок <strong>не подставляет</strong> NPC в сцены автоматически: реплики пишите в <strong>диалогах</strong> сцены. Справочник помогает держать единые имена и описания.</p>
+
+    <h2 id="special">29. Специальные сцены (special) и Plugin API</h2>
+    <p>Поле <code>special</code> у сцены запускает обработчик из реестра <code>SpecialSceneRegistry</code> (<code>js/special-scenes.js</code>) <strong>до</strong> обычного показа текста. Ядро <code>engine.js</code> менять не нужно: подключайте логику через JSON или отдельный скрипт.</p>
+
+    <h3>29.1 Встроенные ID (демо-модуль)</h3>
+    <ul>
+      <li><code>haggle</code> — торг с NPC.</li>
+      <li><code>shop_jack</code> — лавка Джека (фиксированные товары, репутация деревни).</li>
+      <li><code>shop</code> — <strong>универсальная лавка</strong> с <code>shopConfig</code> (§29.5).</li>
+      <li><code>blacksmith</code> — кузница, заточка надетого снаряжения (§25.4).</li>
+      <li><code>temple_priest</code> — снятие проклятия с надетых вещей (§25.3).</li>
+      <li><code>jack_buy_*</code> — покупка зелья, верёвки, припасов, свитка, зелья фокусировки.</li>
+      <li><code>forest_loot_check</code>, <code>barn_chest</code>, <code>attic</code> — обыск/сундуки.</li>
+      <li><code>gear_*</code>, <code>boss_*</code>, <code>cellar_*</code> — сюжет демо-модуля.</li>
+      <li><code>reset</code> — сброс игры.</li>
+    </ul>
+    <p>В редакторе все ID подсказываются в datalist поля <strong>special</strong>, включая записи из <code>plugins.specialScenes</code>.</p>
+
+    <h3>29.2 JSON-плагины (<code>plugins.specialScenes</code>)</h3>
+    <p>Без JavaScript: опишите мини-сцену в JSON. На сцене укажите <code>"special": "dice_game"</code> (тот же ID, что в плагине). После загрузки данных движок зарегистрирует обработчик автоматически.</p>
+    <div class="example">
+      <strong>Пример секции plugins в game_data.json</strong>
+<pre><code>"plugins": {
+  "specialScenes": {
+    "dice_game": {
+      "label": "Мини-игра в кости",
+      "text": "Трактирщик предлагает сыграть в кости. Ставка — 10 золотых.",
+      "dialogue": [
+        { "speaker": "Трактирщик", "text": "Ну что, рискнёшь?" }
+      ],
+      "choices": [
+        { "text": "🎲 Играть (10 зм)", "to": "dice_game_roll", "showIf": { "goldMin": 10 } },
+        { "text": "← Отказаться", "to": "tavern" }
+      ]
+    },
+    "alchemy_station": {
+      "label": "Алхимический станок",
+      "text": "Старый алхимический стол. Колбы и реагенты покрыты пылью.",
+      "flags": { "visited_alchemy": true },
+      "items": ["empty_vial"],
+      "choices": [
+        { "text": "🔍 Осмотреть", "to": "alchemy_examine" },
+        { "text": "← Уйти", "to": "laboratory" }
+      ]
+    }
+  }
+}</code></pre>
+    </div>
+    <p>Поддерживаемые поля конфига: <code>label</code>, <code>text</code>, <code>dialogue</code>, <code>choices</code>, <code>flags</code>, <code>items</code> (массив ID), <code>gold</code> (число). Встроенные ID из демо перезаписать JSON-ом нельзя (в консоли будет предупреждение).</p>
+
+    <h3>29.3 Внешний JS (без правки engine.js)</h3>
+    <p>Подключите свой файл <strong>после</strong> <code>special-scenes.js</code> в <code>index.html</code> / экспорте игры и зарегистрируйте обработчик:</p>
+<pre><code>SpecialSceneRegistry.register(
+  'my_event',
+  'Моё событие',
+  function (engine, sceneId, scene) {
+    engine.setText('Что-то произошло!');
+    engine.setChoices([{ text: 'Дальше', to: 'village' }]);
+    engine.saveGame();
+  }
+);</code></pre>
+    <p>Либо укажите имя существующего метода <code>GameEngine</code> строкой (как встроенные): <code>register('shop_jack', 'Лавка', 'handleShopJack')</code>.</p>
+    <div class="tip">Регистрация из JSON-плагинов повторяется при каждой загрузке <code>game_data</code> (в игре — в <code>applyGameData</code>). Свои <code>register()</code> вызывайте после загрузки данных или в том же скрипте до первого визита на special-сцену.</div>
+
+    <h3>29.4 Если обработчик не найден</h3>
+    <p>Движок покажет предупреждение с подсказкой, кнопку «показать как обычную сцену» (если в редакторе заполнены текст/выборы) и «Назад». Чёрного экрана не будет.</p>
+    <p><strong>Без special:</strong> оставьте поле пустым — сцена работает как обычная.</p>
+
+    <h3 id="shop-system">29.5. Универсальная лавка (special: shop)</h3>
+    <div class="steps">
+      <ol>
+        <li>Создайте сцену → поле <strong>special</strong> = <code>shop</code>.</li>
+        <li>Под формой появится блок <strong>🏪 Лавка (shopConfig)</strong>.</li>
+        <li>Отметьте чекбоксами товары в <strong>inventory</strong> (нужен <code>price</code> у предмета).</li>
+        <li>Настройте множители, репутацию, сцену выхода.</li>
+      </ol>
+    </div>
+    <table>
+      <tr><th>Поле shopConfig</th><th>Смысл</th></tr>
+      <tr><td><code>inventory</code></td><td>Массив ID предметов, которые продаёт торговец</td></tr>
+      <tr><td><code>sellMultiplier</code></td><td>Цена покупки игроком = <code>price × sellMultiplier ×</code> модификатор репутации</td></tr>
+      <tr><td><code>buyMultiplier</code></td><td>Цена скупки у торговца (доля от базовой цены)</td></tr>
+      <tr><td><code>repFlag</code></td><td>Ключ репутации, напр. <code>rep_village</code> (из <code>reputation</code>)</td></tr>
+      <tr><td><code>exitScene</code></td><td>Куда перейти по кнопке «Уйти»</td></tr>
+    </table>
+    <p>В игре: две колонки «Купить» / «Продать». Проклятые предметы продать нельзя. Тест: <code>dev_universal_shop</code>.</p>
+    <div class="example">
+      <strong>Фрагмент сцены</strong>
+<pre><code>"my_shop": {
+  "location": "Рынок",
+  "text": "Торговец ждёт покупателей.",
+  "special": "shop",
+  "shopConfig": {
+    "inventory": ["healing_potion", "rope"],
+    "sellMultiplier": 1,
+    "buyMultiplier": 0.5,
+    "repFlag": "rep_village",
+    "exitScene": "village"
+  }
+}</code></pre>
+    </div>
+
+    <h2 id="map">30. Карта путешествий</h2>
+    <div class="steps">
+      <ol>
+        <li><strong>Карта</strong> — слева список точек, справа карточка; <strong>+ Добавить точку</strong> → ID (<code>village_tavern</code>).</li>
+        <li>Название в меню, иконка, <strong>hub-сцена</strong> (куда попадёт игрок).</li>
+        <li>Опционально: <strong>Условие показа</strong> — стадия квеста или legacy-флаг.</li>
+        <li>На сцене: поле <strong>Точка на карте</strong> = этот ID или <strong>Создать из сцены</strong>.</li>
+        <li>В сюжете: выбор с <code>action: travel:ИД_точки</code>.</li>
+      </ol>
+    </div>
+    <div class="example">
+      <strong>Пример точки карты</strong>
+<pre><code>"village_tavern": {
+  "label": "Таверна",
+  "icon": "🍺",
+  "hubScene": "tavern",
+  "showIf": {
+    "questStage": { "questId": "find_albert", "stage": "1" }
+  }
+}</code></pre>
+    </div>
+
+    <h2 id="graph">31. Карта сюжета (граф)</h2>
+    <p>Вкладка <strong>Карта сюжета</strong> строит диаграмму переходов между сценами (Mermaid). Цвета подсказывают: бой, квестовые стадии на сцене, финалы, «мёртвые» концы, битые ссылки.</p>
+    <ul>
+      <li>Клик по узлу — открыть сцену в редакторе.</li>
+      <li>Используйте для поиска тупиков и сирот (сцены без входящих путей).</li>
+    </ul>
+
+    <h2 id="audio">32. Звуки</h2>
+    <div class="steps">
+      <ol>
+        <li>Положите MP3 в папку <code>audio/</code>.</li>
+        <li><strong>Звуки</strong> → <strong>+ Добавить</strong> → ID и путь <code>audio/file.mp3</code>.</li>
+        <li>Привяжите в умениях и оружии (звук удара).</li>
+      </ol>
+    </div>
+
+    <h2 id="theme">33. Тема интерфейса</h2>
+    <p>Вкладка <strong>Тема</strong>: пресеты (пергамент, тёмное фэнтези…), цвета, шрифты, строка Google Fonts. Сохраняется в <code>data.theme</code>, применяется к игре и редактору.</p>
+
+    <h2 id="play-ui">34. Интерфейс для игрока</h2>
+    <h3>34.1. Сайдбар (слева)</h3>
+    <p>Компактная колонка без длинной прокрутки:</p>
+    <ul>
+      <li><strong>Персонаж</strong> — имя, раса, класс, ОЗ, КД, атака, урон, золото, уровень/опыт.</li>
+      <li><strong>Ресурс</strong> — ярость или ячейки заклинаний (точки по кругам).</li>
+      <li><strong>Характеристики</strong>; блок <strong>Владения / Навыки</strong> — D&amp;D: список владений с бонусом мастерства; PF2e: навык, ранг (T/E/M/L) и итог (+N); блок <strong>Отношения</strong> (репутация).</li>
+      <li><strong>Текущие задания</strong> — журнал квестов.</li>
+      <li><strong>Отдых</strong> — припасы и кнопка «Отдохнуть».</li>
+    </ul>
+
+    <h3>34.2. Dock справа внизу</h3>
+    <p>Вертикальная полоска иконок; панели открываются <strong>поверх</strong> сюжета (контент не сдвигается). Одновременно открыта одна панель; повторный клик по иконке или ❌ — закрыть.</p>
+    <table>
+      <tr><th>Иконка</th><th>Панель</th></tr>
+      <tr><td>🎒</td><td>Инвентарь — экипировка, слоты, предметы, надеть/снять</td></tr>
+      <tr><td>⚡</td><td>Умения — список с «Использовать», активные проклятия ☠️</td></tr>
+      <tr><td>📍</td><td>Локация — название места, меню «Переместиться…»</td></tr>
+      <tr><td>🔊</td><td>Звук — громкость музыки/эффектов, вкл/выкл</td></tr>
+      <tr><td>📁</td><td>Меню — загрузка JSON, сохранение, сброс, выход к выбору игры</td></tr>
+    </table>
+    <p>На узком экране (&lt;768px) dock внизу горизонтально, панели выезжают снизу.</p>
+
+    <h3>34.3. Центр экрана</h3>
+    <p>Текст сцены, диалоги, зона боя (§26.4), кнопки выборов. После победы — окно <strong>Добыча</strong>, затем переход по сцене.</p>
+    <p><strong>Повышение уровня:</strong> модальное окно — ASI (4/8/10) и/или выбор одного умения; для PF2e на чётных уровнях — также <strong>увеличение навыка</strong> (§24).</p>
+    <p><strong>Журнал:</strong> броски, урон, квесты, репутация, концентрация.</p>
+
+    <h2 id="validate">35. Проверка проекта</h2>
+    <p>Кнопка <strong>Проверить проект</strong>:</p>
+    <ul>
+      <li>Сломанные ссылки на сцены (<code>to</code>, <code>nextScene</code>, skillCheck).</li>
+      <li>Сцены без выхода (нет choices, боя, nextScene).</li>
+      <li>Подсказки по условиям (неизвестный предмет в showIf).</li>
+      <li>Модальное окно — клик переходит к проблемной сцене.</li>
+    </ul>
+
+    <h2 id="export">36. Сохранение и экспорт</h2>
+    <table>
+      <tr><th>Действие</th><th>Результат</th></tr>
+      <tr><td>Сохранить JSON</td><td>Файл для репозитория / обмена с соавтором.</td></tr>
+      <tr><td>Экспорт игры</td><td>Папка только для игроков + README.</td></tr>
+      <tr><td>Загрузить JSON в игре</td><td>Быстрый тест без пересборки data.js.</td></tr>
+    </table>
+    <div class="warn">Сохранения привязаны к адресу сайта. При <code>file://</code> перенос папки может «потерять» старое сохранение.</div>
+
+    <h2 id="faq">37. Частые ошибки и FAQ</h2>
+    <table>
+      <tr><th>Проблема</th><th>Решение</th></tr>
+      <tr><td>Кнопка не появляется</td><td>Проверьте showIf в превью; выставьте флаг/стадию квеста/предмет.</td></tr>
+      <tr><td>Квест не в журнале</td><td>Добавьте questSet на выборе; проверьте hidden.</td></tr>
+      <tr><td>Нет рас в создателе</td><td>Добавьте <code>races</code> в JSON; для PF2e — <code>meta.system: "pf2e"</code> и расы с <code>system: "pf2e"</code>.</td></tr>
+      <tr><td>ASI не применяется</td><td>Выберите расу в создателе; старые сохранения без <code>raceKey</code> не пересчитываются автоматически.</td></tr>
+      <tr><td>PF2e: не даёт продолжить</td><td>Выберите наследие (heritage) у родословной.</td></tr>
+      <tr><td>После боя чёрный экран</td><td>Задайте nextScene на сцене с combat.</td></tr>
+      <tr><td>Игра старая после правок</td><td>Синхронизируйте data.js или загрузите JSON в игре.</td></tr>
+      <tr><td>Экспорт игры не работает</td><td>Chrome/Edge, http://localhost, разрешите запись в папку.</td></tr>
+      <tr><td>special — ошибка</td><td>Проверьте ID в datalist; добавьте <code>plugins.specialScenes</code>, <code>register()</code> или текст/выборы сцены.</td></tr>
+      <tr><td>Лавка shop пустая</td><td><code>special: shop</code>, заполните <code>shopConfig.inventory</code> и <code>price</code> у предметов.</td></tr>
+      <tr><td>Нет добычи после боя</td><td>Добавьте <code>loot</code> врагу; проверьте шанс &gt; 0; враг был в <code>combat</code> сцены.</td></tr>
+      <tr><td>Не снять проклятие</td><td>Только сцена <code>temple_priest</code>, предмет надет, хватает золота; в инвентаре снятие не работает.</td></tr>
+      <tr><td>Нет шага навыков в создателе</td><td>Добавьте <code>skillChoices</code> классу; для PF2e — <code>fixedSkills</code> и/или <code>skillChoices</code> с <code>rank</code>.</td></tr>
+      <tr><td>Проверка навыка «+0»</td><td>ID навыка должен совпадать с §39; для D&amp;D нужно владение или высокая характеристика; для PF2e без ранга — штраф untrained (−2).</td></tr>
+      <tr><td>Заточка недоступна</td><td>Предмет экипирован, <code>special: blacksmith</code>, не достигнут <code>enhancementMax</code>.</td></tr>
+    </table>
+
+    <h2 id="checklist">38. Чеклист перед релизом</h2>
+    <ol>
+      <li>Есть цепочка от выбора класса до первой игровой сцены.</li>
+      <li>У каждого класса есть <code>select_class:ИД</code>; расы и классы соответствуют <code>meta.system</code>.</li>
+      <li>У каждого класса настроены навыки: D&amp;D — <code>skillChoices</code>; PF2e — <code>fixedSkills</code> + пул.</li>
+      <li>skillCheck в сценах используют ID из §39 для активной системы правил.</li>
+      <li>В <code>races</code> есть хотя бы одна раса; у PF2e — наследия в каждой родословной.</li>
+      <li>Все <code>to</code>, <code>successNext</code>, <code>failNext</code>, <code>nextScene</code> существуют.</li>
+      <li>Бои имеют nextScene.</li>
+      <li>Квесты продвигаются через questSet; финальная стадия с finish.</li>
+      <li>Репутация: <code>startingFlags</code>, блок <code>reputation</code>, ветки по min/max.</li>
+      <li>Умения в пуле совпадают с ID в <code>progression.levels.*.choices</code>; расходники с <code>useAbility</code> есть в пуле.</li>
+      <li>Условия на ключевых ветках проверены в превью.</li>
+      <li>Кастомные <code>special</code>: зарегистрированы в JSON (<code>plugins.specialScenes</code>) или через <code>SpecialSceneRegistry.register()</code>.</li>
+      <li>Лавки <code>shop</code>, кузница <code>blacksmith</code>, храм <code>temple_priest</code> — сцены и конфиги проверены.</li>
+      <li>У ключевых врагов заполнен <code>loot</code>; победа показывает окно добычи.</li>
+      <li>Проклятые предметы настроены в редакторе (эффект + сцена снятия).</li>
+      <li>Проверить проект — без критических ошибок.</li>
+      <li>Полное прохождение в index.html с нуля.</li>
+      <li>Экспорт игры протестирован в чистой папке.</li>
+    </ol>
+
+    <h2 id="glossary">39. Справочник навыков (латиница для skillCheck)</h2>
+    <p>В редакторе (§14.2) навык выбирается из выпадающего списка. В JSON поле <code>skillCheck.skill</code> — <strong>латиница</strong>, как в таблицах ниже. Список зависит от <code>meta.system</code>: D&amp;D 5e и PF2e используют разные наборы ID.</p>
+
+    <h3 id="glossary-dnd">39.1 Навыки D&amp;D 5e</h3>
+    <table>
+      <tr><th>ID (skillCheck)</th><th>Название</th><th>Характеристика</th></tr>
+      <tr><td><code>acrobatics</code></td><td>Акробатика</td><td>DEX</td></tr>
+      <tr><td><code>animal_handling</code></td><td>Уход за животными</td><td>WIS</td></tr>
+      <tr><td><code>arcana</code></td><td>Магия (тайные знания)</td><td>INT</td></tr>
+      <tr><td><code>athletics</code></td><td>Атлетика</td><td>STR</td></tr>
+      <tr><td><code>deception</code></td><td>Обман</td><td>CHA</td></tr>
+      <tr><td><code>history</code></td><td>История</td><td>INT</td></tr>
+      <tr><td><code>insight</code></td><td>Проницательность</td><td>WIS</td></tr>
+      <tr><td><code>intimidation</code></td><td>Устрашение</td><td>CHA</td></tr>
+      <tr><td><code>investigation</code></td><td>Расследование</td><td>INT</td></tr>
+      <tr><td><code>medicine</code></td><td>Медицина</td><td>WIS</td></tr>
+      <tr><td><code>nature</code></td><td>Природа</td><td>INT</td></tr>
+      <tr><td><code>perception</code></td><td>Восприятие</td><td>WIS</td></tr>
+      <tr><td><code>performance</code></td><td>Выступление</td><td>CHA</td></tr>
+      <tr><td><code>persuasion</code></td><td>Убеждение</td><td>CHA</td></tr>
+      <tr><td><code>religion</code></td><td>Религия</td><td>INT</td></tr>
+      <tr><td><code>sleight_of_hand</code></td><td>Ловкость рук</td><td>DEX</td></tr>
+      <tr><td><code>stealth</code></td><td>Скрытность</td><td>DEX</td></tr>
+      <tr><td><code>survival</code></td><td>Выживание</td><td>WIS</td></tr>
+    </table>
+    <p class="hint">Дополнительно в проверках можно указать «чистые» характеристики: <code>strength</code>, <code>dexterity</code>, <code>constitution</code>, <code>intelligence</code>, <code>wisdom</code>, <code>charisma</code> — бросок без владения навыком. Устаревший alias <code>magic</code> → INT.</p>
+
+    <h3 id="glossary-pf2e">39.2 Навыки Pathfinder 2e</h3>
+    <table>
+      <tr><th>ID (skillCheck)</th><th>Название</th><th>Характеристика</th></tr>
+      <tr><td><code>acrobatics</code></td><td>Акробатика</td><td>DEX</td></tr>
+      <tr><td><code>arcana</code></td><td>Магия (тайные знания)</td><td>INT</td></tr>
+      <tr><td><code>athletics</code></td><td>Атлетика</td><td>STR</td></tr>
+      <tr><td><code>crafting</code></td><td>Ремесло</td><td>INT</td></tr>
+      <tr><td><code>deception</code></td><td>Обман</td><td>CHA</td></tr>
+      <tr><td><code>diplomacy</code></td><td>Дипломатия</td><td>CHA</td></tr>
+      <tr><td><code>intimidation</code></td><td>Запугивание</td><td>CHA</td></tr>
+      <tr><td><code>medicine</code></td><td>Медицина</td><td>WIS</td></tr>
+      <tr><td><code>nature</code></td><td>Природа</td><td>WIS</td></tr>
+      <tr><td><code>occultism</code></td><td>Оккультизм</td><td>INT</td></tr>
+      <tr><td><code>performance</code></td><td>Выступление</td><td>CHA</td></tr>
+      <tr><td><code>perception</code></td><td>Восприятие</td><td>WIS</td></tr>
+      <tr><td><code>religion</code></td><td>Религия</td><td>WIS</td></tr>
+      <tr><td><code>society</code></td><td>Общество</td><td>INT</td></tr>
+      <tr><td><code>stealth</code></td><td>Скрытность</td><td>DEX</td></tr>
+      <tr><td><code>survival</code></td><td>Выживание</td><td>WIS</td></tr>
+      <tr><td><code>thievery</code></td><td>Воровство</td><td>DEX</td></tr>
+    </table>
+    <p class="hint">В PF2e нет отдельного навыка «Убеждение» — используйте <code>diplomacy</code>. Alias <code>persuasion</code> в движке не мапится на PF2e; задайте <code>diplomacy</code> явно.</p>
+
+    <h3 id="glossary-formulas">39.3 Формулы броска</h3>
+    <table>
+      <tr><th>Система</th><th>Бонус к 1d20</th><th>Без подготовки</th></tr>
+      <tr><td>D&amp;D 5e</td><td>мод. характеристики + бонус мастерства (если владение)</td><td>только мод. характеристики</td></tr>
+      <tr><td>PF2e</td><td>уровень + мод. характеристики + бонус ранга</td><td>уровень + мод. хар. − 2 (untrained)</td></tr>
+    </table>
+    <p>Бонус мастерства D&amp;D: +2 на 1–4 ур., +3 на 5–8, +4 на 9–12 (в демо макс. 10 → до +4). Бонусы ранга PF2e: trained +2, expert +4, master +6, legendary +8 (к мод. характеристики и уровню).</p>
+
+    <p class="part-title">Часть V. Расширение движка</p>
+
+    <h2 id="plugin-api">40. Plugin API для special-сцен</h2>
+
+    <p>Движок поддерживает расширение функциональности без правки ядра (<code>engine.js</code>). Вы можете добавлять собственные механики (мини-игры, алхимию, уникальные магазины) двумя способами: через JSON или через внешний JavaScript.</p>
+
+    <h3>40.1. JSON-плагины (без кода)</h3>
+    <p>Для простых сцен с текстом, выборами и флагами используйте секцию <code>plugins.specialScenes</code> в <code>game_data.json</code>:</p>
+<pre><code>{
+  "plugins": {
+    "specialScenes": {
+      "dice_game": {
+        "label": "Мини-игра в кости",
+        "text": "Трактирщик предлагает сыграть. Ставка — 10 золотых.",
+        "dialogue": [
+          { "speaker": "Трактирщик", "text": "Ну что, рискнёшь?" }
+        ],
+        "choices": [
+          { "text": "🎲 Играть (10 зм)", "to": "dice_roll", "showIf": { "goldMin": 10 } },
+          { "text": "← Отказаться", "to": "tavern" }
+        ]
+      }
+    }
+  }
+}</code></pre>
+    <p class="hint">JSON-плагины автоматически регистрируются при загрузке данных. ID плагина должен совпадать с полем <code>special</code> у сцены.</p>
+
+    <h3>40.2. JS-плагины (расширенная логика)</h3>
+    <p>Для сложной логики (расчёты, циклы, обращение к состоянию игры) создайте отдельный JS-файл и подключите его после <code>special-scenes.js</code>:</p>
+<pre><code>&lt;script src="js/special-scenes.js"&gt;&lt;/script&gt;
+&lt;script src="plugins/my-custom-plugin.js"&gt;&lt;/script&gt;</code></pre>
+
+    <p>Регистрация обработчика:</p>
+<pre><code>SpecialSceneRegistry.register('alchemy_station', 'Алхимический станок', function(engine, sceneId, scene) {
+  // Доступ к состоянию игры
+  const gold = engine.state.gold;
+  const hasHerb = engine.state.inventory.includes('herb');
+
+  // Установка текста и диалогов
+  engine.setText('Старый стол с колбами. ' + (hasHerb ? 'У вас есть ингредиенты.' : 'Нужны травы.'));
+  engine.setDialogue([
+    { speaker: 'Алхимик', text: 'Смешать зелье лечения? 5 золотых.' }
+  ]);
+
+  // Формирование выборов динамически
+  const choices = [];
+  if (hasHerb && gold >= 5) {
+    choices.push({
+      text: '🧪 Смешать зелье (5 зм)',
+      action: 'alchemy_craft'  // Можно использовать action для вызова других методов
+    });
+  }
+  choices.push({ text: '← Уйти', to: 'village' });
+  engine.setChoices(choices);
+});</code></pre>
+
+    <h3>40.3. Доступные методы engine.* внутри хендлера</h3>
+    <table class="guide-api-table">
+      <tr><th>Метод</th><th>Описание</th></tr>
+      <tr><td><code>engine.setText(html)</code></td><td>Установить основной текст сцены</td></tr>
+      <tr><td><code>engine.setDialogue(lines)</code></td><td>Массив <code>{speaker, text}</code></td></tr>
+      <tr><td><code>engine.setChoices(choices)</code></td><td>Массив объектов выборов</td></tr>
+      <tr><td><code>engine.clearDialogue()</code></td><td>Очистить блок диалогов</td></tr>
+      <tr><td><code>engine.state</code></td><td>Доступ к gold, inventory, flags, hp, level, className</td></tr>
+      <tr><td><code>engine.addItem(id)</code></td><td>Добавить предмет в инвентарь</td></tr>
+      <tr><td><code>engine.removeItem(id)</code></td><td>Удалить предмет из инвентаря</td></tr>
+      <tr><td><code>engine.applyFlags(obj)</code></td><td>Установить флаги <code>{flag: value}</code></td></tr>
+      <tr><td><code>engine.saveGame()</code></td><td>Сохранить прогресс после изменений</td></tr>
+      <tr><td><code>engine.log(msg, cls)</code></td><td>Запись в журнал (log-dice, log-heal, log-damage)</td></tr>
+      <tr><td><code>engine.showScene(id)</code></td><td>Переход на другую сцену</td></tr>
+    </table>
+
+    <h3>40.4. Готовый шаблон</h3>
+    <p>Файл <code>templates/custom-special-plugin.js</code> содержит рабочие примеры: мини-игра в кости, алхимическая станция, динамический торговец. Скопируйте его в папку вашего проекта и адаптируйте под свои задачи.</p>
+
+    <h2 id="custom-systems">41. Создание собственных систем правил</h2>
+
+    <p>Движок поддерживает несколько RPG-систем через абстракцию <code>RuleSystem</code>. Вы можете создать собственную систему (например, упрощённую d6, FATE, GURPS) без правки ядра.</p>
+
+    <h3>41.1. Наследование от RuleSystem</h3>
+    <p>Создайте файл <code>js/systems/my-system.js</code>:</p>
+<pre><code>class MyD6System extends RuleSystem {
+  get id() { return 'my_d6'; }
+  get label() { return 'Моя d6-система'; }
+  get description() { return 'Упрощённая система на кубиках d6.'; }
+
+  // Переопределяем модификатор: d6 не использует (score-10)/2
+  getModifier(score) {
+    return Math.floor((Number(score) - 3) / 3); // Пример: 3-5=0, 6-8=1, 9+=2
+  }
+
+  // Point Buy или другая генерация характеристик
+  getPointBuyConfig() {
+    return { total: 12, min: 1, max: 6 }; // Распредели 12 очков, значения 1-6
+  }
+
+  // Расчёт ОЗ
+  calculateHP(classKey, level, stats, data, conMod) {
+    const base = data?.classes?.[classKey]?.hp || 6;
+    return base + (conMod || 0) * Math.max(1, level);
+  }
+
+  // Расчёт защиты
+  calculateAC(stats, equipment, data, engine) {
+    const dexMod = this.getModifier(stats?.dex ?? 3);
+    return 3 + dexMod; // Базовая защита 3 + мод. ЛОВ
+  }
+
+  // Бросок атаки
+  rollAttack(attacker, target, engine) {
+    const roll = engine.d(6);
+    const total = roll + (attacker.atkBonus || 0);
+    const ac = target?.ac || 3;
+    const hit = total >= ac;
+    const crit = roll === 6;
+    let dmg = 0;
+    if (hit) {
+      dmg = engine.parseRoll(attacker.dmgRoll || '1d6') + (attacker.dmgBonus || 0);
+      if (crit) dmg *= 2;
+    }
+    return { roll, total, hit, crit, dmg };
+  }
+}
+
+const MySystem = new MyD6System();
+if (typeof window !== 'undefined') window.MyD6System = MySystem;</code></pre>
+
+    <h3>41.2. Регистрация системы</h3>
+    <p>Подключите файл после <code>registry.js</code> и зарегистрируйте:</p>
+<pre><code>&lt;script src="js/systems/base-system.js"&gt;&lt;/script&gt;
+&lt;script src="js/systems/dnd5e.js"&gt;&lt;/script&gt;
+&lt;script src="js/systems/pathfinder2e.js"&gt;&lt;/script&gt;
+&lt;script src="js/systems/my-system.js"&gt;&lt;/script&gt;
+&lt;script src="js/systems/registry.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  if (typeof SystemRegistry !== 'undefined' &amp;&amp; typeof MyD6System !== 'undefined') {
+    SystemRegistry.register(MyD6System);
+  }
+&lt;/script&gt;</code></pre>
+
+    <p>После регистрации система появится в выпадающем списке «Система правил» при создании нового проекта в редакторе.</p>
+
+    <h3>41.3. Методы для переопределения</h3>
+    <table class="guide-api-table">
+      <tr><th>Метод</th><th>Назначение</th></tr>
+      <tr><td><code>get id()</code></td><td>Уникальный ID системы (латиница)</td></tr>
+      <tr><td><code>get label()</code></td><td>Название для UI</td></tr>
+      <tr><td><code>getModifier(score)</code></td><td>Расчёт модификатора характеристики</td></tr>
+      <tr><td><code>getPointBuyConfig()</code></td><td>Настройки генерации персонажа</td></tr>
+      <tr><td><code>calculateHP(...)</code></td><td>Расчёт очков здоровья</td></tr>
+      <tr><td><code>calculateAC(...)</code></td><td>Расчёт класса защиты</td></tr>
+      <tr><td><code>rollAttack(...)</code></td><td>Механика броска атаки</td></tr>
+      <tr><td><code>getSkillBonus(...)</code></td><td>Расчёт бонуса навыка</td></tr>
+      <tr><td><code>scaleEnemy(...)</code></td><td>Масштабирование врагов под уровень</td></tr>
+      <tr><td><code>getResourceMode(...)</code></td><td>Тип ресурса класса (energy/spellSlots/focus)</td></tr>
+    </table>
+
+    <p class="hint">Базовый класс <code>RuleSystem</code> содержит дефолтные реализации всех методов. Переопределяйте только те, которые отличаются от стандартной d20-логики.</p>
+
+    <hr>
+    <p style="margin-top:32px; color: var(--muted); font-size: 0.94rem;">
+      Руководство: 41 раздел (§1–§41). Подразделы §19.4–19.5, §21.5, §25.1–25.4, §26.4–26.5, §27.3, §29.5, §39.1–39.3 — внутри глав 19–29 и 39. Обновлено: навыки D&amp;D/PF2e (§19, §21, §39), dock UI (§34.2), добыча (§27.3, §26.5), лавка <code>shop</code> (§29.5).
+      При расхождении с интерфейсом сверяйтесь с подсказками в формах, <code>data/game_data.json</code> и вкладкой JSON.
+    </p>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+    anchor.addEventListener('click', function (e) {
+      var id = this.getAttribute('href');
+      if (!id || id.length < 2) return;
+      var target = document.querySelector(id);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+</body>
+</html>
