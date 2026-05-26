@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Редактор сцен — Мельница на Тихой реке</title>
+<script src="js/mobile-layout.js"></script>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/editor.css">
+<link rel="stylesheet" href="css/nl-condition-builder.css">
+<script src="js/systems/base-system.js"></script>
+<script src="js/systems/generic.js"></script>
+<script src="js/systems/dnd5e.js"></script>
+<script src="js/systems/pathfinder2e.js"></script>
+<script src="js/systems/registry.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+.header {
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header h1 { font-size: 24px; font-weight: 600; }
+.header-buttons { display: flex; gap: 10px; }
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--success); color: white; }
+.btn-primary:hover { background: var(--success-dark); }
+.btn-secondary { background: var(--paper-dark); color: var(--ink); border: 2px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { filter: brightness(0.85); }
+.btn-info { background: var(--info); color: var(--on-accent); }
+.btn-info:hover { filter: brightness(0.9); }
+
+.container {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+.sidebar {
+  width: 280px;
+  background: var(--card-bg);
+  border-right: 2px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+}
+.sidebar h3 {
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.scene-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.scene-item {
+  position: relative;
+  padding: 10px 12px 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.scene-item:hover { background: var(--paper); border-color: var(--border); }
+.scene-item.active { background: var(--paper-dark); border-color: var(--accent); }
+.scene-item .scene-id { font-size: 12px; color: var(--ink-light); font-family: monospace; }
+.scene-item .scene-loc { font-size: 13px; color: var(--accent); font-weight: 500; }
+.scene-item .scene-preview { font-size: 12px; color: var(--ink-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+.main-area {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-light);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.form-group textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+.form-group .hint {
+  font-size: 12px;
+  color: var(--ink-light);
+  margin-top: 4px;
+}
+
+.choices-section {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.choices-section h4 {
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.choice-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1.4fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  background: var(--paper);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.choice-row input,
+.choice-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+.choice-row .choice-icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.icon-picker-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+  background: var(--card-bg);
+}
+.choice-row .btn-remove {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dialogue-section {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.dialogue-row {
+  display: grid;
+  grid-template-columns: 150px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  background: var(--paper);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.dialogue-row input,
+.dialogue-row textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+.dialogue-row textarea { min-height: 60px; resize: vertical; }
+
+.combat-section {
+  background: #ffebee;
+  border: 2px solid var(--danger);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.combat-section h4 { color: var(--danger); margin-bottom: 12px; }
+.enemy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.enemy-tag {
+  background: var(--card-bg);
+  border: 1px solid var(--danger);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.enemy-tag .remove { cursor: pointer; color: var(--danger); font-weight: bold; }
+
+.states-section {
+  background: #f3e5f5;
+  border: 2px solid #7b1fa2;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.states-section h4 { color: #7b1fa2; margin-bottom: 12px; }
+.state-card {
+  background: var(--card-bg);
+  border: 2px solid #ce93d8;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.state-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.state-card-actions { display: flex; gap: 6px; align-items: center; }
+.choice-row-mini {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.flags-section {
+  background: #e3f2fd;
+  border: 2px solid var(--info);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.flags-section h4 { color: var(--info); margin-bottom: 12px; }
+.flag-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  background: var(--card-bg);
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.choice-card {
+  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.choice-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cond-block {
+  background: #f5f0e6;
+  border: 1px dashed var(--border-dark);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 10px 0;
+}
+.cond-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.cond-rule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px;
+  background: var(--card-bg);
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+.skillcheck-block {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 10px 0;
+}
+.preview-panel {
+  background: #e8f5e9;
+  border: 2px solid #4caf50;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.preview-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.preview-chips .chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  cursor: pointer;
+}
+.preview-chips .chip.on { background: #c8e6c9; border-color: #4caf50; }
+.preview-results { margin-top: 12px; }
+.preview-choice {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.preview-visible { background: #c8e6c9; }
+.preview-visible.used { opacity: 0.7; }
+.preview-hidden { background: #ffcdd2; color: #666; }
+
+.json-preview {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-weight: 500;
+  color: var(--ink-light);
+}
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.tab:hover { color: var(--accent); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.rep-manager-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.rep-faction-grid { display: flex; flex-direction: column; gap: 10px; }
+.rep-faction-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 14px; }
+.rep-faction-card-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.beast-manager-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.beast-card-grid { display: flex; flex-direction: column; gap: 10px; }
+.beast-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 14px; }
+.beast-card-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.beast-edit-form .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.beast-abilities-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.beast-ability-check { font-size: 14px; display: block; }
+.rep-level-card { border-left: 4px solid var(--accent); padding: 10px 12px; margin: 8px 0; background: var(--paper); border-radius: 4px; }
+.rep-level-card-head { font-weight: 600; margin-bottom: 6px; }
+.rep-behavior-tier { border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+.rep-effect-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+.quest-editor {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.quest-editor h4 { color: var(--accent); margin-bottom: 12px; }
+.stage-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr auto;
+  gap: 8px;
+  padding: 8px;
+  background: var(--paper);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.stage-row input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; }
+
+.npc-editor {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.npc-editor h4 { color: var(--accent); margin-bottom: 12px; }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-light);
+}
+.empty-state h2 { margin-bottom: 12px; color: var(--ink); }
+
+.validation-errors {
+  background: #ffebee;
+  border: 2px solid var(--danger);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: var(--danger);
+}
+.validation-errors h4 { margin-bottom: 8px; }
+.validation-errors ul { margin-left: 20px; }
+
+.success-message {
+  background: #e8f5e9;
+  border: 2px solid var(--success);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: var(--success);
+}
+
+.start-screen {
+  text-align: center;
+  padding: 60px 20px;
+}
+.start-screen h2 {
+  font-size: 28px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.start-screen p {
+  font-size: 16px;
+  color: var(--ink-light);
+  margin-bottom: 32px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+.start-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.start-buttons .btn {
+  padding: 16px 24px;
+  font-size: 16px;
+  width: 100%;
+}
+.project-info {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.project-info h4 { color: var(--accent); margin-bottom: 12px; }
+
+.class-editor-wrap { display: flex; gap: 16px; align-items: flex-start; }
+.class-editor-sidebar {
+  width: 200px; flex-shrink: 0;
+  background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 8px;
+}
+.class-editor-sidebar button.class-pick {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 12px; margin-bottom: 4px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--paper); cursor: pointer; font-size: 14px;
+}
+.class-editor-sidebar button.class-pick.active {
+  border-color: var(--accent); background: var(--paper-dark); font-weight: 600;
+}
+.class-editor-detail { flex: 1; min-width: 0; }
+.item-pick-curse { margin-right: 4px; }
+.item-curse-block {
+  margin-top: 14px; padding: 12px; border: 2px solid #6b3a1f; border-radius: 8px;
+  background: rgba(80, 20, 20, 0.06);
+}
+.item-curse-title { margin: 0 0 10px; color: #6b3a1f; font-size: 15px; }
+.item-curse-fields {
+  overflow: hidden; max-height: 0; opacity: 0;
+  transition: max-height 150ms ease, opacity 150ms ease;
+}
+.item-curse-fields--open { max-height: 520px; opacity: 1; }
+.curse-effects-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.curse-effects-toolbar select { flex: 1; min-width: 140px; }
+.curse-effects-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.curse-effect-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; background: var(--paper-dark); border: 1px solid var(--border); border-radius: 16px;
+}
+.curse-pill-remove { border: none; background: transparent; cursor: pointer; padding: 0 2px; }
+.field-error { border-color: #c62828 !important; }
+.field-error-msg { color: #c62828; font-size: 12px; margin-top: 4px; }
+.curse-effects-group.field-error .curse-effects-pills { outline: 1px solid #c62828; border-radius: 4px; padding: 4px; }
+.class-section {
+  background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px;
+  padding: 16px; margin-bottom: 14px;
+}
+.class-section h4 { color: var(--accent); margin-bottom: 12px; font-size: 15px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.ability-edit-card { background: var(--paper); padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px dashed var(--border-dark); }
+.item-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.item-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; background: var(--paper); border: 1px solid var(--border); border-radius: 16px; font-size: 13px;
+}
+.item-chip button { border: none; background: none; color: var(--danger); cursor: pointer; font-weight: bold; }
+.progression-level-row {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--paper);
+}
+.progression-level-row .row-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.progression-choice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin: 4px 4px 0 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--card-bg);
+  font-size: 13px;
+}
+.progression-choice-chip button {
+  border: none;
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+.progression-choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.icon-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  margin-left: 8px;
+  font-size: 20px;
+}
+.icon-preview img {
+  max-width: 24px;
+  max-height: 24px;
+}
+.icon-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.icon-suggestion {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  cursor: pointer;
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.icon-suggestion:hover {
+  border-color: var(--accent);
+  background: var(--paper-dark);
+}
+.icon-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.icon-picker-row > input[type="text"] {
+  flex: 1;
+  min-width: 140px;
+  width: auto !important;
+}
+.icon-picker-row .icon-emoji-select {
+  width: auto !important;
+  min-width: 11rem;
+  max-width: 100%;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+.icon-hint {
+  font-size: 12px;
+  color: var(--ink-light);
+  margin-top: 6px;
+}
+
+.theme-editor-panel h2 { color: var(--accent); margin-bottom: 12px; }
+.theme-preset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 10px;
+}
+.theme-preset-card {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, transform 0.12s;
+}
+.theme-preset-card:hover {
+  border-color: var(--preset-accent, var(--accent));
+  transform: translateY(-2px);
+}
+.theme-preset-card.selected {
+  border-color: var(--preset-accent, var(--accent));
+  box-shadow: 0 0 0 2px var(--border-dark);
+}
+.theme-preset-icon { font-size: 22px; line-height: 1; }
+.theme-preset-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.theme-preset-check {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  line-height: 1;
+}
+.theme-preset-user-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 8px;
+  font-weight: 700;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+.theme-preset-delete {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.theme-preset-delete:hover { background: var(--danger); }
+.theme-selected-label {
+  margin: 8px 0 4px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.theme-custom-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px dashed var(--border);
+}
+.theme-custom-section h3 {
+  font-size: 14px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+.theme-save-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+.theme-save-preset-row input {
+  flex: 1 1 180px;
+  min-width: 140px;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--ink);
+}
+.theme-fonts-details {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.theme-fonts-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-light);
+}
+.theme-colors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.theme-color-row {
+  display: grid;
+  grid-template-columns: 1fr auto 72px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--paper);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.theme-color-row label { font-size: 13px; color: var(--ink-light); font-weight: 600; }
+.theme-color-row input[type="color"] {
+  width: 44px;
+  height: 34px;
+  padding: 2px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--card-bg);
+}
+.theme-color-hex {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.sub-label { font-size: 12px; color: var(--ink-faint); display: block; margin-bottom: 4px; }
+.theme-preview { display: flex; gap: 12px; margin: 16px 0; padding: 12px; border: 2px solid var(--border); border-radius: 8px; background: var(--page-bg); min-height: 140px; }
+
+.balance-editor-panel h2 { color: var(--accent); margin-bottom: 12px; }
+.balance-section-title {
+  font-size: 14px;
+  color: var(--accent);
+  margin: 20px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.balance-table-wrap { overflow-x: auto; margin: 12px 0; }
+.balance-scaling-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+}
+.balance-scaling-table th,
+.balance-scaling-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.balance-scaling-table th { background: var(--paper-dark); color: var(--ink-light); font-size: 13px; }
+.balance-scaling-table input { width: 72px; padding: 6px; text-align: center; }
+.balance-actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.balance-report-output { margin-top: 16px; }
+.balance-report-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+}
+.balance-encounter { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.balance-encounter h4 { color: var(--accent); margin-bottom: 8px; }
+.balance-enemy-block {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 10px 0;
+}
+.balance-level-row {
+  margin: 10px 0;
+  padding: 8px;
+  border-left: 3px solid var(--border);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.balance-rating { font-weight: 700; margin-top: 6px; }
+.balance-rating--normal { color: #2e7d32; }
+.balance-rating--hard { color: #f57c00; }
+.balance-rating--deadly { color: #c62828; }
+.balance-rating--easy { color: var(--ink-light); }
+.balance-recommendations { margin-top: 16px; }
+.balance-recommendations ul { margin: 8px 0 0 20px; }
+.hint-box { padding: 14px; border-radius: 8px; }
+.tp-sidebar { width: 100px; background: var(--paper); border: 2px solid var(--border-dark); padding: 10px; font-size: 13px; color: var(--ink-light); }
+.tp-main { flex: 1; background: var(--card-bg); border: 2px solid var(--border); padding: 12px; border-radius: 4px; }
+.tp-title { font-family: var(--font-heading); color: var(--accent); font-size: 22px; margin-bottom: 8px; }
+.tp-text { color: var(--ink); font-family: var(--font-body); margin-bottom: 10px; }
+.tp-accent { color: var(--accent); }
+.tp-choice { display: block; width: 100%; text-align: left; margin-bottom: 6px; padding: 8px; background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; color: var(--ink); font-family: var(--font-body); cursor: default; }
+.tp-btn { padding: 8px 16px; background: var(--accent); color: var(--on-accent); border: none; border-radius: 6px; font-family: var(--font-heading); cursor: default; }
+
+
+.worldmap-editor-panel h2 { color: var(--accent); margin-bottom: 12px; }
+.worldmap-list { display: flex; flex-direction: column; gap: 16px; }
+.worldmap-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.worldmap-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.worldmap-card-icon { font-size: 28px; }
+.scene-map-badge {
+  display: block;
+  font-size: 11px;
+  color: var(--info);
+  margin-top: 2px;
+}
+.map-location-block { margin-top: 4px; }
+
+.story-graph-panel { padding: 0 4px 20px; }
+.story-graph-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.story-graph-toolbar h2 { color: var(--accent); margin-bottom: 6px; }
+.story-graph-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.story-graph-search label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.story-graph-search-input {
+  flex: 1;
+  min-width: 180px;
+  max-width: 360px;
+  padding: 8px 10px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+.story-graph-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.story-graph-search-input.story-graph-search-invalid {
+  border-color: #c62828;
+  background: #fff5f5;
+}
+.story-graph-mermaid {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow: auto;
+  min-height: 320px;
+}
+.story-graph-mermaid svg {
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+.story-graph-mermaid g.node.graph-node-interactive {
+  cursor: pointer;
+}
+/* Бой: class combat */
+.story-graph-mermaid g.node.graph-node-combat > rect,
+.story-graph-mermaid g.node.graph-node-combat > polygon,
+.story-graph-mermaid g.node.graph-node-combat > path {
+  fill: #f96 !important;
+  stroke: #333 !important;
+  stroke-width: 2px !important;
+}
+/* Квест: class quest */
+.story-graph-mermaid g.node.graph-node-quest > rect,
+.story-graph-mermaid g.node.graph-node-quest > polygon,
+.story-graph-mermaid g.node.graph-node-quest > path {
+  fill: #69f !important;
+  stroke: #05a !important;
+}
+/* Финал: class final */
+.story-graph-mermaid g.node.graph-node-final > rect,
+.story-graph-mermaid g.node.graph-node-final > polygon,
+.story-graph-mermaid g.node.graph-node-final > path {
+  fill: #fd2 !important;
+  stroke: #a80 !important;
+  stroke-width: 2px !important;
+}
+/* Сироты: недостижимы из start */
+.story-graph-mermaid g.node.graph-node-orphan > rect,
+.story-graph-mermaid g.node.graph-node-orphan > polygon,
+.story-graph-mermaid g.node.graph-node-orphan > path {
+  fill: #e1bee7 !important;
+  stroke: #7b1fa2 !important;
+  stroke-width: 3px !important;
+}
+.story-graph-mermaid g.node.graph-node-orphan foreignObject > div {
+  background: #e1bee7 !important;
+  outline: 3px solid #7b1fa2 !important;
+}
+.story-graph-orphans {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+}
+.story-graph-orphans-ok { margin: 0; }
+.story-graph-orphans-warn strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #7b1fa2;
+}
+.story-graph-orphan-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.story-graph-orphan-id {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: monospace;
+  border: 1px solid #7b1fa2;
+  border-radius: 4px;
+  background: #f3e5f5;
+  color: #4a148c;
+  cursor: pointer;
+}
+.story-graph-orphan-id:hover {
+  background: #e1bee7;
+}
+.story-graph-mermaid .edgePath path[stroke-dasharray],
+.story-graph-mermaid path.flowchart-link[style*="stroke-dasharray"] {
+  stroke: #d32f2f !important;
+  stroke-width: 2px !important;
+}
+.story-graph-mermaid g.node.graph-node-deadend > rect,
+.story-graph-mermaid g.node.graph-node-deadend > polygon {
+  stroke-dasharray: 4 4 !important;
+  stroke: #e65100 !important;
+}
+/* Модальное окно линтера */
+.editor-validation-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.editor-validation-modal.open {
+  display: flex;
+}
+.editor-validation-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+.editor-validation-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(640px, 100%);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg, #fff);
+  border: 2px solid var(--border, #ccc);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.editor-validation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border, #ccc);
+}
+.editor-validation-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--accent, #5d4037);
+}
+.editor-validation-close {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-light, #666);
+}
+.editor-validation-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+.editor-validation-ok {
+  margin: 0;
+  font-size: 16px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+.editor-validation-section {
+  margin-bottom: 16px;
+}
+.editor-validation-section h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.editor-validation-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.editor-validation-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  background: var(--paper, #fafafa);
+  font-size: 13px;
+  cursor: pointer;
+  color: inherit;
+}
+.editor-validation-link:hover {
+  border-color: var(--accent, #5d4037);
+  background: var(--paper-dark, #f0ebe3);
+}
+.editor-validation-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border, #ccc);
+  text-align: right;
+}
+/* Поиск: яркая подсветка */
+.story-graph-mermaid g.node.graph-node-search > rect,
+.story-graph-mermaid g.node.graph-node-search > polygon,
+.story-graph-mermaid g.node.graph-node-search > path {
+  fill: #ffe082 !important;
+  stroke: #ff6f00 !important;
+  stroke-width: 5px !important;
+  filter: drop-shadow(0 0 8px rgba(255, 111, 0, 0.75));
+}
+/* htmlLabels (foreignObject) */
+.story-graph-mermaid g.node.graph-node-combat foreignObject > div {
+  background: #f96 !important;
+  border: 2px solid #333 !important;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.story-graph-mermaid g.node.graph-node-quest foreignObject > div {
+  background: #69f !important;
+  color: #fff !important;
+  border: 2px solid #05a !important;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.story-graph-mermaid g.node.graph-node-final foreignObject > div {
+  background: #fd2 !important;
+  border: 2px solid #a80 !important;
+}
+.story-graph-mermaid g.node.graph-node-search foreignObject > div {
+  background: #ffe082 !important;
+  outline: 4px solid #ff6f00 !important;
+  box-shadow: 0 0 10px rgba(255, 111, 0, 0.8);
+}
+.story-graph-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: 320px;
+  padding: 10px 12px;
+  background: #1e1e1e;
+  color: #f5f5f5;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.story-graph-tooltip.visible {
+  opacity: 1;
+}
+.story-graph-tooltip strong {
+  color: #ffcc80;
+  font-size: 12px;
+}
+
+.quest-manager { display: flex; gap: 20px; align-items: flex-start; }
+.quest-manager-sidebar { width: 220px; flex-shrink: 0; }
+.quest-pick {
+  display: block; width: 100%; text-align: left; padding: 8px 10px; margin-bottom: 4px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg);
+  cursor: pointer; font-size: 13px;
+}
+.quest-pick.active { border-color: var(--accent); background: var(--paper-dark); }
+.quest-manager-detail { flex: 1; min-width: 0; }
+.quest-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.quest-detail-head h3 { margin: 0; font-size: 18px; }
+.quest-detail-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 16px; }
+.quest-stage-card { border: 1px dashed var(--border); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+.quest-json-preview { margin-top: 16px; padding: 12px; background: var(--paper); border-radius: 8px; border: 1px solid var(--border); }
+.quest-set-block { background: var(--paper); padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+
+/* Редактор только для ПК */
+#editor-mobile-gate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--paper);
+  color: var(--ink);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+#editor-mobile-gate.active { display: flex; }
+#editor-mobile-gate h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: var(--accent);
+  max-width: 360px;
+}
+#editor-mobile-gate p {
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 400px;
+  margin-bottom: 20px;
+  color: var(--ink-light);
+}
+#editor-mobile-gate .btn-open-game {
+  display: inline-block;
+  padding: 14px 28px;
+  font-size: 17px;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 8px;
+  text-decoration: none;
+}
+</style>
+<script>
+(function editorMobileGate() {
+  const BREAK = 768;
+  function check() {
+    const gate = document.getElementById('editor-mobile-gate');
+    if (!gate) return;
+    const mobile = window.innerWidth < BREAK || 'ontouchstart' in window;
+    gate.classList.toggle('active', mobile);
+    document.body.style.overflow = mobile ? 'hidden' : '';
+  }
+  let t;
+  window.addEventListener('resize', function () {
+    clearTimeout(t);
+    t = setTimeout(check, 200);
+  });
+  document.addEventListener('DOMContentLoaded', check);
+  check();
+})();
+</script>
+</head>
+<body>
+
+<div id="editor-mobile-gate" aria-hidden="true">
+  <h2>Редактор доступен только на ПК</h2>
+  <p>Для создания и правки модулей используйте компьютер с шириной экрана от 768px. На телефоне можно играть и тестировать сценарий.</p>
+  <a class="btn-open-game" href="index.html">Открыть игру</a>
+</div>
+
+<div class="header">
+  <h1 style="cursor:pointer;" title="На дашборд" onclick="Editor.showDashboard()">📝 Редактор сцен — Мельница на Тихой реке (v2.0)</h1>
+  <div class="header-buttons">
+    <button class="btn btn-secondary" onclick="Editor.showDashboard()">🏠 Дашборд</button>
+    <button class="btn btn-info" onclick="Editor.newProject()">📄 Новый проект</button>
+    <button class="btn btn-secondary" onclick="Editor.loadData()">📂 Загрузить JSON</button>
+    <button class="btn btn-primary" onclick="Editor.exportData()">💾 Сохранить JSON</button>
+    <button class="btn btn-info" onclick="Editor.exportGameStandalone()" title="Скопировать игру в папку: index.html, css/, js/ без редактора и сгенерировать data.js">📦 Экспорт игры</button>
+    <button class="btn btn-danger" onclick="Editor.runProjectValidation()">🔍 Проверить проект</button>
+    <a class="btn btn-secondary" href="editor-guide.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">📖 Руководство</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="sidebar">
+    <h3>📍 Сцены</h3>
+    <div class="scene-list" id="scene-list"></div>
+    <button class="btn btn-primary" style="width:100%; margin-top:12px;" onclick="Editor.createScene()">+ Новая сцена</button>
+
+    <h3 style="margin-top:24px;">📊 Статистика</h3>
+    <div id="stats-panel" style="font-size:13px; color:var(--ink-light); line-height:1.8;">
+      Загрузите данные...
+    </div>
+    
+    <h3 style="margin-top:24px;">⚙️ Проект</h3>
+    <div id="project-panel" style="font-size:13px; color:var(--ink-light); line-height:1.8;">
+      Нет открытого проекта
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="tabs">
+      <div class="tab" onclick="Editor.switchTab('scenes', event)">🎬 Сцены</div>
+      <div class="tab" onclick="Editor.switchTab('quests', event)">📜 Квесты</div>
+      <div class="tab" onclick="Editor.switchTab('reputation', event)">🤝 Репутация</div>
+      <div class="tab" onclick="Editor.switchTab('npcs', event)">👥 NPC</div>
+      <div class="tab" onclick="Editor.switchTab('enemies', event)">⚔️ Враги</div>
+      <div class="tab" onclick="Editor.switchTab('beasts', event)">🐾 Звери</div>
+      <div class="tab" onclick="Editor.switchTab('balance', event)">⚖️ Баланс</div>
+      <div class="tab" onclick="Editor.switchTab('items', event)">🎒 Предметы</div>
+      <div class="tab" onclick="Editor.switchTab('classes', event)">🏅 Классы</div>
+      <div class="tab" onclick="Editor.switchTab('races', event)">🧬 Расы</div>
+      <div class="tab" onclick="Editor.switchTab('abilities', event)">✨ Умения</div>
+      <div class="tab" onclick="Editor.switchTab('audio', event)">🔊 Звуки</div>
+      <div class="tab" onclick="Editor.switchTab('theme', event)">🎨 Тема</div>
+      <div class="tab" onclick="Editor.switchTab('worldmap', event)">🗺️ Карта</div>
+      <div class="tab" onclick="Editor.switchTab('graph', event)">🗺️ Карта сюжета</div>
+      <div class="tab" onclick="Editor.switchTab('progression', event)">📈 Прогрессия</div>
+      <div class="tab" onclick="Editor.switchTab('json', event)">📄 JSON</div>
+    </div>
+
+    <div class="tab-content" id="tab-dashboard"></div>
+
+    <!-- ВКЛАДКА СЦЕН -->
+    <div class="tab-content" id="tab-scenes">
+      <div id="scene-editor">
+        <div class="start-screen" id="start-screen">
+          <h2>Добро пожаловать в редактор!</h2>
+          <p>Создавайте текстовые RPG с нуля или редактируйте существующие проекты.</p>
+          <div class="start-buttons">
+            <button class="btn btn-info" onclick="Editor.newProject()">📄 Создать новый проект</button>
+            <button class="btn btn-secondary" onclick="Editor.loadData()">📂 Загрузить game_data.json</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-quests"><div id="quests-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-reputation"><div id="reputation-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-npcs"><div id="npcs-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-enemies"><div id="enemies-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-beasts"><div id="beasts-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-balance"><div id="balance-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-items"><div id="items-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-abilities"><div id="abilities-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-audio"><div id="audio-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-theme"><div id="theme-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-worldmap"><div id="worldmap-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-graph"><div id="story-graph-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-progression">
+      <div id="enemy-scaling-editor"></div>
+      <div id="progression-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div>
+    </div>
+    <div class="tab-content" id="tab-classes"><div id="classes-editor"><div id="classes-list"></div></div></div>
+    <div class="tab-content" id="tab-races"><div id="races-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-json">
+      <div class="form-group">
+        <label>Предпросмотр JSON</label>
+        <div class="json-preview" id="json-preview">Загрузите данные...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/patch-progression.js"></script>
+<script src="js/conditions.js"></script>
+<script src="js/quests.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/enemy-scaling.js"></script>
+<script src="js/audio.js"></script>
+<script>
+const Editor = {
+  data: null,
+  currentScene: null,
+  currentTab: 'dashboard',
+  editingClassId: null,
+
+  escapeHtml(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  },
+  escapeAttr(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  },
+  escapeTextarea(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  },
+  renderIcon(icon) {
+    const value = String(icon || '').trim();
+    if (!value) return '';
+    const isImage = /^((https?:)?\/\/|\.\/|\/).+\.(png|jpe?g|gif|svg)$/i.test(value);
+    if (isImage) {
+      return `<img src="${this.escapeAttr(value)}" alt="icon" style="max-width:18px; max-height:18px; vertical-align:middle;">`;
+    }
+    return this.escapeHtml(value);
+  },
+  renderIconPreview(icon) {
+    const value = String(icon || '').trim();
+    if (!value) return '';
+    const isImage = /^((https?:)?\/\/|\.\/|\/).+\.(png|jpe?g|gif|svg)$/i.test(value);
+    if (isImage) {
+      return `<span class="icon-preview"><img src="${this.escapeAttr(value)}" alt="icon"></span>`;
+    }
+    return `<span class="icon-preview">${this.escapeHtml(value)}</span>`;
+  },
+  setAbilityIcon(classId, idx, icon) {
+    if (!this.data?.classes?.[classId]?.abilities?.[idx]) return;
+    this.data.classes[classId].abilities[idx].icon = icon;
+    this.renderClasses();
+    this.updateJSONPreview();
+  },
+  getIconSuggestions() {
+    return ['⚔️','🛡️','✨','🔥','❄️','💀','🧪','🌀','⚡','🌿','🛠️','📜','🏹'];
+  },
+  getIconPickerOptions() {
+    return ['⚔️','🛡️','✨','🔥','❄️','💀','🧪','🌀','⚡','🌿','🛠️','📜','🏹','🧠','🌙','☀️','⭐','🍷','🏚️','🪓','🧭','🗝️','🎒','🛏️','🧱','🧵','🪄','🧿','⚗️','🧲','🦉','🐺','🐴','🐉','🦴','🥾','📕','🎯','🕯️','⛺','🚪','👤','🗣️','📖','💬','🎭','👁️','💎','🌊','☠️','🩸','🙏','🔔','📯'];
+  },
+  /** Уникальный список для выпадающего списка (без дублей порядка из массива). */
+  getIconPickerOptionsUnique() {
+    return [...new Set(this.getIconPickerOptions())];
+  },
+  /** Выпадающий список emoji; onchangeBody — JS без внешних кавычек, только с двойными кавычками внутри (для HTML onchange="..."). */
+  renderIconEmojiSelect(onchangeBody) {
+    const opts = this.getIconPickerOptionsUnique()
+      .map(ic => `<option value="${this.escapeAttr(ic)}">${this.escapeHtml(ic)}</option>`)
+      .join('');
+    return `<select class="icon-emoji-select" title="Список emoji" aria-label="Выбрать emoji" onchange="${this.escapeAttr(onchangeBody)}"><option value="">▼ Emoji…</option>${opts}</select>`;
+  },
+  /** Кнопки быстрого выбора; onClickExpr(icon) — JS-выражение для вызова (будет экранировано в атрибуте). */
+  renderIconSuggestionButtons(onClickExpr) {
+    return this.getIconSuggestions()
+      .map(icon => {
+        const expr = onClickExpr(icon);
+        return `<button type="button" class="icon-suggestion" onclick="${this.escapeAttr(expr)}" title="${this.escapeAttr(icon)}">${this.escapeHtml(icon)}</button>`;
+      })
+      .join('');
+  },
+  getWeaponItems() {
+    if (!this.data?.items) return [];
+    return Object.entries(this.data.items).filter(([, item]) => item.type === 'weapon');
+  },
+  getAllItemIds() {
+    return Object.keys(this.data?.items || {});
+  },
+
+  ensureAudioConfig() {
+    if (!this.data) return;
+    if (!this.data.audio) this.data.audio = { catalog: {}, defaults: { damageType: {}, effectType: {}, attack: {} } };
+    if (!this.data.audio.catalog) this.data.audio.catalog = {};
+    if (!this.data.audio.defaults) this.data.audio.defaults = { damageType: {}, effectType: {}, attack: {} };
+  },
+
+  getSoundCatalogIds() {
+    this.ensureAudioConfig();
+    return Object.keys(this.data.audio.catalog).sort();
+  },
+
+  renderSoundSelect(current, onChangeAttr) {
+    const opts = this.getSoundCatalogIds().map(sid => {
+      const label = this.data.audio.catalog[sid]?.label || sid;
+      const sel = sid === current ? ' selected' : '';
+      return `<option value="${this.escapeAttr(sid)}"${sel}>${this.escapeHtml(label)} (${this.escapeHtml(sid)})</option>`;
+    }).join('');
+    return `<select onchange="${onChangeAttr}"><option value="">— авто —</option>${opts}</select>`;
+  },
+
+  renderAbilitySoundFields(ctx, ref, ab, index) {
+    const cast = ab.soundCast || '';
+    const hit = ab.soundHit || '';
+    let castChange;
+    let hitChange;
+    if (ctx === 'global') {
+      castChange = `Editor.setAbilitySound('global','${this.escapeAttr(ref)}','soundCast',this.value)`;
+      hitChange = `Editor.setAbilitySound('global','${this.escapeAttr(ref)}','soundHit',this.value)`;
+    } else {
+      castChange = `Editor.setAbilitySound('class','${this.escapeAttr(ref)}',${index},'soundCast',this.value)`;
+      hitChange = `Editor.setAbilitySound('class','${this.escapeAttr(ref)}',${index},'soundHit',this.value)`;
+    }
+    return `<div class="form-group sound-fields"><label>🔊 Звук</label><div class="grid-2"><div class="form-group"><label>SFX при использовании</label>${this.renderSoundSelect(cast, castChange)}</div><div class="form-group"><label>SFX при попадании</label>${this.renderSoundSelect(hit, hitChange)}</div></div><div class="icon-hint">Пусто = звук по типу урона из каталога. MP3 кладите в папку <code>audio/</code>.</div></div>`;
+  },
+
+  setAbilitySound(ctx, idOrClassId, indexOrField, fieldOrValue, maybeValue) {
+    let ab, field, value;
+    if (ctx === 'global') {
+      ab = this.data?.progression?.abilities?.[idOrClassId];
+      field = indexOrField;
+      value = fieldOrValue;
+    } else {
+      ab = this.data?.classes?.[idOrClassId]?.abilities?.[indexOrField];
+      field = fieldOrValue;
+      value = maybeValue;
+    }
+    if (!ab) return;
+    const v = (value || '').trim();
+    if (v) ab[field] = v;
+    else delete ab[field];
+    this.updateJSONPreview();
+  },
+
+  renderAudio() {
+    const c = document.getElementById('audio-editor');
+    if (!this.data) {
+      c.innerHTML = '<div class="empty-state"><h2>Нет данных</h2></div>';
+      return;
+    }
+    this.ensureAudioConfig();
+    const catalog = this.data.audio.catalog;
+    const ids = Object.keys(catalog);
+    const rows = ids.map(sid => {
+      const entry = catalog[sid] || {};
+      const label = entry.label || '';
+      const file = entry.file || entry.path || '';
+      return `<div class="ability-edit-card"><div class="grid-3"><div class="form-group"><label>ID</label><input value="${this.escapeHtml(sid)}" disabled></div><div class="form-group"><label>Название</label><input value="${this.escapeHtml(label)}" onchange="Editor.updateAudioCatalog('${this.escapeAttr(sid)}','label',this.value)"></div><div class="form-group"><label>Файл</label><input value="${this.escapeHtml(file)}" placeholder="audio/fire_hit.mp3" onchange="Editor.updateAudioCatalog('${this.escapeAttr(sid)}','file',this.value)"></div></div><button class="btn btn-danger" onclick="Editor.deleteAudioEntry('${this.escapeAttr(sid)}')">🗑 Удалить</button></div>`;
+    }).join('');
+    c.innerHTML = `<div class="project-info"><h4>Каталог звуков</h4><p class="hint">Файлы .mp3 / .ogg в папке <code>audio/</code>. Если файла нет — играет синтезированный звук.</p>${rows || '<div class="empty-state"><h2>Каталог пуст</h2></div>'}<button class="btn btn-primary" style="margin-top:16px;" onclick="Editor.addAudioEntry()">+ Добавить звук</button><button class="btn btn-secondary" style="margin-top:8px;margin-left:8px;" type="button" onclick="if(typeof AudioEngine!=='undefined'){AudioEngine.unlock();AudioEngine.play('fire_cast');}">▶ Проверить огонь</button></div>`;
+  },
+
+  updateAudioCatalog(id, field, value) {
+    this.ensureAudioConfig();
+    if (!this.data.audio.catalog[id]) this.data.audio.catalog[id] = {};
+    this.data.audio.catalog[id][field] = value;
+    this.updateJSONPreview();
+  },
+
+  addAudioEntry() {
+    this.ensureAudioConfig();
+    const id = prompt('ID звука (латиница, например fire_hit):', 'new_sound');
+    if (!id || !/^[a-z][a-z0-9_]*$/i.test(id)) return;
+    if (this.data.audio.catalog[id]) { alert('ID уже есть'); return; }
+    this.data.audio.catalog[id] = { label: 'Новый звук', file: `audio/${id}.mp3` };
+    this.renderAudio();
+    this.updateJSONPreview();
+  },
+
+  deleteAudioEntry(id) {
+    if (!confirm('Удалить звук из каталога?')) return;
+    this.ensureAudioConfig();
+    delete this.data.audio.catalog[id];
+    this.renderAudio();
+    this.updateJSONPreview();
+  },
+
+  newProject() {
+    if (typeof this.openNewProjectModal === 'function') this.openNewProjectModal();
+    else alert('Загрузите editor-new-project.js');
+  },
+
+  loadData() {
+    if (typeof this._loadDataFromFile === 'function') this._loadDataFromFile();
+    else alert('Загрузите editor-new-project.js');
+  },
+
+  exportData() {
+    if (!this.data) return;
+    const json = JSON.stringify(this.data, null, 2);
+    localStorage.setItem('melnitsa_game_data', json);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'game_data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ Файл сохранён как game_data.json');
+  },
+
+  switchTab(tab, event) {
+    this.currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    if (event?.target) event.target.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'json') this.updateJSONPreview();
+    if (tab === 'progression') this.renderProgression();
+    if (tab === 'balance') this.renderBalance();
+    if (tab === 'audio') this.renderAudio();
+    if (tab === 'theme') this.renderTheme();
+    if (tab === 'worldmap') this.renderWorldMap();
+    if (tab === 'quests') this.renderQuests();
+    if (tab === 'reputation') this.renderReputation();
+    if (tab === 'graph') this.renderStoryGraphPanel();
+    if (tab === 'races') this.renderRaces();
+  },
+
+  renderAll() {
+    this.renderSceneList();
+    this.renderStats();
+    this.renderQuests();
+    if (typeof this.renderReputation === 'function') this.renderReputation();
+    this.renderNPCs();
+    this.renderEnemies();
+    if (typeof this.renderBeasts === 'function') this.renderBeasts();
+    if (typeof this.renderBalance === 'function') this.renderBalance();
+    this.renderItems();
+    this.renderClasses();
+    this.renderRaces();
+    this.renderAbilities();
+    this.renderAudio();
+    this.renderTheme();
+    this.renderWorldMap();
+    this.renderProgression();
+    this.renderStoryGraphPanel();
+    this.renderSceneEditor();
+    this.updateJSONPreview();
+  },
+
+  renderSceneList() {
+    const list = document.getElementById('scene-list');
+    if (!this.data?.scenes) { list.innerHTML = ''; return; }
+    list.innerHTML = Object.entries(this.data.scenes).map(([id, scene]) => {
+      const preview = scene.text ? scene.text.substring(0, 60) + '...' : 'Нет текста';
+      const active = this.currentScene === id ? 'active' : '';
+      return `<div class="scene-item ${active}" onclick="Editor.selectScene('${id}')">
+        <div class="scene-id">${id}</div>
+        <div class="scene-loc">${scene.location || '—'}</div>
+        <div class="scene-preview">${preview}</div>
+      </div>`;
+    }).join('');
+  },
+
+  selectScene(id) {
+    this.currentScene = id;
+    this.renderSceneList();
+    this.renderSceneEditor();
+  },
+
+  renderSceneEditor() { /* ... оставляем как в оригинале, без изменений ... */ 
+    const container = document.getElementById('scene-editor');
+    if (!this.currentScene || !this.data.scenes[this.currentScene]) {
+      container.innerHTML = '<div class="empty-state"><h2>Сцена не найдена</h2></div>';
+      return;
+    }
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.style.display = 'none';
+    const scene = this.data.scenes[this.currentScene];
+    const allScenes = Object.keys(this.data.scenes);
+    const allEnemies = this.data.enemies ? Object.keys(this.data.enemies) : [];
+    container.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2>Редактирование: ${this.currentScene}</h2><button class="btn btn-danger" onclick="Editor.deleteScene('${this.currentScene}')">🗑 Удалить</button></div>
+      <div class="form-group"><label>ID сцены</label><input type="text" id="scene-id" value="${this.currentScene}" onchange="Editor.updateSceneId(this.value)"></div>
+      <div class="form-group"><label>Локация</label><input type="text" id="scene-location" value="${scene.location||''}" oninput="Editor.scheduleLivePreviewUpdate()" onchange="Editor.updateSceneField('location',this.value)"></div>
+      <div class="form-group"><label>NPC сцены (для репутации при разговоре)</label>
+        <select onchange="Editor.setSceneNpcId(this.value)">
+          <option value="">— нет —</option>
+          ${Object.keys(this.data.npcs || {}).map(nid => `<option value="${this.escapeAttr(nid)}" ${scene.npcId === nid ? 'selected' : ''}>${this.escapeHtml(this.data.npcs[nid]?.name || nid)}</option>`).join('')}
+        </select>
+        <p class="hint">При первом входе в сцену применяются эффекты NPC с триггером «При разговоре».</p>
+      </div>
+      <div class="form-group"><label>Текст</label><textarea id="scene-text" oninput="Editor.scheduleLivePreviewUpdate()" onchange="Editor.updateSceneField('text',this.value)">${scene.text||''}</textarea></div>
+      <div class="dialogue-section"><h4>🗣️ Диалоги <button class="btn btn-secondary" style="font-size:12px;" onclick="Editor.addDialogue()">+ Добавить</button></h4><div id="dialogue-list">${(scene.dialogue||[]).map((d,i)=>`<div class="dialogue-row"><input placeholder="Говорящий" value="${d.speaker}" onchange="Editor.updateDialogue(${i},'speaker',this.value)"><textarea placeholder="Текст" onchange="Editor.updateDialogue(${i},'text',this.value)">${d.text}</textarea><button class="btn btn-danger" onclick="Editor.removeDialogue(${i})">×</button></div>`).join('')}</div></div>
+            ${this.renderChoicePreviewPanel()}
+      <div class="choices-section"><h4>🔀 Выборы <button class="btn btn-secondary" style="font-size:12px;" onclick="Editor.addChoice()">+ Добавить</button></h4>
+      <div id="choices-list">${(scene.choices||[]).map((c,i)=>this.renderChoiceEditor(c,i,allScenes)).join('')}</div></div>
+      <div class="combat-section"><h4>⚔️ Бой</h4><div class="form-group"><label>Враги</label><div class="enemy-tags" id="enemy-tags">${(scene.combat||[]).map((eid,i)=>`<div class="enemy-tag">${eid}<span class="remove" onclick="Editor.removeEnemyFromCombat(${i})">×</span></div>`).join('')}</div><select id="enemy-select" onchange="Editor.addEnemyToCombat(this.value); this.value='';"><option value="">+ Добавить врага</option>${allEnemies.map(e=>`<option value="${e}">${e}</option>`).join('')}</select></div><div class="form-group"><label>Сцена после победы</label><select id="next-scene" onchange="Editor.updateSceneField('nextScene',this.value)"><option value="">— Выберите —</option>${allScenes.map(s=>`<option value="${s}" ${scene.nextScene===s?'selected':''}>${s}</option>`).join('')}</select></div></div>
+      <div class="flags-section"><h4>🏴 Флаги</h4><div id="flags-list">${Object.entries(scene.flags||{}).map(([k,v],i)=>`<div class="flag-row"><input value="${k}" onchange="Editor.updateFlagKey(${i},this.value)"><input value="${v}" onchange="Editor.updateFlagValue(${i},this.value)"><button class="btn btn-danger" onclick="Editor.removeFlag(${i})">×</button></div>`).join('')}</div><button class="btn btn-secondary" onclick="Editor.addFlag()">+ Добавить флаг</button></div>
+      <div class="form-group"><label>Предметы</label><div id="items-list">${(scene.items||[]).map((item,i)=>`<div class="flag-row"><input value="${item}" onchange="Editor.updateItem(${i},this.value)"><button class="btn btn-danger" onclick="Editor.removeItem(${i})">×</button></div>`).join('')}</div><button class="btn btn-secondary" onclick="Editor.addItem()">+ Добавить предмет</button></div>
+      <div class="form-group"><label>Золото</label><input type="number" id="scene-gold" value="${scene.gold||0}" onchange="Editor.updateSceneField('gold',parseInt(this.value)||0)"></div>
+      ${this.renderHubReturnFields(scene)}
+      ${typeof this.renderSceneAudioSection === 'function' ? this.renderSceneAudioSection(scene) : ''}
+      ${this.renderSpecialSceneField(scene)}
+      ${typeof this.renderShopConfigSection === 'function' ? this.renderShopConfigSection(scene) : ''}`;
+    setTimeout(() => { if (Editor.updateChoicePreview) Editor.updateChoicePreview(); }, 0);
+  },
+
+  // Вспомогательные методы для сцен (оставляем)
+  updateSceneId(newId) { if(newId===this.currentScene) return; if(this.data.scenes[newId]) { alert('ID существует'); return; } this.data.scenes[newId]=this.data.scenes[this.currentScene]; delete this.data.scenes[this.currentScene]; Object.values(this.data.scenes).forEach(s=>{if(s.choices)s.choices.forEach(c=>{if(c.to===this.currentScene)c.to=newId;});if(s.nextScene===this.currentScene)s.nextScene=newId;}); this.currentScene=newId; this.renderSceneList(); this.renderSceneEditor(); this.updateJSONPreview(); },
+  renderHubReturnFields(scene) {
+    const ids = Object.keys(this.data.scenes || {});
+    const hub = scene.hubScene || 'village_hub';
+    const opts = ids.map(sid => `<option value="${this.escapeAttr(sid)}" ${scene.hubScene === sid ? 'selected' : ''}>${this.escapeHtml(sid)}</option>`).join('');
+    return `<div class="project-info hub-return-panel" style="margin-top:12px;">
+      <h4>🏘️ Возврат в хаб</h4>
+      <p class="hint">Для локаций деревни: включите чекбокс — в конец выборов добавится «← Вернуться на площадь» (если такой кнопки ещё нет).</p>
+      <div class="form-group">
+        <label><input type="checkbox" ${scene.returnsToHub ? 'checked' : ''} onchange="Editor.setSceneReturnsToHub(this.checked)"> Локация возвращает в хаб</label>
+      </div>
+      <div class="form-group">
+        <label>ID хаб-сцены</label>
+        <select onchange="Editor.setSceneHubScene(this.value)">
+          <option value="">— выберите —</option>
+          ${opts}
+        </select>
+      </div>
+    </div>`;
+  },
+  setSceneReturnsToHub(checked) {
+    const s = this.data.scenes[this.currentScene];
+    if (!s) return;
+    if (checked) {
+      s.returnsToHub = true;
+      if (!s.hubScene) s.hubScene = this.data.scenes.village_hub ? 'village_hub' : 'village';
+    } else {
+      delete s.returnsToHub;
+    }
+    this.syncHubReturnChoice();
+    this.updateJSONPreview();
+    this.renderSceneEditor();
+  },
+  setSceneHubScene(value) {
+    const s = this.data.scenes[this.currentScene];
+    if (!s) return;
+    if (value) s.hubScene = value;
+    else delete s.hubScene;
+    this.syncHubReturnChoice();
+    this.updateJSONPreview();
+    this.renderSceneEditor();
+  },
+  syncHubReturnChoice() {
+    const s = this.data.scenes[this.currentScene];
+    if (!s?.returnsToHub || !s.hubScene) return;
+    if (!s.choices) s.choices = [];
+    const hub = s.hubScene;
+    const label = hub === 'village_hub' ? '← Вернуться на площадь' : '← Вернуться';
+    let idx = s.choices.findIndex(c => c && (c._hubReturn || c.to === hub));
+    if (idx >= 0) {
+      s.choices[idx].text = label;
+      s.choices[idx].to = hub;
+      s.choices[idx].icon = s.choices[idx].icon || '🏘️';
+      s.choices[idx]._hubReturn = true;
+      return;
+    }
+    s.choices.push({ text: label, to: hub, icon: '🏘️', _hubReturn: true });
+  },
+  setSceneNpcId(npcId) {
+    const s = this.data.scenes[this.currentScene];
+    if (!s) return;
+    if (!npcId) delete s.npcId;
+    else s.npcId = npcId;
+    this.updateJSONPreview();
+  },
+  updateSceneField(field,value){
+    this.data.scenes[this.currentScene][field]=value;
+    this.updateJSONPreview();
+    if (field === 'returnsToHub' || field === 'hubScene') this.syncHubReturnChoice();
+    if(field==='combat'||field==='nextScene') this.renderSceneList();
+  },
+  addDialogue(){ const s=this.data.scenes[this.currentScene]; if(!s.dialogue)s.dialogue=[]; s.dialogue.push({speaker:'',text:''}); this.renderSceneEditor(); },
+  updateDialogue(idx,field,val){ this.data.scenes[this.currentScene].dialogue[idx][field]=val; this.updateJSONPreview(); },
+  removeDialogue(idx){ this.data.scenes[this.currentScene].dialogue.splice(idx,1); this.renderSceneEditor(); },
+  addChoice(){ const s=this.data.scenes[this.currentScene]; if(!s.choices)s.choices=[]; s.choices.push({text:'',to:'',icon:'➡️'}); this.renderSceneEditor(); },
+  updateChoice(idx,field,val){
+    const c=this.data.scenes[this.currentScene].choices[idx];
+    if(field==='doneFlag'&&!val) delete c.doneFlag;
+    else c[field]=val;
+    this.updateJSONPreview();
+    if(field==='icon') this.renderSceneEditor();
+    if(Editor.updateChoicePreview) Editor.updateChoicePreview();
+    this.renderSceneList();
+  },
+  setChoiceIcon(idx,icon){ const s=this.data.scenes[this.currentScene]; if(!s.choices?.[idx]) return; s.choices[idx].icon = icon; this.renderSceneEditor(); this.updateJSONPreview(); },
+  removeChoice(idx){ this.data.scenes[this.currentScene].choices.splice(idx,1); this.renderSceneEditor(); },
+  addEnemyToCombat(eid){ if(!eid)return; const s=this.data.scenes[this.currentScene]; if(!s.combat)s.combat=[]; s.combat.push(eid); this.renderSceneEditor(); this.renderSceneList(); },
+  removeEnemyFromCombat(idx){ this.data.scenes[this.currentScene].combat.splice(idx,1); this.renderSceneEditor(); this.renderSceneList(); },
+  addFlag(){ const s=this.data.scenes[this.currentScene]; if(!s.flags)s.flags={}; s.flags['new_flag']=true; this.renderSceneEditor(); },
+  updateFlagKey(idx,newKey){ const s=this.data.scenes[this.currentScene]; const old=Object.keys(s.flags)[idx]; const val=s.flags[old]; delete s.flags[old]; s.flags[newKey]=val; this.renderSceneEditor(); },
+  updateFlagValue(idx,val){ const s=this.data.scenes[this.currentScene]; const key=Object.keys(s.flags)[idx]; s.flags[key]=val==='true'?true:(val==='false'?false:val); this.updateJSONPreview(); },
+  removeFlag(idx){ const s=this.data.scenes[this.currentScene]; const key=Object.keys(s.flags)[idx]; delete s.flags[key]; this.renderSceneEditor(); },
+  addItem(){ const s=this.data.scenes[this.currentScene]; if(!s.items)s.items=[]; s.items.push('new_item'); this.renderSceneEditor(); },
+  updateItem(idx,val){ this.data.scenes[this.currentScene].items[idx]=val; this.updateJSONPreview(); },
+  removeItem(idx){ this.data.scenes[this.currentScene].items.splice(idx,1); this.renderSceneEditor(); },
+  deleteScene(id){ if(Object.keys(this.data.scenes).length<=1){alert('Нельзя удалить последнюю сцену');return;} if(!confirm('Удалить?'))return; delete this.data.scenes[id]; if(this.currentScene===id) this.currentScene=Object.keys(this.data.scenes)[0]; this.renderSceneList(); this.renderSceneEditor(); },
+
+  updateProjectPanel(){ const p=document.getElementById('project-panel'); if(!this.data){p.innerHTML='Нет проекта';return;} p.innerHTML=`<b>Название:</b> ${this.data.meta?.title||'—'}<br><b>Версия:</b> ${this.data.meta?.version||'—'}<br><b>Автор:</b> ${this.data.meta?.author||'—'}<br><button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="Editor.editMeta()">✏️ Мета</button>`; },
+  editMeta(){ if(!this.data)return; const t=prompt('Название:',this.data.meta?.title||''); if(t===null)return; const a=prompt('Автор:',this.data.meta?.author||''); const d=prompt('Описание:',this.data.meta?.description||''); this.data.meta={...this.data.meta,title:t||this.data.meta?.title,author:a||this.data.meta?.author,description:d||this.data.meta?.description}; this.updateProjectPanel(); this.updateJSONPreview(); },
+  renderStats(){ const p=document.getElementById('stats-panel'); if(!this.data){p.innerHTML='Загрузите данные...';return;} p.innerHTML=`Сцен: ${Object.keys(this.data.scenes||{}).length}<br>Квестов: ${Object.keys(this.data.quests||{}).length}<br>NPC: ${Object.keys(this.data.npcs||{}).length}<br>Врагов: ${Object.keys(this.data.enemies||{}).length}<br>Предметов: ${Object.keys(this.data.items||{}).length}<br>Классов: ${Object.keys(this.data.classes||{}).length}`; },
+  updateJSONPreview(){ const el=document.getElementById('json-preview'); if(!this.data){el.textContent='Нет данных';return;} el.textContent=JSON.stringify(this.data,null,2); },
+  validateAll(){
+    if(!this.data){ alert('Нет данных'); return; }
+    const result = typeof this.validateProject === 'function'
+      ? this.validateProject()
+      : { ok: true, issues: [], errors: [], deadEnds: [], brokenLinks: [] };
+    const sceneIds = new Set(Object.keys(this.data.scenes || {}));
+    const flagCatalog = new Set(ConditionSystem.collectFlagNames(this.data));
+    const itemIds = new Set(Object.keys(this.data.items || {}));
+    const extra = [];
+
+    Object.entries(this.data.scenes || {}).forEach(([id, s]) => {
+      if (!s.text && !s.special) {
+        extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: `Сцена «${id}»: нет текста` });
+      }
+      (s.choices || []).forEach((c, i) => {
+        if (!c.to && !c.skillCheck && !c.action) {
+          extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: `Сцена «${id}», выбор ${i + 1}: нет цели` });
+        }
+        const condErrors = [];
+        ConditionSystem.validateChoiceConditions(c, { sceneId: id, flagCatalog, itemIds, sceneIds: [...sceneIds] }, condErrors, `Сцена «${id}», выбор ${i + 1}`);
+        condErrors.forEach(msg => extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: msg }));
+      });
+      if (s.combat?.length && !s.nextScene) {
+        extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: `Сцена «${id}»: бой без nextScene` });
+      }
+    });
+    Object.entries(this.data.quests || {}).forEach(([id, q]) => {
+      if (!q.stages?.length) extra.push({ type: 'warning', severity: 'warning', message: `Квест «${id}»: нет этапов` });
+    });
+    Object.entries(this.data.enemies || {}).forEach(([id, e]) => {
+      if (!e.name) extra.push({ type: 'warning', severity: 'warning', message: `Враг «${id}»: нет имени` });
+      if (e.hp == null) extra.push({ type: 'warning', severity: 'warning', message: `Враг «${id}»: нет HP` });
+      if (!e.creatureType) extra.push({ type: 'warning', severity: 'warning', message: `Враг «${id}»: не указан тип существа` });
+    });
+
+    const merged = {
+      ok: result.ok && extra.filter(e => e.severity === 'error').length === 0,
+      issues: [...(result.issues || []), ...extra],
+      errors: result.errors || [],
+      deadEnds: result.deadEnds || [],
+      brokenLinks: result.brokenLinks || []
+    };
+    this._lastValidation = merged;
+    if (typeof this.showValidationModal === 'function') {
+      this.showValidationModal(merged);
+    } else if (merged.issues.length === 0) {
+      alert('✅ Ошибок не обнаружено');
+    } else {
+      alert(merged.issues.map(i => i.message).join('\n'));
+    }
+  },
+
+  renderLootItemSelect(enemyId, entry, idx) {
+    const items = this.data?.items || {};
+    const cur = entry.item || '';
+    let opts = '<option value="">— предмет —</option><option value="gold"' + (cur === 'gold' ? ' selected' : '') + '>gold (золото)</option>';
+    Object.keys(items).sort().forEach(iid => {
+      const name = items[iid].name || iid;
+      opts += `<option value="${iid}"${cur === iid ? ' selected' : ''}>${iid} — ${name}</option>`;
+    });
+    return `<select onchange="Editor.updateEnemyLoot('${enemyId}',${idx},'item',this.value)">${opts}</select>`;
+  },
+  renderEnemyLootSection(enemyId, enemy) {
+    const loot = Array.isArray(enemy.loot) ? enemy.loot : [];
+    const rows = loot.map((entry, idx) => `
+      <div class="loot-editor-row" style="display:grid;grid-template-columns:2fr 1fr 0.6fr 0.6fr auto;gap:8px;align-items:end;margin-bottom:8px;">
+        <div class="form-group"><label>Предмет</label>${this.renderLootItemSelect(enemyId, entry, idx)}</div>
+        <div class="form-group"><label>Шанс (0–1)</label>
+          <input type="number" min="0" max="1" step="0.05" value="${entry.chance ?? 1}" onchange="Editor.updateEnemyLoot('${enemyId}',${idx},'chance',parseFloat(this.value))">
+        </div>
+        <div class="form-group"><label>Min</label>
+          <input type="number" min="0" value="${entry.min ?? 1}" onchange="Editor.updateEnemyLoot('${enemyId}',${idx},'min',parseInt(this.value)||0)">
+        </div>
+        <div class="form-group"><label>Max</label>
+          <input type="number" min="0" value="${entry.max ?? 1}" onchange="Editor.updateEnemyLoot('${enemyId}',${idx},'max',parseInt(this.value)||0)">
+        </div>
+        <button type="button" class="btn btn-danger" onclick="Editor.removeEnemyLoot('${enemyId}',${idx})">✕</button>
+      </div>`).join('');
+    return `<div class="project-info" style="margin-top:12px;">
+      <h4>Добыча (loot)</h4>
+      ${rows || '<p class="hint">Таблица пуста — с врага ничего не падает.</p>'}
+      <button type="button" class="btn btn-secondary" onclick="Editor.addEnemyLootEntry('${enemyId}')">+ Добавить предмет</button>
+    </div>`;
+  },
+  addEnemyLootEntry(enemyId) {
+    const e = this.data.enemies[enemyId];
+    if (!e) return;
+    if (!Array.isArray(e.loot)) e.loot = [];
+    e.loot.push({ item: '', chance: 1, min: 1, max: 1 });
+    this.renderEnemies();
+    this.updateJSONPreview();
+  },
+  updateEnemyLoot(enemyId, idx, field, val) {
+    const e = this.data.enemies[enemyId];
+    if (!e?.loot?.[idx]) return;
+    e.loot[idx][field] = val;
+    this.updateJSONPreview();
+  },
+  removeEnemyLoot(enemyId, idx) {
+    const e = this.data.enemies[enemyId];
+    if (!e?.loot) return;
+    e.loot.splice(idx, 1);
+    this.renderEnemies();
+    this.updateJSONPreview();
+  },
+  updateEnemy(id, f, val) {
+    if (!this.data.enemies?.[id]) return;
+    this.data.enemies[id][f] = val;
+    this.updateJSONPreview();
+  },
+
+  renderItemBonusesEditor(id, it) {
+    const b = (it.bonuses && typeof it.bonuses === 'object') ? it.bonuses : {};
+    const json = JSON.stringify(b, null, 2);
+    return `<div class="form-group"><label>Бонусы (JSON)</label>
+      <textarea rows="4" style="font-family:monospace;font-size:12px;" onchange="Editor.updateItemBonuses('${id}', this.value)">${json}</textarea>
+      <small>maxHpBonus, acBonus, atkBonus, dmgBonus, str, dex, con, int, wis, cha</small></div>`;
+  },
+  renderItemAccessoryFields(id, it) {
+    const slot = it.slot || 'ring';
+    return `<div class="grid-3">
+      <div class="form-group"><label>Слот аксессуара</label>
+        <select onchange="Editor.updateItemData('${id}','slot',this.value)">
+          <option value="ring" ${slot==='ring'?'selected':''}>Кольцо</option>
+          <option value="necklace" ${slot==='necklace'?'selected':''}>Ожерелье</option>
+          <option value="earrings" ${slot==='earrings'?'selected':''}>Серьги</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Иконка</label>
+        <input value="${it.icon||''}" onchange="Editor.updateItemData('${id}','icon',this.value)">
+      </div>
+    </div>${this.renderItemBonusesEditor(id, it)}`;
+  },
+  updateItemBonuses(id, raw) {
+    try {
+      const parsed = raw.trim() ? JSON.parse(raw) : {};
+      this.data.items[id].bonuses = parsed;
+      this.updateJSONPreview();
+    } catch (e) {
+      alert('Неверный JSON бонусов: ' + e.message);
+    }
+  },
+  renderItemConsumableFields(id, it) {
+    if (!it.use) it.use = { effect: 'heal', formula: '1d4', target: 'self' };
+    const u = it.use;
+    const target = u.target || 'self';
+    const effectOpts = ['heal', 'damage', 'focus_potion', 'rest_material', 'message']
+      .map(e => `<option value="${e}" ${u.effect === e ? 'selected' : ''}>${e}</option>`).join('');
+    const targetOpts = [
+      ['self', 'Себя'],
+      ['ally', 'Союзник (пока = себя)'],
+      ['single_enemy', 'Один враг (только в бою)'],
+      ['all_enemies', 'Все враги (только в бою)']
+    ].map(([v, lab]) => `<option value="${v}" ${target === v ? 'selected' : ''}>${lab}</option>`).join('');
+    return `<div class="project-info" style="margin-top:8px;">
+      <h4>Использование (use)</h4>
+      <div class="grid-3">
+        <div class="form-group"><label>Эффект</label>
+          <select onchange="Editor.updateItemUse('${id}','effect',this.value)">${effectOpts}</select>
+        </div>
+        <div class="form-group"><label>Цель использования</label>
+          <select onchange="Editor.updateItemUse('${id}','target',this.value)">${targetOpts}</select>
+        </div>
+        <div class="form-group"><label>Формула / amount</label>
+          <input value="${u.formula || u.amount || ''}" placeholder="2d4+2" onchange="Editor.updateItemUseFormula('${id}',this.value)">
+        </div>
+      </div>
+      <div class="form-group"><label>Подпись кнопки</label>
+        <input value="${u.label || ''}" placeholder="Выпить" onchange="Editor.updateItemUse('${id}','label',this.value)">
+      </div>
+    </div>`;
+  },
+  updateItemUse(id, field, val) {
+    const it = this.data.items[id];
+    if (!it) return;
+    if (!it.use) it.use = {};
+    it.use[field] = val;
+    this.updateJSONPreview();
+    if (field === 'effect' || field === 'target') this.renderItems();
+  },
+  renderItemEnhancementEditor(id, it) {
+    const max = it.enhancementMax != null ? it.enhancementMax : 3;
+    const costs = Array.isArray(it.enhancementCost) ? it.enhancementCost.join(', ') : '100, 300, 900';
+    const enh = it.enhancement != null ? it.enhancement : 0;
+    return `<div class="project-info" style="margin-top:8px;padding:10px;">
+      <h4 style="margin:0 0 8px;">⚒️ Заточка</h4>
+      <div class="grid-3">
+        <div class="form-group"><label>Старт. уровень (шаблон)</label>
+          <input type="number" min="0" value="${enh}" onchange="Editor.updateItemData('${id}','enhancement',parseInt(this.value)||0)">
+        </div>
+        <div class="form-group"><label>Макс. (+N)</label>
+          <input type="number" min="0" value="${max}" onchange="Editor.updateItemData('${id}','enhancementMax',parseInt(this.value)||0)">
+        </div>
+        <div class="form-group"><label>Цены +1,+2,+3 (через запятую)</label>
+          <input value="${costs}" placeholder="100, 300, 900" onchange="Editor.updateItemEnhancementCosts('${id}',this.value)">
+        </div>
+      </div>
+    </div>`;
+  },
+  updateItemEnhancementCosts(id, raw) {
+    const arr = String(raw).split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+    this.data.items[id].enhancementCost = arr.length ? arr : [100, 300, 900];
+    this.updateJSONPreview();
+  },
+  updateItemUseFormula(id, raw) {
+    const it = this.data.items[id];
+    if (!it?.use) return;
+    if (/^\d+$/.test(String(raw).trim())) it.use.amount = parseInt(raw, 10);
+    else {
+      it.use.formula = raw;
+      delete it.use.amount;
+    }
+    this.updateJSONPreview();
+  },
+  renderItems() {
+    const c = document.getElementById('items-editor');
+    if (!this.data?.items) {
+      c.innerHTML = '<div class="empty-state"><h2>Нет данных</h2></div>';
+      return;
+    }
+    c.innerHTML = Object.entries(this.data.items).map(([id, it]) => {
+      const typeOpts = ['weapon', 'armor', 'shield', 'accessory', 'consumable', 'readable', 'misc', 'equipment', 'key', 'quest']
+        .map(t => `<option value="${t}" ${it.type === t ? 'selected' : ''}>${t}</option>`).join('');
+      let extra = '';
+      if (it.type === 'weapon') {
+        extra = `<div class="grid-3">
+          <div class="form-group"><label>Урон</label><input value="${it.dmgRoll || it.damage || '1d6'}" onchange="Editor.updateItemData('${id}','dmgRoll',this.value)"></div>
+          <div class="form-group"><label>Характеристика</label><input value="${it.stat || 'str'}" onchange="Editor.updateItemData('${id}','stat',this.value)"></div>
+        </div>${this.renderItemEnhancementEditor(id, it)}${this.renderItemBonusesEditor(id, it)}`;
+      } else if (it.type === 'armor' || it.type === 'shield') {
+        extra = `<div class="grid-3">
+          <div class="form-group"><label>КД / acBonus</label><input value="${it.ac ?? it.acBonus ?? ''}" onchange="Editor.updateItemData('${id}','ac',parseInt(this.value)||0)"></div>
+        </div>${this.renderItemEnhancementEditor(id, it)}${this.renderItemBonusesEditor(id, it)}`;
+      } else if (it.type === 'accessory') {
+        extra = this.renderItemAccessoryFields(id, it);
+      } else if (it.type === 'consumable') {
+        extra = this.renderItemConsumableFields(id, it);
+      }
+      return `<div class="quest-editor">
+        <h4>${it.name || 'Без названия'} (${id})</h4>
+        <div class="form-group"><label>Название</label><input value="${it.name || ''}" onchange="Editor.updateItemData('${id}','name',this.value)"></div>
+        <div class="form-group"><label>Тип</label><select onchange="Editor.updateItemData('${id}','type',this.value)">${typeOpts}</select></div>
+        <div class="form-group"><label>Описание</label><textarea onchange="Editor.updateItemData('${id}','desc',this.value)">${it.desc || ''}</textarea></div>
+        ${extra}
+        <button class="btn btn-danger" onclick="Editor.deleteItem('${id}')">🗑 Удалить</button>
+      </div>`;
+    }).join('') + '<button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="Editor.createItem()">+ Новый предмет</button>';
+  },
+  updateItemData(id, f, val) {
+    this.data.items[id][f] = val;
+    this.updateJSONPreview();
+    if (f === 'type') this.renderItems();
+  },
+  createItem(){ const id=prompt('ID предмета:'); if(!id||this.data.items[id])return; this.data.items[id]={name:'Новый предмет',type:'misc',desc:''}; this.renderItems(); this.updateJSONPreview(); },
+  deleteItem(id){ if(!confirm('Удалить предмет?'))return; delete this.data.items[id]; this.renderItems(); this.updateJSONPreview(); },
+
+  renderProgression(){ const c=document.getElementById('progression-editor'); if(!this.data){c.innerHTML='<div class="empty-state"><h2>Нет данных</h2></div>';return;} if(!this.data.progression)this.data.progression={enabled:true,maxLevel:5,expTable:[0,100,220,380,600],defaultHpGain:'1d8',defaults:{enemyExp:20,skillCheckExp:12},skillExp:{},abilities:{}}; const pg=this.data.progression; let html=`<div class="project-info"><h4>Система уровней</h4><div class="form-group"><label><input type="checkbox" ${pg.enabled!==false?'checked':''} onchange="Editor.updateProgression('enabled',this.checked)"> Включена</label></div><div class="form-group"><label>Макс. уровень</label><input type="number" value="${pg.maxLevel||5}" onchange="Editor.updateProgression('maxLevel',parseInt(this.value))"></div><div class="form-group"><label>Пороги опыта (через запятую)</label><input value="${(pg.expTable||[]).join(', ')}" onchange="Editor.updateExpTable(this.value)"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group"><label>XP за врага по умолч.</label><input type="number" value="${pg.defaults?.enemyExp??20}" onchange="Editor.updateProgressionDefault('enemyExp',parseInt(this.value))"></div><div class="form-group"><label>XP за проверку по умолч.</label><input type="number" value="${pg.defaults?.skillCheckExp??12}" onchange="Editor.updateProgressionDefault('skillCheckExp',parseInt(this.value))"></div></div></div>`; html += `<div class="project-info"><h4>Прогрессия классов</h4>`; html += Object.entries(this.data.classes || {}).map(([classId, cls])=>this.renderClassProgressionSection(classId, cls, pg.maxLevel||5)).join(''); html += `</div>`; c.innerHTML=html; },
+  updateProgression(f,val){ if(!this.data.progression)this.data.progression={}; this.data.progression[f]=val; this.updateJSONPreview(); },
+  updateProgressionDefault(f,val){ if(!this.data.progression)this.data.progression={}; if(!this.data.progression.defaults)this.data.progression.defaults={}; this.data.progression.defaults[f]=val; this.updateJSONPreview(); },
+  updateExpTable(str){ const arr=str.split(',').map(s=>parseInt(s.trim(),10)).filter(n=>!isNaN(n)); this.data.progression.expTable=arr; this.updateJSONPreview(); },
+  renderGlobalAbilityEditor(id, ab, idx){ if(!ab)ab={}; if(!ab.effect)ab.effect={}; if (typeof ab.effect === 'string') { const old=ab.effect; if (old.startsWith('heal:')){ab.effect={type:'heal',value:old.slice(5)};} else if (old.startsWith('damage:')){ab.effect={type:'damage',value:old.slice(7)};} else if (old==='extra_attack'){ab.effect={type:'extra_attack'};} else if (old.startsWith('ac_bonus:')){ab.effect={type:'buff',buffType:'ac',value:old.slice(9)};} else if (old==='magic_missile'){ab.effect={type:'magic_missile'};} else if (old.startsWith('aoe_fire:')){ab.effect={type:'damage',value:old.slice(9),damageType:'fire',targeting:{scope:'all_enemies'}};} else if (old.startsWith('smite:')){ab.effect={type:'smite',value:old.slice(6)};} else {ab.effect={type:'custom',desc:old};}} if(!ab.effect.targeting)ab.effect.targeting={scope:'single'}; if(!ab.usage)ab.usage='both'; if(ab.type!=='passive')ab.type='active'; const effectTypes=Editor.ABILITY_EFFECT_TYPES||{damage:'Урон',heal:'Лечение',buff:'Бафф',extra_attack:'Доп. атака',magic_missile:'Маг. снаряд',smite:'Кара',detect_magic:'Обнаружение магии',divine_sense:'Божественное чувство',custom:'Особый'}; const usageOptions={combat:'Только бой',exploration:'Только исследование',both:'Любое'}; const damageTypes={physical:'Физический',fire:'Огонь',cold:'Холод',lightning:'Молния',radiant:'Излучение',necrotic:'Некротический'}; return `<div class="ability-edit-card"><div style="display:flex;justify-content:space-between;align-items:center;"><h4>${this.escapeHtml(ab.name||id)} (${this.escapeHtml(id)})</h4><button class="btn btn-danger" onclick="Editor.deleteGlobalAbility('${this.escapeAttr(id)}')">🗑 Удалить</button></div><div class="grid-2"><div class="form-group"><label>Название</label><input value="${this.escapeHtml(ab.name||'')}" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','name',this.value)"></div><div class="form-group" style="grid-column:1/-1"><label>Иконка</label><div class="icon-picker-row">${this.renderIconEmojiSelect('if(this.value){Editor.updateGlobalAbility(' + JSON.stringify(id) + ',"icon",this.value);}')}<input type="text" value="${this.escapeHtml(ab.icon||'✨')}" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','icon',this.value)">${this.renderIconPreview(ab.icon)}</div><div class="icon-suggestions">${this.renderIconSuggestionButtons(icon => 'Editor.updateGlobalAbility(' + JSON.stringify(id) + ',"icon",' + JSON.stringify(icon) + ')')}</div><div class="icon-hint">Emoji или путь к PNG/SVG.</div></div></div><div class="form-group"><label>Описание</label><textarea rows="2" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','desc',this.value)">${this.escapeHtml(ab.desc||'')}</textarea></div><div class="grid-3"><div class="form-group"><label>Стоимость</label><input type="number" value="${ab.cost??1}" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','cost',parseInt(this.value)||0)"></div><div class="form-group"><label>Тип</label><select onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','type',this.value)"><option value="active" ${ab.type==='active'?'selected':''}>Активное</option><option value="passive" ${ab.type==='passive'?'selected':''}>Пассивное</option></select></div><div class="form-group"><label>Применение</label><select onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','usage',this.value)">${Object.entries(usageOptions).map(([v,l])=>`<option value="${v}" ${ab.usage===v?'selected':''}>${l}</option>`).join('')}</select></div></div><div class="form-group"><label>Тип эффекта</label><select onchange="Editor.updateGlobalAbilityEffectType('${this.escapeAttr(id)}',this.value)">${Object.entries(effectTypes).map(([v,l])=>`<option value="${v}" ${ab.effect?.type===v?'selected':''}>${l}</option>`).join('')}</select></div>${ab.effect?.type==='damage'||ab.effect?.type==='heal'?`<div class="grid-2"><div class="form-group"><label>Формула</label><input value="${this.escapeHtml(ab.effect.value||'1d6')}" onchange="Editor.updateGlobalAbilityEffectValue('${this.escapeAttr(id)}',this.value)"></div>${ab.effect?.type==='damage'?`<div class="form-group"><label>Тип урона</label><select onchange="Editor.updateGlobalAbilityEffectDamageType('${this.escapeAttr(id)}',this.value)">${Object.entries(damageTypes).map(([v,l])=>`<option value="${v}" ${ab.effect.damageType===v?'selected':''}>${l}</option>`).join('')}</select></div>`:''}</div>`:''}${ab.effect?.type==='buff'?`<div class="grid-2"><div class="form-group"><label>Что усиливает</label><select onchange="Editor.updateGlobalAbilityBuffType('${this.escapeAttr(id)}',this.value)"><option value="ac" ${ab.effect.buffType==='ac'?'selected':''}>КД</option><option value="atk" ${ab.effect.buffType==='atk'?'selected':''}>Атака</option><option value="dmg" ${ab.effect.buffType==='dmg'?'selected':''}>Урон</option></select></div><div class="form-group"><label>Величина</label><input type="number" value="${ab.effect.value||2}" onchange="Editor.updateGlobalAbilityEffectValue('${this.escapeAttr(id)}',this.value)"></div></div>`:''}${Editor.renderEffectTypeExtraFields?Editor.renderEffectTypeExtraFields(ab.effect,{value:`Editor.updateGlobalAbilityEffectValue('${this.escapeAttr(id)}',this.value)`,message:`Editor.updateGlobalAbilityEffectMessage('${this.escapeAttr(id)}',this.value)`}):''}<div class="form-group"><label>Область действия</label><select onchange="Editor.updateGlobalAbilityTargeting('${this.escapeAttr(id)}','scope',this.value)">${['single','area','all_enemies','ally','self'].map(v=>`<option value="${v}" ${(ab.effect?.targeting?.scope||'single')===v?'selected':''}>${this.escapeHtml(v)}</option>`).join('')}</select></div><div class="grid-2"><div class="form-group"><label>Дальность</label><input value="${this.escapeHtml(ab.effect?.targeting?.range||'self')}" onchange="Editor.updateGlobalAbilityTargeting('${this.escapeAttr(id)}','range',this.value)"></div><div class="form-group"><label>Радиус</label><input value="${this.escapeHtml(ab.effect?.targeting?.radius||'10ft')}" onchange="Editor.updateGlobalAbilityTargeting('${this.escapeAttr(id)}','radius',this.value)"></div></div><div class="form-group"><label><input type="checkbox" ${ab.effect?.savingThrow?'checked':''} onchange="Editor.toggleGlobalAbilitySavingThrow('${this.escapeAttr(id)}',this.checked)"> Спасбросок</label></div><div id="globalSaveBlock-${this.escapeAttr(id)}" style="${ab.effect?.savingThrow?'':'display:none;'}"><div class="grid-2"><div class="form-group"><label>Навык</label><select onchange="Editor.updateGlobalAbilitySave('${this.escapeAttr(id)}','skill',this.value)">${['strength','dexterity','constitution','intelligence','wisdom','charisma'].map(v=>`<option value="${v}" ${ab.effect?.savingThrow?.skill===v?'selected':''}>${this.escapeHtml(v)}</option>`).join('')}</select></div><div class="form-group"><label>DC</label><input type="number" value="${ab.effect?.savingThrow?.dc||13}" onchange="Editor.updateGlobalAbilitySave('${this.escapeAttr(id)}','dc',parseInt(this.value)||0)"></div></div><div class="form-group"><label><input type="checkbox" ${ab.effect?.savingThrow?.halfOnSave?'checked':''} onchange="Editor.updateGlobalAbilitySave('${this.escapeAttr(id)}','halfOnSave',this.checked)"> Половина на успех</label></div></div>${this.renderAbilitySoundFields('global', id, ab)}${ab.type==='passive'?`<div class="form-group"><label>Пассивный эффект (JSON)</label><textarea rows="2" onchange="Editor.updateGlobalAbilityPassive('${this.escapeAttr(id)}',this.value)">${this.escapeHtml(JSON.stringify(ab.passive||{}))}</textarea></div>`:''}</div>`; },
+  updateGlobalAbility(id, field, value){ if(!this.data.progression) this.data.progression={abilities:{}}; if(!this.data.progression.abilities) this.data.progression.abilities={}; const target=this.data.progression.abilities[id]; if(!target)return; target[field]=value; this.updateJSONPreview(); this.renderAbilities(); },
+  updateGlobalAbilityEffectType(id, type){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; if(Editor.applyAbilityEffectDefaults) Editor.applyAbilityEffectDefaults(target.effect,type); else { target.effect.type=type; if(type==='damage'){target.effect.value='2d6'; target.effect.damageType='fire';} if(type==='heal'){target.effect.value='1d8+2';} if(type==='buff'){target.effect.value=2; target.effect.buffType='ac';} delete target.effect.savingThrow; } this.updateJSONPreview(); this.renderAbilities(); },
+  updateGlobalAbilityEffectValue(id, value){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; target.effect.value=value; this.updateJSONPreview(); },
+  updateGlobalAbilityEffectDamageType(id, dt){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; target.effect.damageType=dt; this.updateJSONPreview(); },
+  updateGlobalAbilityBuffType(id, bt){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; target.effect.buffType=bt; this.updateJSONPreview(); },
+  updateGlobalAbilityTargeting(id, field, value){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; if(!target.effect.targeting) target.effect.targeting={scope:'single'}; target.effect.targeting[field]=value; this.updateJSONPreview(); },
+  toggleGlobalAbilitySavingThrow(id, checked){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; if(checked) target.effect.savingThrow={skill:'dexterity',dc:13,halfOnSave:false}; else delete target.effect.savingThrow; this.renderAbilities(); },
+  updateGlobalAbilitySave(id, field, value){ const target=this.data.progression?.abilities?.[id]; if(!target?.effect) return; if(!target.effect.savingThrow) target.effect.savingThrow={}; target.effect.savingThrow[field]=value; this.updateJSONPreview(); },
+  updateGlobalAbilityPassive(id, jsonStr){ const target=this.data.progression?.abilities?.[id]; if(!target) return; try{ target.passive=JSON.parse(jsonStr); }catch(e){ alert('Ошибка JSON: '+e.message); } this.updateJSONPreview(); },
+  addGlobalAbilityToClass(classId, abilityId){ const cls=this.data?.classes?.[classId]; const pool=this.data?.progression?.abilities; if(!cls||!pool||!pool[abilityId]) return; if(!cls.abilities) cls.abilities=[]; if(cls.abilities.some(a=>a.id===abilityId)){ alert('Умение уже добавлено в класс'); return; } cls.abilities.push(JSON.parse(JSON.stringify(pool[abilityId]))); this.renderClasses(); this.updateJSONPreview(); },
+  getClassAbilityOptions(classId) {
+    const cls = this.data?.classes?.[classId];
+    return (cls?.abilities || []).map(ab => ({ id: ab.id, label: `${ab.name || ab.id} (${ab.id})`, icon: ab.icon || '' }));
+  },
+  renderClassProgressionSection(classId, cls, maxLevel) {
+    if (!cls.progression) cls.progression = { levels: {} };
+    if (!cls.progression.levels) cls.progression.levels = {};
+    const options = this.getClassAbilityOptions(classId);
+    const levels = [];
+    for (let level = 2; level <= maxLevel; level += 1) {
+      const cfg = cls.progression.levels[level] || { choices: [] };
+      const chosen = (cfg.choices || []).map(choiceId => {
+        const ab = (cls.abilities || []).find(a => a.id === choiceId) || { name: choiceId, icon: '' };
+        return `<span class="progression-choice-chip">${this.renderIcon(ab.icon)} ${this.escapeHtml(ab.name || choiceId)}<button type="button" onclick="Editor.removeProgressionChoice('${this.escapeAttr(classId)}',${level},${JSON.stringify(choiceId)})">×</button></span>`;
+      }).join('') || '<div class="hint">Нет выбранных умений</div>';
+      const selectHtml = options.length
+        ? `<select class="icon-picker-select" onchange="Editor.addProgressionChoice('${this.escapeAttr(classId)}',${level},this.value); this.value='';"><option value="">+ Добавить умение</option>${options.map(o => `<option value="${this.escapeAttr(o.id)}">${this.escapeHtml(o.icon)} ${this.escapeHtml(o.label)}</option>`).join('')}</select>`
+        : '<div class="hint">Создайте умения для этого класса на вкладке «Классы»</div>';
+      levels.push(`<div class="progression-level-row"><div class="row-title">Уровень ${level}</div><div class="progression-choice-list">${chosen}</div>${selectHtml}</div>`);
+    }
+    return `<div class="class-section"><h4>Прогрессия класса — ${this.escapeHtml(cls.name || classId)}</h4>${levels.join('')}</div>`;
+  },
+  addProgressionChoice(classId, level, abilityId) {
+    if (!abilityId) return;
+    const cls = this.data?.classes?.[classId];
+    if (!cls) return;
+    if (!cls.progression) cls.progression = { levels: {} };
+    if (!cls.progression.levels) cls.progression.levels = {};
+    if (!cls.progression.levels[level]) cls.progression.levels[level] = { choices: [] };
+    const choices = cls.progression.levels[level].choices;
+    if (!choices.includes(abilityId)) choices.push(abilityId);
+    this.renderProgression();
+    this.updateJSONPreview();
+  },
+  removeProgressionChoice(classId, level, abilityId) {
+    const cfg = this.data?.classes?.[classId]?.progression?.levels?.[level];
+    if (!cfg?.choices) return;
+    cfg.choices = cfg.choices.filter(id => id !== abilityId);
+    this.renderProgression();
+    this.updateJSONPreview();
+  },
+
+  // ========== РАСШИРЕННЫЙ РЕДАКТОР КЛАССОВ ==========
+  selectClassToEdit(id){ this.editingClassId=id; this.renderClasses(); },
+  renderClasses(){ const container=document.getElementById('classes-list'); if(!this.data?.classes){ container.innerHTML='<div class="empty-state"><h2>Нет данных</h2></div>'; return; } const ids=Object.keys(this.data.classes); if(!ids.length){ container.innerHTML='<div class="empty-state"><h2>Нет классов</h2><button class="btn btn-primary" onclick="Editor.createClass()">+ Создать класс</button></div>'; return; } if(!this.editingClassId||!this.data.classes[this.editingClassId]) this.editingClassId=ids[0]; const sidebar=ids.map(id=>{ const cls=this.data.classes[id]; const active=id===this.editingClassId?'active':''; return `<button type="button" class="class-pick ${active}" onclick="Editor.selectClassToEdit('${id}')">${this.renderIcon(cls.icon) || '⚔️'} ${this.escapeHtml(cls.name||id)}</button>`; }).join(''); container.innerHTML=`<div class="class-editor-wrap"><div class="class-editor-sidebar">${sidebar}<button type="button" class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="Editor.createClass()">+ Новый класс</button></div><div class="class-editor-detail">${this.renderClassDetail(this.editingClassId)}</div></div>`; },
+  renderClassDetail(id){ const cls=this.data.classes[id]; if(!cls) return ''; if(!cls.stats) cls.stats={str:10,dex:10,con:10,int:10,wis:10,cha:10}; if(!cls.resource) cls.resource={name:'Ресурс',max:2,desc:''}; if(!cls.abilities) cls.abilities=[]; if(!cls.startingItems) cls.startingItems=[]; const weapons=this.getWeaponItems(); const weaponOptions=weapons.map(([wid,w])=>`<option value="${wid}" ${cls.mainWeapon===wid?'selected':''}>${this.escapeHtml(w.name)} (${wid})</option>`).join(''); const itemCheckboxes=this.getAllItemIds().map(itemId=>{ const item=this.data.items[itemId]; const checked=cls.startingItems.includes(itemId)?'checked':''; return `<label style="display:block;font-size:13px;margin:4px 0;"><input type="checkbox" ${checked} onchange="Editor.toggleStartingItem('${id}','${itemId}',this.checked)"> ${this.escapeHtml(item.name)} (${itemId})</label>`; }).join('')||'<p class="hint">Создайте предметы во вкладке «Предметы»</p>'; const globalAbilityOptions=Object.entries(this.data.progression?.abilities||{}).map(([aid,ab])=>`<option value="${this.escapeAttr(aid)}">${this.escapeHtml(ab.icon||'✨')} ${this.escapeHtml(ab.name||aid)}</option>`).join(''); const abilitiesHtml=cls.abilities.map((ab,idx)=>this.renderAbilityEditor(id,ab,idx,cls)).join(''); return `<div class="class-section"><div style="display:flex;justify-content:space-between;"><h4>Основное — ${this.escapeHtml(cls.name)}</h4><button class="btn btn-danger" onclick="Editor.deleteClass('${id}')">🗑 Удалить</button></div><div class="grid-2"><div class="form-group"><label>ID класса</label><input value="${id}" disabled></div><div class="form-group" style="grid-column:1/-1"><label>Иконка</label><div class="icon-picker-row">${this.renderIconEmojiSelect('if(this.value){Editor.updateClass(' + JSON.stringify(id) + ',"icon",this.value);}')}<input type="text" value="${this.escapeHtml(cls.icon||'⚔️')}" onchange="Editor.updateClass('${id}','icon',this.value)">${this.renderIconPreview(cls.icon)}</div><div class="icon-suggestions">${this.renderIconSuggestionButtons(icon => 'Editor.updateClass(' + JSON.stringify(id) + ',"icon",' + JSON.stringify(icon) + ')')}</div><div class="icon-hint">Выберите emoji из списка или вставьте свой / путь к PNG/SVG (например <code>icons/class.png</code>).</div></div></div><div class="form-group"><label>Название</label><input value="${this.escapeHtml(cls.name||'')}" onchange="Editor.updateClass('${id}','name',this.value)"></div></div><div class="class-section"><h4>❤️ Здоровье и защита</h4><div class="grid-3"><div class="form-group"><label>ОЗ</label><input type="number" value="${cls.hp??20}" onchange="Editor.updateClass('${id}','hp',parseInt(this.value)||1)"></div><div class="form-group"><label>КД</label><input type="number" value="${cls.ac??10}" onchange="Editor.updateClass('${id}','ac',parseInt(this.value)||10)"></div><div class="form-group"><label>Инициатива</label><input type="number" value="${cls.initBonus??0}" onchange="Editor.updateClass('${id}','initBonus',parseInt(this.value)||0)"></div></div></div><div class="class-section"><h4>⚡ Ресурс класса</h4><div class="grid-3"><div class="form-group"><label>Название</label><input value="${this.escapeHtml(cls.resource.name)}" onchange="Editor.updateClassResource('${id}','name',this.value)"></div><div class="form-group"><label>Максимум</label><input type="number" value="${cls.resource.max??2}" onchange="Editor.updateClassResource('${id}','max',parseInt(this.value)||0)"></div><div class="form-group"><label>Описание</label><input value="${this.escapeHtml(cls.resource.desc||'')}" onchange="Editor.updateClassResource('${id}','desc',this.value)"></div></div></div><div class="class-section"><h4>📊 Характеристики</h4><div class="grid-6">${['str','dex','con','int','wis','cha'].map(stat=>`<div class="form-group"><label>${stat.toUpperCase()}</label><input type="number" min="1" max="30" value="${cls.stats[stat]??10}" onchange="Editor.updateClassStat('${id}','${stat}',parseInt(this.value)||10)"></div>`).join('')}</div><div class="form-group"><label>Владение навыками</label><input value="${this.escapeHtml(cls.skills||'')}" onchange="Editor.updateClass('${id}','skills',this.value)"></div></div><div class="class-section"><h4>⚔️ Оружие и бой</h4><div class="form-group"><label>Стартовое оружие</label><select onchange="Editor.setClassWeapon('${id}',this.value)"><option value="">— не выбрано —</option>${weaponOptions}</select></div><div class="grid-3"><div class="form-group"><label>Бонус атаки</label><input type="number" value="${cls.atkBonus??0}" onchange="Editor.updateClass('${id}','atkBonus',parseInt(this.value)||0)"></div><div class="form-group"><label>Кубики урона</label><input value="${this.escapeHtml(cls.dmgRoll||'1d6')}" onchange="Editor.updateClass('${id}','dmgRoll',this.value)"></div><div class="form-group"><label>Бонус урона</label><input type="number" value="${cls.dmgBonus??0}" onchange="Editor.updateClass('${id}','dmgBonus',parseInt(this.value)||0)"></div></div><div class="form-group"><label>Звук атаки</label>${this.renderSoundSelect(cls.attackSound||'', `Editor.updateClass('${id}','attackSound',this.value)`)}<div class="hint">Пусто = звук оружия из предмета</div></div></div><div class="class-section"><h4>🎒 Стартовый инвентарь</h4><div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);padding:8px;border-radius:6px;">${itemCheckboxes}</div></div><div class="class-section"><h4>✨ Способности</h4><div class="form-group"><label>Добавить умение из общего пула</label><div style="display:flex;gap:8px;align-items:center;"><select style="flex:1;" onchange="if(this.value){Editor.addGlobalAbilityToClass('${id}',this.value); this.value='';}"><option value="">— Выбрать умение —</option>${globalAbilityOptions}</select><button class="btn btn-secondary" type="button" onclick="Editor.addAbility('${id}')">+ Локальное</button></div></div>${abilitiesHtml}<button class="btn btn-primary" style="margin-top:10px;" onclick="Editor.addAbility('${id}')">+ Добавить способность</button></div>`; },
+  renderAbilityEditor(classId, ab, index, cls) {
+    // Нормализуем старые строковые эффекты
+    if (!ab.effect) ab.effect = {};
+    if (typeof ab.effect === 'string') {
+      const old = ab.effect;
+      ab.effect = {};
+      if (old.startsWith('heal:')) { ab.effect.type='heal'; ab.effect.value=old.slice(5); }
+      else if (old.startsWith('damage:')) { ab.effect.type='damage'; ab.effect.value=old.slice(7); }
+      else if (old==='extra_attack') ab.effect.type='extra_attack';
+      else if (old.startsWith('ac_bonus:')) { ab.effect.type='buff'; ab.effect.value=old.slice(9); ab.effect.buffType='ac'; }
+      else if (old==='magic_missile') ab.effect.type='magic_missile';
+      else if (old.startsWith('aoe_fire:')) { ab.effect.type='damage'; ab.effect.value=old.slice(9); ab.effect.damageType='fire'; ab.effect.targeting={scope:'all_enemies'}; }
+      else if (old.startsWith('smite:')) { ab.effect.type='smite'; ab.effect.value=old.slice(6); }
+      else ab.effect = { type:'custom', desc:old };
+    }
+    if (!ab.targeting && ab.effect?.targeting) ab.targeting = ab.effect.targeting;
+    if (!ab.targeting) ab.targeting = { scope: 'single' };
+    if (!ab.usage) ab.usage = ab.combatOnly ? 'combat' : (ab.combatOnly===false?'exploration':'both');
+    if (ab.type !== 'passive') ab.type = 'active';
+
+    const effectTypes = Editor.ABILITY_EFFECT_TYPES || { damage:'Урон', heal:'Лечение', buff:'Бафф', extra_attack:'Доп. атака', magic_missile:'Маг. снаряд', smite:'Кара', detect_magic:'Обнаружение магии', divine_sense:'Божественное чувство', custom:'Особый' };
+    const scopeOptions = { single:'Одна цель', area:'Область', all_enemies:'Все враги', ally:'Союзник', self:'На себя' };
+    const usageOptions = { combat:'Только бой', exploration:'Только исследование', both:'Любое' };
+    const damageTypes = { physical:'Физический', fire:'Огонь', cold:'Холод', lightning:'Молния', radiant:'Излучение', necrotic:'Некротический' };
+
+    return `<div class="ability-edit-card">
+      <div class="grid-2"><div class="form-group"><label>ID</label><input value="${this.escapeHtml(ab.id||'')}" placeholder="my_ability" onchange="Editor.updateAbility('${classId}',${index},'id',this.value)"></div><div class="form-group" style="grid-column:1/-1"><label>Иконка</label><div class="icon-picker-row">${this.renderIconEmojiSelect('if(this.value){Editor.setAbilityIcon(' + JSON.stringify(classId) + ',' + index + ',this.value);}')}<input type="text" value="${this.escapeHtml(ab.icon||'✨')}" onchange="Editor.updateAbility('${classId}',${index},'icon',this.value)">${this.renderIconPreview(ab.icon)}</div><div class="icon-suggestions">${this.renderIconSuggestionButtons(icon => 'Editor.setAbilityIcon(' + JSON.stringify(classId) + ',' + index + ',' + JSON.stringify(icon) + ')')}</div><div class="icon-hint">Список emoji, быстрые кнопки ниже или свой текст / путь к PNG/SVG (<code>icons/skill.png</code>).</div></div></div>
+      <div class="form-group"><label>Название</label><input value="${this.escapeHtml(ab.name||'')}" onchange="Editor.updateAbility('${classId}',${index},'name',this.value)"></div>
+      <div class="form-group"><label>Описание</label><textarea rows="2" onchange="Editor.updateAbility('${classId}',${index},'desc',this.value)">${this.escapeTextarea(ab.desc||'')}</textarea></div>
+      ${this.renderAbilitySoundFields('class', classId, ab, index)}
+      <div class="grid-3"><div class="form-group"><label>Тип</label><select onchange="Editor.updateAbility('${classId}',${index},'type',this.value)"><option value="active" ${ab.type==='active'?'selected':''}>Активное</option><option value="passive" ${ab.type==='passive'?'selected':''}>Пассивное</option></select></div><div class="form-group"><label>Применение</label><select onchange="Editor.updateAbility('${classId}',${index},'usage',this.value)">${Object.entries(usageOptions).map(([v,l])=>`<option value="${v}" ${ab.usage===v?'selected':''}>${l}</option>`).join('')}</select></div><div class="form-group"><label>Стоимость (${this.escapeHtml(cls.resource?.name||'ресурс')})</label><input type="number" value="${ab.cost??1}" onchange="Editor.updateAbility('${classId}',${index},'cost',parseInt(this.value)||0)"></div></div>
+      ${ab.type==='active'?`<div class="form-group"><label>Тип эффекта</label><select onchange="Editor.updateAbilityEffectType('${classId}',${index},this.value)">${Object.entries(effectTypes).map(([v,l])=>`<option value="${v}" ${ab.effect?.type===v?'selected':''}>${l}</option>`).join('')}</select></div>
+      ${(ab.effect?.type==='damage'||ab.effect?.type==='heal')?`<div class="grid-2"><div class="form-group"><label>Формула (XdY+Z)</label><input value="${this.escapeHtml(ab.effect.value||'1d6')}" placeholder="2d6+3" onchange="Editor.updateAbilityEffectValue('${classId}',${index},this.value)"></div>${ab.effect?.type==='damage'?`<div class="form-group"><label>Тип урона</label><select onchange="Editor.updateAbilityEffectDamageType('${classId}',${index},this.value)">${Object.entries(damageTypes).map(([v,l])=>`<option value="${v}" ${ab.effect.damageType===v?'selected':''}>${l}</option>`).join('')}</select></div>`:''}</div>`:''}
+      ${ab.effect?.type==='buff'?`<div class="grid-2"><div class="form-group"><label>Что усиливает</label><select onchange="Editor.updateAbilityBuffType('${classId}',${index},this.value)"><option value="ac" ${ab.effect.buffType==='ac'?'selected':''}>Класс доспеха</option><option value="atk" ${ab.effect.buffType==='atk'?'selected':''}>Атака</option><option value="dmg" ${ab.effect.buffType==='dmg'?'selected':''}>Урон</option></select></div><div class="form-group"><label>Величина</label><input type="number" value="${ab.effect.value||2}" onchange="Editor.updateAbilityEffectValue('${classId}',${index},this.value)"></div></div>`:''}
+      ${Editor.renderEffectTypeExtraFields ? Editor.renderEffectTypeExtraFields(ab.effect, { value: `Editor.updateAbilityEffectValue('${classId}',${index},this.value)`, message: `Editor.updateAbilityEffectMessage('${classId}',${index},this.value)` }) : ''}
+      <div class="form-group"><label>Область действия</label><select onchange="Editor.updateAbilityTargeting('${classId}',${index},'scope',this.value)">${Object.entries(scopeOptions).map(([v,l])=>`<option value="${v}" ${(ab.effect?.targeting?.scope||ab.targeting?.scope)==v?'selected':''}>${l}</option>`).join('')}</select></div>
+      ${(ab.effect?.targeting?.scope==='area'||ab.targeting?.scope==='area')?`<div class="form-group"><label>Радиус (например: 15ft)</label><input value="${this.escapeHtml((ab.effect?.targeting?.radius||ab.targeting?.radius)||'10ft')}" onchange="Editor.updateAbilityTargeting('${classId}',${index},'radius',this.value)"></div>`:''}
+      <div class="form-group"><label>Дальность</label><input value="${this.escapeHtml((ab.effect?.targeting?.range||ab.targeting?.range)||'self')}" placeholder="30ft / self" onchange="Editor.updateAbilityTargeting('${classId}',${index},'range',this.value)"></div>
+      <div class="form-group"><label><input type="checkbox" id="hasSave-${classId}-${index}" ${ab.effect?.savingThrow?'checked':''} onchange="Editor.toggleSavingThrow('${classId}',${index},this.checked)"> Цель совершает спасбросок</label></div>
+      <div id="saveBlock-${classId}-${index}" style="${ab.effect?.savingThrow?'':'display:none;'}"><div class="grid-2"><div class="form-group"><label>Навык спасброска</label><select onchange="Editor.updateAbilitySave('${classId}',${index},'skill',this.value)"><option value="strength" ${ab.effect?.savingThrow?.skill==='strength'?'selected':''}>Сила</option><option value="dexterity" ${ab.effect?.savingThrow?.skill==='dexterity'?'selected':''}>Ловкость</option><option value="constitution" ${ab.effect?.savingThrow?.skill==='constitution'?'selected':''}>Телосложение</option><option value="intelligence" ${ab.effect?.savingThrow?.skill==='intelligence'?'selected':''}>Интеллект</option><option value="wisdom" ${ab.effect?.savingThrow?.skill==='wisdom'?'selected':''}>Мудрость</option><option value="charisma" ${ab.effect?.savingThrow?.skill==='charisma'?'selected':''}>Харизма</option></select></div><div class="form-group"><label>Сложность (DC)</label><input type="number" value="${ab.effect?.savingThrow?.dc||13}" onchange="Editor.updateAbilitySave('${classId}',${index},'dc',parseInt(this.value))"></div></div><div class="form-group"><label><input type="checkbox" ${ab.effect?.savingThrow?.halfOnSave?'checked':''} onchange="Editor.updateAbilitySave('${classId}',${index},'halfOnSave',this.checked)"> Половина урона при успехе</label></div></div>
+      `:''}
+      ${ab.type==='passive'?`<div class="form-group"><label>Пассивный эффект (JSON)</label><textarea rows="2" onchange="Editor.updateAbilityPassive('${classId}',${index},this.value)">${JSON.stringify(ab.passive||{})}</textarea><div class="hint">Пример: {"maxHpBonus":6, "acBonus":2, "atkBonus":1, "resourceMaxBonus":1}</div></div>`:''}
+      <div style="margin-top:10px;"><label><input type="checkbox" ${ab.oncePerCombat?'checked':''} onchange="Editor.updateAbility('${classId}',${index},'oncePerCombat',this.checked)"> Один раз за бой</label></div>
+      <button class="btn btn-danger" style="margin-top:10px;" onclick="Editor.deleteAbility('${classId}',${index})">🗑 Удалить способность</button>
+    </div>`;
+  },
+  updateAbility(classId, idx, field, value){ this.data.classes[classId].abilities[idx][field]=value; this.updateJSONPreview(); if(field==='name'||field==='icon') this.renderClasses(); },
+  updateAbilityEffectType(classId, idx, type){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect)ab.effect={}; if(Editor.applyAbilityEffectDefaults) Editor.applyAbilityEffectDefaults(ab.effect,type); else { ab.effect.type=type; if(type==='damage'){ab.effect.value='2d6';ab.effect.damageType='fire';} if(type==='heal')ab.effect.value='1d8+2'; if(type==='buff'){ab.effect.buffType='ac';ab.effect.value=2;} delete ab.effect.savingThrow; } this.renderClasses(); this.updateJSONPreview(); },
+  updateAbilityEffectValue(classId, idx, value){ const ab=this.data.classes[classId].abilities[idx]; ab.effect.value=value; this.updateJSONPreview(); },
+  updateAbilityEffectDamageType(classId, idx, dt){ const ab=this.data.classes[classId].abilities[idx]; ab.effect.damageType=dt; this.updateJSONPreview(); },
+  updateAbilityBuffType(classId, idx, bt){ const ab=this.data.classes[classId].abilities[idx]; ab.effect.buffType=bt; this.updateJSONPreview(); },
+  updateAbilityTargeting(classId, idx, field, value){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect)ab.effect={}; if(!ab.effect.targeting)ab.effect.targeting={scope:'single'}; ab.effect.targeting[field]=value; this.updateJSONPreview(); },
+  toggleSavingThrow(classId, idx, checked){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect)ab.effect={}; if(checked) ab.effect.savingThrow={skill:'dexterity',dc:13,halfOnSave:false}; else delete ab.effect.savingThrow; this.renderClasses(); },
+  updateAbilitySave(classId, idx, field, value){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect.savingThrow)ab.effect.savingThrow={}; ab.effect.savingThrow[field]=value; this.updateJSONPreview(); },
+  updateAbilityPassive(classId, idx, jsonStr){ const ab=this.data.classes[classId].abilities[idx]; try{ ab.passive=JSON.parse(jsonStr); }catch(e){ alert('Ошибка JSON: '+e.message); } this.updateJSONPreview(); },
+  addAbility(classId){ if(!this.data.classes[classId].abilities)this.data.classes[classId].abilities=[]; const n=this.data.classes[classId].abilities.length+1; this.data.classes[classId].abilities.push({id:classId+'_skill_'+n,name:'Новая способность',cost:1,icon:'✨',desc:'Описание...',combatOnly:true,oncePerCombat:false,effect:'damage:1d6'}); this.renderClasses(); this.updateJSONPreview(); },
+  deleteAbility(classId, idx){ if(!confirm('Удалить способность?'))return; this.data.classes[classId].abilities.splice(idx,1); this.renderClasses(); this.updateJSONPreview(); },
+  updateClass(id, field, value){ if(!this.data.classes[id])return; this.data.classes[id][field]=value; this.updateJSONPreview(); if(field==='name'||field==='icon')this.renderClasses(); },
+  updateClassStat(id, stat, value){ if(!this.data.classes[id].stats)this.data.classes[id].stats={}; this.data.classes[id].stats[stat]=value; this.updateJSONPreview(); },
+  updateClassResource(id, field, value){ if(!this.data.classes[id].resource)this.data.classes[id].resource={name:'Ресурс',max:2,desc:''}; this.data.classes[id].resource[field]=value; this.updateJSONPreview(); if(field==='name')this.renderClasses(); },
+  setClassWeapon(classId, weaponId){ const cls=this.data.classes[classId]; if(!cls)return; cls.mainWeapon=weaponId||null; if(weaponId&&this.data.items[weaponId]){ const w=this.data.items[weaponId]; if(w.dmgRoll)cls.dmgRoll=w.dmgRoll; if(w.dmgBonus!=null)cls.dmgBonus=(cls.dmgBonus??0)+w.dmgBonus; if(!cls.startingItems.includes(weaponId))cls.startingItems.push(weaponId); } this.renderClasses(); this.updateJSONPreview(); },
+  toggleStartingItem(classId, itemId, checked){ const cls=this.data.classes[classId]; if(!cls.startingItems)cls.startingItems=[]; if(checked&&!cls.startingItems.includes(itemId))cls.startingItems.push(itemId); if(!checked)cls.startingItems=cls.startingItems.filter(i=>i!==itemId); this.updateJSONPreview(); },
+  createClass(){ const id=prompt('ID класса (латиница):'); if(!id||!/^[a-z][a-z0-9_]*$/i.test(id)){alert('ID должен быть латиницей');return;} if(this.data.classes[id]){alert('Класс уже существует');return;} this.data.classes[id]={name:'Новый класс',icon:'⚔️',hp:20,ac:14,atkBonus:3,dmgRoll:'1d8',dmgBonus:2,initBonus:2,stats:{str:12,dex:14,con:12,int:10,wis:10,cha:10},skills:'Атлетика, Восприятие',resource:{name:'Энергия',max:2,desc:'Ресурс для способностей.'},mainWeapon:null,startingItems:[],abilities:[{id:id+'_strike',name:'Удар',cost:1,icon:'⚔️',desc:'Базовая атака.',combatOnly:true,oncePerCombat:false,effect:'damage:1d8'}]}; this.editingClassId=id; this.renderClasses(); this.updateJSONPreview(); },
+  deleteClass(id){ if(!confirm('Удалить класс?'))return; delete this.data.classes[id]; this.editingClassId=Object.keys(this.data.classes)[0]||null; this.renderClasses(); this.updateJSONPreview(); }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  ThemeSystem.applyDefaults();
+  Editor.updateProjectPanel();
+  Editor.showDashboard();
+});
+</script>
+<script src="js/special-scenes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="js/editor/editor-linter.js"></script>
+<script src="js/reputation-system.js"></script>
+<script src="js/editor/editor-quests.js"></script>
+<script src="js/editor/editor-reputation.js"></script>
+<script src="js/editor/editor-audio-fields.js"></script>
+<script src="js/editor/editor-races.js"></script>
+<script src="js/editor/editor-class-skills.js"></script>
+<script src="js/editor/editor-choices.js"></script>
+<script src="js/nl-condition-builder.js"></script>
+<script src="js/editor-nl-condition-bridge.js"></script>
+<script src="js/editor/editor-states.js"></script>
+<script src="js/editor/editor-graph.js"></script>
+<script src="js/editor/editor-theme.js"></script>
+<script src="js/wild-shape.js"></script>
+<script src="js/editor/editor-enemy-scaling.js"></script>
+<script src="js/editor/editor-beasts.js"></script>
+<script src="js/editor/editor-sidebar-panels.js"></script>
+<script src="js/editor/editor-worldmap.js"></script>
+<script src="js/editor/editor-special.js"></script>
+<script src="js/editor-dashboard.js"></script>
+<script src="js/editor-preview.js"></script>
+<script src="js/editor-visual-tools.js"></script>
+<script src="js/editor/pf2e-starter-template.js"></script>
+<script src="js/editor-new-project.js"></script>
+<script src="js/editor-import.js"></script>
+<script src="js/editor/editor-abilities.js"></script>
+<script src="js/editor/editor-export.js"></script>
+<script src="js/editor/editor-items-curse.js"></script>
+</body>
+</html>

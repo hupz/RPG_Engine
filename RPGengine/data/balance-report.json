@@ -1,0 +1,2594 @@
+[
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 92.2,
+    "hpLostPct": 29.6,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 99.2,
+    "hpLostPct": 18.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 13.7,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 27.8,
+    "hpLostPct": 85.4,
+    "avgRounds": 4.1
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 52.8,
+    "hpLostPct": 73.8,
+    "avgRounds": 5.5
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 74.4,
+    "hpLostPct": 61.7,
+    "avgRounds": 6.3
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 92.3,
+    "hpLostPct": 29.3,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 99.1,
+    "hpLostPct": 18.6,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 12.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 83.2,
+    "hpLostPct": 37.5,
+    "avgRounds": 2.2
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 96.7,
+    "hpLostPct": 25.3,
+    "avgRounds": 2.3
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 99.6,
+    "hpLostPct": 18,
+    "avgRounds": 2.3
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 80.7,
+    "hpLostPct": 43,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 94.9,
+    "hpLostPct": 29.3,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 99.2,
+    "hpLostPct": 21.6,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 83.9,
+    "hpLostPct": 45.2,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 97.3,
+    "hpLostPct": 29.4,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_a",
+    "enemyName": "Разведчик А",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 99.5,
+    "hpLostPct": 21.4,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 92.7,
+    "hpLostPct": 29.4,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 99,
+    "hpLostPct": 18.4,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 13.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 28.8,
+    "hpLostPct": 85.5,
+    "avgRounds": 4.1
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 52.9,
+    "hpLostPct": 73.9,
+    "avgRounds": 5.5
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 74.5,
+    "hpLostPct": 61.9,
+    "avgRounds": 6.3
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 92.4,
+    "hpLostPct": 28.5,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 99.3,
+    "hpLostPct": 18.2,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 12.8,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 83.4,
+    "hpLostPct": 37.6,
+    "avgRounds": 2.2
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 96.7,
+    "hpLostPct": 25.6,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 99.3,
+    "hpLostPct": 18.5,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 80.9,
+    "hpLostPct": 42.8,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 95.3,
+    "hpLostPct": 29.4,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 99,
+    "hpLostPct": 21.6,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 83.7,
+    "hpLostPct": 44.6,
+    "avgRounds": 2.7
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 97.3,
+    "hpLostPct": 28.8,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "scout_b",
+    "enemyName": "Разведчик Б",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 99.5,
+    "hpLostPct": 21,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 92.2,
+    "hpLostPct": 30,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 99.1,
+    "hpLostPct": 18.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 13.8,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 27.5,
+    "hpLostPct": 85.4,
+    "avgRounds": 4.1
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 53.5,
+    "hpLostPct": 74,
+    "avgRounds": 5.5
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 73.4,
+    "hpLostPct": 62,
+    "avgRounds": 6.3
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 92.9,
+    "hpLostPct": 27.7,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 99.1,
+    "hpLostPct": 18.5,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 13.1,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 83.4,
+    "hpLostPct": 37.3,
+    "avgRounds": 2.2
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 96.3,
+    "hpLostPct": 25.4,
+    "avgRounds": 2.3
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 99.2,
+    "hpLostPct": 19.1,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 81.1,
+    "hpLostPct": 41.7,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 95,
+    "hpLostPct": 29.3,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 99.3,
+    "hpLostPct": 21.1,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 83.9,
+    "hpLostPct": 45.2,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 97.7,
+    "hpLostPct": 29.2,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_a",
+    "enemyName": "Волк А",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 99.5,
+    "hpLostPct": 21.1,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 92.4,
+    "hpLostPct": 29.6,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 99.1,
+    "hpLostPct": 19,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 13.5,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 27.6,
+    "hpLostPct": 85.7,
+    "avgRounds": 4.1
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 51.3,
+    "hpLostPct": 75.2,
+    "avgRounds": 5.5
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 73.5,
+    "hpLostPct": 62.5,
+    "avgRounds": 6.3
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 93.1,
+    "hpLostPct": 27.3,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 99,
+    "hpLostPct": 17.9,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 12.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 83.3,
+    "hpLostPct": 38.1,
+    "avgRounds": 2.2
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 96.8,
+    "hpLostPct": 25.2,
+    "avgRounds": 2.3
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 99.5,
+    "hpLostPct": 18.6,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 80.7,
+    "hpLostPct": 42.9,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 94.9,
+    "hpLostPct": 30,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 98.9,
+    "hpLostPct": 21.7,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 83.8,
+    "hpLostPct": 45.2,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 97.2,
+    "hpLostPct": 29.2,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "wolf_b",
+    "enemyName": "Волк Б",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 99.3,
+    "hpLostPct": 21.5,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 45,
+    "hpLostPct": 73.9,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 70,
+    "hpLostPct": 60.8,
+    "avgRounds": 5.6
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 85.8,
+    "hpLostPct": 49.5,
+    "avgRounds": 6.1
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 0.5,
+    "hpLostPct": 99.7,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 2.3,
+    "hpLostPct": 99.1,
+    "avgRounds": 4.9
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 5.5,
+    "hpLostPct": 98.2,
+    "avgRounds": 6.6
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 44.9,
+    "hpLostPct": 74.4,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 69.4,
+    "hpLostPct": 61.5,
+    "avgRounds": 5.6
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 85.8,
+    "hpLostPct": 49.7,
+    "avgRounds": 6.2
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 29.8,
+    "hpLostPct": 84.2,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 53.2,
+    "hpLostPct": 72.5,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 72.5,
+    "hpLostPct": 61.2,
+    "avgRounds": 4.4
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 21.7,
+    "hpLostPct": 88.6,
+    "avgRounds": 4.8
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 40.2,
+    "hpLostPct": 80.5,
+    "avgRounds": 6.5
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 59,
+    "hpLostPct": 71.4,
+    "avgRounds": 7.7
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 24,
+    "hpLostPct": 88.9,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 46.5,
+    "hpLostPct": 79,
+    "avgRounds": 4.9
+  },
+  {
+    "enemy": "corvin",
+    "enemyName": "Корвин",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 67.9,
+    "hpLostPct": 68.4,
+    "avgRounds": 5.6
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 86.7,
+    "hpLostPct": 38.9,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 97.7,
+    "hpLostPct": 26,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 99.6,
+    "hpLostPct": 18.4,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 12.3,
+    "hpLostPct": 94.5,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 30.6,
+    "hpLostPct": 87.1,
+    "avgRounds": 6.5
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 52.1,
+    "hpLostPct": 78.6,
+    "avgRounds": 7.9
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 87.1,
+    "hpLostPct": 39.1,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 97.8,
+    "hpLostPct": 25.2,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 99.7,
+    "hpLostPct": 18.9,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 72.7,
+    "hpLostPct": 55.8,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 94,
+    "hpLostPct": 37.2,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 98.9,
+    "hpLostPct": 26.9,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 67.5,
+    "hpLostPct": 57.2,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 90.1,
+    "hpLostPct": 41,
+    "avgRounds": 5.2
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 97.8,
+    "hpLostPct": 30.6,
+    "avgRounds": 5.4
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 73.1,
+    "hpLostPct": 57.6,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 93.2,
+    "hpLostPct": 40,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "bruiser",
+    "enemyName": "Громила",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 98.7,
+    "hpLostPct": 29.2,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 99.8,
+    "hpLostPct": 10.6,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 6.2,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 4.4,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 75,
+    "hpLostPct": 53.2,
+    "avgRounds": 4.4
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 95.4,
+    "hpLostPct": 34.4,
+    "avgRounds": 4.9
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 99.1,
+    "hpLostPct": 25.1,
+    "avgRounds": 5
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 99.7,
+    "hpLostPct": 10.3,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 6.1,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 4.6,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 99.1,
+    "hpLostPct": 11.3,
+    "avgRounds": 1.6
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 6.9,
+    "avgRounds": 1.6
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 4.6,
+    "avgRounds": 1.6
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 98.5,
+    "hpLostPct": 17.4,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 10.5,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 7.3,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 99.3,
+    "hpLostPct": 15.3,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 9.6,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_a",
+    "enemyName": "Лучник А",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 6.6,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 99.8,
+    "hpLostPct": 10.2,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 6.4,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 4.6,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 74.9,
+    "hpLostPct": 53.3,
+    "avgRounds": 4.4
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 95.3,
+    "hpLostPct": 34.8,
+    "avgRounds": 4.9
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 99.1,
+    "hpLostPct": 25.2,
+    "avgRounds": 5
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 99.8,
+    "hpLostPct": 10,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 6.1,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 4.5,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 98.9,
+    "hpLostPct": 11.8,
+    "avgRounds": 1.6
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 7.2,
+    "avgRounds": 1.7
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 4.9,
+    "avgRounds": 1.6
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 98.4,
+    "hpLostPct": 16.9,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 10.3,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 7.1,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 99.2,
+    "hpLostPct": 15.6,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 100,
+    "hpLostPct": 9.6,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "archer_b",
+    "enemyName": "Лучник Б",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 100,
+    "hpLostPct": 6.9,
+    "avgRounds": 2.1
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 76.5,
+    "hpLostPct": 48.6,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 93.4,
+    "hpLostPct": 33.5,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 98.8,
+    "hpLostPct": 25,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 8.4,
+    "hpLostPct": 95.6,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 21.4,
+    "hpLostPct": 90.6,
+    "avgRounds": 5.2
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 37.9,
+    "hpLostPct": 84.2,
+    "avgRounds": 6.5
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 77.2,
+    "hpLostPct": 47,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 93,
+    "hpLostPct": 33.8,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 98.5,
+    "hpLostPct": 24.9,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 63.8,
+    "hpLostPct": 60.3,
+    "avgRounds": 2.5
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 85.5,
+    "hpLostPct": 45.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 94.7,
+    "hpLostPct": 35.1,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 57.3,
+    "hpLostPct": 64,
+    "avgRounds": 4
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 78.8,
+    "hpLostPct": 51.4,
+    "avgRounds": 4.8
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 90.7,
+    "hpLostPct": 40.5,
+    "avgRounds": 5.1
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 61.2,
+    "hpLostPct": 65.9,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 86.4,
+    "hpLostPct": 48.6,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "cultist_enforcer",
+    "enemyName": "Культист-изувер",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 95.7,
+    "hpLostPct": 37.3,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 71.1,
+    "hpLostPct": 53.3,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 91,
+    "hpLostPct": 37.1,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 97,
+    "hpLostPct": 28.7,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 6.5,
+    "hpLostPct": 96.6,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 15.2,
+    "hpLostPct": 93.5,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 29.3,
+    "hpLostPct": 88.3,
+    "avgRounds": 6
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 73.1,
+    "hpLostPct": 51,
+    "avgRounds": 3.3
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 89.6,
+    "hpLostPct": 37.9,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 96.8,
+    "hpLostPct": 28.4,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 52.8,
+    "hpLostPct": 67.3,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 80.1,
+    "hpLostPct": 51.2,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 92,
+    "hpLostPct": 39.8,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 47.2,
+    "hpLostPct": 70.7,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 73.1,
+    "hpLostPct": 56,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 87.8,
+    "hpLostPct": 44.7,
+    "avgRounds": 5
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 52.4,
+    "hpLostPct": 71.1,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 78.6,
+    "hpLostPct": 55.7,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "lukorn_guard_a",
+    "enemyName": "Охранник Люкорна",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 92.3,
+    "hpLostPct": 42.7,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 72.1,
+    "hpLostPct": 51.5,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 89.4,
+    "hpLostPct": 39.9,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 96.5,
+    "hpLostPct": 28.6,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 6.7,
+    "hpLostPct": 96.4,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 16.2,
+    "hpLostPct": 93.3,
+    "avgRounds": 4.7
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 28.2,
+    "hpLostPct": 88.7,
+    "avgRounds": 5.9
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 73,
+    "hpLostPct": 51,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 90,
+    "hpLostPct": 36.8,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 97.4,
+    "hpLostPct": 27.6,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 54.6,
+    "hpLostPct": 65.3,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 78.3,
+    "hpLostPct": 51.9,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 91.7,
+    "hpLostPct": 40,
+    "avgRounds": 3
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 49.1,
+    "hpLostPct": 68.7,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 72.8,
+    "hpLostPct": 55.2,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 86.5,
+    "hpLostPct": 46,
+    "avgRounds": 5
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 52.4,
+    "hpLostPct": 71.6,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 79.2,
+    "hpLostPct": 54.6,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "lukorn_guard_b",
+    "enemyName": "Охранник Люкорна",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 92.2,
+    "hpLostPct": 42.9,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 90.9,
+    "hpLostPct": 33.1,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 98.8,
+    "hpLostPct": 21.1,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 15.5,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 23.4,
+    "hpLostPct": 88,
+    "avgRounds": 4.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 47.7,
+    "hpLostPct": 77.3,
+    "avgRounds": 5.8
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 69.7,
+    "hpLostPct": 66.1,
+    "avgRounds": 6.6
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 92,
+    "hpLostPct": 30.5,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 98.8,
+    "hpLostPct": 20.1,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 99.9,
+    "hpLostPct": 14.5,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 81.1,
+    "hpLostPct": 43.4,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 96.3,
+    "hpLostPct": 28.9,
+    "avgRounds": 2.5
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 99.3,
+    "hpLostPct": 20.6,
+    "avgRounds": 2.6
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 77.5,
+    "hpLostPct": 45.6,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 93.8,
+    "hpLostPct": 32.4,
+    "avgRounds": 4.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 98.5,
+    "hpLostPct": 23.6,
+    "avgRounds": 4.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 81.7,
+    "hpLostPct": 49.3,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 96.7,
+    "hpLostPct": 32.4,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_c",
+    "enemyName": "Охранник (боковая дверь)",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 99.5,
+    "hpLostPct": 24,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 79.2,
+    "hpLostPct": 46.2,
+    "avgRounds": 3.3
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 94,
+    "hpLostPct": 32.4,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 98.7,
+    "hpLostPct": 23.8,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 9.9,
+    "hpLostPct": 94.9,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 25,
+    "hpLostPct": 88.8,
+    "avgRounds": 5.1
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 42.5,
+    "hpLostPct": 81.4,
+    "avgRounds": 6.3
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 79.3,
+    "hpLostPct": 44.6,
+    "avgRounds": 3.3
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 93.7,
+    "hpLostPct": 31.2,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 98.4,
+    "hpLostPct": 23.6,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 65.1,
+    "hpLostPct": 56.9,
+    "avgRounds": 2.4
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 86.7,
+    "hpLostPct": 43.1,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 95.4,
+    "hpLostPct": 32.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 59.4,
+    "hpLostPct": 62.7,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 80.5,
+    "hpLostPct": 48.7,
+    "avgRounds": 4.5
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 92.9,
+    "hpLostPct": 37.4,
+    "avgRounds": 4.7
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 62.6,
+    "hpLostPct": 64.2,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 87,
+    "hpLostPct": 46.7,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "lukorn_guard_d",
+    "enemyName": "Охранник (подвал)",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 95.8,
+    "hpLostPct": 36,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 62,
+    "hpLostPct": 59,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 82.5,
+    "hpLostPct": 45.6,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 92.6,
+    "hpLostPct": 34.8,
+    "avgRounds": 4
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 4.7,
+    "hpLostPct": 97.2,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 11.1,
+    "hpLostPct": 94.8,
+    "avgRounds": 4.4
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 20.1,
+    "hpLostPct": 91.5,
+    "avgRounds": 5.5
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 62.8,
+    "hpLostPct": 57.1,
+    "avgRounds": 3.2
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 81.7,
+    "hpLostPct": 44.5,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 92.4,
+    "hpLostPct": 35.3,
+    "avgRounds": 4
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 43.4,
+    "hpLostPct": 70.6,
+    "avgRounds": 2.3
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 68.8,
+    "hpLostPct": 58.3,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 84.2,
+    "hpLostPct": 47.8,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 37.5,
+    "hpLostPct": 75.4,
+    "avgRounds": 3.5
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 61.5,
+    "hpLostPct": 63.1,
+    "avgRounds": 4.6
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 78.4,
+    "hpLostPct": 53.2,
+    "avgRounds": 5.1
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 43.5,
+    "hpLostPct": 76.1,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 66.8,
+    "hpLostPct": 63.4,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "lukorn_bodyguard_a",
+    "enemyName": "Телохранитель",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 82.7,
+    "hpLostPct": 52,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 62.4,
+    "hpLostPct": 58.7,
+    "avgRounds": 3.3
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 81.5,
+    "hpLostPct": 46.2,
+    "avgRounds": 3.8
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 91.8,
+    "hpLostPct": 36.5,
+    "avgRounds": 4
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 4.6,
+    "hpLostPct": 97.4,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 11.1,
+    "hpLostPct": 95,
+    "avgRounds": 4.3
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 19.9,
+    "hpLostPct": 91.7,
+    "avgRounds": 5.5
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 62.6,
+    "hpLostPct": 57.6,
+    "avgRounds": 3.3
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 82.7,
+    "hpLostPct": 44.2,
+    "avgRounds": 3.7
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 92.4,
+    "hpLostPct": 35.4,
+    "avgRounds": 4
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 45.4,
+    "hpLostPct": 69.7,
+    "avgRounds": 2.3
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 69.4,
+    "hpLostPct": 57.7,
+    "avgRounds": 2.9
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 84.7,
+    "hpLostPct": 47.4,
+    "avgRounds": 3.1
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 39,
+    "hpLostPct": 74.5,
+    "avgRounds": 3.6
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 60.7,
+    "hpLostPct": 62.8,
+    "avgRounds": 4.5
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 78,
+    "hpLostPct": 53.2,
+    "avgRounds": 5.1
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 41.8,
+    "hpLostPct": 76.8,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 68.6,
+    "hpLostPct": 62.4,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "lukorn_bodyguard_b",
+    "enemyName": "Телохранитель",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 82.8,
+    "hpLostPct": 52.3,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "warrior",
+    "level": 1,
+    "winRate": 21.6,
+    "hpLostPct": 89.6,
+    "avgRounds": 4.5
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "warrior",
+    "level": 2,
+    "winRate": 40.9,
+    "hpLostPct": 80.8,
+    "avgRounds": 5.9
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "warrior",
+    "level": 3,
+    "winRate": 60.3,
+    "hpLostPct": 71.6,
+    "avgRounds": 7
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "wizard",
+    "level": 1,
+    "winRate": 0,
+    "hpLostPct": 100,
+    "avgRounds": 2.7
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "wizard",
+    "level": 2,
+    "winRate": 0.3,
+    "hpLostPct": 99.9,
+    "avgRounds": 4.1
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "wizard",
+    "level": 3,
+    "winRate": 0.2,
+    "hpLostPct": 99.9,
+    "avgRounds": 5.5
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "paladin",
+    "level": 1,
+    "winRate": 20.4,
+    "hpLostPct": 90.5,
+    "avgRounds": 4.5
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "paladin",
+    "level": 2,
+    "winRate": 42.3,
+    "hpLostPct": 80.4,
+    "avgRounds": 5.9
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "paladin",
+    "level": 3,
+    "winRate": 59.7,
+    "hpLostPct": 71.9,
+    "avgRounds": 7
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "rogue",
+    "level": 1,
+    "winRate": 11.6,
+    "hpLostPct": 94.3,
+    "avgRounds": 2.8
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "rogue",
+    "level": 2,
+    "winRate": 27.6,
+    "hpLostPct": 88.2,
+    "avgRounds": 3.9
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "rogue",
+    "level": 3,
+    "winRate": 44,
+    "hpLostPct": 80.6,
+    "avgRounds": 4.7
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "cleric",
+    "level": 1,
+    "winRate": 5.9,
+    "hpLostPct": 97.2,
+    "avgRounds": 4.2
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "cleric",
+    "level": 2,
+    "winRate": 13.7,
+    "hpLostPct": 94.4,
+    "avgRounds": 6.1
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "cleric",
+    "level": 3,
+    "winRate": 26.1,
+    "hpLostPct": 90,
+    "avgRounds": 7.7
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "ranger",
+    "level": 1,
+    "winRate": 7.4,
+    "hpLostPct": 97.1,
+    "avgRounds": 3.4
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "ranger",
+    "level": 2,
+    "winRate": 18.3,
+    "hpLostPct": 93.5,
+    "avgRounds": 4.7
+  },
+  {
+    "enemy": "lukorn_boss",
+    "enemyName": "Торговец Люкорн",
+    "class": "ranger",
+    "level": 3,
+    "winRate": 34.4,
+    "hpLostPct": 87.6,
+    "avgRounds": 5.9
+  }
+]
