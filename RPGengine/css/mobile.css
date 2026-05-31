@@ -1,0 +1,564 @@
+/**
+ * Мобильные стили RPGengine (только body.mobile).
+ * Десктоп не затрагивается.
+ */
+
+/* ========== CSS-переменные мобильной вёрстки ========== */
+body.mobile {
+  --mobile-header-height: 48px;
+  --mobile-dock-height: 48px;
+  --mobile-combat-height: 35vh;
+  --mobile-combat-actions-height: 120px;
+
+  font-size: 18px;
+  flex-direction: column;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Отключение hover на тач-устройствах */
+@media (hover: none) {
+  body.mobile button.choice:hover,
+  body.mobile .dock-icon:hover,
+  body.mobile .inv-item:hover,
+  body.mobile .equip-slot-btn:hover,
+  body.mobile .cc-class-card:hover,
+  body.mobile .cc-race-card:hover,
+  body.mobile .cc-skill-chip:hover,
+  body.mobile .panel-close:hover,
+  body.mobile .combat-enemy-targetable:hover {
+    background: inherit;
+    border-color: inherit;
+    color: inherit;
+    transform: none;
+    box-shadow: inherit;
+  }
+}
+
+/* ========== Свёрнутая панель персонажа ========== */
+body.mobile.mobile-compact .mobile-sidebar-compact-bar {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--mobile-header-height);
+  padding: 6px 8px;
+  margin: -4px -4px 0;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+}
+
+body.mobile .mobile-sidebar-toggle {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  line-height: 1;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+body.mobile .mobile-sidebar-toggle:active {
+  background: var(--paper-dark);
+}
+
+body.mobile .mobile-compact-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.mobile .mobile-compact-hp-wrap {
+  flex: 0 1 88px;
+  min-width: 56px;
+  max-width: 120px;
+}
+
+body.mobile .mobile-compact-hp-bar {
+  height: 8px;
+  width: 100%;
+}
+
+body.mobile .mobile-compact-ac {
+  flex: 0 0 auto;
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Развёрнутое содержимое — только в режиме expanded (без дубля сверху) */
+body.mobile .sidebar-character-expandable {
+  transition: opacity 200ms ease;
+}
+
+/* Свёрнуто: только компактная полоса, полная карточка скрыта */
+body.mobile.mobile-compact .sidebar-character-expandable {
+  display: none !important;
+}
+
+/* Развёрнуто: компактная полоса скрыта, видна только полная панель */
+body.mobile.mobile-sidebar-expanded .mobile-sidebar-compact-bar {
+  display: none !important;
+}
+
+body.mobile.mobile-sidebar-expanded .sidebar-character-expandable {
+  display: block;
+}
+
+body.mobile.mobile-sidebar-expanded .mobile-sidebar-toggle--in-panel {
+  display: flex !important;
+}
+
+/* Заголовок полной панели с кнопкой «свернуть» */
+body.mobile .sidebar-mobile-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+body.mobile .sidebar-mobile-header-row h3 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+body.mobile .mobile-sidebar-toggle--in-panel {
+  flex-shrink: 0;
+}
+
+/* В свёрнутом режиме скрываем квесты и отдых — экономия места */
+body.mobile.mobile-compact #sidebar .active-quests-card,
+body.mobile.mobile-compact #sidebar .rest-card {
+  display: none;
+}
+
+body.mobile #sidebar {
+  width: 100%;
+  min-width: 0;
+  max-height: none;
+  border-right: none;
+  border-bottom: 3px solid var(--border-dark);
+  flex-shrink: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: max-height 200ms ease;
+}
+
+body.mobile.mobile-sidebar-expanded #sidebar {
+  max-height: 42vh;
+}
+
+body.mobile.mobile-compact #sidebar {
+  max-height: calc(var(--mobile-header-height) + 16px);
+  overflow: hidden;
+}
+
+/* ========== Основная колонка и текст сцены ========== */
+body.mobile #main {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  padding-bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px) + 8px);
+  gap: 8px;
+  overflow: hidden;
+}
+
+body.mobile #game-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  overflow: hidden;
+}
+
+body.mobile #game-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.mobile .scene-text-container {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 12px 16px;
+  margin: 0 -4px;
+  background: color-mix(in srgb, var(--card-bg) 40%, transparent);
+  border-radius: 8px;
+}
+
+body.mobile #story-text {
+  font-size: max(16px, 1rem);
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+body.mobile #scene-title {
+  font-size: 24px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+body.mobile .dialogue-block {
+  font-size: max(16px, 1rem);
+}
+
+/* ========== Выборы — крупные кнопки ========== */
+body.mobile .choices-grid,
+body.mobile .choices-list,
+body.mobile #choices-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+body.mobile .choices-grid--short-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.mobile button.choice {
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
+  padding: 14px 16px;
+  transform: none !important;
+}
+
+body.mobile button.choice:active {
+  background: var(--paper-dark);
+  border-color: var(--accent);
+}
+
+body.mobile .start-btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: 18px;
+}
+
+/* ========== Dock снизу (уменьшенный) ========== */
+body.mobile .sidebar-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: 100%;
+  height: var(--mobile-dock-height);
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+  border: 2px solid var(--border);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -4px 16px var(--shadow-md);
+  z-index: 9000;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+}
+
+body.mobile .dock-icon {
+  flex: 1;
+  min-width: 44px;
+  max-width: 64px;
+  width: auto;
+  height: 40px;
+  font-size: 22px;
+  border-radius: 8px;
+}
+
+body.mobile .dock-icon.dock-icon-active {
+  background: var(--paper-dark);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  transform: none;
+}
+
+body.mobile .dock-icon:active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+/* Bottom sheet панели */
+body.mobile .sidebar-panels-wrap {
+  pointer-events: none;
+}
+
+body.mobile .panel-overlay {
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: none;
+  max-height: 60vh;
+  padding: 0;
+  transform: translateY(100%);
+  transition: opacity 220ms ease, transform 220ms ease, visibility 220ms ease;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+
+body.mobile .panel-overlay.panel-active {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+body.mobile .panel-overlay.panel-swiping {
+  transition: none;
+}
+
+body.mobile #panel-abilities.panel-overlay {
+  width: 100%;
+}
+
+body.mobile .panel-overlay-inner {
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 20px 14px 16px;
+  border-radius: 16px 16px 0 0;
+  touch-action: pan-y;
+}
+
+body.mobile .panel-overlay-inner::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 12px;
+  border-radius: 4px;
+  background: var(--border-dark);
+  opacity: 0.65;
+}
+
+body.mobile .panel-close {
+  top: 10px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+}
+
+/* ========== Бой: панель врагов ========== */
+body.mobile #game-content.in-combat .scene-text-container {
+  flex: 0 1 auto;
+  max-height: 22vh;
+  min-height: 64px;
+}
+
+body.mobile #combat-area.combat-panel-mobile {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  max-height: var(--mobile-combat-height);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  gap: 8px;
+}
+
+/* Игрок только в сайдбаре — строка игрока в бою скрыта */
+body.mobile #combat-area .combat-player-row {
+  display: none !important;
+}
+
+body.mobile .combat-enemies-title {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 0 6px;
+  padding: 6px 0;
+  background: var(--card-bg);
+  font-size: 18px;
+}
+
+body.mobile .combat-enemies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+body.mobile .combat-enemy {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 64px;
+  padding: 12px;
+}
+
+body.mobile .combat-unit-name {
+  min-width: 0;
+  font-size: 20px;
+}
+
+body.mobile .combat-hp-text {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+body.mobile .hp-bar-bg {
+  height: 18px;
+  width: 100%;
+}
+
+body.mobile .combat-enemy-targetable {
+  outline: 3px solid #c9a227;
+  outline-offset: 2px;
+}
+
+body.mobile .combat-enemy-targetable:active {
+  background: #fff8e1;
+}
+
+body.mobile .combat-target-hint {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+/* ========== Бой: панель умений (фикс. над dock) ========== */
+body.mobile #game-content.in-combat #choices-area {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px));
+  z-index: 8500;
+  height: var(--mobile-combat-actions-height);
+  max-height: var(--mobile-combat-actions-height);
+  margin: 0;
+  padding: 8px 10px 10px;
+  background: color-mix(in srgb, var(--paper) 97%, transparent);
+  border-top: 2px solid var(--border);
+  box-shadow: 0 -6px 16px var(--shadow-sm);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+body.mobile #game-content.in-combat #choices-area .combat-turn-sticky,
+body.mobile #game-content.in-combat #choices-area > b {
+  flex: 0 0 100%;
+  width: 100%;
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  margin: 0 0 4px !important;
+  padding: 4px 0;
+  background: color-mix(in srgb, var(--paper) 97%, transparent);
+  font-size: 20px !important;
+  font-family: var(--font-heading) !important;
+}
+
+body.mobile #game-content.in-combat #choices-area > div:not(.combat-consumable-row) {
+  flex: 0 0 100%;
+  width: 100%;
+  font-size: 14px;
+}
+
+body.mobile #game-content.in-combat #choices-area .pf2e-actions-indicator {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+body.mobile #game-content.in-combat #choices-area button.choice {
+  flex: 0 0 auto;
+  min-width: 72px;
+  min-height: 48px;
+  width: auto;
+  font-size: 14px;
+  white-space: nowrap;
+  padding: 10px 12px;
+}
+
+body.mobile #game-content.in-combat #choices-area .combat-consumable-row {
+  flex: 0 0 100%;
+  min-width: min(100%, 320px);
+  flex-wrap: wrap;
+}
+
+body.mobile #game-card.in-combat,
+body.mobile #game-content.in-combat {
+  padding-bottom: calc(var(--mobile-combat-actions-height) + var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px) + 8px);
+}
+
+/* ========== Инвентарь, создатель, модалки ========== */
+body.mobile #panel-inventory .inv-section-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+body.mobile #panel-inventory .inv-item {
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 64px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+body.mobile #panel-inventory .equip-slot-btn {
+  min-height: 44px;
+  width: 100%;
+}
+
+body.mobile .screen.char-creator-screen {
+  padding: 12px 12px calc(var(--mobile-dock-height) + env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+body.mobile .cc-class-grid,
+body.mobile .cc-race-grid,
+body.mobile .cc-gender-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+body.mobile .cc-nav-row {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 8000;
+}
+
+body.mobile .modal-box {
+  width: calc(100vw - 24px);
+  max-height: 85vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
