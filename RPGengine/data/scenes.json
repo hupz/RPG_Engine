@@ -1,0 +1,1121 @@
+{
+  "start": {
+    "id": "start",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Добро пожаловать в «Мельницу на Тихой реке». Выберите класс персонажа, чтобы начать приключение.",
+    "choices": [
+      {
+        "text": "⚔️ Выбрать Воина",
+        "to": "class_warrior",
+        "action": "select_class:warrior"
+      },
+      {
+        "text": "🔮 Выбрать Мага",
+        "to": "class_wizard",
+        "action": "select_class:wizard"
+      },
+      {
+        "text": "✝️ Выбрать Паладина",
+        "to": "class_paladin",
+        "action": "select_class:paladin"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "class_warrior": {
+    "id": "class_warrior",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Вы выбрали путь Воина. Крепкий, надёжный, смертоносный. Введите имя вашего героя.",
+    "choices": [
+      {
+        "text": "Продолжить",
+        "to": "name_entry"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "class_wizard": {
+    "id": "class_wizard",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Вы выбрали путь Мага. Мудрый, могущественный, хрупкий. Введите имя вашего героя.",
+    "choices": [
+      {
+        "text": "Продолжить",
+        "to": "name_entry"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "class_paladin": {
+    "id": "class_paladin",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Вы выбрали путь Паладина. Благородный, непреклонный, святой. Введите имя вашего героя.",
+    "choices": [
+      {
+        "text": "Продолжить",
+        "to": "name_entry"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "name_entry": {
+    "id": "name_entry",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Односеансовый модуль D&D 5e для одного героя. Введите имя персонажа и начните путь.",
+    "choices": [
+      {
+        "text": "⚔️ Начать приключение",
+        "to": "village",
+        "action": "start_game"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "village": {
+    "id": "village",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Деревня Тихий Брод. Двадцать домов, прижавшихся к дороге. За окном — серое небо и дождь. Староста Марта сидит за столом у печки, попивая травяной настой.\n\n«Значит, ты тот наёмник? Смотрю — крепкий. Нам нужен не говорун, а тот, кто может разобраться с... неприятностью.»",
+    "choices": [
+      {
+        "text": "🗣️ «Расскажите об Альберте»",
+        "to": "village_albert",
+        "doneFlag": "martaAlbert"
+      },
+      {
+        "text": "🗣️ «Что известно о мельнице?»",
+        "to": "village_millinfo",
+        "doneFlag": "martaMill"
+      },
+      {
+        "text": "💰 «Мало. Пятьдесят золотых»",
+        "to": "village_haggle",
+        "doneFlag": "haggleDone"
+      },
+      {
+        "text": "✅ «Я берусь. Куда идти?»",
+        "to": "village_accept"
+      },
+      {
+        "text": "🏪 Сходить в лавку Пройдохи Джека",
+        "to": "village_shop"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {
+      "quest_find_albert": "start"
+    },
+    "items": [],
+    "gold": 0
+  },
+  "village_albert": {
+    "id": "village_albert",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Марта кивает, задумчиво глядя в кружку.",
+    "choices": [
+      {
+        "text": "← Вернуться к разговору с Мартой",
+        "to": "village"
+      }
+    ],
+    "dialogue": [
+      {
+        "speaker": "Марта",
+        "text": "Альберт — вдовец. Жил один, кроме старого пса Гризли. Молчаливый, но добрый. Никогда не ссорился. Мельницу унаследовал от отца."
+      },
+      {
+        "speaker": "Марта",
+        "text": "Три дня назад ушёл на заре, как обычно. Но вечером костёр не горел. На следующий день мимо проходил караван с железом — пропала упряжка."
+      }
+    ],
+    "combat": null,
+    "flags": {
+      "martaAlbert": true
+    },
+    "items": [],
+    "gold": 0
+  },
+  "village_millinfo": {
+    "id": "village_millinfo",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Марта разворачивает салфетку, рисуя пальцем по дереву.",
+    "choices": [
+      {
+        "text": "← Вернуться к разговору с Мартой",
+        "to": "village"
+      }
+    ],
+    "dialogue": [
+      {
+        "speaker": "Марта",
+        "text": "Мельница в полутора часах ходьбы по лесу. Трёхэтажная: жернова внизу, жилой этаж, чердак с механизмом. Рядом сарай и погреб."
+      },
+      {
+        "speaker": "Марта",
+        "text": "Под мельницей — каменный погреб для зерна. Тяжёлая дверь, ключ у Альберта."
+      },
+      {
+        "speaker": "Марта",
+        "text": "Если увидишь Гризли — не пугай. Он лает на чужих, но если Альберт жив, пёс будет рядом."
+      }
+    ],
+    "combat": null,
+    "flags": {
+      "martaMill": true
+    },
+    "items": [],
+    "gold": 0
+  },
+  "village_haggle": {
+    "id": "village_haggle",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "haggle"
+  },
+  "village_accept": {
+    "id": "village_accept",
+    "location": "Таверна «Кривая Подкова»",
+    "text": "Марта кивает и протягивает кошелёк.",
+    "choices": [
+      {
+        "text": "🏪 Зайти в лавку перед дорогой",
+        "to": "village_shop"
+      },
+      {
+        "text": "🌲 Выйти из деревни и пойти по тропе",
+        "to": "forest"
+      }
+    ],
+    "dialogue": [
+      {
+        "speaker": "Марта",
+        "text": "Иди по лесной тропе на север. Мельница у реки — слышно журчание воды. Да хранит тебя Случай, {charName}."
+      }
+    ],
+    "combat": null,
+    "flags": {
+      "quest_find_albert": "reach_mill",
+      "acceptedQuest": true
+    },
+    "items": [],
+    "gold": 25
+  },
+  "village_shop": {
+    "id": "village_shop",
+    "location": "Лавка Пройдохи Джека",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "shop_jack"
+  },
+  "forest": {
+    "id": "forest",
+    "location": "Лесная тропа",
+    "text": "Тропа узкая, земля сырая от дождя. Через сорок минут вы замечаете свежие следы — ботинки с железными набойками. Не крестьянские. Далее пахнет дымом.",
+    "choices": [
+      {
+        "text": "🔍 Осмотреть следы (Восприятие DC 13)",
+        "to": "forest",
+        "skillCheck": {
+          "skill": "perception",
+          "dc": 13,
+          "successText": "Следы свежие — двое, может, трое. Один тащил что-то тяжёлое. В кустах — тёплый окурок.",
+          "successFlags": {
+            "forestClue": true
+          },
+          "successItems": [],
+          "failText": "Следы замыты дождём. Здесь кто-то был, но неясно кто и куда."
+        }
+      },
+      {
+        "text": "⚔️ Идти осторожно, готовя оружие",
+        "to": "forest_combat_start"
+      },
+      {
+        "text": "🌿 Обойти по чаще (Скрытность DC 13)",
+        "to": "forest",
+        "skillCheck": {
+          "skill": "stealth",
+          "dc": 13,
+          "successText": "Вы сворачиваете в подлесок. Через пять минут выходите к опушке — мельница виднеется. Вы прошли мимо разведчиков.",
+          "successFlags": {},
+          "successNext": "thicket",
+          "failText": "Ветка хрустнула. Из-за кустов выходят двое — короткие мечи наготове.",
+          "failNext": "forest_combat_start"
+        }
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "forest_combat_start": {
+    "id": "forest_combat_start",
+    "location": "Лесная тропа",
+    "text": "Из-за поваленного дуба выходят двое. Кожаные доспехи, грязные лица, короткие мечи. Они не говорят — сразу бросаются в атаку.",
+    "choices": [],
+    "dialogue": [],
+    "combat": [
+      "scout_a",
+      "scout_b"
+    ],
+    "nextScene": "forest_after",
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "forest_after": {
+    "id": "forest_after",
+    "location": "Лесная тропа",
+    "text": "Тропа пуста. На разведчиках — потёртые куртки, сумки с мелочью. У одного — жетон с мельничным колесом.",
+    "choices": [
+      {
+        "text": "🔍 Обыскать тела подробнее",
+        "to": "forest_loot"
+      },
+      {
+        "text": "🌲 Продолжить путь",
+        "to": "thicket"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [
+      "mill_token",
+      "crooked_map"
+    ],
+    "gold": 3
+  },
+  "forest_loot": {
+    "id": "forest_loot",
+    "location": "Лесная тропа",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "forest_loot_check"
+  },
+  "thicket": {
+    "id": "thicket",
+    "location": "Лесная чаща",
+    "text": "Тропа сужается. Сосны стоят плотной стеной, и свет едва пробивается сквозь ветви. Где-то рядом журчит ручей. Пахнет сыростью и... чем-то звериным.\n\nКрупный валун торчит из мха у дороги. Под ним — что-то тёмное. Сумка?",
+    "choices": [
+      {
+        "text": "🔍 Подойти к валуну",
+        "to": "thicket_approach"
+      },
+      {
+        "text": "⚔️ Идти осторожно, оружие наготове",
+        "to": "thicket_combat_start"
+      },
+      {
+        "text": "🌲 Продолжить путь к мельнице",
+        "to": "mill_arrival"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "thicket_approach": {
+    "id": "thicket_approach",
+    "location": "Лесная чаща",
+    "text": "Вы приближаетесь к валуну. Тёмный кожаный мешок валяется в мху. Но из-за дерева слева доносится рычание...",
+    "choices": [
+      {
+        "text": "⚔️ Взять сумку и готовиться к бою",
+        "to": "thicket_combat_start"
+      },
+      {
+        "text": "🏃 Отступить к тропе",
+        "to": "thicket"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "thicket_combat_start": {
+    "id": "thicket_combat_start",
+    "location": "Лесная чаща",
+    "text": "Из чащи выскакивают двое. Серые, худые, с обнажёнными клыками. Волки защищают свою территорию — или просто голодны.",
+    "choices": [],
+    "dialogue": [],
+    "combat": [
+      "wolf_a",
+      "wolf_b"
+    ],
+    "nextScene": "thicket_after",
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "thicket_after": {
+    "id": "thicket_after",
+    "location": "Лесная чаща",
+    "text": "Волки повержены. Чаща замирает. Под валуном лежит потёртая кожаная сумка с выгравированными инициалами «Д».",
+    "choices": [
+      {
+        "text": "🔍 Обыскать сумку",
+        "to": "thicket_bag"
+      },
+      {
+        "text": "🌲 Идти к мельнице",
+        "to": "mill_arrival"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [
+      "jack_bag"
+    ],
+    "gold": 0
+  },
+  "thicket_bag": {
+    "id": "thicket_bag",
+    "location": "Лесная чаща",
+    "text": "Внутри — сложенный шёлковый плат, бронзовая фляжка и кошелёк с двенадцатью золотыми. Джек явно прибрал к рукам чужие деньги, но это не ваше дело.",
+    "choices": [
+      {
+        "text": "🌲 Идти к мельнице",
+        "to": "mill_arrival"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {
+      "thicketBagLoot": true,
+      "quest_lost_bag": "find_bag"
+    },
+    "items": [],
+    "gold": 12
+  },
+  "mill_arrival": {
+    "id": "mill_arrival",
+    "location": "Мельница",
+    "text": "Мельница встаёт из тумана. Три этажа, покосившаяся крыша, огромное колесо. Окна на втором этаже темны. Дверь заперта. Рядом — сарай, дверь приоткрыта. Ветер треплет старый мешок.",
+    "choices": [
+      {
+        "text": "🚪 Подойти к главной двери",
+        "to": "mill_door"
+      },
+      {
+        "text": "🏚️ Заглянуть в сарай",
+        "to": "mill_barn"
+      },
+      {
+        "text": "👁️ Осмотреть окружение (Восприятие DC 14)",
+        "to": "mill_arrival",
+        "skillCheck": {
+          "skill": "perception",
+          "dc": 14,
+          "successText": "На северной стороне — окно второго этажа, приоткрытое на щель. У сарая земля вспахана следами — много тяжёлых.",
+          "successFlags": {
+            "millClue": true
+          },
+          "failText": "Туман мешает. Мельница старая, трава вытоптана."
+        }
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {
+      "quest_find_albert": "find_clues"
+    },
+    "items": [],
+    "gold": 0
+  },
+  "mill_barn": {
+    "id": "mill_barn",
+    "location": "Сарай",
+    "text": "Сарай пахнет маслом и плесенью. На стене — грязный чертёж механизма. В углу — ящик с инструментами. На полу — следы каблуков.",
+    "choices": [
+      {
+        "text": "🔍 Изучить чертёж",
+        "to": "mill_barn_blueprint"
+      },
+      {
+        "text": "📦 Обыскать ящик",
+        "to": "mill_barn_chest"
+      },
+      {
+        "text": "Вернуться к мельнице",
+        "to": "mill_arrival"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {
+      "barnVisited": true
+    },
+    "items": [],
+    "gold": 0
+  },
+  "mill_barn_blueprint": {
+    "id": "mill_barn_blueprint",
+    "location": "Сарай",
+    "text": "Чертёж схематичный: «Малая — вниз, Средняя — центр, Большая — вверх». Шестерня среднего размера — в центр.",
+    "choices": [
+      {
+        "text": "Обыскать ящик",
+        "to": "mill_barn_chest"
+      },
+      {
+        "text": "Вернуться к мельнице",
+        "to": "mill_arrival"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {
+      "hasBlueprint": true
+    },
+    "items": [],
+    "gold": 0
+  },
+  "mill_barn_chest": {
+    "id": "mill_barn_chest",
+    "location": "Сарай",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "barn_chest"
+  },
+  "mill_door": {
+    "id": "mill_door",
+    "location": "Дверь мельницы",
+    "text": "Деревянная дверь тяжёлая, влажная. Ручка не поворачивается — заперто изнутри. За дверью — скрип.",
+    "choices": [
+      {
+        "text": "💪 Выломать дверь (Сила DC 16)",
+        "to": "mill_door",
+        "skillCheck": {
+          "skill": "strength",
+          "dc": 16,
+          "successText": "Вы выбиваете дверь. Грохот эхом откатывается. Внутри — темнота и плесень.",
+          "successFlags": {
+            "doorBroken": true
+          },
+          "successNext": "mill_first",
+          "failText": "Дверь крепка. Вмятина есть, засов не сдвинулся."
+        }
+      },
+      {
+        "text": "🗝️ Поддеть засов (Ловкость рук DC 14)",
+        "to": "mill_door",
+        "skillCheck": {
+          "skill": "dexterity",
+          "dc": 14,
+          "successText": "Кинжал проскальзывает в щель. Щелчок — дверь открыта.",
+          "successNext": "mill_first",
+          "failText": "Щель узкая, засов ржавый. Кинжал царапает дерево."
+        }
+      },
+      {
+        "text": "🪟 Залезть через окно 2 этажа (Акробатика DC 12)",
+        "to": "mill_door",
+        "skillCheck": {
+          "skill": "acrobatics",
+          "dc": 12,
+          "successText": "Вы цепляетесь за штукатурку, протискиваетесь в щель. Падаете на пол второго этажа. Пыль взмывает.",
+          "successNext": "mill_second",
+          "failText": "Штукатурка осыпается. Вы срываетесь в кусты."
+        }
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "mill_first": {
+    "id": "mill_first",
+    "location": "Мельница, 1 этаж",
+    "text": "Первый этаж — полумрак. Жернова огромные, покрытые пылью. Механизм остановлен. На столе — перевернутая кружка, разбитая тарелка. В ящике под столом — испорченное зерно и кровавый платок.\n\nЛестница наверх. В углу за мешками — что-то странное.",
+    "choices": [
+      {
+        "text": "🔍 Осмотреть этаж (Восприятие DC 12)",
+        "to": "mill_first",
+        "skillCheck": {
+          "skill": "perception",
+          "dc": 12,
+          "successText": "Кровавый платок — свежий. Под столом: обломок кинжала и цепочка с ключом. От сейфа Альберта.",
+          "successItems": [
+            "albert_key"
+          ],
+          "failText": "Только пыль и сырость."
+        }
+      },
+      {
+        "text": "🪜 Подняться на 2 этаж",
+        "to": "mill_second"
+      },
+      {
+        "text": "👁️ Осмотреть мешки в углу (Восприятие DC 14)",
+        "to": "mill_first",
+        "skillCheck": {
+          "skill": "perception",
+          "dc": 14,
+          "successText": "За мешками — потайная дверь в полу с железной ручкой. Лестница в погреб.",
+          "successFlags": {
+            "foundCellar": true
+          },
+          "successNext": "cellar",
+          "failText": "Мешки тяжёлые, зерно прокисшее. Ничего необычного."
+        }
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {
+      "doorBroken": true
+    },
+    "items": [],
+    "gold": 0
+  },
+  "mill_second": {
+    "id": "mill_second",
+    "location": "Мельница, 2 этаж",
+    "text": "Жилой этаж. Кровать не заправлена, одежда разбросана. На подоконнике — грязные следы ботинок. Лестница на чердак.",
+    "choices": [
+      {
+        "text": "🪜 На чердак",
+        "to": "mill_attic"
+      },
+      {
+        "text": "🔍 Обыскать комнату (Восприятие DC 13)",
+        "to": "mill_second",
+        "skillCheck": {
+          "skill": "perception",
+          "dc": 13,
+          "successText": "В тумбочке — дневник. Последняя запись о шагах ночью. Также свечка и кресало.",
+          "successFlags": {
+            "secondFloorLoot": true
+          },
+          "successItems": [
+            "albert_diary"
+          ],
+          "failText": "Ничего особенного."
+        }
+      },
+      {
+        "text": "⬇️ Вниз",
+        "to": "mill_first"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "mill_attic": {
+    "id": "mill_attic",
+    "location": "Мельница, чердак",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "attic"
+  },
+  "boss_talk": {
+    "id": "boss_talk",
+    "location": "Мельница, чердак",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "boss_talk"
+  },
+  "boss_albert": {
+    "id": "boss_albert",
+    "location": "Мельница, чердак",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "boss_albert"
+  },
+  "boss_mercy": {
+    "id": "boss_mercy",
+    "location": "Мельница, чердак",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "boss_mercy"
+  },
+  "boss_fight": {
+    "id": "boss_fight",
+    "location": "Мельница, чердак",
+    "text": "Корвин вскидывает меч. Глаза пусты — он делал это раньше.",
+    "choices": [],
+    "dialogue": [],
+    "combat": [
+      "corvin"
+    ],
+    "nextScene": "boss_after",
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "boss_after": {
+    "id": "boss_after",
+    "location": "Чердак",
+    "text": "Корвин падает на колени. Меч выскальзывает. Он смотрит в окно.",
+    "choices": [
+      {
+        "text": "Обыскать тело",
+        "to": "boss_loot"
+      },
+      {
+        "text": "В погреб",
+        "to": "cellar_after"
+      }
+    ],
+    "dialogue": [
+      {
+        "speaker": "Корвин",
+        "text": "...Мельница. Всё ради мельницы. Глупо, да? Я хотел просто выжить."
+      }
+    ],
+    "combat": null,
+    "flags": {
+      "corvinDead": true,
+      "quest_bandit_lair": "complete"
+    },
+    "items": [
+      "corvin_chest_key"
+    ],
+    "gold": 0
+  },
+  "boss_loot": {
+    "id": "boss_loot",
+    "location": "Чердак",
+    "text": "В кирасе — письмо. Заказ на перевалку от торговца Люкорна. И 12 золотых.",
+    "choices": [
+      {
+        "text": "В погреб",
+        "to": "cellar_after"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [
+      "lukorn_letter"
+    ],
+    "gold": 12
+  },
+  "cellar": {
+    "id": "cellar",
+    "location": "Погреб",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "cellar_first"
+  },
+  "cellar_intimidate": {
+    "id": "cellar_intimidate",
+    "location": "Погреб",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "cellar_intimidate"
+  },
+  "cellar_combat": {
+    "id": "cellar_combat",
+    "location": "Погреб",
+    "text": "Погреб сужается до каменных стен. Мешки с зерном — укрытие. Пол скользкий.",
+    "choices": [],
+    "dialogue": [],
+    "combat": [
+      "bruiser",
+      "archer_a",
+      "archer_b"
+    ],
+    "nextScene": "cellar_after",
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "cellar_after": {
+    "id": "cellar_after",
+    "location": "Погреб",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "cellar_after"
+  },
+  "cellar_free": {
+    "id": "cellar_free",
+    "location": "Погреб",
+    "text": "Альберт кивает, дрожа. Вы ломаете прутья.",
+    "choices": [
+      {
+        "text": "🔍 Осмотреть погреб ещё раз",
+        "to": "cellar_search"
+      },
+      {
+        "text": "🏚️ Вернуться к мельнице",
+        "to": "mill_arrival"
+      },
+      {
+        "text": "🌲 Вернуться в деревню",
+        "to": "epilogue"
+      }
+    ],
+    "dialogue": [
+      {
+        "speaker": "Альберт",
+        "text": "Я не забуду этого. Деревня не забудет. Пойдём отсюда..."
+      }
+    ],
+    "combat": null,
+    "flags": {
+      "albertSaved": true,
+      "quest_find_albert": "complete"
+    },
+    "items": [],
+    "gold": 0
+  },
+  "cellar_search": {
+    "id": "cellar_search",
+    "location": "Погреб",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "cellar_search"
+  },
+  "cellar_dog": {
+    "id": "cellar_dog",
+    "location": "Погреб",
+    "text": "Вы разрываете верёвку. Гризли — старый, с седой мордой — подбегает к Альберту. Потом смотрит на вас и виляет хвостом.",
+    "choices": [
+      {
+        "text": "🔍 Осмотреть погреб",
+        "to": "cellar_search"
+      },
+      {
+        "text": "🗣️ Поговорить с Альбертом",
+        "to": "cellar_free"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {
+      "dogFreed": true
+    },
+    "items": [],
+    "gold": 0
+  },
+  "fled": {
+    "id": "fled",
+    "location": "Лес",
+    "text": "Вы отступили. Лес поглощает вас. Мельница остаётся позади.\n\nАльберт так и не узнает, кто приходил. Деревня останется без муки.\n\nИногда отступление — тоже выбор.",
+    "choices": [
+      {
+        "text": "↺ Начать заново",
+        "to": "reset",
+        "action": "reset_game"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "epilogue": {
+    "id": "epilogue",
+    "location": "Тихий Брод",
+    "text": "Деревня встречает вас как героя — скромно, но тепло. Марта плачет, обнимая Альберта. Гризли виляет хвостом.\n\nНаграда: {gold} зм. Бочка солёной рыбы. И благодарность, которую не измерить монетами.",
+    "choices": [
+      {
+        "text": "🎉 Конец приключения",
+        "to": "reset",
+        "action": "reset_game"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "game_over": {
+    "id": "game_over",
+    "location": "Гибель",
+    "text": "Тьма смыкается. Холод земли на щеке. Последнее — ветер в жерновах и далёкий лай.\n\nВаша история закончилась. Но Случай даёт новый бросок.",
+    "choices": [
+      {
+        "text": "↺ Начать заново",
+        "to": "reset",
+        "action": "reset_game"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "reset": {
+    "id": "reset",
+    "location": "",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "reset"
+  },
+  "jack_buy": {
+    "id": "jack_buy",
+    "location": "Лавка Пройдохи Джека",
+    "text": "Джек разводит руками над прилавком.\n\n«Зелье лечения — двадцать золотых. Верёвка — десять. Припасы — десять. Берёшь?»",
+    "choices": [
+      {
+        "text": "🧪 Купить зелье лечения (20 зм)",
+        "to": "jack_buy_potion"
+      },
+      {
+        "text": "🪢 Купить верёвку (10 зм)",
+        "to": "jack_buy_rope"
+      },
+      {
+        "text": "🍖 Купить припасы (10 зм)",
+        "to": "jack_buy_supplies"
+      },
+      {
+        "text": "← Назад",
+        "to": "village_shop"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "jack_buy_potion": {
+    "id": "jack_buy_potion",
+    "location": "Лавка Пройдохи Джека",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "jack_buy_potion"
+  },
+  "jack_buy_rope": {
+    "id": "jack_buy_rope",
+    "location": "Лавка Пройдохи Джека",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "jack_buy_rope"
+  },
+  "jack_buy_supplies": {
+    "id": "jack_buy_supplies",
+    "location": "Лавка Пройдохи Джека",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "jack_buy_supplies"
+  },
+  "jack_quest_talk": {
+    "id": "jack_quest_talk",
+    "location": "Лавка Пройдохи Джека",
+    "text": "Джек прищуривается и опускает голос, хотя в лавке никого нет.",
+    "choices": [
+      {
+        "text": "✅ «Берусь. Жди меня»",
+        "to": "jack_quest_accept"
+      },
+      {
+        "text": "❌ «Слишком опасно»",
+        "to": "village_shop"
+      }
+    ],
+    "dialogue": [
+      {
+        "speaker": "Джек",
+        "text": "Три дня назад шёл через чащу к мельнице — торговать с мельником. Слышал вой. Волки, не иначе. Бросил сумку и бежал, не оглядываясь."
+      },
+      {
+        "speaker": "Джек",
+        "text": "В сумке — мои личные сбережения и товарный образец. Если найдёшь — тридцать золотых твои. Но осторожно: волки до сих пор там шатаются, я слышал их по ночам."
+      }
+    ],
+    "combat": null,
+    "flags": {
+      "jackQuest": true,
+      "quest_lost_bag": "start"
+    },
+    "items": [],
+    "gold": 0
+  },
+  "jack_quest_accept": {
+    "id": "jack_quest_accept",
+    "location": "Лавка Пройдохи Джека",
+    "text": "Джек улыбается во все тридцать два зуба.\n\n«Вот это я понимаю — деловой подход! Сумка где-то у большого камня в чаще, сразу после мостика через ручей. Удачи, воин.»",
+    "choices": [
+      {
+        "text": "🚪 Уйти",
+        "to": "village"
+      }
+    ],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0
+  },
+  "jack_reward": {
+    "id": "jack_reward",
+    "location": "Лавка Пройдохи Джека",
+    "text": "Джек хватает сумку и заглядывает внутрь.",
+    "choices": [
+      {
+        "text": "🚪 Уйти",
+        "to": "village"
+      }
+    ],
+    "dialogue": [
+      {
+        "speaker": "Джек",
+        "text": "Плат на месте, фляжка... Хм. Кошелёк легче, чем должен быть. Ну, ладно. Держи тридцать — честное слово торговца."
+      }
+    ],
+    "combat": null,
+    "flags": {
+      "jackRewarded": true,
+      "quest_lost_bag": "complete"
+    },
+    "items": [],
+    "gold": 30
+  },
+  "mill_attic_gear_top": {
+    "id": "mill_attic_gear_top",
+    "location": "Мельница, чердак",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "gear_top"
+  },
+  "mill_attic_gear_mid": {
+    "id": "mill_attic_gear_mid",
+    "location": "Мельница, чердак",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "gear_mid"
+  },
+  "mill_attic_gear_bot": {
+    "id": "mill_attic_gear_bot",
+    "location": "Мельница, чердак",
+    "text": "",
+    "choices": [],
+    "dialogue": [],
+    "combat": null,
+    "flags": {},
+    "items": [],
+    "gold": 0,
+    "special": "gear_bot"
+  }
+}

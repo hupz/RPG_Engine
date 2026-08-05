@@ -1,0 +1,124 @@
+{
+  "_comment": "Справочник формата боевых действий (abilities / progression.abilities). Парсинг: CombatManager.parseAction().",
+  "schema": {
+    "id": "уникальный ID",
+    "name": "Название в UI",
+    "icon": "эмодзи или URL",
+    "flavorText": "Ролевой текст при использовании",
+    "desc": "Описание для подсказки",
+    "tags": ["martial", "spell", "…"],
+    "cost": "ресурс класса / ячейки (legacy + PF2e actions через actionCost)",
+    "spellLevel": 0,
+    "actionCost": {
+      "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 },
+      "pf2e": { "actions": 2 }
+    },
+    "targetType": "self | singleEnemy | allEnemies | singleAlly | allAllies | area",
+    "range": "melee | ranged | 150",
+    "requirements": ["hasWeaponEquipped", "frontline", "notSurprised"],
+    "effects": [
+      { "type": "damage", "value": "2d8", "damageType": "fire", "targeting": { "scope": "single" } },
+      { "type": "heal", "value": "1d4+2" },
+      { "type": "apply_status", "statusId": "prone", "targeting": { "scope": "single" } },
+      { "type": "grantBonus", "stat": "ac|atk|dmg", "value": 2, "duration": "turn" },
+      { "type": "removeStatus", "statusId": "poison", "target": "self" },
+      { "type": "move", "distance": 30 }
+    ],
+    "soundEffect": "ID из audio.catalog (копируется в soundCast)",
+    "combatOnly": true,
+    "oncePerCombat": false,
+    "legacy": {
+      "effect": "heal:1d8+2",
+      "actionType": "bonus_action",
+      "targeting": { "scope": "all_enemies" }
+    }
+  },
+  "examples": {
+    "power_attack": {
+      "id": "power_attack",
+      "name": "Мощная атака",
+      "icon": "⚔️",
+      "flavorText": "Вы жертвуете точностью ради сокрушительного удара.",
+      "tags": ["martial", "weapon"],
+      "actionCost": { "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 } },
+      "targetType": "self",
+      "range": "melee",
+      "requirements": ["hasWeaponEquipped", "frontline"],
+      "effects": [
+        { "type": "grantBonus", "stat": "dmg", "value": 5, "duration": "next_attack" },
+        { "type": "grantBonus", "stat": "atk", "value": -2, "duration": "next_attack" }
+      ],
+      "soundEffect": "slash_sword"
+    },
+    "fireball": {
+      "id": "fireball",
+      "name": "Огненный шар",
+      "icon": "🔥",
+      "spellLevel": 3,
+      "cost": 1,
+      "actionCost": {
+        "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 },
+        "pf2e": { "actions": 2 }
+      },
+      "targetType": "area",
+      "range": 150,
+      "requirements": ["notSurprised"],
+      "effects": [
+        {
+          "type": "damage",
+          "value": "8d6",
+          "damageType": "fire",
+          "targeting": { "scope": "all_enemies" },
+          "allTargets": true,
+          "savingThrow": { "skill": "dexterity", "dc": 14, "halfOnSave": true }
+        }
+      ],
+      "soundEffect": "fireball"
+    },
+    "trip_attack": {
+      "id": "trip_attack",
+      "name": "Подсечка",
+      "icon": "🦵",
+      "actionCost": { "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 } },
+      "targetType": "singleEnemy",
+      "range": "melee",
+      "requirements": ["hasWeaponEquipped", "frontline"],
+      "effects": [
+        { "type": "damage", "value": "1d6", "targeting": { "scope": "single" } },
+        { "type": "apply_status", "statusId": "prone", "targeting": { "scope": "single" } }
+      ]
+    },
+    "healing_word": {
+      "id": "healing_word",
+      "name": "Лечащее слово",
+      "icon": "💚",
+      "spellLevel": 1,
+      "cost": 1,
+      "actionCost": { "dnd5e": { "action": 0, "bonusAction": 1, "reaction": 0 } },
+      "targetType": "self",
+      "range": 60,
+      "effects": [{ "type": "heal", "value": "1d4+2" }],
+      "soundEffect": "heal"
+    },
+    "defensive_strike": {
+      "id": "defensive_strike",
+      "name": "Оборонительный удар",
+      "icon": "🛡️",
+      "actionCost": { "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 } },
+      "targetType": "singleEnemy",
+      "range": "melee",
+      "requirements": ["hasWeaponEquipped", "frontline"],
+      "effects": [
+        { "type": "damage", "value": "1d8", "targeting": { "scope": "single" } },
+        { "type": "grantBonus", "stat": "ac", "value": 2, "duration": "until_next_turn" }
+      ],
+      "soundEffect": "slash_sword"
+    },
+    "legacy_warrior_cleave": {
+      "_note": "Старый формат — автоматически нормализуется parseAction()",
+      "id": "warrior_cleave",
+      "effect": { "type": "damage", "value": "2d8", "targeting": { "scope": "single" } },
+      "cost": 1
+    }
+  }
+}

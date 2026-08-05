@@ -1,0 +1,93 @@
+{
+  "marta": {
+    "id": "marta",
+    "name": "Староста Марта",
+    "location": "village",
+    "icon": "👵",
+    "description": "Пожилая женщина с седыми волосами, собранными в пучок. Глаза острые, внимательные.",
+    "dialogues": {
+      "default": [
+        {
+          "speaker": "Марта",
+          "text": "Значит, ты тот наёмник? Смотрю — крепкий."
+        }
+      ]
+    },
+    "quests": [
+      "find_albert"
+    ],
+    "shop": false,
+    "attitude": "neutral"
+  },
+  "jack": {
+    "id": "jack",
+    "name": "Пройдоха Джек",
+    "location": "village_shop",
+    "icon": "🦊",
+    "description": "Худой мужчина с хитрой улыбкой и лисьими глазами. Жёлтый берет.",
+    "dialogues": {
+      "default": [
+        {
+          "speaker": "Джек",
+          "text": "Добро пожаловать! У Джека всё есть — и то, что видишь, и то, что спрятано."
+        }
+      ]
+    },
+    "quests": [
+      "lost_bag"
+    ],
+    "shop": true,
+    "shopItems": [
+      "healing_potion",
+      "rope",
+      "supplies"
+    ],
+    "shopPrices": {
+      "healing_potion": 20,
+      "rope": 10,
+      "supplies": 10
+    },
+    "attitude": "friendly"
+  },
+  "albert": {
+    "id": "albert",
+    "name": "Альберт Мельник",
+    "location": "cellar",
+    "icon": "👨‍🌾",
+    "description": "Пожилой мельник в лохмотьях. Истощённый, но сильный духом.",
+    "dialogues": {
+      "default": [
+        {
+          "speaker": "Альберт",
+          "text": "Боги... ты пришёл. Я думал, умру."
+        }
+      ]
+    },
+    "quests": [],
+    "shop": false,
+    "attitude": "grateful"
+  },
+  "corvin_npc": {
+    "id": "corvin_npc",
+    "name": "Корвин",
+    "location": "mill_attic",
+    "icon": "⚔️",
+    "description": "Мужчина в кирасе. Длинный меч. Глаза пустые — усталость.",
+    "dialogues": {
+      "default": [
+        {
+          "speaker": "Корвин",
+          "text": "Ты не первый, кто пришёл сюда. Жаль. Мне не хотелось убивать."
+        }
+      ]
+    },
+    "quests": [],
+    "shop": false,
+    "attitude": "hostile",
+    "canSpare": true,
+    "spareCondition": {
+      "skill": "persuasion",
+      "dc": 15
+    }
+  }
+}

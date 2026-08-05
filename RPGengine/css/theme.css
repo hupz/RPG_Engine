@@ -1,0 +1,75 @@
+/* Fallback tokens — overridden by ThemeSystem.apply() */
+:root {
+  --page-bg: #121212;
+  --paper: #1a1a2e;
+  --paper-dark: #16213e;
+  --paper-shadow: #2a2a4a;
+  --card-bg: #16213e;
+  --ink: #e0e0e0;
+  --ink-light: #b0b0b0;
+  --ink-faint: #9aa0aa;
+  --accent: #e94560;
+  --accent-light: #ff6b81;
+  --danger: #ff6b6b;
+  --success: #2ecc71;
+  --success-dark: #1e9e55;
+  --info: #5b8fd9;
+  --info-light: #7eb3f0;
+  --border: #2a2a4a;
+  --border-dark: #3a3a5a;
+  --pencil: #b0b0b0;
+  --on-accent: #ffffff;
+  --on-success: #121212;
+  --overlay: rgba(0, 0, 0, 0.72);
+  --tag-combat-bg: #3d2028;
+  --tag-once-bg: #3d3020;
+  --tag-once-fg: #f1c40f;
+  --inv-use-bg: #1e3d2a;
+  --inv-use-border: #2ecc71;
+  --inv-use-hover: #2e5c40;
+  --wizard: #9c7bd8;
+  --wizard-light: #b39ddb;
+  --paladin: #2ecc71;
+  --paladin-light: #58d68d;
+  --warrior: #e94560;
+  --warrior-light: #ff6b81;
+  --shadow-sm: rgba(0, 0, 0, 0.35);
+  --shadow-md: rgba(0, 0, 0, 0.5);
+  --highlight: rgba(255, 255, 255, 0.06);
+  --font-body: 'Caveat', cursive;
+  --font-heading: 'Amatic SC', cursive;
+  --editor-header-bg: #0f3460;
+  --editor-header-fg: #e0e0e0;
+  --editor-surface-info: color-mix(in srgb, var(--info) 20%, var(--card-bg));
+  --editor-surface-warn: color-mix(in srgb, var(--gold, #f1c40f) 16%, var(--card-bg));
+  --editor-surface-success: color-mix(in srgb, var(--success) 16%, var(--card-bg));
+  --editor-surface-muted: var(--paper-dark);
+  --input-bg: var(--card-bg);
+  --input-fg: var(--ink);
+}
+
+[data-theme-mode="light"] {
+  --page-bg: #d8d0c0;
+  --paper: #f5f0e8;
+  --paper-dark: #e8e0d0;
+  --paper-shadow: #d4cbb8;
+  --card-bg: #ffffff;
+  --ink: #2c2418;
+  --ink-light: #6b5d4d;
+  --ink-faint: #9a8e7e;
+  --accent: #8b4513;
+  --accent-light: #a0522d;
+  --danger: #b22222;
+  --success: #2e7d32;
+  --success-dark: #1b5e20;
+  --info: #1565c0;
+  --info-light: #42a5f5;
+  --border: #c4b8a0;
+  --border-dark: #a89880;
+  --overlay: rgba(60, 50, 40, 0.6);
+  --shadow-sm: rgba(0, 0, 0, 0.08);
+  --shadow-md: rgba(0, 0, 0, 0.15);
+  --highlight: rgba(255, 255, 255, 0.5);
+  --editor-header-bg: #3d5a80;
+  --editor-header-fg: #ffffff;
+}

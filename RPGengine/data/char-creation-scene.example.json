@@ -1,0 +1,24 @@
+{
+  "_comment": "Фрагмент для data/game_data.json → scenes. Сгенерировать сцену: SceneTemplate.charCreation.create({ ... })",
+  "char_creation": {
+    "id": "char_creation",
+    "sceneTemplate": "character_creation",
+    "templateDetached": false,
+    "templateParams": {
+      "introText": "Создайте героя перед началом приключения.",
+      "nextScene": "start",
+      "music": "char_creation_theme",
+      "displayMode": "embedded",
+      "preset": "standard"
+    },
+    "mapLocation": null
+  },
+  "_campaign_flow_example": {
+    "start": {
+      "text": "Добро пожаловать. Сначала создайте персонажа.",
+      "choices": [
+        { "text": "🧝 Создать персонажа", "to": "char_creation" }
+      ]
+    }
+  }
+}
