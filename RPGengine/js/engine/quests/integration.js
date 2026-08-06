@@ -4,6 +4,7 @@
  */
 
 import QuestManager from './tasks/QuestManager.js';
+import Migration from './Migration.js';
 
 // Глобальный экземпляр для совместимости со старым кодом
 window.NewQuestSystem = null;
@@ -24,7 +25,6 @@ export function initQuestSystem(gameState, gameData) {
 
     // Миграция старых квестов если есть данные
     if (gameData?.quests) {
-        const { Migration } = await import('./Migration.js');
         const migratedQuests = Migration.migrateAll(gameData.quests);
         
         // Добавляем мигрированные квесты в менеджер
