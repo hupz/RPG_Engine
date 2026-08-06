@@ -834,19 +834,21 @@ body.editor-help-show-all .editor-help-inline {
 }
 .analytics-warn { color: var(--danger, #c62828); margin-top: 8px; }
 
-/* Живое превью: split view */
+/* Живое превью: split view — превью игрока по умолчанию крупнее, редактор сбоку */
 .scenes-split-view {
   display: flex;
+  flex-direction: row-reverse;
   gap: 16px;
   align-items: flex-start;
 }
 .scenes-editor-pane {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 42%;
+  min-width: 280px;
+  max-width: 520px;
 }
 .scenes-preview-pane {
-  flex: 0 0 380px;
-  max-width: 380px;
+  flex: 1 1 58%;
+  min-width: 320px;
   position: sticky;
   top: 16px;
   max-height: calc(100vh - 100px);
@@ -854,13 +856,21 @@ body.editor-help-show-all .editor-help-inline {
   display: flex;
   flex-direction: column;
   border: 2px solid var(--border-dark, #a89880);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--paper, #f5f0e8);
   padding: 0;
   font-family: var(--font-body, 'Segoe UI', system-ui, sans-serif);
   color: var(--ink, #2c2418);
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 17px;
+  line-height: 1.55;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+body.editor-writer-mode .scenes-preview-pane {
+  flex: 1 1 62%;
+}
+body.editor-writer-mode .scenes-editor-pane {
+  flex: 1 1 38%;
+  max-width: 480px;
 }
 .live-preview-body {
   flex: 1;

@@ -14,8 +14,14 @@
       "flankingUsesAdvantage": true,
       "shiftCostsAction": false,
       "sameZonePenalty": {
-        "ranged": { "disadvantage": true, "attackBonus": 0 },
-        "spell": { "disadvantage": true, "attackBonus": 0 }
+        "ranged": {
+          "disadvantage": true,
+          "attackBonus": 0
+        },
+        "spell": {
+          "disadvantage": true,
+          "attackBonus": 0
+        }
       },
       "opportunityAttack": {
         "enabled": true,
@@ -33,21 +39,76 @@
     },
     "climate": {
       "enabled": true,
-      "startDate": { "month": 3, "day": 15, "year": 4720 },
+      "startDate": {
+        "month": 3,
+        "day": 15,
+        "year": 4720
+      },
       "seasons": {
-        "spring": { "dayLength": { "dawn": 5, "dayStart": 6, "dusk": 20, "night": 21 } },
-        "summer": { "dayLength": { "dawn": 4, "dayStart": 5, "dusk": 22, "night": 23 } },
-        "autumn": { "dayLength": { "dawn": 6, "dayStart": 7, "dusk": 19, "night": 20 } },
-        "winter": { "dayLength": { "dawn": 7, "dayStart": 8, "dusk": 17, "night": 18 } }
+        "spring": {
+          "dayLength": {
+            "dawn": 5,
+            "dayStart": 6,
+            "dusk": 20,
+            "night": 21
+          }
+        },
+        "summer": {
+          "dayLength": {
+            "dawn": 4,
+            "dayStart": 5,
+            "dusk": 22,
+            "night": 23
+          }
+        },
+        "autumn": {
+          "dayLength": {
+            "dawn": 6,
+            "dayStart": 7,
+            "dusk": 19,
+            "night": 20
+          }
+        },
+        "winter": {
+          "dayLength": {
+            "dawn": 7,
+            "dayStart": 8,
+            "dusk": 17,
+            "night": 18
+          }
+        }
       },
       "regions": {
         "default": {
           "baseTemp": 0,
           "weights": {
-            "spring": { "clear": 30, "cloudy": 30, "rain": 25, "fog": 15 },
-            "summer": { "clear": 40, "hot": 20, "rain": 20, "thunderstorm": 15, "drought": 5 },
-            "autumn": { "rain": 25, "cloudy": 30, "clear": 20, "fog": 15, "storm": 10 },
-            "winter": { "snow": 30, "blizzard": 10, "clear": 20, "cloudy": 20, "ice": 20 }
+            "spring": {
+              "clear": 30,
+              "cloudy": 30,
+              "rain": 25,
+              "fog": 15
+            },
+            "summer": {
+              "clear": 40,
+              "hot": 20,
+              "rain": 20,
+              "thunderstorm": 15,
+              "drought": 5
+            },
+            "autumn": {
+              "rain": 25,
+              "cloudy": 30,
+              "clear": 20,
+              "fog": 15,
+              "storm": 10
+            },
+            "winter": {
+              "snow": 30,
+              "blizzard": 10,
+              "clear": 20,
+              "cloudy": 20,
+              "ice": 20
+            }
           }
         }
       }
@@ -307,7 +368,9 @@
       "icon": "▲",
       "description": "Лучший из двух бросков к20.",
       "behavior": "roll_mod",
-      "grants": { "advantage": true },
+      "grants": {
+        "advantage": true
+      },
       "duration": 1,
       "color": "gold"
     },
@@ -317,7 +380,9 @@
       "icon": "▼",
       "description": "Худший из двух бросков к20.",
       "behavior": "roll_mod",
-      "grants": { "disadvantage": true },
+      "grants": {
+        "disadvantage": true
+      },
       "duration": 1,
       "color": "slate"
     },
@@ -1146,22 +1211,50 @@
       "fireball": {
         "id": "fireball",
         "name": "Огненный шар",
-        "cost": 3,
-        "spellLevel": 3,
         "icon": "🔥",
-        "soundCast": "fire_cast",
-        "soundHit": "fire_hit",
-        "desc": "3 круг. 8к6 урона огнём по всем врагам.",
-        "combatOnly": true,
-        "oncePerCombat": false,
-        "effect": {
-          "type": "damage",
-          "value": "8d6",
-          "damageType": "fire",
-          "targeting": {
-            "scope": "all_enemies"
+        "spellLevel": 3,
+        "cost": 1,
+        "flavorText": "Сгусток пламени срывается с кончиков пальцев и взрывается волной жара.",
+        "desc": "8d6 урона огнём по всем врагам; спасбросок Ловкости DC 14 (половина при успехе).",
+        "tags": [
+          "spell",
+          "fire",
+          "area"
+        ],
+        "actionCost": {
+          "dnd5e": {
+            "action": 1,
+            "bonusAction": 0,
+            "reaction": 0
+          },
+          "pf2e": {
+            "actions": 2
           }
         },
+        "targetType": "area",
+        "range": "spell",
+        "requirements": [
+          "notSurprised"
+        ],
+        "effects": [
+          {
+            "type": "damage",
+            "value": "8d6",
+            "damageType": "fire",
+            "targeting": {
+              "scope": "all_enemies"
+            },
+            "allTargets": true,
+            "savingThrow": {
+              "skill": "dexterity",
+              "dc": 14,
+              "halfOnSave": true
+            }
+          }
+        ],
+        "soundEffect": "fireball",
+        "combatOnly": true,
+        "oncePerCombat": false,
         "usage": "combat",
         "type": "active"
       },
@@ -1172,7 +1265,11 @@
         "spellLevel": 5,
         "icon": "❄️",
         "range": "cone",
-        "tags": ["spell", "cone", "cold"],
+        "tags": [
+          "spell",
+          "cone",
+          "cold"
+        ],
         "soundCast": "cold_cast",
         "soundHit": "cold_hit",
         "desc": "5 круг. 8к8 урона холодом по врагам в вашей зоне (конус).",
@@ -2047,50 +2144,38 @@
         "cost": 0,
         "flavorText": "Вы жертвуете точностью ради сокрушительного удара.",
         "desc": "Следующая атака: +5 урона, −2 к броску атаки.",
-        "tags": ["martial", "weapon"],
+        "tags": [
+          "martial",
+          "weapon"
+        ],
         "actionCost": {
-          "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 }
+          "dnd5e": {
+            "action": 1,
+            "bonusAction": 0,
+            "reaction": 0
+          }
         },
         "targetType": "self",
         "range": "melee",
-        "requirements": ["hasWeaponEquipped", "frontline"],
-        "effects": [
-          { "type": "grantBonus", "stat": "dmg", "value": 5, "duration": "next_attack" },
-          { "type": "grantBonus", "stat": "atk", "value": -2, "duration": "next_attack" }
+        "requirements": [
+          "hasWeaponEquipped",
+          "frontline"
         ],
-        "soundEffect": "slash_sword",
-        "combatOnly": true,
-        "oncePerCombat": false,
-        "usage": "combat",
-        "type": "active"
-      },
-      "fireball": {
-        "id": "fireball",
-        "name": "Огненный шар",
-        "icon": "🔥",
-        "spellLevel": 3,
-        "cost": 1,
-        "flavorText": "Сгусток пламени срывается с кончиков пальцев и взрывается волной жара.",
-        "desc": "8d6 урона огнём по всем врагам; спасбросок Ловкости DC 14 (половина при успехе).",
-        "tags": ["spell", "fire", "area"],
-        "actionCost": {
-          "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 },
-          "pf2e": { "actions": 2 }
-        },
-        "targetType": "area",
-        "range": "spell",
-        "requirements": ["notSurprised"],
         "effects": [
           {
-            "type": "damage",
-            "value": "8d6",
-            "damageType": "fire",
-            "targeting": { "scope": "all_enemies" },
-            "allTargets": true,
-            "savingThrow": { "skill": "dexterity", "dc": 14, "halfOnSave": true }
+            "type": "grantBonus",
+            "stat": "dmg",
+            "value": 5,
+            "duration": "next_attack"
+          },
+          {
+            "type": "grantBonus",
+            "stat": "atk",
+            "value": -2,
+            "duration": "next_attack"
           }
         ],
-        "soundEffect": "fireball",
+        "soundEffect": "slash_sword",
         "combatOnly": true,
         "oncePerCombat": false,
         "usage": "combat",
@@ -2103,24 +2188,39 @@
         "cost": 0,
         "flavorText": "Вы бьёте по ногам и пытаетесь сбить противника с ног.",
         "desc": "1d6 урона и попытка сбить с ног (статус prone).",
-        "tags": ["martial", "weapon", "control"],
+        "tags": [
+          "martial",
+          "weapon",
+          "control"
+        ],
         "actionCost": {
-          "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 }
+          "dnd5e": {
+            "action": 1,
+            "bonusAction": 0,
+            "reaction": 0
+          }
         },
         "targetType": "singleEnemy",
         "range": "melee",
-        "requirements": ["hasWeaponEquipped", "frontline"],
+        "requirements": [
+          "hasWeaponEquipped",
+          "frontline"
+        ],
         "effects": [
           {
             "type": "damage",
             "value": "1d6",
             "damageType": "physical",
-            "targeting": { "scope": "single" }
+            "targeting": {
+              "scope": "single"
+            }
           },
           {
             "type": "apply_status",
             "statusId": "prone",
-            "targeting": { "scope": "single" }
+            "targeting": {
+              "scope": "single"
+            }
           }
         ],
         "soundEffect": "attack_hit",
@@ -2137,15 +2237,25 @@
         "cost": 1,
         "flavorText": "Тихое слово соткано из целительной энергии.",
         "desc": "Бонусное действие: восстановить 1d4+2 ОЗ.",
-        "tags": ["spell", "healing"],
+        "tags": [
+          "spell",
+          "healing"
+        ],
         "actionCost": {
-          "dnd5e": { "action": 0, "bonusAction": 1, "reaction": 0 }
+          "dnd5e": {
+            "action": 0,
+            "bonusAction": 1,
+            "reaction": 0
+          }
         },
         "targetType": "self",
         "range": "spell",
         "requirements": [],
         "effects": [
-          { "type": "heal", "value": "1d4+2" }
+          {
+            "type": "heal",
+            "value": "1d4+2"
+          }
         ],
         "soundEffect": "heal",
         "combatOnly": true,
@@ -2160,19 +2270,31 @@
         "cost": 0,
         "flavorText": "Вы бьёте и тут же занимаете защитную стойку.",
         "desc": "1d8 урона по цели и +2 КД до начала следующего хода.",
-        "tags": ["martial", "weapon"],
+        "tags": [
+          "martial",
+          "weapon"
+        ],
         "actionCost": {
-          "dnd5e": { "action": 1, "bonusAction": 0, "reaction": 0 }
+          "dnd5e": {
+            "action": 1,
+            "bonusAction": 0,
+            "reaction": 0
+          }
         },
         "targetType": "singleEnemy",
         "range": "melee",
-        "requirements": ["hasWeaponEquipped", "frontline"],
+        "requirements": [
+          "hasWeaponEquipped",
+          "frontline"
+        ],
         "effects": [
           {
             "type": "damage",
             "value": "1d8",
             "damageType": "physical",
-            "targeting": { "scope": "single" }
+            "targeting": {
+              "scope": "single"
+            }
           },
           {
             "type": "grantBonus",
@@ -2421,11 +2543,23 @@
           "formSource": "beast",
           "forms": {
             "pool": "beast",
-            "filter": { "maxCr": 1 }
+            "filter": {
+              "maxCr": 1
+            }
           },
-          "statOverride": { "physical": true, "mental": true },
-          "duration": { "type": "minutes_per_level", "value": 10, "concentration": true },
-          "restrictions": { "cannot_cast": true, "cannot_use_equipment": true },
+          "statOverride": {
+            "physical": true,
+            "mental": true
+          },
+          "duration": {
+            "type": "minutes_per_level",
+            "value": 10,
+            "concentration": true
+          },
+          "restrictions": {
+            "cannot_cast": true,
+            "cannot_use_equipment": true
+          },
           "visual": "Тело покрывается шерстью, черты лица стираются..."
         },
         "usage": "combat",
@@ -2450,11 +2584,18 @@
               "name": "Небесные крылья",
               "icon": "👼",
               "type": "appendage",
-              "grant": { "fly_speed": 40, "fly": true },
+              "grant": {
+                "fly_speed": 40,
+                "fly": true
+              },
               "visual": "Из спины вырастают сияющие крылья"
             }
           ],
-          "duration": { "type": "minutes", "value": 10, "concentration": false }
+          "duration": {
+            "type": "minutes",
+            "value": 10,
+            "concentration": false
+          }
         },
         "usage": "both",
         "type": "active",
@@ -2476,7 +2617,10 @@
               "id": "spider_legs",
               "name": "Паучьи лапы",
               "type": "appendage",
-              "grant": { "climb_speed": 20, "spider_climb": true },
+              "grant": {
+                "climb_speed": 20,
+                "spider_climb": true
+              },
               "visual": "Ноги становятся похожи на паучьи"
             }
           ]
@@ -2501,7 +2645,10 @@
               "id": "gills",
               "name": "Жабры",
               "type": "appendage",
-              "grant": { "swim_speed": 30, "water_breathing": true }
+              "grant": {
+                "swim_speed": 30,
+                "water_breathing": true
+              }
             }
           ]
         },
@@ -3040,7 +3187,11 @@
           "cost": 1,
           "icon": "🔥",
           "range": "cone",
-          "tags": ["spell", "cone", "fire"],
+          "tags": [
+            "spell",
+            "cone",
+            "fire"
+          ],
           "soundCast": "fire_cast",
           "soundHit": "fire_hit",
           "desc": "Конус 15 футов из вашей зоны. 3к6 урона огнём по врагам рядом. Спасбросок Ловкости DC 13 — половина урона.",
@@ -3270,7 +3421,10 @@
           "cost": 1,
           "icon": "💚",
           "range": "touch",
-          "tags": ["spell", "touch"],
+          "tags": [
+            "spell",
+            "touch"
+          ],
           "desc": "Касание в вашей зоне. Восстанавливает 1к8+2 ОЗ себе или союзнику.",
           "combatOnly": false,
           "oncePerCombat": false,
@@ -3640,7 +3794,10 @@
           "cost": 1,
           "icon": "💚",
           "range": "touch",
-          "tags": ["spell", "touch"],
+          "tags": [
+            "spell",
+            "touch"
+          ],
           "desc": "Касание в вашей зоне. Восстанавливает 1к8+2 ОЗ себе или союзнику.",
           "combatOnly": false,
           "oncePerCombat": false,
@@ -6559,11 +6716,18 @@
         "loot": true,
         "merchant": true,
         "gatherable": true,
-        "gatherLocations": ["forest", "meadow"],
+        "gatherLocations": [
+          "forest",
+          "meadow"
+        ],
         "gatherSkill": "nature",
         "gatherDc": 12
       },
-      "tags": ["plant", "alchemy", "healing"]
+      "tags": [
+        "plant",
+        "alchemy",
+        "healing"
+      ]
     },
     "herb_green": {
       "id": "herb_green",
@@ -6576,11 +6740,18 @@
         "loot": true,
         "merchant": true,
         "gatherable": true,
-        "gatherLocations": ["swamp", "forest"],
+        "gatherLocations": [
+          "swamp",
+          "forest"
+        ],
         "gatherSkill": "nature",
         "gatherDc": 12
       },
-      "tags": ["plant", "alchemy", "poison"]
+      "tags": [
+        "plant",
+        "alchemy",
+        "poison"
+      ]
     },
     "crystal_water": {
       "id": "crystal_water",
@@ -6593,11 +6764,17 @@
         "loot": false,
         "merchant": true,
         "gatherable": true,
-        "gatherLocations": ["river", "well"],
+        "gatherLocations": [
+          "river",
+          "well"
+        ],
         "gatherSkill": "nature",
         "gatherDc": 10
       },
-      "tags": ["water", "alchemy"]
+      "tags": [
+        "water",
+        "alchemy"
+      ]
     },
     "iron_ore": {
       "id": "iron_ore",
@@ -6610,11 +6787,17 @@
         "loot": true,
         "merchant": true,
         "gatherable": true,
-        "gatherLocations": ["mountain", "cave"],
+        "gatherLocations": [
+          "mountain",
+          "cave"
+        ],
         "gatherSkill": "survival",
         "gatherDc": 14
       },
-      "tags": ["metal", "smithing"]
+      "tags": [
+        "metal",
+        "smithing"
+      ]
     },
     "wood_log": {
       "id": "wood_log",
@@ -6627,11 +6810,17 @@
         "loot": false,
         "merchant": true,
         "gatherable": true,
-        "gatherLocations": ["forest"],
+        "gatherLocations": [
+          "forest"
+        ],
         "gatherSkill": "nature",
         "gatherDc": 10
       },
-      "tags": ["wood", "smithing", "crafting"]
+      "tags": [
+        "wood",
+        "smithing",
+        "crafting"
+      ]
     },
     "leather_scrap": {
       "id": "leather_scrap",
@@ -6648,7 +6837,11 @@
         "gatherSkill": "survival",
         "gatherDc": 12
       },
-      "tags": ["leather", "armor", "crafting"]
+      "tags": [
+        "leather",
+        "armor",
+        "crafting"
+      ]
     }
   },
   "recipes": {
@@ -6816,18 +7009,47 @@
       "description": "Простой железный меч.",
       "startKnown": false,
       "ingredients": [
-        { "id": "iron_ore", "quantity": 3 },
-        { "id": "wood_log", "quantity": 1 }
+        {
+          "id": "iron_ore",
+          "quantity": 3
+        },
+        {
+          "id": "wood_log",
+          "quantity": 1
+        }
       ],
-      "result": { "itemId": "iron_sword", "quantity": 1 },
-      "requirements": {
-        "level": { "min": 2 },
-        "skills": [{ "skillId": "smithing", "rank": "trained" }],
-        "tools": [{ "itemId": "smithing_hammer", "consumed": false }]
+      "result": {
+        "itemId": "iron_sword",
+        "quantity": 1
       },
-      "craftingTime": { "type": "hours", "value": 4 },
-      "rewards": { "experience": 15 },
-      "tags": ["weapon", "smithing"]
+      "requirements": {
+        "level": {
+          "min": 2
+        },
+        "skills": [
+          {
+            "skillId": "smithing",
+            "rank": "trained"
+          }
+        ],
+        "tools": [
+          {
+            "itemId": "smithing_hammer",
+            "consumed": false
+          }
+        ]
+      },
+      "craftingTime": {
+        "type": "hours",
+        "value": 4
+      },
+      "rewards": {
+        "experience": 15
+      },
+      "tags": [
+        "weapon",
+        "smithing"
+      ]
     },
     "leather_armor_craft": {
       "id": "leather_armor_craft",
@@ -6837,17 +7059,41 @@
       "description": "Лёгкий кожаный доспех.",
       "startKnown": false,
       "ingredients": [
-        { "id": "leather_scrap", "quantity": 4 },
-        { "id": "herb_red", "quantity": 1 }
+        {
+          "id": "leather_scrap",
+          "quantity": 4
+        },
+        {
+          "id": "herb_red",
+          "quantity": 1
+        }
       ],
-      "result": { "itemId": "leather_armor", "quantity": 1 },
-      "requirements": {
-        "level": { "min": 1 },
-        "skills": [{ "skillId": "leatherworking", "rank": "trained" }]
+      "result": {
+        "itemId": "leather_armor",
+        "quantity": 1
       },
-      "craftingTime": { "type": "hours", "value": 6 },
-      "rewards": { "experience": 10 },
-      "tags": ["armor", "leatherworking"]
+      "requirements": {
+        "level": {
+          "min": 1
+        },
+        "skills": [
+          {
+            "skillId": "leatherworking",
+            "rank": "trained"
+          }
+        ]
+      },
+      "craftingTime": {
+        "type": "hours",
+        "value": 6
+      },
+      "rewards": {
+        "experience": 10
+      },
+      "tags": [
+        "armor",
+        "leatherworking"
+      ]
     },
     "herb_bandage_craft": {
       "id": "herb_bandage_craft",
@@ -6857,17 +7103,42 @@
       "description": "Повязка из лечебных и нейтрализующих трав.",
       "startKnown": false,
       "ingredients": [
-        { "id": "herb_red", "quantity": 1 },
-        { "id": "herb_green", "quantity": 1 }
+        {
+          "id": "herb_red",
+          "quantity": 1
+        },
+        {
+          "id": "herb_green",
+          "quantity": 1
+        }
       ],
-      "result": { "itemId": "bandage", "quantity": 2 },
-      "requirements": {
-        "level": { "min": 1 },
-        "skills": [{ "skillId": "medicine", "rank": "untrained" }]
+      "result": {
+        "itemId": "bandage",
+        "quantity": 2
       },
-      "craftingTime": { "type": "instant", "value": 0 },
-      "rewards": { "experience": 2 },
-      "tags": ["healing", "medicine", "beginner"]
+      "requirements": {
+        "level": {
+          "min": 1
+        },
+        "skills": [
+          {
+            "skillId": "medicine",
+            "rank": "untrained"
+          }
+        ]
+      },
+      "craftingTime": {
+        "type": "instant",
+        "value": 0
+      },
+      "rewards": {
+        "experience": 2
+      },
+      "tags": [
+        "healing",
+        "medicine",
+        "beginner"
+      ]
     }
   },
   "enemies": {
@@ -6916,7 +7187,10 @@
           "atkBonus": 3,
           "dmgRoll": "1d6",
           "dmgBonus": 1,
-          "tags": ["ranged", "weapon"]
+          "tags": [
+            "ranged",
+            "weapon"
+          ]
         },
         {
           "id": "dagger",
@@ -6925,7 +7199,10 @@
           "atkBonus": 3,
           "dmgRoll": "1d4",
           "dmgBonus": 1,
-          "tags": ["melee", "weapon"]
+          "tags": [
+            "melee",
+            "weapon"
+          ]
         }
       ]
     },
@@ -7024,7 +7301,10 @@
           "atkBonus": 2,
           "dmgRoll": "1d6",
           "dmgBonus": 0,
-          "tags": ["ranged", "weapon"]
+          "tags": [
+            "ranged",
+            "weapon"
+          ]
         }
       ]
     },
@@ -7050,7 +7330,10 @@
           "atkBonus": 2,
           "dmgRoll": "1d4",
           "dmgBonus": 0,
-          "tags": ["ranged", "weapon"]
+          "tags": [
+            "ranged",
+            "weapon"
+          ]
         }
       ]
     },
@@ -7353,59 +7636,132 @@
   },
   "quests": {
     "find_albert": {
+      "id": "find_albert",
       "title": "Пропавший мельник",
-      "description": "Мельник Альберт пропал три дня назад. Найдите его и узнайте, что случилось.",
       "giver": "marta",
+      "description": "Мельник Альберт пропал три дня назад. Найдите его и узнайте, что случилось.",
       "hidden": false,
+      "questFormat": 2,
       "rewards": {
         "gold": 50,
         "items": [],
         "reputation": {
-          "rep_village": 15
+          "rep_village": 10
         },
         "exp": 100
       },
-      "stages": {
-        "0": {
-          "log": "Поговорите со старостой Марты и узнайте подробности.",
-          "hint": "Начало",
-          "finish": false
+      "stages": [
+        {
+          "id": "start",
+          "title": "Поговорить с Мартой",
+          "hint": "Поговорите со старостой Мартой в таверне",
+          "log": "Марта просит найти пропавшего мельника Альберта.",
+          "completionRule": "all",
+          "tasks": [
+            {
+              "type": "TalkToNPC",
+              "id": "fa_talk_marta",
+              "npcId": "marta",
+              "description": "Поговорить с Мартой"
+            }
+          ]
         },
-        "1": {
-          "log": "Отправляйтесь к мельнице на север.",
-          "hint": "Достигнуть мельницы",
-          "finish": false
+        {
+          "id": "reach_mill",
+          "title": "Достигнуть мельницы",
+          "hint": "Отправляйтесь к мельнице на север",
+          "log": "Нужно добраться до мельницы на Тихой реке.",
+          "completionRule": "all",
+          "tasks": [
+            {
+              "type": "VisitLocation",
+              "id": "fa_visit_mill",
+              "sceneId": "mill_arrival",
+              "description": "Посетить мельницу"
+            }
+          ]
         },
-        "2": {
-          "log": "Осмотрите мельницу и найдите следы Альберта.",
-          "hint": "Найти улики",
-          "finish": false
+        {
+          "id": "find_clues",
+          "title": "Найти улики",
+          "hint": "Осмотрите мельницу и найдите следы Альберта",
+          "log": "В мельнице нужно найти улики.",
+          "completionRule": "any",
+          "tasks": [
+            {
+              "type": "VisitLocation",
+              "id": "fa_visit_cellar",
+              "sceneId": "cellar",
+              "description": "Спуститься в погреб"
+            },
+            {
+              "type": "CollectItem",
+              "id": "fa_diary",
+              "itemId": "albert_diary",
+              "count": 1,
+              "description": "Найти дневник Альберта",
+              "optional": true
+            }
+          ]
         },
-        "3": {
-          "log": "Найдите Альберта в погребе и освободите его.",
-          "hint": "Спасти Альберта",
-          "finish": false
+        {
+          "id": "rescue",
+          "title": "Спасти Альберта",
+          "hint": "Найдите Альберта в погребе и освободите его",
+          "log": "Альберт в беде — его нужно спасти.",
+          "completionRule": "all",
+          "tasks": [
+            {
+              "type": "VisitLocation",
+              "id": "fa_free",
+              "sceneId": "cellar_free",
+              "description": "Освободить Альберта"
+            }
+          ]
         },
-        "4": {
-          "log": "Вернитесь в деревню и получите награду.",
-          "hint": "Завершено",
-          "finish": true
+        {
+          "id": "complete",
+          "title": "Вернуться в деревню",
+          "hint": "Вернитесь в деревню и получите награду у Марты",
+          "log": "Альберт спасён. Пора за наградой.",
+          "finish": true,
+          "completionRule": "any",
+          "tasks": [
+            {
+              "type": "TalkToNPC",
+              "id": "fa_reward",
+              "npcId": "marta",
+              "description": "Получить награду у Марты"
+            },
+            {
+              "type": "VisitLocation",
+              "id": "fa_village",
+              "sceneId": "village_hub",
+              "description": "Вернуться в деревню"
+            }
+          ]
         }
-      },
-      "isFinished": false,
+      ],
       "legacyStageMap": {
+        "0": "0",
         "start": "0",
+        "1": "1",
         "reach_mill": "1",
+        "2": "2",
         "find_clues": "2",
+        "3": "3",
         "rescue": "3",
+        "4": "4",
         "complete": "4"
       }
     },
     "lost_bag": {
+      "id": "lost_bag",
       "title": "Пропавшая сумка",
-      "description": "Джек потерял сумку в лесу у большого камня. Найдите её и получите награду.",
       "giver": "jack",
+      "description": "Джек потерял сумку в лесу у большого камня. Найдите её и получите награду.",
       "hidden": false,
+      "questFormat": 2,
       "rewards": {
         "gold": 30,
         "items": [],
@@ -7414,41 +7770,86 @@
         },
         "exp": 50
       },
-      "stages": {
-        "0": {
-          "log": "Поговорите с Джеком о пропавшей сумке.",
-          "hint": "Начало",
-          "finish": false
+      "stages": [
+        {
+          "id": "start",
+          "title": "Поговорить с Джеком",
+          "hint": "Поговорите с Джеком о пропавшей сумке",
+          "log": "Джек потерял сумку у валуна в чаще.",
+          "tasks": [
+            {
+              "type": "TalkToNPC",
+              "id": "lb_talk",
+              "npcId": "jack",
+              "description": "Поговорить с Джеком"
+            }
+          ]
         },
-        "1": {
-          "log": "Найдите сумку у валуна в лесной чаще.",
-          "hint": "Найти сумку",
-          "finish": false
+        {
+          "id": "find_bag",
+          "title": "Найти сумку",
+          "hint": "Найдите сумку у валуна в лесной чаще",
+          "log": "Сумка где-то у большого камня в чаще.",
+          "tasks": [
+            {
+              "type": "CollectItem",
+              "id": "lb_bag",
+              "itemId": "jack_bag",
+              "count": 1,
+              "description": "Найти сумку Джека"
+            }
+          ]
         },
-        "2": {
-          "log": "Верните сумку Джеку.",
-          "hint": "Вернуть сумку",
-          "finish": false
+        {
+          "id": "return",
+          "title": "Вернуть сумку",
+          "hint": "Верните сумку Джеку",
+          "log": "Сумка найдена — пора вернуть её Джеку.",
+          "tasks": [
+            {
+              "type": "DeliverItem",
+              "id": "lb_deliver",
+              "itemId": "jack_bag",
+              "npcId": "jack",
+              "count": 1,
+              "description": "Отдать сумку Джеку"
+            }
+          ]
         },
-        "3": {
+        {
+          "id": "complete",
+          "title": "Завершено",
+          "hint": "Квест выполнен",
           "log": "Квест выполнен. Получена награда 30 зм.",
-          "hint": "Завершено",
-          "finish": true
+          "finish": true,
+          "tasks": [
+            {
+              "type": "TalkToNPC",
+              "id": "lb_done",
+              "npcId": "jack",
+              "description": "Поговорить с Джеком о награде"
+            }
+          ]
         }
-      },
-      "isFinished": false,
+      ],
       "legacyStageMap": {
+        "0": "0",
         "start": "0",
+        "1": "1",
         "find_bag": "1",
+        "2": "2",
         "return": "2",
+        "3": "3",
         "complete": "3"
       }
     },
     "bandit_lair": {
+      "id": "bandit_lair",
       "title": "Логово бандитов",
-      "description": "Вы нашли карту с отметкой «склад». Возможно, бандиты имеют тайное укрытие.",
       "giver": "auto",
+      "description": "Вы нашли карту с отметкой «склад». Возможно, бандиты имеют тайное укрытие.",
       "hidden": true,
+      "questFormat": 2,
       "rewards": {
         "gold": 40,
         "items": [
@@ -7459,27 +7860,74 @@
         },
         "exp": 75
       },
-      "stages": {
-        "0": {
-          "log": "Карта с отметкой «склад» найдена у разведчика.",
-          "hint": "Найдена карта",
-          "finish": false
+      "stages": [
+        {
+          "id": "found_map",
+          "title": "Карта найдена",
+          "hint": "Карта с отметкой «склад» найдена у разведчика",
+          "log": "Найдена карта бандитов.",
+          "tasks": [
+            {
+              "type": "CollectItem",
+              "id": "bl_map",
+              "itemId": "crooked_map",
+              "count": 1,
+              "description": "Найти карту бандитов"
+            }
+          ]
         },
-        "1": {
-          "log": "Найдите склад бандитов и узнайте, кто их главарь.",
-          "hint": "Расследование",
-          "finish": false
+        {
+          "id": "investigate",
+          "title": "Найти главаря",
+          "hint": "Найдите склад бандитов и узнайте, кто их главарь",
+          "log": "Нужно найти логово и главаря бандитов.",
+          "completionRule": "any",
+          "tasks": [
+            {
+              "type": "KillEnemy",
+              "id": "bl_corvin",
+              "enemyId": "corvin",
+              "count": 1,
+              "description": "Победить Корвина"
+            },
+            {
+              "type": "VisitLocation",
+              "id": "bl_cellar",
+              "sceneId": "cellar_free",
+              "description": "Осмотреть логово в погребе"
+            }
+          ]
         },
-        "2": {
+        {
+          "id": "complete",
+          "title": "Завершено",
+          "hint": "Главарь бандитов найден",
           "log": "Главарь бандитов найден.",
-          "hint": "Завершено",
-          "finish": true
+          "finish": true,
+          "tasks": [
+            {
+              "type": "KillEnemy",
+              "id": "bl_done",
+              "enemyId": "corvin",
+              "count": 1,
+              "description": "Победа над Корвином",
+              "optional": true
+            },
+            {
+              "type": "VisitLocation",
+              "id": "bl_done_scene",
+              "sceneId": "cellar_after",
+              "description": "Завершить расследование"
+            }
+          ]
         }
-      },
-      "isFinished": false,
+      ],
       "legacyStageMap": {
+        "0": "0",
         "found_map": "0",
+        "1": "1",
         "investigate": "1",
+        "2": "2",
         "complete": "2"
       }
     },
@@ -7487,83 +7935,218 @@
       "id": "lukorn_investigation",
       "title": "Тень Люкорна",
       "giver": "albert",
-      "description": "Письмо у Корвина упоминает торговца Люкорна и 'старый дом у северных ворот'. Кто стоит за бандитами?",
-      "stages": {
-        "0": {
-          "log": "Альберт рассказал о Люкорне — влиятельном торговце из города.",
-          "hint": "Поговорите с Альбертом в таверне (у камина). Нужно письмо Люкорна с чердака мельницы. После разговора откройте карту путешествий — «Северные ворота».",
-          "finish": false
-        },
-        "1": {
-          "log": "Люкорн использует мельницу как перевалочный пункт для краденых товаров.",
-          "hint": "На карте путешествий выберите «Северные ворота», затем дом Люкорна или канализацию (ключ от Марты).",
-          "finish": false
-        },
-        "2": {
-          "log": "Вы нашли доказательства связи Люкорна с бандитами.",
-          "hint": "Вернитесь к Марте с уликами или confront Люкорна напрямую.",
-          "finish": false
-        },
-        "3": {
-          "log": "Люкорн арестован / убит / сбежал — дело закрыто.",
-          "hint": "",
-          "finish": true
-        }
-      },
+      "description": "Расследование дел советника Люкорна.",
+      "hidden": false,
+      "questFormat": 2,
       "rewards": {
-        "gold": 100,
-        "items": [
-          "lukorn_signet_ring"
-        ],
+        "gold": 60,
+        "exp": 120,
         "reputation": {
           "rep_village": 15
         },
-        "exp": 200
+        "items": []
       },
-      "hidden": false,
-      "isFinished": false,
-      "legacyStageMap": {}
+      "stages": [
+        {
+          "id": "talk_albert",
+          "title": "Поговорить с Альбертом",
+          "hint": "Поговорите с Альбертом в таверне (у камина)",
+          "log": "Альберт знает о письме Люкорна.",
+          "tasks": [
+            {
+              "type": "TalkToNPC",
+              "id": "lu_albert",
+              "npcId": "albert",
+              "description": "Поговорить с Альбертом"
+            }
+          ]
+        },
+        {
+          "id": "go_lukorn",
+          "title": "Дом Люкорна",
+          "hint": "На карте — «Северные ворота», затем дом Люкорна",
+          "log": "Нужно посетить дом Люкорна.",
+          "completionRule": "any",
+          "tasks": [
+            {
+              "type": "VisitLocation",
+              "id": "lu_house",
+              "sceneId": "lukorn_house_interior",
+              "description": "Войти в дом Люкорна"
+            },
+            {
+              "type": "VisitLocation",
+              "id": "lu_basement",
+              "sceneId": "lukorn_basement",
+              "description": "Осмотреть подвал Люкорна"
+            },
+            {
+              "type": "CollectItem",
+              "id": "lu_letter",
+              "itemId": "lukorn_letter",
+              "count": 1,
+              "description": "Найти письмо Люкорна",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "id": "confront",
+          "title": "Противостояние",
+          "hint": "Вернитесь к Марте с уликами или противостойте Люкорну",
+          "log": "Пора решить дело Люкорна.",
+          "completionRule": "any",
+          "tasks": [
+            {
+              "type": "KillEnemy",
+              "id": "lu_boss",
+              "enemyId": "lukorn_boss",
+              "count": 1,
+              "description": "Победить Люкорна"
+            },
+            {
+              "type": "VisitLocation",
+              "id": "lu_surrender",
+              "sceneId": "lukorn_surrender",
+              "description": "Принять сдачу Люкорна"
+            },
+            {
+              "type": "VisitLocation",
+              "id": "lu_justice",
+              "sceneId": "lukorn_justice_ending",
+              "description": "Правосудие над Люкорном"
+            }
+          ]
+        },
+        {
+          "id": "complete",
+          "title": "Дело закрыто",
+          "hint": "Расследование завершено",
+          "log": "Тень Люкорна рассеялась.",
+          "finish": true,
+          "completionRule": "any",
+          "tasks": [
+            {
+              "type": "VisitLocation",
+              "id": "lu_aftermath",
+              "sceneId": "lukorn_aftermath",
+              "description": "Подвести итоги"
+            },
+            {
+              "type": "TalkToNPC",
+              "id": "lu_marta",
+              "npcId": "marta",
+              "description": "Доложить Марте"
+            }
+          ]
+        }
+      ],
+      "legacyStageMap": {
+        "0": "0",
+        "talk_albert": "0",
+        "1": "1",
+        "go_lukorn": "1",
+        "2": "2",
+        "confront": "2",
+        "3": "3",
+        "complete": "3"
+      }
     },
     "albert_locket": {
       "id": "albert_locket",
       "title": "Медальон Эльзы",
       "giver": "albert",
-      "description": "Альберт потерял медальон своей покойной жены много лет назад у старого дуба на берегу реки.",
-      "stages": {
-        "0": {
-          "log": "Альберт рассказал о потерянном медальоне его жены Эльзы.",
-          "hint": "На карте путешествий — «Излучина Тихой реки». У старого дуба у воды осмотрите корни (Восприятие DC 13) или пройдите вдоль берега (DC 15).",
-          "finish": false
-        },
-        "1": {
-          "log": "Медальон Эльзы найден у корней старого дуба.",
-          "hint": "Верните медальон Альберту в таверне или на площади деревни.",
-          "finish": false
-        },
-        "2": {
-          "log": "Альберт получил медальон обратно. В его глазах — слёзы.",
-          "hint": "",
-          "finish": true
-        },
-        "failed": {
-          "log": "Медальон Эльзы так и не удалось найти у старого дуба. Квест провален.",
-          "hint": "",
-          "failed": true
-        }
-      },
-      "rewards": {
-        "gold": 20,
-        "items": [
-          "alberts_gratitude"
-        ],
-        "reputation": {
-          "rep_village": 10
-        },
-        "exp": 60
-      },
+      "description": "Альберт просит найти медальон Эльзы у излучины реки.",
       "hidden": false,
-      "isFinished": false,
-      "legacyStageMap": {}
+      "questFormat": 2,
+      "rewards": {
+        "gold": 25,
+        "exp": 40,
+        "reputation": {
+          "rep_village": 5
+        },
+        "items": []
+      },
+      "stages": [
+        {
+          "id": "search",
+          "title": "Излучина реки",
+          "hint": "На карте — «Излучина Тихой реки». У старого дуба поищите медальон",
+          "log": "Медальон Эльзы где-то у излучины.",
+          "completionRule": "any",
+          "tasks": [
+            {
+              "type": "CollectItem",
+              "id": "al_locket",
+              "itemId": "elsa_locket",
+              "count": 1,
+              "description": "Найти медальон Эльзы"
+            },
+            {
+              "type": "VisitLocation",
+              "id": "al_found",
+              "sceneId": "river_bend_found",
+              "description": "Найти место у излучины"
+            }
+          ]
+        },
+        {
+          "id": "return",
+          "title": "Вернуть медальон",
+          "hint": "Верните медальон Альберту в таверне или на площади",
+          "log": "Медальон найден — верните его Альберту.",
+          "tasks": [
+            {
+              "type": "DeliverItem",
+              "id": "al_deliver",
+              "itemId": "elsa_locket",
+              "npcId": "albert",
+              "count": 1,
+              "description": "Отдать медальон Альберту"
+            }
+          ]
+        },
+        {
+          "id": "complete",
+          "title": "Завершено",
+          "hint": "Медальон возвращён",
+          "log": "Альберт снова держит медальон Эльзы.",
+          "finish": true,
+          "tasks": [
+            {
+              "type": "TalkToNPC",
+              "id": "al_done",
+              "npcId": "albert",
+              "description": "Поговорить с Альбертом"
+            }
+          ]
+        },
+        {
+          "id": "failed",
+          "title": "Провал",
+          "hint": "Медальон утерян навсегда",
+          "log": "Медальон Эльзы больше не найти.",
+          "failed": true,
+          "tasks": [
+            {
+              "type": "VisitLocation",
+              "id": "al_fail",
+              "sceneId": "albert_locket_failed",
+              "description": "Признать провал поиска"
+            }
+          ]
+        }
+      ],
+      "legacyStageMap": {
+        "0": "0",
+        "search": "0",
+        "1": "1",
+        "return": "1",
+        "2": "2",
+        "complete": "2",
+        "3": "3",
+        "failed": "3"
+      }
     }
   },
   "actionChains": {
@@ -8107,41 +8690,115 @@
         "dawn": {
           "text": "Таверна ещё пуста. Марта топит печь — в воздухе витает запах свежего хлеба и травяного чая.",
           "choices": [
-            { "text": "🍳 Попросить завтрак", "to": "tavern_entry", "icon": "🍳" },
-            { "text": "🗣️ Поговорить со старостой", "to": "village", "icon": "💬" },
-            { "text": "← Вернуться на площадь", "to": "village_hub", "icon": "🏘️", "_hubReturn": true }
+            {
+              "text": "🍳 Попросить завтрак",
+              "to": "tavern_entry",
+              "icon": "🍳"
+            },
+            {
+              "text": "🗣️ Поговорить со старостой",
+              "to": "village",
+              "icon": "💬"
+            },
+            {
+              "text": "← Вернуться на площадь",
+              "to": "village_hub",
+              "icon": "🏘️",
+              "_hubReturn": true
+            }
           ]
         },
         "day": {
           "text": "В таверне несколько местных крестьян за кружкой эля. Торговец у окна пересчитывает монеты.",
           "choices": [
-            { "text": "🗣️ Поговорить со старостой", "to": "village", "icon": "💬" },
-            { "text": "🛏️ Старая таверна у угла", "to": "tavern_entry", "icon": "🚪" },
-            { "text": "← Вернуться на площадь", "to": "village_hub", "icon": "🏘️", "_hubReturn": true }
+            {
+              "text": "🗣️ Поговорить со старостой",
+              "to": "village",
+              "icon": "💬"
+            },
+            {
+              "text": "🛏️ Старая таверна у угла",
+              "to": "tavern_entry",
+              "icon": "🚪"
+            },
+            {
+              "text": "← Вернуться на площадь",
+              "to": "village_hub",
+              "icon": "🏘️",
+              "_hubReturn": true
+            }
           ]
         },
         "dusk": {
           "text": "Сумерки. Таверна понемногу заполняется — местные шёпотом обсуждают пропавшего мельника.",
           "choices": [
-            { "text": "🔪 Слушать сплетни", "to": "tavern_entry", "icon": "👂" },
-            { "text": "🗣️ Поговорить со старостой", "to": "village", "icon": "💬" },
-            { "text": "← Вернуться на площадь", "to": "village_hub", "icon": "🏘️", "_hubReturn": true }
+            {
+              "text": "🔪 Слушать сплетни",
+              "to": "tavern_entry",
+              "icon": "👂"
+            },
+            {
+              "text": "🗣️ Поговорить со старостой",
+              "to": "village",
+              "icon": "💬"
+            },
+            {
+              "text": "← Вернуться на площадь",
+              "to": "village_hub",
+              "icon": "🏘️",
+              "_hubReturn": true
+            }
           ]
         },
         "night": {
           "text": "Таверна битком. Пьяницы поют, в углу кто-то играет в кости. Воздух густой от дыма и перегара.",
           "choices": [
-            { "text": "🎲 Присоединиться к игре", "to": "tavern_entry", "icon": "🎲", "condition": "time_period", "conditionParams": { "periods": ["night"] } },
-            { "text": "🔪 Слушать сплетни", "to": "tavern_entry", "icon": "👂", "condition": "time_period", "conditionParams": { "periods": ["night", "dusk"] } },
-            { "text": "🛏️ Снять комнату", "to": "tavern_entry", "icon": "🛏️" },
-            { "text": "← Вернуться на площадь", "to": "village_hub", "icon": "🏘️", "_hubReturn": true }
+            {
+              "text": "🎲 Присоединиться к игре",
+              "to": "tavern_entry",
+              "icon": "🎲",
+              "condition": "time_period",
+              "conditionParams": {
+                "periods": [
+                  "night"
+                ]
+              }
+            },
+            {
+              "text": "🔪 Слушать сплетни",
+              "to": "tavern_entry",
+              "icon": "👂",
+              "condition": "time_period",
+              "conditionParams": {
+                "periods": [
+                  "night",
+                  "dusk"
+                ]
+              }
+            },
+            {
+              "text": "🛏️ Снять комнату",
+              "to": "tavern_entry",
+              "icon": "🛏️"
+            },
+            {
+              "text": "← Вернуться на площадь",
+              "to": "village_hub",
+              "icon": "🏘️",
+              "_hubReturn": true
+            }
           ]
         }
       },
       "climate": {
         "region": "default",
         "indoor": true,
-        "operatingHours": { "open": 6, "close": 23, "seasonal": true, "weatherDependent": false },
+        "operatingHours": {
+          "open": 6,
+          "close": 23,
+          "seasonal": true,
+          "weatherDependent": false
+        },
         "seasonVariants": {
           "winter": {
             "text": "Морозный воздух проникает под дверь, но в таверне тепло от печи. На подоконниках — иней.",
@@ -8177,7 +8834,9 @@
             "weather": "thunderstorm",
             "chance": 10,
             "action": "show_text",
-            "params": { "text": "⚡ Молния ударила в колокол на крыше — все вздрагивают!" }
+            "params": {
+              "text": "⚡ Молния ударила в колокол на крыше — все вздрагивают!"
+            }
           }
         ]
       },
@@ -8433,7 +9092,12 @@
       "climate": {
         "region": "default",
         "indoor": true,
-        "operatingHours": { "open": 7, "close": 19, "seasonal": true, "weatherDependent": true }
+        "operatingHours": {
+          "open": 7,
+          "close": 19,
+          "seasonal": true,
+          "weatherDependent": true
+        }
       },
       "components": [
         {
@@ -8457,12 +9121,23 @@
           "enabled": true,
           "params": {
             "header": "⚒️ Услуги кузнеца",
-            "operatingHours": { "open": 7, "close": 19, "seasonal": true, "weatherDependent": true },
+            "operatingHours": {
+              "open": 7,
+              "close": 19,
+              "seasonal": true,
+              "weatherDependent": true
+            },
             "afterHours": {
               "text": "Кузница закрыта. Дверь заперта, из-за щели виден тусклый свет горна.",
               "choices": [
-                { "text": "🚪 Постучать", "to": "blacksmith" },
-                { "text": "🌙 Уйти", "to": "village_hub" }
+                {
+                  "text": "🚪 Постучать",
+                  "to": "blacksmith"
+                },
+                {
+                  "text": "🌙 Уйти",
+                  "to": "village_hub"
+                }
               ]
             },
             "services": [
@@ -10502,7 +11177,9 @@
     "tavern_entry": {
       "id": "tavern_entry",
       "location": "Таверна",
-      "climate": { "indoor": true },
+      "climate": {
+        "indoor": true
+      },
       "text": "Зайдя в таверну вы наблюдаете весьма грустную картину. Посетителей нету, а следовательно и нету музыки. За большой стойкой стоит крупный высокий мужчина, скорее всего владелец и управляющий этого места. Но запах стоит неплохой, может поесть перед уходом?",
       "choices": [
         {
@@ -12138,5 +12815,6 @@
         "Сильван"
       ]
     }
-  }
+  },
+  "questsVersion": 2
 }

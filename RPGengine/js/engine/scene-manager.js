@@ -167,6 +167,11 @@
         sceneId = 'albert_locket_failed';
       }
       this.state.scene = sceneId;
+      if (typeof QuestEvents !== 'undefined') {
+        const loc = this.data?.scenes?.[sceneId]?.location || '';
+        QuestEvents.emit('SceneEntered', { sceneId, scene: sceneId, location: loc });
+        QuestEvents.emit('LocationVisited', { sceneId, scene: sceneId, location: loc });
+      }
       if (typeof CombatLog !== 'undefined' && !this.state.combat) {
         const log = CombatLog.getInstance();
         if (log?.active) {

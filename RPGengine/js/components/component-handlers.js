@@ -11,6 +11,15 @@ const SceneComponentHandlers = {
     if (typeof t === 'object' && t.questSet) {
       GameEngine.updateQuest(t.questSet.questId, t.questSet.stage);
     }
+    // Quest events: dialogue finished with NPC
+    const npcId = store.npcId || store.npc || (typeof t === 'object' ? t.npc : null);
+    if (typeof QuestEvents !== 'undefined') {
+      QuestEvents.emit('NPCTalked', { npcId, npc: npcId, topicIndex });
+      QuestEvents.emit('NPCDialogueFinished', { npcId, npc: npcId, topicIndex });
+      if (typeof t === 'object' && t.choiceFlag) {
+        QuestEvents.emit('ChoiceSelected', { flag: t.choiceFlag, sceneId: GameEngine.state?.scene });
+      }
+    }
     if (typeof t === 'object' && t.donate) {
       const cost = parseInt(t.donate.cost, 10) || 10;
       if (GameEngine.state.gold < cost) {
@@ -18,6 +27,9 @@ const SceneComponentHandlers = {
         return;
       }
       GameEngine.state.gold -= cost;
+      if (typeof QuestEvents !== 'undefined') {
+        QuestEvents.emit('GoldSpent', { amount: cost, reason: 'donate' });
+      }
       if (t.donate.flag) GameEngine.state.flags[t.donate.flag] = true;
       GameEngine.updateStats();
       GameEngine.log(`🙏 Пожертвование в храм (−${cost} зм).`, 'log-heal');

@@ -1240,6 +1240,11 @@
      */
     getQuestStage(questId) {
       if (!questId) return null;
+      if (typeof QuestRuntime !== 'undefined') {
+        QuestRuntime.bind(this);
+        const key = QuestRuntime.getStageKey(questId);
+        if (key != null) return key;
+      }
       const direct = this.state.questStages?.[questId];
       if (direct != null && direct !== '') return String(direct);
       const legacy = this.state.flags?.['quest_' + questId];
@@ -1253,6 +1258,10 @@
 
     /** Квест завершён: стадия __finished__, legacy complete или текущая стадия с finish: true */
     isQuestFinished(questId) {
+      if (typeof QuestRuntime !== 'undefined') {
+        QuestRuntime.bind(this);
+        if (QuestRuntime.isCompleted(questId)) return true;
+      }
       const s = this.state.questStages?.[questId];
       if (s === '__finished__') return true;
       if (this.state.flags?.['quest_' + questId] === 'complete') return true;
@@ -1264,6 +1273,10 @@
 
     /** Квест провален */
     isQuestFailed(questId) {
+      if (typeof QuestRuntime !== 'undefined') {
+        QuestRuntime.bind(this);
+        if (QuestRuntime.isFailed(questId)) return true;
+      }
       const s = this.state.questStages?.[questId];
       if (s === '__failed__') return true;
       if (this.state.flags?.['quest_' + questId] === 'failed') return true;
@@ -1310,61 +1323,20 @@
      */
     updateQuest(questId, stage, opts = {}) {
       if (!questId || !this.data?.quests?.[questId]) return;
+      if (typeof QuestRuntime !== 'undefined') {
+        QuestRuntime.bind(this);
+        QuestRuntime.setStage(questId, stage, opts || {});
+        return;
+      }
+      // Fallback without runtime
       const quest = this.data.quests[questId];
       const stageKey = QuestSystem.resolveStageRef(quest, stage);
       if (stageKey == null) return;
-
-      const prev = this.getQuestStage(questId);
-      const failing = !opts.skipFinish && (
-        stage === 'failed' || stageKey === '__failed__' ||
-        QuestSystem.isStageFailed(quest, stageKey)
-      );
-
-      if (failing) {
-        this.state.questStages[questId] = '__failed__';
-        this.syncLegacyQuestFlag(questId, 'failed');
-        const st = QuestSystem.getStageData(quest, stageKey);
-        if (!opts.silentLog && st?.log && prev !== '__failed__' && prev !== stageKey) {
-          this.log('❌ ' + st.log, 'log-damage');
-        }
-        this.updateUI();
-        this.checkAchievements({ type: 'quest_update', questId, stage: '__failed__' });
-        this.saveGame();
-        return;
-      }
-
-      const finishing = !opts.skipFinish && (
-        stage === 'complete' || stageKey === '__finished__' ||
-        QuestSystem.isStageFinished(quest, stageKey)
-      );
-
-      if (finishing) {
-        this.state.questStages[questId] = '__finished__';
-        this.syncLegacyQuestFlag(questId, 'complete');
-        const st = QuestSystem.getStageData(quest, stageKey);
-        if (!opts.silentLog && st?.log) this.log('📜 ' + st.log, 'log-heal');
-        if (prev !== '__finished__' && prev !== stageKey) {
-          this.awardQuestExp(questId);
-          this.log('✅ Квест завершён: «' + (quest.title || questId) + '»', 'log-heal');
-          this.applyQuestNpcReputation(questId);
-        }
-      } else {
-        this.state.questStages[questId] = stageKey;
-        this.syncLegacyQuestFlag(questId, stageKey);
-        const st = QuestSystem.getStageData(quest, stageKey);
-        if (!opts.silentLog && st?.log && prev !== stageKey) {
-          this.log('📜 ' + st.log, 'log-heal');
-        }
-        if (!opts.silentLog && st?.hint && prev !== stageKey) {
-          this.log('💡 ' + st.hint, 'log-dice');
-        }
-        this.applyQuestMapUnlocks(questId, stageKey);
-      }
-
+      if (!this.state.questStages) this.state.questStages = {};
+      this.state.questStages[questId] = stageKey;
       this.updateUI();
-      this.checkAchievements({ type: 'quest_update', questId, stage: stageKey });
       this.saveGame();
-    },
+    }
 
     /** Открывает точки на карте путешествий при смене стадии побочных квестов */
     applyQuestMapUnlocks(questId, stageKey) {
@@ -1611,7 +1583,8 @@
       if (opts.gold !== false) {
         const gold = Number(rewards.gold) || 0;
         if (gold > 0) {
-          this.state.gold += gold;
+          if (typeof this.changeGold === 'function') this.changeGold(gold, { reason: 'quest_reward', silent: true });
+          else this.state.gold += gold;
           const note = opts.logGold ? ` (${opts.logGold})` : '';
           this.log(`💰 +${gold} зм${note}`, 'log-heal');
           applied = true;
@@ -1981,7 +1954,7 @@
         this.refreshShopUI();
         return;
       }
-      this.state.gold -= price;
+      if (typeof this.changeGold === 'function') this.changeGold(-price, { reason: 'buy', silent: true }); else this.state.gold -= price;
       this.addItem(itemId);
       this.updateStats();
       session.message =
@@ -2027,7 +2000,7 @@
       if (!this.state.inventory.includes(itemId)) {
         this.unequipItem(itemId, { silent: true });
       }
-      this.state.gold += price;
+      if (typeof this.changeGold === 'function') this.changeGold(price, { reason: 'sell', silent: true }); else this.state.gold += price;
       this.updateStats();
       session.message = `Продано: ${db?.name || itemId} (+${price} зм).`;
       session.selectedSellId = null;
@@ -2115,7 +2088,7 @@
         return;
       }
 
-      this.state.gold -= cost;
+      if (typeof this.changeGold === 'function') this.changeGold(-cost, { reason: 'service', silent: true }); else this.state.gold -= cost;
       this.setItemEnhancementLevel(itemId, current + 1);
       this.recalcDerivedStats();
       this.updateStats();
@@ -2183,7 +2156,7 @@
         return;
       }
 
-      this.state.gold -= cost;
+      if (typeof this.changeGold === 'function') this.changeGold(-cost, { reason: 'service', silent: true }); else this.state.gold -= cost;
       delete this.state.equipped[entry.slot];
       if (entry.slot === 'shield') delete this.state.equipped.offhand;
 
@@ -2467,6 +2440,14 @@
       this.state.enemies.forEach((enemy) => {
         if (!enemy || enemy.hp > 0 || enemy._repKillApplied) return;
         enemy._repKillApplied = true;
+        if (typeof QuestEvents !== 'undefined') {
+          QuestEvents.emit('EnemyKilled', {
+            enemyId: enemy.id || enemy.templateId,
+            id: enemy.id,
+            templateId: enemy.templateId || enemy.id,
+            count: 1
+          });
+        }
         const template = this.data?.enemies?.[enemy.id];
         if (!template?.factionImportant) return;
         const delta = Number(template.reputationOnKill);
@@ -3133,6 +3114,20 @@
 
     // Внутри объекта GameEngine
     applyEffect(effect, target = null) {
+      // Legacy string effects → object (миграции ProjectDataSchema; ветка оставлена как страховка)
+      if (typeof effect === 'string') {
+        if (typeof ProjectDataSchema !== 'undefined' && ProjectDataSchema.normalizeAbilityEffect) {
+          effect = ProjectDataSchema.normalizeAbilityEffect(effect);
+        } else {
+          const s = effect.trim();
+          if (s.startsWith('heal:')) effect = { type: 'heal', value: s.slice(5), targeting: { scope: 'self' } };
+          else if (s.startsWith('damage:')) effect = { type: 'damage', value: s.slice(7), damageType: 'physical' };
+          else if (s.startsWith('smite:')) effect = { type: 'smite', value: s.slice(6) };
+          else if (s === 'magic_missile') effect = { type: 'magic_missile' };
+          else if (s === 'extra_attack') effect = { type: 'extra_attack' };
+          else effect = { type: 'custom', desc: s };
+        }
+      }
       // --- НОВЫЙ ФОРМАТ (объект) ---
       if (effect && typeof effect === 'object' && effect.type) {
         if (effect.type === 'apply_status') {
@@ -3330,74 +3325,8 @@
         return true;
       }
 
-      // --- СТАРЫЙ ФОРМАТ (строка) для обратной совместимости ---
-      const eff = effect;
-      if (typeof eff === 'string') {
-        if (eff.startsWith('heal:')) {
-          const amt = this.parseRoll(eff.slice(5));
-          this.heal(amt);
-          this.log(`✨ +${amt} ОЗ`, 'log-heal');
-          this.playCombatSound(this.resolveSoundId(this._abilitySoundCtx?.soundHit, 'heal'));
-          return true;
-        }
-        if (eff === 'extra_attack') {
-          if (this.state.combat) this.state.combat.actionSurge = true;
-          this.log('⚡ Дополнительная атака!', 'log-combat');
-          return false;
-        }
-        if (eff.startsWith('damage:')) {
-          const dmg = this.parseRoll(eff.slice(7));
-          const enemy = this.state.enemies.find(e => e.hp > 0);
-          if (enemy) {
-            enemy.hp -= dmg;
-            this.log(`💥 ${dmg} урона`, 'log-damage');
-            this.playAbilityHit(this._abilitySoundCtx, { damageType: 'physical' });
-          }
-          return true;
-        }
-        if (eff.startsWith('ac_bonus:')) {
-          this.applyAcBonus(parseInt(eff.split(':')[1], 10));
-          return true;
-        }
-        if (eff === 'detect_magic') {
-          this.log('Обнаружение магии активировано.', 'log-dice');
-          return !this.state.combat;
-        }
-        if (eff === 'divine_sense') {
-          this.log('Божественное чувство активировано.', 'log-dice');
-          return !this.state.combat;
-        }
-        if (eff === 'magic_missile') {
-          const upLv = this.getUpcastLevelsAboveBase(this._abilitySoundCtx);
-          const dartCount = 3 + upLv;
-          let total = 0;
-          for (let i = 0; i < dartCount; i++) total += this.d(4) + 1;
-          const enemy = this.state.enemies.find(e => e.hp > 0);
-          if (enemy) {
-            enemy.hp -= total;
-            this.log(`✨ Магический снаряд: ${total} урона (${dartCount} снаряда)`, 'log-damage');
-            this.playAbilityHit(this._abilitySoundCtx, { type: 'magic_missile' });
-          }
-          return true;
-        }
-        if (eff.startsWith('aoe_fire:')) {
-          const dmg = this.parseRoll(eff.slice(9));
-          for (let e of this.state.enemies) {
-            e.hp -= dmg;
-            this.log(`🔥 ${e.name}: ${dmg} урона огнём`, 'log-damage');
-          }
-          this.playAbilityHit(this._abilitySoundCtx, { damageType: 'fire' });
-          return true;
-        }
-        if (eff.startsWith('smite:')) {
-          if (this.state.combat) {
-            this.state.combat.divineSmite = true;
-            this.state.combat.smiteRoll = eff.slice(6);
-            this.log('⚡ Кара — нанесите удар!', 'log-combat');
-          }
-          return false;
-        }
-      }
+      // Legacy string effects нормализуются в начале applyEffect — отдельная ветка не нужна.
+
       // Если пассивка
       if (effect && effect.passive) {
         this.applyPassiveAbility(effect);
@@ -3536,6 +3465,28 @@
         this.updateQuest(choice.questSet.questId, stage);
         if (choice.questSet.questId === 'lost_bag') this.syncLostBagQuestProgress({ silentLog: true });
       }
+      if (typeof QuestEvents !== 'undefined') {
+        const npcId = choice.npc || choice.npcId;
+        if (npcId) {
+          QuestEvents.emit('NPCTalked', { npcId, npc: npcId, sceneId: this.state.scene });
+          QuestEvents.emit('NPCDialogueFinished', { npcId, npc: npcId, sceneId: this.state.scene });
+        }
+        if (choice.deliverItem) {
+          QuestEvents.emit('ItemDelivered', {
+            itemId: choice.deliverItem,
+            item: choice.deliverItem,
+            npcId: choice.npc || choice.npcId,
+            qty: Number(choice.deliverQty) || 1
+          });
+        }
+        if (choice.once || choice.choiceFlag) {
+          QuestEvents.emit('ChoiceSelected', {
+            flag: choice.choiceFlag || this.getChoiceUsedFlag?.(choice, origIdx),
+            sceneId: this.state.scene,
+            text: choice.text
+          });
+        }
+      }
       if (choice.flags) this.applyFlags(choice.flags);
       const goldCost = Number(choice.goldCost) || 0;
       if (goldCost > 0) {
@@ -3595,7 +3546,7 @@
           this.log(`❌ Нужно ${price} зм за комнату.`, 'log-damage');
           return;
         }
-        this.state.gold -= price;
+        if (typeof this.changeGold === 'function') this.changeGold(-price, { reason: 'buy', silent: true }); else this.state.gold -= price;
         this.updateStats();
         this.rest('long');
         this.log(`🛏️ Комната снята (−${price} зм). Долгий отдых.`, 'log-heal');
@@ -3608,7 +3559,7 @@
           this.log(`❌ Нужно ${price} зм.`, 'log-damage');
           return;
         }
-        this.state.gold -= price;
+        if (typeof this.changeGold === 'function') this.changeGold(-price, { reason: 'buy', silent: true }); else this.state.gold -= price;
         this.state.hp = this.state.maxHp;
         this.updateStats();
         this.log(`✨ Лечение (−${price} зм). ОЗ восстановлены.`, 'log-heal');

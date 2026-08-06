@@ -1,150 +1,107 @@
 // ============================================
-// Система квестов: нормализация данных, стадии, совместимость с флагами quest_*
+// Система квестов v2: этапы → задачи + события
 // ============================================
 
 const QuestSystem = {
-  /**
-   * Нормализует все квесты в data.quests к формату v2:
-   * { title, stages: { "0": { log, hint } }, isFinished, hidden?, rewards?, legacyStageMap? }
-   */
   normalizeAll(data) {
     if (!data) return;
+    if (typeof QuestMigrate !== 'undefined') {
+      QuestMigrate.migrateAll(data);
+      return;
+    }
     if (!data.quests || typeof data.quests !== 'object') data.quests = {};
-    for (const [id, quest] of Object.entries(data.quests)) {
-      data.quests[id] = this.normalizeQuest(id, quest);
-    }
   },
 
-  /** Один квест: массив stages[] или старые поля → объект stages по ключам "0","1",… */
   normalizeQuest(questId, quest) {
-    if (!quest || typeof quest !== 'object') {
-      return { title: questId, stages: { 0: { log: '', hint: '' } }, isFinished: false };
+    if (typeof QuestMigrate !== 'undefined') {
+      return QuestMigrate.migrateQuest(questId, quest);
     }
-    if (quest.stages && !Array.isArray(quest.stages) && typeof quest.stages === 'object') {
-      const stages = {};
-      const legacyStageMap = { ...(quest.legacyStageMap || {}) };
-      for (const [k, st] of Object.entries(quest.stages)) {
-        const key = String(k);
-        stages[key] = {
-          log: st.log || st.description || '',
-          hint: st.hint || st.name || '',
-          finish: !!st.finish && !st.failed,
-          failed: !!st.failed
-        };
-        if (st.legacyId) legacyStageMap[st.legacyId] = key;
-      }
-      return {
-        ...quest,
-        title: quest.title || questId,
-        stages,
-        isFinished: !!quest.isFinished,
-        legacyStageMap
-      };
-    }
-    const arr = Array.isArray(quest.stages) ? quest.stages : [];
-    const stages = {};
-    const legacyStageMap = {};
-    arr.forEach((st, i) => {
-      const key = String(i);
-      const legacyId = st.id || ('stage_' + i);
-      stages[key] = {
-        log: st.description || st.log || '',
-        hint: st.name || st.hint || '',
-        finish: (legacyId === 'complete' || !!st.finish) && legacyId !== 'failed' && !st.failed,
-        failed: legacyId === 'failed' || !!st.failed
-      };
-      legacyStageMap[legacyId] = key;
-    });
-    if (!Object.keys(stages).length) {
-      stages['0'] = { log: quest.description || '', hint: 'Начало', finish: false };
-      legacyStageMap.start = '0';
-    }
-    return {
-      title: quest.title || questId,
-      description: quest.description,
-      giver: quest.giver,
-      hidden: !!quest.hidden,
-      rewards: quest.rewards,
-      stages,
-      isFinished: !!quest.isFinished,
-      legacyStageMap
-    };
+    return quest;
   },
 
-  /** Ключи стадий по возрастанию (0, 1, 2, …) */
   getStageKeys(quest) {
     if (!quest?.stages) return [];
+    if (Array.isArray(quest.stages)) {
+      return quest.stages.map((_, i) => String(i));
+    }
     return Object.keys(quest.stages).sort((a, b) => Number(a) - Number(b));
   },
 
-  /**
-   * Приводит ссылку на стадию (число, "0", legacy "start", "complete") к ключу в stages.
-   */
   resolveStageRef(quest, stageRef) {
+    if (typeof QuestRuntime !== 'undefined') {
+      const idx = QuestRuntime.resolveStageIndex(quest, stageRef);
+      if (idx != null) return String(idx);
+    }
     if (stageRef == null || stageRef === '') return null;
     const keys = this.getStageKeys(quest);
     if (!keys.length) return '0';
     const s = String(stageRef);
-    if (quest.stages[s]) return s;
-    if (quest.legacyStageMap?.[s]) return quest.legacyStageMap[s];
-    if (s === 'complete') {
-      const fin = keys.find(k => quest.stages[k]?.finish);
-      return fin || keys[keys.length - 1];
+    if (quest.stages && !Array.isArray(quest.stages) && quest.stages[s]) return s;
+    if (Array.isArray(quest.stages)) {
+      const n = Number(s);
+      if (!Number.isNaN(n) && n >= 0 && n < quest.stages.length) return String(n);
+      const found = quest.stages.findIndex((st) => st.id === s || st.legacyId === s);
+      if (found >= 0) return String(found);
     }
-    if (s === 'failed') {
-      const fail = keys.find(k => quest.stages[k]?.failed);
-      return fail || s;
+    if (quest.legacyStageMap?.[s] != null) return String(quest.legacyStageMap[s]);
+    if (s === 'complete' && Array.isArray(quest.stages)) {
+      const fi = quest.stages.findIndex((st) => st.finish);
+      return fi >= 0 ? String(fi) : String(quest.stages.length - 1);
     }
-    const n = Number(s);
-    if (!Number.isNaN(n) && quest.stages[String(n)]) return String(n);
+    if (s === 'failed' && Array.isArray(quest.stages)) {
+      const fi = quest.stages.findIndex((st) => st.failed);
+      return fi >= 0 ? String(fi) : s;
+    }
     return keys[0];
   },
 
   getStageData(quest, stageKey) {
     if (!quest?.stages || stageKey == null) return null;
+    if (Array.isArray(quest.stages)) {
+      const n = Number(stageKey);
+      const st = quest.stages[n];
+      if (!st) return null;
+      return {
+        log: st.log || '',
+        hint: st.hint || st.title || '',
+        finish: !!st.finish,
+        failed: !!st.failed,
+        title: st.title,
+        tasks: st.tasks
+      };
+    }
     return quest.stages[String(stageKey)] || null;
   },
 
-  /** Последняя стадия (максимальный числовой ключ) */
   getLastStageKey(quest) {
     const keys = this.getStageKeys(quest);
     return keys.length ? keys[keys.length - 1] : null;
   },
 
-  /** Стадия считается финальной только если у неё явно finish: true */
   isStageFinished(quest, stageKey) {
     const st = this.getStageData(quest, stageKey);
     return !!st?.finish && !st?.failed;
   },
 
-  /** Стадия провала квеста */
   isStageFailed(quest, stageKey) {
     const st = this.getStageData(quest, stageKey);
     return !!st?.failed;
   },
 
-  /** ID квеста из legacy-флага quest_find_albert → find_albert */
   questIdFromLegacyFlag(flagName) {
     if (!flagName || !String(flagName).startsWith('quest_')) return null;
     return String(flagName).slice(6);
   },
 
-  /** Legacy-псевдонимы флагов репутации в старых JSON */
   resolveReputationFlag(flag) {
     const alias = { village_hero: 'rep_village', jack_friend: 'rep_village' };
     return alias[flag] || flag;
   },
 
-  /**
-   * Награды репутации из rewards.
-   * Новый формат: { "rep_village": 15 } (может быть отрицательным).
-   * Старый: строка "rep_village" + опционально reputationAmount.
-   */
   getReputationEntries(rewards) {
     const rep = rewards?.reputation;
     if (rep == null || rep === '') return [];
     const legacyDefault = { village_hero: 10, jack_friend: 8, rep_village: 10 };
-
     if (typeof rep === 'object' && !Array.isArray(rep)) {
       return Object.entries(rep)
         .map(([flag, amount]) => ({
@@ -162,15 +119,24 @@ const QuestSystem = {
     return [];
   },
 
-  /** Первый флаг/значение для редактора (одна фракция на квест) */
   getPrimaryReputationReward(rewards) {
     const entries = this.getReputationEntries(rewards || {});
     if (entries.length) return entries[0];
     return { flag: '', amount: 0 };
   },
 
-  /** Список ID квестов для редакторов */
   getQuestIds(data) {
     return Object.keys(data?.quests || {});
+  },
+
+  getTaskTypes() {
+    if (typeof QuestTaskRegistry !== 'undefined') {
+      return QuestTaskRegistry.list().filter((t) => t.id !== 'base');
+    }
+    return [];
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.QuestSystem = QuestSystem;
+}

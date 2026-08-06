@@ -242,11 +242,20 @@
 
   Editor.renderClasses = function () {
     const container = document.getElementById('classes-list');
-    if (!container || !this.data?.classes) {
-      return _renderClasses();
+    if (!container) return;
+    if (!this.data) {
+      container.innerHTML = '<div class="empty-state"><h2>Нет данных</h2></div>';
+      return;
     }
+    if (!this.data.classes) this.data.classes = {};
     const ids = Object.keys(this.data.classes);
-    if (!ids.length) return _renderClasses();
+    if (!ids.length) {
+      this.editingClassId = null;
+      container.innerHTML = `<div class="empty-state"><h2>Нет классов</h2>
+        <p class="hint">Выберите пресет выше или создайте пустой класс.</p>
+        <button class="btn btn-primary" onclick="Editor.createClass()">+ Создать класс</button></div>`;
+      return;
+    }
     if (!this.editingClassId || !this.data.classes[this.editingClassId]) {
       this.editingClassId = ids[0];
     }
@@ -265,30 +274,57 @@
       <div class="class-editor-detail">${this.renderClassDetail(this.editingClassId)}</div>
     </div>`;
   };
+  // сохранить after-хуки (пресеты), если hooks уже оборачивал старый метод
+  if (Editor.hooks && typeof Editor.hooks.replace === 'function') {
+    const fn = Editor.renderClasses.bind(Editor);
+    Editor.hooks.replace('renderClasses', function () { return fn(); });
+  }
 
-  Editor.renderClassDetail = function (id) {
-    let html = _renderClassDetail(id);
-    const section = this.renderClassSkillChoicesSection(id);
+  function enhanceClassDetailSkills(html, id) {
+    const section = Editor.renderClassSkillChoicesSection(id);
     const abMarker = '<div class="class-section"><h4>✨ Способности</h4>';
-    if (html.includes(abMarker)) {
-      html = html.replace(abMarker, section + abMarker);
-    } else {
-      html += section;
+    if (typeof html === 'string' && html.includes(abMarker)) {
+      return html.replace(abMarker, section + abMarker);
     }
-    return html;
-  };
+    return (html || '') + section;
+  }
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('renderClassDetail', function (html, args) {
+      const id = args && args[0];
+      if (!id) return html;
+      return enhanceClassDetailSkills(html, id);
+    });
+  } else {
+    Editor.renderClassDetail = function (id) {
+      return enhanceClassDetailSkills(_renderClassDetail.call(this, id), id);
+    };
+  }
 
-  const _createClass = Editor.createClass.bind(Editor);
-  Editor.createClass = function () {
-    _createClass();
-    const id = this.editingClassId;
-    if (id && this.data.classes[id]) {
-      const c = this.data.classes[id];
-      c.skillChoices = { count: 2, from: [], rank: 'trained' };
-      c.fixedSkills = c.system === 'pf2e' ? [] : undefined;
-      c.skills = '';
-      this.renderClasses();
-      this.updateJSONPreview();
-    }
-  };
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('createClass', function () {
+      const id = Editor.editingClassId;
+      if (id && Editor.data?.classes?.[id]) {
+        const c = Editor.data.classes[id];
+        c.skillChoices = { count: 2, from: [], rank: 'trained' };
+        c.fixedSkills = c.system === 'pf2e' ? [] : undefined;
+        c.skills = '';
+        Editor.renderClasses();
+        Editor.updateJSONPreview();
+      }
+    });
+  } else {
+    const _createClass = Editor.createClass.bind(Editor);
+    Editor.createClass = function () {
+      _createClass();
+      const id = this.editingClassId;
+      if (id && this.data.classes[id]) {
+        const c = this.data.classes[id];
+        c.skillChoices = { count: 2, from: [], rank: 'trained' };
+        c.fixedSkills = c.system === 'pf2e' ? [] : undefined;
+        c.skills = '';
+        this.renderClasses();
+        this.updateJSONPreview();
+      }
+    };
+  }
 })();

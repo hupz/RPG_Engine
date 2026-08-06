@@ -21,7 +21,7 @@
     { id: 'items', tab: 'items', icon: '🎒', labelKey: 'editor.nav.items', writerVisible: true },
     { id: 'quests', tab: 'quests', icon: '📜', labelKey: 'editor.nav.quests', writerVisible: true },
     { id: 'npcs', tab: 'npcs', icon: '👤', labelKey: 'editor.nav.npcs', writerVisible: true },
-    { id: 'enemies', tab: 'enemies', icon: '👹', labelKey: 'editor.nav.enemies' },
+    { id: 'enemies', tab: 'enemies', icon: '👹', labelKey: 'editor.nav.enemies', writerVisible: true },
     {
       id: 'classes',
       tab: 'classes',
@@ -51,7 +51,7 @@
       icon: '🎵',
       labelKey: 'editor.nav.assets',
       subTabs: [
-        { tab: 'audio', labelKey: 'editor.tabs.audio' },
+        { tab: 'audio', labelKey: 'editor.tabs.audio', writerVisible: true },
         { tab: 'theme', labelKey: 'editor.tabs.theme' }
       ]
     },
@@ -68,7 +68,7 @@
         { tab: 'analytics', labelKey: 'editor.tabs.analytics' },
         { tab: 'climate', labelKey: 'editor.tabs.climate' },
         { tab: 'world', labelKey: 'editor.tabs.world' },
-        { tab: 'worldmap', labelKey: 'editor.tabs.worldmap' },
+        { tab: 'worldmap', labelKey: 'editor.tabs.worldmap', writerVisible: true },
         { tab: 'graph', labelKey: 'editor.tabs.graph' },
         { tab: 'races', labelKey: 'editor.tabs.races' }
       ]

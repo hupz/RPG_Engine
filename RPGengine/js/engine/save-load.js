@@ -53,6 +53,7 @@
           supplies: this.state.supplies,
           resources: this.state.resources,
           questStages: this.state.questStages,
+          questProgress: this.state.questProgress,
           level: this.state.level,
           exp: this.state.exp,
           expAwarded: this.state.expAwarded,
@@ -126,6 +127,11 @@
         this.state.scene = data.scene || 'village';
         this.state.supplies = parseInt(data.supplies) || 0;
         this.state.questStages = data.questStages || {};
+        this.state.questProgress = data.questProgress || {};
+        if (typeof QuestRuntime !== 'undefined') {
+          QuestRuntime.bind(this);
+          QuestRuntime.hydrateFromSave(this);
+        }
         this.migrateSaveQuestStages();
         this.state.resources = data.resources || { mode: 'energy', current: 2, max: 2, spellSlots: null };
         this.migrateResourcesState();
@@ -282,4 +288,38 @@
       }
     }
   });
+})();
+
+// dataVersion migration on load
+(function patchSaveLoadMigration() {
+  if (typeof GameEngine === 'undefined') return;
+  const migrate = (data) => {
+    if (typeof ProjectDataSchema !== 'undefined' && data) {
+      return ProjectDataSchema.migrateProjectData(data);
+    }
+    return data;
+  };
+  const origLoadFile = GameEngine.loadGameDataFromFile;
+  if (typeof origLoadFile === 'function') {
+    // leave file picker; patch internal assign if any
+  }
+  const origApply = GameEngine.applyGameData || GameEngine.setGameData || GameEngine.loadData;
+  // Patch common path: when state gets data from JSON.parse in load
+  const origLoad = GameEngine.loadGame;
+  if (typeof origLoad === 'function' && !GameEngine._dataSchemaPatched) {
+    GameEngine._dataSchemaPatched = true;
+    GameEngine.loadGame = function (...args) {
+      const r = origLoad.apply(this, args);
+      if (this.data) this.data = migrate(this.data);
+      return r;
+    };
+  }
+  if (typeof GameEngine.init === 'function' && !GameEngine._dataSchemaInitPatched) {
+    GameEngine._dataSchemaInitPatched = true;
+    const oi = GameEngine.init.bind(GameEngine);
+    GameEngine.init = function (...args) {
+      if (this.data) this.data = migrate(this.data);
+      return oi(...args);
+    };
+  }
 })();

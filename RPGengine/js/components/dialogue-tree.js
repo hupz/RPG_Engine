@@ -35,7 +35,7 @@
 
       if (!window.SceneComponentHandlers) window.SceneComponentHandlers = {};
       if (!window.SceneComponentHandlers._dialogue) window.SceneComponentHandlers._dialogue = {};
-      window.SceneComponentHandlers._dialogue[ctx.index] = { topics, name };
+      window.SceneComponentHandlers._dialogue[ctx.index] = { topics, name, npcId: p.npc, npc: p.npc };
     }
   };
 

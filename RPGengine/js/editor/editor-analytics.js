@@ -309,22 +309,32 @@
     }
   });
 
-  const origSwitchTab = Editor.switchTab?.bind(Editor);
-  if (origSwitchTab) {
-    Editor.switchTab = function (tab, event) {
-      origSwitchTab(tab, event);
-      if (tab === 'analytics' && typeof this.renderAnalytics === 'function') {
-        this.renderAnalytics();
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('switchTab', function (result, args) {
+      if (args && args[0] === 'analytics' && typeof Editor.renderAnalytics === 'function') {
+        Editor.renderAnalytics();
       }
-    };
-  }
-
-  const origRenderAll = Editor.renderAll?.bind(Editor);
-  if (origRenderAll) {
-    Editor.renderAll = function () {
-      origRenderAll();
-      if (this.currentTab === 'analytics') this.renderAnalytics();
-    };
+    });
+    Editor.hooks.after('renderAll', function () {
+      if (Editor.currentTab === 'analytics' && typeof Editor.renderAnalytics === 'function') {
+        Editor.renderAnalytics();
+      }
+    });
+  } else {
+    const origSwitchTab = Editor.switchTab?.bind(Editor);
+    if (origSwitchTab) {
+      Editor.switchTab = function (tab, event) {
+        origSwitchTab(tab, event);
+        if (tab === 'analytics' && typeof this.renderAnalytics === 'function') this.renderAnalytics();
+      };
+    }
+    const origRenderAll = Editor.renderAll?.bind(Editor);
+    if (origRenderAll) {
+      Editor.renderAll = function () {
+        origRenderAll();
+        if (this.currentTab === 'analytics') this.renderAnalytics();
+      };
+    }
   }
 
   let resizeTimer;

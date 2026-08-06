@@ -114,13 +114,28 @@
       }).join('') || '<p class="hint">Нет выборов</p>';
 
       const meta = [];
-      if (sceneHasCombat(scene)) meta.push('<span class="live-meta-tag">⚔️ Бой</span>');
+      if (sceneHasCombat(scene)) {
+        const enemies = (Array.isArray(scene.combat) ? scene.combat : [])
+          .map((id) => this.data?.enemies?.[id]?.name || id)
+          .filter(Boolean);
+        meta.push('<span class="live-meta-tag">⚔️ Бой' +
+          (enemies.length ? ': ' + this.escapeHtml(enemies.join(', ')) : '') + '</span>');
+      }
+      if (Array.isArray(scene.items) && scene.items.length) {
+        const names = scene.items.map((id) => this.data?.items?.[id]?.name || id);
+        meta.push('<span class="live-meta-tag">🎁 ' + this.escapeHtml(names.join(', ')) + '</span>');
+      }
+      if ((scene.choices || []).some((c) => c?.questSet?.questId)) {
+        const qids = [...new Set((scene.choices || []).filter((c) => c?.questSet?.questId).map((c) => c.questSet.questId))];
+        const qnames = qids.map((id) => this.data?.quests?.[id]?.title || id);
+        meta.push('<span class="live-meta-tag">📜 ' + this.escapeHtml(qnames.join(', ')) + '</span>');
+      }
       if (scene.special && String(scene.special).trim()) {
         meta.push(`<span class="live-meta-tag">✨ ${this.escapeHtml(scene.special)}</span>`);
       }
 
       el.innerHTML = `
-        <div class="live-preview-location">📍 ${loc}</div>
+        <div class="live-preview-location">👁️ Глазами игрока · 📍 ${loc}</div>
         ${textBlock}
         ${dlgHtml}
         <div class="live-preview-choices">${choicesHtml}</div>
@@ -145,7 +160,7 @@
       const toolbar = document.createElement('div');
       toolbar.className = 'live-preview-toolbar';
       toolbar.innerHTML = `
-        <span class="live-preview-title">👁️ Превью сцены</span>
+        <span class="live-preview-title">👁️ Глазами игрока</span>
         <button type="button" id="editor-play-btn" class="btn btn-info btn-sm"
           onclick="(window.EditorTutorial && EditorTutorial.active ? EditorTutorial.playTest() : Editor.playTest())"
           title="Открыть игру с текущими данными">▶ Play</button>`;
@@ -219,86 +234,73 @@
     }
   });
 
-  if (typeof Editor.renderChoiceEditor === 'function') {
+  function enhanceChoiceEditorHtml(html, args) {
+    const idx = args && args[1];
+    if (typeof html !== 'string') return html;
+    html = html.replace(
+      '<div class="choice-card">',
+      `<div class="choice-card" draggable="true" data-choice-index="${idx}">`
+    );
+    html = html.replace(
+      '<div class="choice-card-head"><strong>Выбор #',
+      `<div class="choice-card-head"><span class="drag-handle" title="Перетащить">⠿</span><strong>Выбор #`
+    );
+    return html;
+  }
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('renderChoiceEditor', function (result, args) {
+      return enhanceChoiceEditorHtml(result, args);
+    });
+  } else if (typeof Editor.renderChoiceEditor === 'function') {
     const origChoiceEditor = Editor.renderChoiceEditor.bind(Editor);
     Editor.renderChoiceEditor = function (c, idx, allScenes) {
-      let html = origChoiceEditor(c, idx, allScenes);
-      html = html.replace(
-        '<div class="choice-card">',
-        `<div class="choice-card" draggable="true" data-choice-index="${idx}">`
-      );
-      html = html.replace(
-        '<div class="choice-card-head"><strong>Выбор #',
-        `<div class="choice-card-head"><span class="drag-handle" title="Перетащить">⠿</span><strong>Выбор #`
-      );
-      return html;
+      return enhanceChoiceEditorHtml(origChoiceEditor(c, idx, allScenes), [c, idx, allScenes]);
     };
   }
 
-  const origRenderSceneList = Editor.renderSceneList.bind(Editor);
-  Editor.renderSceneList = function () {
-    origRenderSceneList();
-    if (!this.data?.scenes) return;
+  function enhanceSceneListColors() {
+    if (!Editor.data?.scenes) return;
     document.querySelectorAll('.scene-item').forEach(el => {
       const idEl = el.querySelector('.scene-id');
       if (!idEl) return;
       const sid = idEl.textContent.trim();
-      const scene = this.data.scenes[sid];
+      const scene = Editor.data.scenes[sid];
       if (!scene) return;
-      const colorClass = this.getSceneColorClass(scene);
+      const colorClass = Editor.getSceneColorClass(scene);
       el.classList.remove(
         'scene-color-combat', 'scene-color-special', 'scene-color-quest',
         'scene-color-dialogue', 'scene-color-deadend'
       );
       el.classList.add(colorClass);
     });
-  };
-
-  const origRenderSceneEditor = Editor.renderSceneEditor.bind(Editor);
-  Editor.renderSceneEditor = function () {
-    origRenderSceneEditor();
+  }
+  function enhanceSceneEditorPreview() {
     const container = document.getElementById('scene-editor');
     if (!container) return;
-
-    if (!this.currentScene || !this.data?.scenes?.[this.currentScene]) {
-      this.scheduleLivePreviewUpdate();
+    if (!Editor.currentScene || !Editor.data?.scenes?.[Editor.currentScene]) {
+      Editor.scheduleLivePreviewUpdate?.();
       return;
     }
-
-    this.wrapSceneEditorSplitView();
-    this._choiceDragBound = false;
-    this.bindChoiceDragDrop();
-    this.renderLivePreview();
-  };
-
-  const origSelectScene = Editor.selectScene.bind(Editor);
-  Editor.selectScene = function (id) {
-    if (this.currentTab === 'dashboard') {
-      this.currentTab = 'scenes';
-      document.getElementById('tab-dashboard')?.classList.remove('active');
-      document.getElementById('tab-scenes')?.classList.add('active');
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      const scenesTab = document.querySelector('.tab[onclick*="scenes"]');
-      if (scenesTab) scenesTab.classList.add('active');
-    }
-    origSelectScene(id);
-    this.scheduleLivePreviewUpdate();
-  };
-
-  const origUpdateJSONPreview = Editor.updateJSONPreview.bind(Editor);
-  Editor.updateJSONPreview = function () {
-    origUpdateJSONPreview();
-    this.scheduleLivePreviewUpdate();
-    if (typeof this.refreshDashboardIfVisible === 'function') {
-      this.refreshDashboardIfVisible();
-    }
-  };
-
-  const origSwitchTab = Editor.switchTab.bind(Editor);
-  Editor.switchTab = function (tab, event) {
-    origSwitchTab(tab, event);
-    if (tab === 'scenes') this.scheduleLivePreviewUpdate();
-  };
+    Editor.wrapSceneEditorSplitView?.();
+    Editor._choiceDragBound = false;
+    Editor.bindChoiceDragDrop?.();
+    Editor.renderLivePreview?.();
+  }
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('renderSceneList', function () { enhanceSceneListColors(); });
+    Editor.hooks.after('renderSceneEditor', function () { enhanceSceneEditorPreview(); });
+  } else {
+    const origRenderSceneList = Editor.renderSceneList.bind(Editor);
+    Editor.renderSceneList = function () {
+      origRenderSceneList();
+      enhanceSceneListColors();
+    };
+    const origRenderSceneEditor = Editor.renderSceneEditor.bind(Editor);
+    Editor.renderSceneEditor = function () {
+      origRenderSceneEditor();
+      enhanceSceneEditorPreview();
+    };
+  }
 
   function activateScenesTabUi() {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -307,17 +309,59 @@
     if (scenesTab) scenesTab.classList.add('active');
   }
 
-  if (typeof Editor.submitCreateSceneModal === 'function') {
-    const origSubmit = Editor.submitCreateSceneModal.bind(Editor);
-    Editor.submitCreateSceneModal = function () {
-      origSubmit();
+  function onSelectScenePreview() {
+    if (Editor.currentTab === 'dashboard') {
+      Editor.currentTab = 'scenes';
+      document.getElementById('tab-dashboard')?.classList.remove('active');
+      document.getElementById('tab-scenes')?.classList.add('active');
+      activateScenesTabUi();
+    }
+    Editor.scheduleLivePreviewUpdate?.();
+  }
+
+  if (Editor.hooks?.before) {
+    Editor.hooks.before('selectScene', function (args) {
+      if (Editor.currentTab === 'dashboard') {
+        Editor.currentTab = 'scenes';
+        document.getElementById('tab-dashboard')?.classList.remove('active');
+        document.getElementById('tab-scenes')?.classList.add('active');
+        activateScenesTabUi();
+      }
+      return args;
+    });
+    Editor.hooks.after('selectScene', function () { Editor.scheduleLivePreviewUpdate?.(); });
+    Editor.hooks.after('updateJSONPreview', function () {
+      Editor.scheduleLivePreviewUpdate?.();
+      Editor.refreshDashboardIfVisible?.();
+    });
+    Editor.hooks.after('switchTab', function (result, args) {
+      if (args && args[0] === 'scenes') Editor.scheduleLivePreviewUpdate?.();
+    });
+    Editor.hooks.after('submitCreateSceneModal', function () {
       if (Editor.data?.scenes) {
         Editor.currentTab = 'scenes';
         document.getElementById('tab-dashboard')?.classList.remove('active');
         document.getElementById('tab-scenes')?.classList.add('active');
         activateScenesTabUi();
-        Editor.scheduleLivePreviewUpdate();
+        Editor.scheduleLivePreviewUpdate?.();
       }
+    });
+  } else {
+    const origSelectScene = Editor.selectScene.bind(Editor);
+    Editor.selectScene = function (id) {
+      onSelectScenePreview();
+      origSelectScene(id);
+    };
+    const origUpdateJSONPreview = Editor.updateJSONPreview.bind(Editor);
+    Editor.updateJSONPreview = function () {
+      origUpdateJSONPreview();
+      Editor.scheduleLivePreviewUpdate?.();
+      Editor.refreshDashboardIfVisible?.();
+    };
+    const origSwitchTab = Editor.switchTab.bind(Editor);
+    Editor.switchTab = function (tab, event) {
+      origSwitchTab(tab, event);
+      if (tab === 'scenes') Editor.scheduleLivePreviewUpdate?.();
     };
   }
 

@@ -2872,6 +2872,28 @@ body.campaign-selecting #char-creator-screen {
   padding: 8px 0;
   margin: 0;
 }
+#active-quests-list .quest-task {
+  font-size: 12px;
+  color: var(--ink-light);
+  line-height: 1.35;
+  padding-left: 2px;
+}
+#active-quests-list .quest-task.done {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}
+.quest-task-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  margin: 6px 0;
+  background: var(--paper);
+}
+.quest-preview-tasks {
+  margin: 4px 0 0 16px;
+  padding: 0;
+  font-size: 13px;
+}
 
 /* Дикий облик — выбор формы */
 .wild-shape-grid {

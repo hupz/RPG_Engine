@@ -4,6 +4,23 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/).
 
+## [1.1.0] - 2026-08-06
+
+### Changed
+- Система квестов v2: этапы состоят из типизированных задач (TalkToNPC, CollectItem, KillEnemy, …)
+- Прогресс задач через события (ItemCollected, EnemyKilled, LocationVisited, …)
+- Автопереход этапа при выполнении всех задач; журнал показывает задачи и счётчики
+- Редактор квестов: конструктор задач без флагов/условий
+- Миграция старых квестов (стадии log/hint) → tasks при загрузке
+
+### Added
+- `js/quests/task-base.js`, `task-types.js`, `quest-events.js`, `quest-runtime.js`, `quest-migrate.js`
+- События квестов: NPCDialogueFinished, ItemEquipped, ItemCrafted, GoldSpent/GoldGained, ItemRemoved
+- `GameEngine.changeGold` с эмитом событий
+- `completionRule: all|any` на этапах (advanced, без UI в базовом редакторе)
+- Жёсткая привязка квестов «Мельницы» к npcId/itemId/sceneId/enemyId
+
+
 ## [1.0.0] - 2026-06-06
 
 ### Added

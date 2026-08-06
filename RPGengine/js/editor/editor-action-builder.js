@@ -346,20 +346,29 @@
     }
   });
 
-  const origSwitch = Editor.switchTab.bind(Editor);
-  Editor.switchTab = function (tab, event) {
-    origSwitch(tab, event);
-    if (tab === 'actions' && this.data) this.renderActionChainsTab();
-  };
-
-  const origLoad = Editor.loadData || Editor.setData;
-  if (Editor.updateJSONPreview) {
-    const origPreview = Editor.updateJSONPreview.bind(Editor);
-    Editor.updateJSONPreview = function () {
-      origPreview();
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('switchTab', function (result, args) {
+      if (args && args[0] === 'actions' && this.data) this.renderActionChainsTab?.();
+    });
+    Editor.hooks.after('updateJSONPreview', function () {
       if (document.getElementById('tab-actions')?.classList.contains('active')) {
-        this.renderActionChainsTab();
+        this.renderActionChainsTab?.();
       }
+    });
+  } else {
+    const origSwitch = Editor.switchTab.bind(Editor);
+    Editor.switchTab = function (tab, event) {
+      origSwitch(tab, event);
+      if (tab === 'actions' && this.data) this.renderActionChainsTab();
     };
+    if (Editor.updateJSONPreview) {
+      const origPreview = Editor.updateJSONPreview.bind(Editor);
+      Editor.updateJSONPreview = function () {
+        origPreview();
+        if (document.getElementById('tab-actions')?.classList.contains('active')) {
+          this.renderActionChainsTab();
+        }
+      };
+    }
   }
 })();

@@ -10,89 +10,90 @@
 
   const STEPS = [
     {
-      id: 'scenes-list',
-      title: 'Список сцен',
-      text: 'Это список ваших сцен. Нажмите «Новая сцена», чтобы создать первую локацию.',
-      selectors: ['#scene-list', '#btn-create-scene'],
+      id: 'create-scene',
+      title: 'Создайте сцену',
+      text: 'Нажмите «+ Новая сцена» и введите только название. ID создастся сам — код писать не нужно.',
+      selectors: ['#scene-list', '#btn-create-scene', 'button[onclick*="createScene"]'],
       prepare(t) {
         t.ensureProject();
         t.switchToScenesTab();
         if (typeof Editor.ensureSceneListActions === 'function') Editor.ensureSceneListActions();
       },
       isDone(t) {
-        return t._flags.modalOpened;
+        return t._flags.sceneCommitted || t._flags.modalOpened;
       }
     },
     {
-      id: 'scene-form',
-      title: 'Название и описание',
-      text: 'Введите название локации в форме создания, нажмите «Создать», затем допишите описание в поле «Текст».',
-      selectors() {
-        const modal = document.getElementById('template-scene-modal');
-        if (modal && !modal.classList.contains('hidden')) {
-          return ['#tpl-scene-name', '#tpl-scene-id', '#template-scene-modal .btn-primary'];
-        }
-        return ['#scene-location', '#scene-text'];
-      },
+      id: 'add-text',
+      title: 'Текст сцены',
+      text: 'Нажмите «+ Добавить» → «Текст и локация». Напишите, что видит игрок. Справа обновится превью «глазами игрока».',
+      selectors: ['.scene-add-module-btn', '.scene-module-pick', '#scene-text', '#scene-title', '.scene-module-card[data-module="story"]'],
       prepare(t) {
         t.switchToScenesTab();
+        if (Editor.currentScene && typeof Editor.selectScene === 'function') {
+          Editor.selectScene(Editor.currentScene);
+        }
+        // подсказать добавить story, если пусто
+        const scene = Editor.data?.scenes?.[Editor.currentScene];
+        if (scene && typeof Editor.addSceneModule === 'function') {
+          const mods = Editor.getSceneModules?.(scene) || [];
+          if (!mods.includes('story')) {
+            /* пользователь добавит сам */
+          }
+        }
       },
-      isDone(t) {
-        return t._flags.sceneCommitted && t._flags.descriptionTouched;
+      isDone() {
+        const scene = Editor.data?.scenes?.[Editor.currentScene];
+        const text = (scene?.text || '').trim();
+        const el = document.getElementById('scene-text');
+        const live = el ? el.value.trim() : '';
+        return !!(text || live);
       }
     },
     {
-      id: 'npc-panel',
-      title: 'NPC',
-      text: 'Добавьте NPC из панели справа — откройте вкладку NPC и нажмите «Добавить NPC».',
-      selectors: ['.editor-nav-item[data-section-id="npcs"]', '#tab-npcs .quest-manager-sidebar .btn-primary'],
-      prepare(t) {
-        t.switchToTab('npcs');
-        if (typeof Editor.renderNPCs === 'function') Editor.renderNPCs();
-      },
-      isDone(t) {
-        return t._flags.npcCreated;
-      }
-    },
-    {
-      id: 'dialogue',
-      title: 'Диалог',
-      text: 'Создайте диалог: вернитесь к сцене и нажмите «+ Добавить» в блоке «Диалоги».',
-      selectors: ['#tab-scenes .dialogue-section h4 button', '#dialogue-list'],
+      id: 'add-choice',
+      title: 'Выбор (кнопка)',
+      text: 'Снова «+ Добавить» → «Выборы». Создайте кнопку перехода: текст кнопки и куда ведёт.',
+      selectors: ['.scene-add-module-btn', '.choices-section', '#choices-list', '.choice-card'],
       prepare(t) {
         t.switchToScenesTab();
         if (Editor.currentScene && typeof Editor.selectScene === 'function') {
           Editor.selectScene(Editor.currentScene);
         }
       },
-      isDone(t) {
+      isDone() {
         const scene = Editor.data?.scenes?.[Editor.currentScene];
-        return Array.isArray(scene?.dialogue) && scene.dialogue.length > 0;
+        return Array.isArray(scene?.choices) && scene.choices.length > 0;
       }
     },
     {
-      id: 'choice',
-      title: 'Переход между сценами',
-      text: 'Добавьте кнопку перехода к другой сцене: «+ Добавить» в блоке «Выборы» и укажите целевую сцену.',
-      selectors() {
-        const list = ['#tab-scenes .choices-section h4 button', '#choices-list'];
-        const toInput = document.querySelector('#choices-list .choice-card input[list], #choices-list .choice-card input[placeholder*="сцен"]');
-        if (toInput) list.push(toInput);
-        return list;
-      },
+      id: 'add-quest',
+      title: 'Квест на выборе',
+      text: 'В карточке выбора включите «Продвинуть квест» или используйте мастер «📜 Старт квеста». Выберите задание и этап по названиям.',
+      selectors: ['.choice-quest-fields', '.scene-wizards-bar', 'button[onclick*="openSceneWizard(\'quest\')"]'],
       prepare(t) {
         t.switchToScenesTab();
-      },
-      isDone(t) {
+        if (Editor.currentScene && typeof Editor.selectScene === 'function') {
+          Editor.selectScene(Editor.currentScene);
+        }
+        // убедиться что есть choices
         const scene = Editor.data?.scenes?.[Editor.currentScene];
-        return (scene?.choices || []).some((c) => c && String(c.to || '').trim());
+        if (scene && (!scene.choices || !scene.choices.length) && typeof Editor.addChoice === 'function') {
+          /* не авто-добавляем — пользователь */
+        }
+      },
+      isDone() {
+        const scene = Editor.data?.scenes?.[Editor.currentScene];
+        const hasOnChoice = (scene?.choices || []).some((c) => c?.questSet?.questId);
+        const hasQuestTab = Object.keys(Editor.data?.quests || {}).length > 0 && hasOnChoice;
+        return hasOnChoice || hasQuestTab;
       }
     },
     {
       id: 'play',
-      title: 'Тестирование',
-      text: 'Нажмите «Play» в панели превью справа, чтобы протестировать сцену в игре.',
-      selectors: ['.scenes-preview-pane', '#editor-play-btn'],
+      title: 'Превью и Play',
+      text: 'Справа — вид глазами игрока. Нажмите ▶ Play, чтобы открыть игру с текущими данными.',
+      selectors: ['.scenes-preview-pane', '#editor-play-btn', '#live-preview-body'],
       prepare(t) {
         t.switchToScenesTab();
         if (typeof Editor.renderLivePreview === 'function') Editor.renderLivePreview();
@@ -104,7 +105,7 @@
     {
       id: 'save',
       title: 'Сохранение',
-      text: 'Сохраните проект — нажмите «Сохранить JSON» в шапке редактора.',
+      text: 'Сохраните проект: «Сохранить JSON» в меню экспорта.',
       selectors: ['#export-menu-toggle', '[data-export="json"]'],
       prepare() {},
       isDone(t) {
@@ -181,12 +182,32 @@
       if (this._hooksInstalled) return;
       this._hooksInstalled = true;
 
-      this._wrap('openCreateSceneModal', () => {
+      
+      this._wrap('addSceneModule', () => {
+        this._flags.moduleAdded = true;
+      });
+      this._wrap('addChoice', () => {
+        this._flags.choiceAdded = true;
+      });
+      this._wrap('setChoiceQuestSet', () => {
+        this._flags.questBound = true;
+      });
+      this._wrap('applyWizardQuest', () => {
+        this._flags.questBound = true;
+      });
+
+this._wrap('openCreateSceneModal', () => {
+        this._flags.modalOpened = true;
+      });
+
+      this._wrap('createBlankScene', () => {
+        this._flags.sceneCommitted = true;
         this._flags.modalOpened = true;
       });
 
       this._wrap('createScene', () => {
         this._flags.modalOpened = true;
+        this._flags.sceneCommitted = true;
       });
 
       this._wrap('commitTemplateScene', () => {
@@ -224,41 +245,62 @@
         this._flags.projectSaved = true;
       });
 
-      const origConfirm = Editor.confirmNewProject?.bind(Editor);
-      if (origConfirm) {
-        Editor.confirmNewProject = (...args) => {
-          origConfirm(...args);
-          this.onProjectReady();
-        };
-      }
-
-      const origRenderAll = Editor.renderAll?.bind(Editor);
-      if (origRenderAll) {
-        Editor.renderAll = (...args) => {
-          origRenderAll(...args);
+      if (Editor.hooks?.after) {
+        Editor.hooks.after('confirmNewProject', () => { this.onProjectReady(); });
+        Editor.hooks.after('renderAll', () => {
           if (this.waitingForProject && Editor.data) this.onProjectReady();
           if (this.active) this._scheduleReposition();
-        };
-      }
-
-      const origRenderSceneEditor = Editor.renderSceneEditor?.bind(Editor);
-      if (origRenderSceneEditor) {
-        Editor.renderSceneEditor = (...args) => {
-          origRenderSceneEditor(...args);
+        });
+        Editor.hooks.after('renderSceneEditor', () => {
           if (this.active) this._scheduleReposition();
-        };
-      }
-
-      const origRenderNPCs = Editor.renderNPCs?.bind(Editor);
-      if (origRenderNPCs) {
-        Editor.renderNPCs = (...args) => {
-          origRenderNPCs(...args);
+        });
+        Editor.hooks.after('renderNPCs', () => {
           if (this.active) this._scheduleReposition();
-        };
+        });
+      } else {
+        const origConfirm = Editor.confirmNewProject?.bind(Editor);
+        if (origConfirm) {
+          Editor.confirmNewProject = (...args) => {
+            origConfirm(...args);
+            this.onProjectReady();
+          };
+        }
+        const origRenderAll = Editor.renderAll?.bind(Editor);
+        if (origRenderAll) {
+          Editor.renderAll = (...args) => {
+            origRenderAll(...args);
+            if (this.waitingForProject && Editor.data) this.onProjectReady();
+            if (this.active) this._scheduleReposition();
+          };
+        }
+        const origRenderSceneEditor = Editor.renderSceneEditor?.bind(Editor);
+        if (origRenderSceneEditor) {
+          Editor.renderSceneEditor = (...args) => {
+            origRenderSceneEditor(...args);
+            if (this.active) this._scheduleReposition();
+          };
+        }
+        const origRenderNPCs = Editor.renderNPCs?.bind(Editor);
+        if (origRenderNPCs) {
+          Editor.renderNPCs = (...args) => {
+            origRenderNPCs(...args);
+            if (this.active) this._scheduleReposition();
+          };
+        }
       }
     },
 
     _wrap(name, after) {
+      if (Editor.hooks?.after) {
+        Editor.hooks.after(name, function (...hookArgs) {
+          try {
+            after.apply(EditorTutorial, hookArgs[1] || []);
+          } catch (e) {
+            console.warn('[tutorial]', e);
+          }
+        });
+        return;
+      }
       const orig = Editor[name];
       if (typeof orig !== 'function') return;
       Editor[name] = function (...args) {

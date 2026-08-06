@@ -16,7 +16,10 @@
     'achievements',
     'snippets',
     'npcs',
-    'items'
+    'items',
+    'enemies',
+    'worldmap',
+    'audio'
   ]);
 
   Object.assign(Editor, {
@@ -37,7 +40,9 @@
 
     getEditorModeToggleLabel() {
       const tr = (k) => (typeof t === 'function' ? t(k) : k);
-      return this.isWriterMode() ? '⚙️ ' + tr('editor.writerModeFull') : '✏️ ' + tr('editor.writerMode');
+      return this.isWriterMode()
+        ? '⚙️ Все разделы'
+        : '✏️ Режим писателя';
     },
 
     updateEditorModeToggleButton() {
@@ -49,8 +54,8 @@
       btn.classList.toggle('btn-secondary', writer);
       btn.setAttribute('aria-pressed', writer ? 'true' : 'false');
       btn.title = writer
-        ? 'Показать все технические вкладки (баланс, климат, JSON…)'
-        : 'Оставить только сцены, квесты, NPC и предметы';
+        ? 'Показать все разделы (классы, баланс, климат…). Формы без кода — как в режиме писателя.'
+        : 'Только сцены, квесты, NPC, предметы, бой, карта, звук. Классы и правила скрыты.';
     },
 
     applyEditorMode(mode) {
@@ -79,8 +84,8 @@
       const hint = document.getElementById('writer-mode-hint');
       if (hint) {
         hint.textContent = writer
-          ? 'Видны: сцены, шаблоны, квесты, NPC, предметы.'
-          : 'Скрывает баланс, климат, JSON и другие технические разделы.';
+          ? 'Писатель: сцены, квесты, NPC, предметы, бой, карта, звук. Без классов и систем правил.'
+          : 'Все разделы открыты. Везде формы и списки — без написания кода.';
       }
 
       const activeTab = this.currentTab || 'scenes';
@@ -96,9 +101,9 @@
     initEditorMode() {
       let stored = 'full';
       try {
-        stored = localStorage.getItem(STORAGE_KEY) || 'full';
+        stored = localStorage.getItem(STORAGE_KEY) || 'writer';
       } catch (e) { /* ignore */ }
-      this.applyEditorMode(stored === 'writer' ? 'writer' : 'full');
+      this.applyEditorMode(stored === 'full' ? 'full' : 'writer');
     }
   });
 

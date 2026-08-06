@@ -213,13 +213,34 @@
       else this.renderAbilities();
     },
 
+    renderDiceFormulaField(current, onchangeAttr, label) {
+      const cur = current || '1d6';
+      const presets = (this.DICE_PRESETS || ['1d4','1d6','1d8','1d10','1d12','2d6','2d8','3d6','4d6']);
+      const opts = presets.map((d) =>
+        `<option value="${d}" ${d === cur ? 'selected' : ''}>${d}</option>`
+      ).join('');
+      const isCustom = cur && !presets.includes(cur);
+      return `<div class="form-group"><label>${this.escapeHtml(label || 'Кубики')}</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select onchange="if(this.value==='__custom__'){const v=prompt('Своя формула (например 2d6+3):','${this.escapeAttr(cur)}');if(v!=null){const el=this.nextElementSibling;if(el){el.value=v;el.dispatchEvent(new Event('change'));}}this.value='${this.escapeAttr(presets.includes(cur)?cur:presets[0])}';}else{const el=this.nextElementSibling;if(el){el.value=this.value;el.dispatchEvent(new Event('change'));}}">
+            ${opts}
+            <option value="__custom__">Своё…</option>
+          </select>
+          <input type="text" value="${this.escapeHtml(cur)}" placeholder="1d8+2" style="max-width:120px"
+            onchange="${onchangeAttr}">
+        </div>
+        <p class="hint">Выберите кости или введите формулу вручную.</p>
+      </div>`;
+    },
+
     renderEffectTypeExtraFields(effect, handlers) {
       const t = effect?.type;
       const h = handlers || {};
       if (t === 'smite') {
-        return `<div class="form-group"><label>Кубики кары (XdY)</label>
-          <input value="${this.escapeHtml(effect.value || '2d8')}" placeholder="2d8"
-            onchange="${h.value || ''}"></div>`;
+        return this.renderDiceFormulaField(effect.value || '2d8', h.value || '', 'Кубики кары');
+      }
+      if (t === 'heal') {
+        return this.renderDiceFormulaField(effect.value || '1d8', h.value || '', 'Лечение (кубики)');
       }
       if (t === 'magic_missile') {
         return `<div class="hint">Автоматически: 3×(1d4+1) по одному врагу (настройка в движке).</div>`;
@@ -305,96 +326,68 @@
     }
   });
 
-  const origGlobalAbilityEditor = Editor.renderGlobalAbilityEditor;
-  if (typeof origGlobalAbilityEditor === 'function') {
+
+  function enhanceGlobalAbilityHtml(html, id, ab, idx) {
+    if (typeof html !== 'string' || !ab) return html;
+    Editor._transformEditScope = 'global';
+    Editor._transformEditId = id;
+    const sl = ab.spellLevel != null ? ab.spellLevel : 0;
+    const spellBlock = typeof Editor.renderSpellLevelSelect === 'function'
+      ? `<div class="form-group"><label>Уровень заклинания</label>${Editor.renderSpellLevelSelect(sl, `Editor.updateGlobalAbility('${Editor.escapeAttr(id)}','spellLevel',parseInt(this.value,10)||0)`)}</div>`
+      : '';
+    const actionBlock = typeof Editor.renderAbilityActionTypeFields === 'function'
+      ? Editor.renderAbilityActionTypeFields(ab, {
+          actionType: `Editor.updateGlobalAbility('${Editor.escapeAttr(id)}','actionType',this.value); Editor.renderAbilities();`,
+          trigger: `Editor.updateGlobalAbility('${Editor.escapeAttr(id)}','trigger',this.value||''); Editor.renderAbilities();`
+        })
+      : '';
+    const zoneBlock = typeof Editor.renderCombatZoneReachField === 'function'
+      ? Editor.renderCombatZoneReachField(ab, {
+          range: `Editor.updateGlobalAbility('${Editor.escapeAttr(id)}','range',this.value||''); Editor.renderAbilities();`
+        })
+      : '';
+    const needle = '<div class="form-group"><label>Тип эффекта</label>';
+    if (html.includes(needle)) {
+      html = html.replace(needle, spellBlock + actionBlock + zoneBlock + needle);
+    }
+    return html;
+  }
+
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('renderGlobalAbilityEditor', function (html, args) {
+      const id = args && args[0];
+      const ab = args && args[1];
+      const idx = args && args[2];
+      return enhanceGlobalAbilityHtml(html, id, ab, idx);
+    });
+    Editor.hooks.after('renderClassDetail', function (html, args) {
+      const id = args && args[0];
+      const cls = Editor.data?.classes?.[id];
+      if (!cls?.abilities?.length || typeof html !== 'string') return html;
+      // доп. поля action type уже могут быть в renderAbilityEditor
+      return html;
+    });
+  } else if (typeof Editor.renderGlobalAbilityEditor === 'function') {
+    const orig = Editor.renderGlobalAbilityEditor.bind(Editor);
     Editor.renderGlobalAbilityEditor = function (id, ab, idx) {
-      Editor._transformEditScope = 'global';
-      Editor._transformEditId = id;
-      let html = origGlobalAbilityEditor.call(this, id, ab, idx);
-      const sl = ab.spellLevel != null ? ab.spellLevel : 0;
-      const spellBlock = `<div class="form-group"><label>Уровень заклинания</label>${this.renderSpellLevelSelect(sl, `Editor.updateGlobalAbility('${this.escapeAttr(id)}','spellLevel',parseInt(this.value,10)||0)`)}</div>`;
-      const actionBlock = this.renderAbilityActionTypeFields(ab, {
-        actionType: `Editor.updateGlobalAbility('${this.escapeAttr(id)}','actionType',this.value); Editor.renderAbilities();`,
-        trigger: `Editor.updateGlobalAbility('${this.escapeAttr(id)}','trigger',this.value||''); Editor.renderAbilities();`
-      });
-      const zoneBlock = this.renderCombatZoneReachField(ab, {
-        range: `Editor.updateGlobalAbility('${this.escapeAttr(id)}','range',this.value||''); Editor.updateAbilities();`
-      });
-      const needle = '<div class="form-group"><label>Тип эффекта</label>';
-      if (html.includes(needle)) {
-        html = html.replace(needle, spellBlock + actionBlock + zoneBlock + needle);
-      }
-      return html;
+      return enhanceGlobalAbilityHtml(orig(id, ab, idx), id, ab, idx);
     };
   }
 
-  const origRenderClassDetail = Editor.renderClassDetail;
-  if (typeof origRenderClassDetail === 'function') {
-    Editor.renderClassDetail = function (id) {
-      let html = origRenderClassDetail.call(this, id);
-      const cls = this.data?.classes?.[id];
-      if (!cls?.abilities?.length) return html;
-      cls.abilities.forEach((ab, idx) => {
-        const marker = `data-ability-idx="${idx}"`;
-        if (!html.includes(marker)) return;
-        Editor._transformEditScope = 'class';
-        Editor._transformEditClassId = id;
-        Editor._transformEditIdx = idx;
-        const block = this.renderAbilityActionTypeFields(ab, {
-          actionType: `Editor.updateClassAbilityMeta('${this.escapeAttr(id)}',${idx},'actionType',this.value)`,
-          trigger: `Editor.updateClassAbilityMeta('${this.escapeAttr(id)}',${idx},'trigger',this.value)`
-        });
-        const zoneBlock = this.renderCombatZoneReachField(ab, {
-          range: `Editor.updateClassAbilityMeta('${this.escapeAttr(id)}',${idx},'range',this.value||''); Editor.renderClasses();`
-        });
-        const needle = `<div class="ability-edit-card" ${marker}>`;
-        if (html.includes(needle)) {
-          html = html.replace(needle, needle + block + zoneBlock);
-        }
-      });
-      return html;
-    };
-  }
-
-  const origClassProgression = Editor.renderClassProgressionSection;
-  if (typeof origClassProgression === 'function') {
-    Editor.renderClassProgressionSection = function (classId, cls, maxLevel) {
+  // updateProgressionSlots — определение, не обёртка
+  if (typeof Editor.updateProgressionSlots !== 'function') {
+    Editor.updateProgressionSlots = function (classId, level, value) {
+      const cls = this.data?.classes?.[classId];
+      if (!cls) return;
       if (!cls.progression) cls.progression = { levels: {} };
       if (!cls.progression.levels) cls.progression.levels = {};
-      const options = this.getClassAbilityOptions(classId);
-      const levels = [];
-      for (let level = 2; level <= maxLevel; level += 1) {
-        const cfg = cls.progression.levels[level] || cls.progression.levels[String(level)] || { choices: [] };
-        const slots = Array.isArray(cfg.slots) ? cfg.slots.join(', ') : '';
-        const chosen = (cfg.choices || []).map(choiceId => {
-          const ab = (cls.abilities || []).find(a => a.id === choiceId) || { name: choiceId, icon: '' };
-          return `<span class="progression-choice-chip">${this.renderIcon(ab.icon)} ${this.escapeHtml(ab.name || choiceId)}<button type="button" onclick="Editor.removeProgressionChoice('${this.escapeAttr(classId)}',${level},${JSON.stringify(choiceId)})">×</button></span>`;
-        }).join('') || '<div class="hint">Нет выбранных умений</div>';
-        const selectHtml = options.length
-          ? `<select class="icon-picker-select" onchange="Editor.addProgressionChoice('${this.escapeAttr(classId)}',${level},this.value); this.value='';"><option value="">+ Добавить умение</option>${options.map(o => `<option value="${this.escapeAttr(o.id)}">${this.escapeHtml(o.icon)} ${this.escapeHtml(o.label)}</option>`).join('')}</select>`
-          : '<div class="hint">Создайте умения для этого класса на вкладке «Классы»</div>';
-        levels.push(`<div class="progression-level-row"><div class="row-title">Уровень ${level}</div>
-          <div class="form-group" style="margin:6px 0;"><label>Ячейки (через запятую)</label>
-            <input value="${this.escapeAttr(slots)}" placeholder="4, 2, 1 — круги 1–3; одно число = энергия (воин)"
-              onchange="Editor.updateProgressionSlots('${this.escapeAttr(classId)}',${level},this.value)">
-            <div class="hint">Маг: [4,2] на 3 ур. · Воин: [3] = ярость</div></div>
-          <div class="progression-choice-list">${chosen}</div>${selectHtml}</div>`);
-      }
-      return `<div class="class-section"><h4>Прогрессия класса — ${this.escapeHtml(cls.name || classId)}</h4>${levels.join('')}</div>`;
+      const key = String(level);
+      if (!cls.progression.levels[key]) cls.progression.levels[key] = { choices: [] };
+      const parts = value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !Number.isNaN(n) && n >= 0);
+      if (parts.length) cls.progression.levels[key].slots = parts;
+      else delete cls.progression.levels[key].slots;
+      this.renderProgression?.();
+      this.updateJSONPreview?.();
     };
   }
-
-  Editor.updateProgressionSlots = function (classId, level, value) {
-    const cls = this.data?.classes?.[classId];
-    if (!cls) return;
-    if (!cls.progression) cls.progression = { levels: {} };
-    if (!cls.progression.levels) cls.progression.levels = {};
-    const key = String(level);
-    if (!cls.progression.levels[key]) cls.progression.levels[key] = { choices: [] };
-    const parts = value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !Number.isNaN(n) && n >= 0);
-    if (parts.length) cls.progression.levels[key].slots = parts;
-    else delete cls.progression.levels[key].slots;
-    this.renderProgression();
-    this.updateJSONPreview();
-  };
 })();

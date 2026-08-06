@@ -1006,6 +1006,9 @@ const ACTION_REGISTRY = {
       if (!itemId) return false;
       for (let i = 0; i < qty; i++) engine.addItem(itemId);
       if (typeof engine.discoverRecipe === 'function') engine.discoverRecipe(recipe.id);
+      if (typeof QuestEvents !== 'undefined') {
+        QuestEvents.emit('ItemCrafted', { itemId, recipeId: recipe.id, qty });
+      }
       engine.saveGame?.();
       const name = engine.data?.items?.[itemId]?.name || recipe.name || itemId;
       return {

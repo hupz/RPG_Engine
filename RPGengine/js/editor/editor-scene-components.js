@@ -146,8 +146,10 @@
             <div class="form-group"><label>Приветствие</label>
               <textarea rows="2" onchange="Editor.updateComponentParam(${index},'greeting',this.value)">${Editor.escapeHtml(p.greeting || '')}</textarea>
             </div>
-            <div class="form-group"><label>Темы (JSON: label, reply, flags, donate)</label>
-              <textarea rows="4" onchange="Editor.updateComponentTopics(${index},this.value)">${Editor.escapeHtml(JSON.stringify(p.topics || [], null, 2))}</textarea>
+            <div class="form-group"><label>Темы диалога</label>
+              <p class="hint">Каждая тема — кнопка в разговоре. Без JSON.</p>
+              <div class="dialogue-topics-builder">${this.renderDialogueTopicsBuilder(index, p.topics || [])}</div>
+              <button type="button" class="btn btn-secondary" onclick="Editor.addDialogueTopic(${index})">+ Тема</button>
             </div>`;
           break;
         case 'interactive':
@@ -270,6 +272,137 @@
       this.updateComponentParam(index, 'costTable', arr);
     },
 
+
+    renderDialogueTopicsBuilder(compIndex, topics) {
+      const list = Array.isArray(topics) ? topics : [];
+      if (!list.length) return '<p class="hint">Тем пока нет</p>';
+      return list.map((topic, ti) => {
+        const top = typeof topic === 'string' ? { label: topic, reply: '' } : (topic || {});
+        return `<div class="dialogue-topic-card">
+          <div class="quest-stage-head">
+            <strong>Тема ${ti + 1}</strong>
+            <button type="button" class="btn-remove" onclick="Editor.removeDialogueTopic(${compIndex},${ti})">×</button>
+          </div>
+          <div class="form-group"><label>Текст кнопки</label>
+            <input type="text" value="${Editor.escapeAttr(top.label || top.text || '')}"
+              onchange="Editor.updateDialogueTopicField(${compIndex},${ti},'label',this.value)"></div>
+          <div class="form-group"><label>Ответ NPC</label>
+            <textarea rows="2" onchange="Editor.updateDialogueTopicField(${compIndex},${ti},'reply',this.value)">${Editor.escapeHtml(top.reply || '')}</textarea></div>
+          <div class="form-group"><label>Пожертвование (золото, 0 = нет)</label>
+            <input type="number" min="0" value="${top.donate && top.donate.cost != null ? top.donate.cost : 0}"
+              onchange="Editor.updateDialogueTopicDonate(${compIndex},${ti},this.value)"></div>
+        </div>`;
+      }).join('');
+    },
+
+    addDialogueTopic(compIndex) {
+      const scene = this.data?.scenes?.[this.currentScene];
+      const comp = scene?.components?.[compIndex];
+      if (!comp) return;
+      if (!comp.params) comp.params = {};
+      if (!Array.isArray(comp.params.topics)) comp.params.topics = [];
+      comp.params.topics.push({ label: 'Новая тема', reply: '' });
+      this.updateJSONPreview();
+      this.renderSceneEditor();
+    },
+
+    removeDialogueTopic(compIndex, topicIndex) {
+      const topics = this.data?.scenes?.[this.currentScene]?.components?.[compIndex]?.params?.topics;
+      if (!Array.isArray(topics)) return;
+      topics.splice(topicIndex, 1);
+      this.updateJSONPreview();
+      this.renderSceneEditor();
+    },
+
+    updateDialogueTopicField(compIndex, topicIndex, field, value) {
+      const topics = this.data?.scenes?.[this.currentScene]?.components?.[compIndex]?.params?.topics;
+      if (!Array.isArray(topics) || !topics[topicIndex]) return;
+      let top = topics[topicIndex];
+      if (typeof top === 'string') {
+        top = { label: top, reply: '' };
+        topics[topicIndex] = top;
+      }
+      top[field] = value;
+      this.updateJSONPreview();
+    },
+
+    updateDialogueTopicDonate(compIndex, topicIndex, costRaw) {
+      const topics = this.data?.scenes?.[this.currentScene]?.components?.[compIndex]?.params?.topics;
+      if (!Array.isArray(topics) || !topics[topicIndex]) return;
+      let top = topics[topicIndex];
+      if (typeof top === 'string') {
+        top = { label: top, reply: '' };
+        topics[topicIndex] = top;
+      }
+      const cost = parseInt(costRaw, 10) || 0;
+      if (cost > 0) top.donate = { cost };
+      else delete top.donate;
+      this.updateJSONPreview();
+    },
+
+    renderServiceActionParamsForm(compIndex, svcIndex, svc) {
+      const ap = svc.actionParams && typeof svc.actionParams === 'object' ? svc.actionParams : {};
+      const amount = ap.amount != null ? ap.amount : '';
+      const itemId = ap.itemId || ap.resultId || '';
+      const target = ap.target || 'self';
+      return `<div class="grid-2">
+        <div class="form-group"><label>Цель</label>
+          <select onchange="Editor.updateServiceActionParam(${compIndex},${svcIndex},'target',this.value)">
+            <option value="self" ${target === 'self' ? 'selected' : ''}>Герой</option>
+            <option value="enemy" ${target === 'enemy' ? 'selected' : ''}>Враг</option>
+          </select></div>
+        <div class="form-group"><label>Величина</label>
+          <input type="text" value="${Editor.escapeAttr(String(amount))}" placeholder="full или 10"
+            onchange="Editor.updateServiceActionParam(${compIndex},${svcIndex},'amount',this.value)"></div>
+      </div>
+      <div class="form-group"><label>Предмет (если нужен)</label>
+        <input type="text" value="${Editor.escapeAttr(itemId)}"
+          onchange="Editor.updateServiceActionParam(${compIndex},${svcIndex},'itemId',this.value)"></div>`;
+    },
+
+    renderServicePanelParamsForm(compIndex, svcIndex, svc) {
+      const pp = svc.panelParams && typeof svc.panelParams === 'object' ? svc.panelParams : {};
+      const npc = pp.npc || '';
+      const flatCost = pp.flatCost != null ? pp.flatCost : (pp.costBase != null ? pp.costBase : '');
+      const maxEnh = pp.maxEnhancement != null ? pp.maxEnhancement : '';
+      const npcOpts = Object.keys(this.data?.npcs || {}).map((id) => {
+        const sel = id === npc ? ' selected' : '';
+        const name = this.data.npcs[id]?.name || id;
+        return `<option value="${Editor.escapeAttr(id)}"${sel}>${Editor.escapeHtml(name)}</option>`;
+      }).join('');
+      return `<div class="form-group"><label>NPC</label>
+        <select onchange="Editor.updateServicePanelParam(${compIndex},${svcIndex},'npc',this.value)">
+          <option value="">—</option>${npcOpts}
+        </select></div>
+        <div class="grid-2">
+          <div class="form-group"><label>Базовая цена</label>
+            <input type="number" min="0" value="${Editor.escapeAttr(String(flatCost))}"
+              onchange="Editor.updateServicePanelParam(${compIndex},${svcIndex},'flatCost',parseInt(this.value,10)||0)"></div>
+          <div class="form-group"><label>Макс. заточка</label>
+            <input type="number" min="0" value="${Editor.escapeAttr(String(maxEnh))}"
+              onchange="Editor.updateServicePanelParam(${compIndex},${svcIndex},'maxEnhancement',parseInt(this.value,10)||0)"></div>
+        </div>`;
+    },
+
+    updateServiceActionParam(compIndex, svcIndex, key, value) {
+      const services = this.ensureComponentServices(compIndex);
+      if (!services?.[svcIndex]) return;
+      if (!services[svcIndex].actionParams) services[svcIndex].actionParams = {};
+      if (value === '' || value == null) delete services[svcIndex].actionParams[key];
+      else services[svcIndex].actionParams[key] = value;
+      this.updateJSONPreview();
+    },
+
+    updateServicePanelParam(compIndex, svcIndex, key, value) {
+      const services = this.ensureComponentServices(compIndex);
+      if (!services?.[svcIndex]) return;
+      if (!services[svcIndex].panelParams) services[svcIndex].panelParams = {};
+      if (value === '' || value == null) delete services[svcIndex].panelParams[key];
+      else services[svcIndex].panelParams[key] = value;
+      if (key === 'flatCost') services[svcIndex].panelParams.costBase = value;
+      this.updateJSONPreview();
+    },
+
     updateComponentTopics(index, jsonStr) {
       try {
         const topics = JSON.parse(jsonStr);
@@ -330,13 +463,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Параметры панели (panelParams)</label>
-            <p class="hint">JSON-объект: NPC, цены, рецепты и т.д. — зависит от панели.</p>
-            <textarea class="service-json-field" rows="5"
-              id="svc-panel-params-${compIndex}-${svcIndex}"
-              onchange="Editor.updateServiceJsonField(${compIndex},${svcIndex},'panelParams',this.value)">${Editor.escapeHtml(jsonFieldText(svc.panelParams))}</textarea>
-            <button type="button" class="btn btn-secondary" style="margin-top:6px;"
-              onclick="Editor.formatServiceJsonField(${compIndex},${svcIndex},'panelParams')">Отформатировать JSON</button>
+            <label>Параметры панели</label>
+            <div class="svc-params-form">${this.renderServicePanelParamsForm(compIndex, svcIndex, svc)}</div>
           </div>`;
       } else if (type === 'chain') {
         const chainListId = Editor.allocSmartIdList(`svc-chain-${compIndex}-${svcIndex}`);
@@ -371,11 +499,8 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Параметры действия (actionParams)</label>
-            <p class="hint">JSON: target, amount, itemId и др. — см. реестр действий.</p>
-            <textarea class="service-json-field" rows="4"
-              id="svc-action-params-${compIndex}-${svcIndex}"
-              onchange="Editor.updateServiceJsonField(${compIndex},${svcIndex},'actionParams',this.value)">${Editor.escapeHtml(jsonFieldText(svc.actionParams))}</textarea>
+            <label>Параметры действия</label>
+            <div class="svc-params-form">${this.renderServiceActionParamsForm(compIndex, svcIndex, svc)}</div>
             <button type="button" class="btn btn-secondary" style="margin-top:6px;"
               onclick="Editor.formatServiceJsonField(${compIndex},${svcIndex},'actionParams')">Отформатировать JSON</button>
           </div>`;

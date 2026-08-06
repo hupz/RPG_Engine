@@ -306,22 +306,36 @@
     }
   });
 
-  const origDetail = Editor.renderClassDetail;
-  Editor.renderClassDetail = function (id) {
-    let html = origDetail.call(this, id);
-    if (id === 'druid') html += this.renderDruidWildShapeClassSection();
-    return html;
-  };
-
-  const origSwitch = Editor.switchTab;
-  Editor.switchTab = function (tab, event) {
-    origSwitch.call(this, tab, event);
-    if (tab === 'beasts') this.renderBeasts();
-  };
-
-  const origRenderAll = Editor.renderAll;
-  Editor.renderAll = function () {
-    origRenderAll.call(this);
-    if (typeof this.renderBeasts === 'function') this.renderBeasts();
-  };
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('renderClassDetail', function (html, args) {
+      const id = args && args[0];
+      if (id === 'druid' && typeof this.renderDruidWildShapeClassSection === 'function') {
+        return (html || '') + this.renderDruidWildShapeClassSection();
+      }
+      return html;
+    });
+    Editor.hooks.after('switchTab', function (result, args) {
+      if (args && args[0] === 'beasts') this.renderBeasts?.();
+    });
+    Editor.hooks.after('renderAll', function () {
+      this.renderBeasts?.();
+    });
+  } else {
+    const origDetail = Editor.renderClassDetail;
+    Editor.renderClassDetail = function (id) {
+      let html = origDetail.call(this, id);
+      if (id === 'druid') html += this.renderDruidWildShapeClassSection();
+      return html;
+    };
+    const origSwitch = Editor.switchTab;
+    Editor.switchTab = function (tab, event) {
+      origSwitch.call(this, tab, event);
+      if (tab === 'beasts') this.renderBeasts();
+    };
+    const origRenderAll = Editor.renderAll;
+    Editor.renderAll = function () {
+      origRenderAll.call(this);
+      if (typeof this.renderBeasts === 'function') this.renderBeasts();
+    };
+  }
 })();

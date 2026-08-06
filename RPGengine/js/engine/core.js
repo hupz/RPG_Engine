@@ -70,6 +70,7 @@ Object.assign(GameEngine, {
       inventory: [], flags: {}, scene: 'start', combat: null,
       enemies: [], resources: { mode: 'energy', current: 0, max: 0, spellSlots: null },
       supplies: 0, classData: {}, questStages: {},
+      questProgress: {},
       equipped: {},
       /** Активные эффекты проклятий с надетых предметов (флаги по ID эффекта) */
       curseEffects: {},
@@ -1416,6 +1417,7 @@ Object.assign(GameEngine, {
         CombatManager.normalizeProgressionAbilities(data, this);
       }
       if (typeof QuestSystem !== 'undefined') QuestSystem.normalizeAll(data);
+      if (typeof QuestRuntime !== 'undefined') QuestRuntime.bind(this);
       ThemeSystem.ensureInData(data);
       if (!data.races) data.races = {};
       if (!data.meta) data.meta = {};

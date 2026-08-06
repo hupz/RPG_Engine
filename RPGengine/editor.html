@@ -1796,7 +1796,7 @@ body.editor-app {
       <div class="tab" data-tab-id="worldmap" onclick="Editor.switchTab('worldmap', event)" data-i18n="editor.tabs.worldmap">🗺️ Карта путешествий</div>
       <div class="tab" data-tab-id="graph" onclick="Editor.switchTab('graph', event)" data-i18n="editor.tabs.graph">🗺️ Карта сюжета</div>
       <div class="tab" data-tab-id="progression" onclick="Editor.switchTab('progression', event)" data-i18n="editor.tabs.progression">📈 Прогрессия</div>
-      <div class="tab" data-tab-id="json" onclick="Editor.switchTab('json', event)" data-i18n="editor.tabs.json">📄 JSON</div>
+      <div class="tab" data-tab-id="json" data-advanced="export" onclick="Editor.switchTab('json', event)" data-i18n="editor.tabs.json">📦 Данные</div>
     </div>
     </div>
 
@@ -1846,7 +1846,8 @@ body.editor-app {
     <div class="tab-content" id="tab-races"><div id="races-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
     <div class="tab-content" id="tab-json">
       <div class="form-group">
-        <label>Предпросмотр JSON</label>
+        <label>Данные проекта</label>
+        <p class="hint">Только для резервной копии или передачи файла. Обычная работа — через формы слева, без правки этого текста.</p>
         <div class="json-preview" id="json-preview">Загрузите данные...</div>
       </div>
     </div>
@@ -1864,6 +1865,11 @@ body.editor-app {
 
 <script src="js/patch-progression.js"></script>
 <script src="js/conditions.js"></script>
+<script src="js/quests/task-base.js"></script>
+<script src="js/quests/task-types.js"></script>
+<script src="js/quests/quest-events.js"></script>
+<script src="js/quests/quest-runtime.js"></script>
+<script src="js/quests/quest-migrate.js"></script>
 <script src="js/quests.js"></script>
 <script src="js/enemy-scaling.js"></script>
 <script src="js/audio.js"></script>
@@ -2001,33 +2007,8 @@ const Editor = {
   },
 
   renderAudio() {
-    const c = document.getElementById('audio-editor');
-    if (!this.data) {
-      c.innerHTML = '<div class="empty-state"><h2>Нет данных</h2></div>';
-      return;
-    }
-    this.ensureAudioConfig();
-    const catalog = this.data.audio.catalog;
-    const ids = Object.keys(catalog);
-    const rows = ids.map(sid => {
-      const entry = catalog[sid] || {};
-      const label = entry.label || '';
-      const file = entry.file || entry.path || '';
-      return `<div class="ability-edit-card"><div class="grid-3"><div class="form-group"><label>ID</label><input value="${this.escapeHtml(sid)}" disabled></div><div class="form-group"><label>Название</label><input value="${this.escapeHtml(label)}" onchange="Editor.updateAudioCatalog('${this.escapeAttr(sid)}','label',this.value)"></div><div class="form-group"><label>Файл</label><input value="${this.escapeHtml(file)}" placeholder="audio/fire_hit.mp3" onchange="Editor.updateAudioCatalog('${this.escapeAttr(sid)}','file',this.value)"></div></div><button class="btn btn-danger" onclick="Editor.deleteAudioEntry('${this.escapeAttr(sid)}')">🗑 Удалить</button></div>`;
-    }).join('');
-    c.innerHTML = `<div class="project-info">
-      <h4>Каталог звуков</h4>
-      <p class="hint">Файлы .mp3 / .ogg в папке <code>audio/</code>. Если файла нет — играет синтезированный звук.</p>
-      <div id="audio-drop-zone" class="asset-drop-zone" role="button" tabindex="0" aria-label="Загрузить аудиофайл">
-        <input type="file" id="audio-drop-file-input" class="asset-drop-zone-input" accept="audio/*,.mp3,.ogg" tabindex="-1">
-        <span class="asset-drop-zone-icon">🔊</span>
-        <span class="asset-drop-zone-text">Перетащите аудиофайл (.mp3, .ogg) сюда или нажмите для выбора</span>
-      </div>
-      ${rows || '<div class="empty-state"><h2>Каталог пуст</h2></div>'}
-      <button class="btn btn-primary" style="margin-top:16px;" onclick="Editor.addAudioEntry()">+ Добавить звук</button>
-      <button class="btn btn-secondary" style="margin-top:8px;margin-left:8px;" type="button" onclick="if(typeof AudioEngine!=='undefined'){AudioEngine.unlock();AudioEngine.play('fire_cast');}">▶ Проверить огонь</button>
-    </div>`;
-    if (typeof this.bindAudioDropZone === 'function') this.bindAudioDropZone();
+    /* вынесено в js/editor/*-panel.js / core-tabs */
+
   },
 
   updateAudioCatalog(id, field, value) {
@@ -2066,82 +2047,18 @@ const Editor = {
   },
 
   switchTab(tab, event) {
-    this.currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    if (event?.target) {
-      event.target.classList.add('active');
-      event.target.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
-    }
-    document.getElementById('tab-' + tab).classList.add('active');
-    if (tab === 'json') this.updateJSONPreview();
-    if (tab === 'progression') this.renderProgression();
-    if (tab === 'balance') this.renderBalance();
-    if (tab === 'audio') this.renderAudio();
-    if (tab === 'theme') this.renderTheme();
-    if (tab === 'climate') this.renderClimateTab();
-    if (tab === 'worldmap') this.renderWorldMap();
-    if (tab === 'quests') this.renderQuests();
-    if (tab === 'snippets' && typeof this.renderSnippets === 'function') this.renderSnippets();
-    if (tab === 'reputation') this.renderReputation();
-    if (tab === 'achievements' && typeof this.renderAchievements === 'function') this.renderAchievements();
-    if (tab === 'analytics' && typeof this.renderAnalytics === 'function') this.renderAnalytics();
-    if (tab === 'graph') this.renderStoryGraphPanel();
-    if (tab === 'races') this.renderRaces();
-    if (tab === 'ingredients' && typeof this.renderIngredients === 'function') this.renderIngredients();
-    if (tab === 'recipes' && typeof this.renderRecipes === 'function') this.renderRecipes();
-    if (tab === 'actions' && typeof this.renderActionChainsTab === 'function') this.renderActionChainsTab();
-    if (tab === 'items') this.renderItems();
-    if (tab === 'npcs') this.renderNPCs();
-    if (tab === 'enemies') this.renderEnemies();
-    if (tab === 'classes') this.renderClasses();
-    if (tab === 'abilities') this.renderAbilities();
-    if (tab === 'beasts' && typeof this.renderBeasts === 'function') this.renderBeasts();
-    if (tab === 'scene_templates' && typeof this.renderSceneTemplates === 'function') this.renderSceneTemplates();
-    if (tab === 'world' && typeof this.renderWorldHierarchy === 'function') this.renderWorldHierarchy();
+    /* вынесено в js/editor/*-panel.js / core-tabs */
+
   },
 
   renderAll() {
-    this.renderSceneList();
-    this.renderStats();
-    this.renderQuests();
-    if (typeof this.renderSnippets === 'function') this.renderSnippets();
-    if (typeof this.renderReputation === 'function') this.renderReputation();
-    if (typeof this.renderAchievements === 'function') this.renderAchievements();
-    if (typeof this.renderAnalytics === 'function') this.renderAnalytics();
-    this.renderNPCs();
-    this.renderEnemies();
-    if (typeof this.renderBeasts === 'function') this.renderBeasts();
-    if (typeof this.renderWorldHierarchy === 'function') this.renderWorldHierarchy();
-    if (typeof this.renderBalance === 'function') this.renderBalance();
-    this.renderItems();
-    if (typeof this.renderIngredients === 'function') this.renderIngredients();
-    if (typeof this.renderRecipes === 'function') this.renderRecipes();
-    this.renderClasses();
-    this.renderRaces();
-    this.renderAbilities();
-    this.renderAudio();
-    this.renderTheme();
-    this.renderWorldMap();
-    this.renderProgression();
-    this.renderStoryGraphPanel();
-    this.renderSceneEditor();
-    this.updateJSONPreview();
-    if (typeof this.syncNavLayout === 'function') this.syncNavLayout(this.currentTab);
+    /* вынесено в js/editor/*-panel.js / core-tabs */
+
   },
 
   renderSceneList() {
-    const list = document.getElementById('scene-list');
-    if (!this.data?.scenes) { list.innerHTML = ''; return; }
-    list.innerHTML = Object.entries(this.data.scenes).map(([id, scene]) => {
-      const preview = scene.text ? scene.text.substring(0, 60) + '...' : 'Нет текста';
-      const active = this.currentScene === id ? 'active' : '';
-      return `<div class="scene-item ${active}" onclick="Editor.selectScene('${id}')">
-        <div class="scene-id">${id}</div>
-        <div class="scene-loc">${scene.location || '—'}</div>
-        <div class="scene-preview">${preview}</div>
-      </div>`;
-    }).join('');
+    /* вынесено в js/editor/*-panel.js / core-tabs */
+
   },
 
   selectScene(id) {
@@ -2150,558 +2067,20 @@ const Editor = {
     this.renderSceneEditor();
   },
 
-  renderSceneEditor() { /* ... оставляем как в оригинале, без изменений ... */ 
-    const container = document.getElementById('scene-editor');
-    if (!this.currentScene || !this.data.scenes[this.currentScene]) {
-      container.innerHTML = '<div class="empty-state"><h2>Сцена не найдена</h2></div>';
-      return;
-    }
-    const startScreen = document.getElementById('start-screen');
-    if (startScreen) startScreen.style.display = 'none';
-    const scene = this.data.scenes[this.currentScene];
-    const allScenes = Object.keys(this.data.scenes);
-    const allEnemies = this.data.enemies ? Object.keys(this.data.enemies) : [];
-    container.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2>Редактирование: ${this.currentScene}</h2><button class="btn btn-danger" onclick="Editor.deleteScene('${this.currentScene}')">🗑 Удалить</button></div>
-      <div class="form-group"><label>ID сцены</label><input type="text" id="scene-id" value="${this.currentScene}" onchange="Editor.updateSceneId(this.value)"></div>
-      <div class="form-group"><label>Локация</label><input type="text" id="scene-location" value="${scene.location||''}" oninput="Editor.scheduleLivePreviewUpdate()" onchange="Editor.updateSceneField('location',this.value)"></div>
-      <div class="form-group"><label>NPC сцены (для репутации при разговоре)</label>
-        <select onchange="Editor.setSceneNpcId(this.value)">
-          <option value="">— нет —</option>
-          ${Object.keys(this.data.npcs || {}).map(nid => `<option value="${this.escapeAttr(nid)}" ${scene.npcId === nid ? 'selected' : ''}>${this.escapeHtml(this.data.npcs[nid]?.name || nid)}</option>`).join('')}
-        </select>
-        <p class="hint">При первом входе в сцену применяются эффекты NPC с триггером «При разговоре».</p>
-      </div>
-      <div class="form-group"><label>Текст</label>
-        ${typeof this.renderSmartTextarea === 'function'
-          ? this.renderSmartTextarea(
-              'scene-text',
-              scene.text || '',
-              6,
-              "Editor.updateSceneField('text',this.value)",
-              this.getSmartTextVariables(),
-              { onInput: 'Editor.scheduleLivePreviewUpdate()' }
-            )
-          : `<textarea id="scene-text" oninput="Editor.scheduleLivePreviewUpdate()" onchange="Editor.updateSceneField('text',this.value)">${this.escapeTextarea(scene.text || '')}</textarea>`}
-        <p class="hint">Подстановки: <code>{charName}</code>, сниппеты <code>@id</code> — введите <code>{</code> или <code>@</code> для списка.</p>
-      </div>
-      <div class="dialogue-section"><h4>🗣️ Диалоги <button class="btn btn-secondary" style="font-size:12px;" onclick="Editor.addDialogue()">+ Добавить</button></h4>
-        <div id="dialogue-list">${typeof this.renderDialogueList === 'function' ? this.renderDialogueList(scene) : ''}</div>
-      </div>
-            ${this.renderChoicePreviewPanel()}
-      <div class="choices-section"><h4>🔀 Выборы <button class="btn btn-secondary" style="font-size:12px;" onclick="Editor.addChoice()">+ Добавить</button></h4>
-      <div id="choices-list">${(scene.choices||[]).map((c,i)=>this.renderChoiceEditor(c,i,allScenes)).join('')}</div></div>`;
-    setTimeout(() => { if (Editor.updateChoicePreview) Editor.updateChoicePreview(); }, 0);
-  },
-
-  // Вспомогательные методы для сцен (оставляем)
-  updateSceneId(newId) { if(newId===this.currentScene) return; if(this.data.scenes[newId]) { alert('ID существует'); return; } this.data.scenes[newId]=this.data.scenes[this.currentScene]; delete this.data.scenes[this.currentScene]; Object.values(this.data.scenes).forEach(s=>{if(s.choices)s.choices.forEach(c=>{if(c.to===this.currentScene)c.to=newId;});if(s.nextScene===this.currentScene)s.nextScene=newId;}); this.currentScene=newId; this.renderSceneList(); this.renderSceneEditor(); this.updateJSONPreview(); },
-  renderHubReturnFields(scene) {
-    const ids = Object.keys(this.data.scenes || {});
-    const hub = scene.hubScene || 'village_hub';
-    const opts = ids.map(sid => `<option value="${this.escapeAttr(sid)}" ${scene.hubScene === sid ? 'selected' : ''}>${this.escapeHtml(sid)}</option>`).join('');
-    return `<div class="project-info hub-return-panel" style="margin-top:12px;">
-      <h4>🏘️ Возврат в хаб</h4>
-      <p class="hint">Для локаций деревни: включите чекбокс — в конец выборов добавится «← Вернуться на площадь» (если такой кнопки ещё нет).</p>
-      <div class="form-group">
-        <label><input type="checkbox" ${scene.returnsToHub ? 'checked' : ''} onchange="Editor.setSceneReturnsToHub(this.checked)"> Локация возвращает в хаб</label>
-      </div>
-      <div class="form-group">
-        <label>ID хаб-сцены</label>
-        <select onchange="Editor.setSceneHubScene(this.value)">
-          <option value="">— выберите —</option>
-          ${opts}
-        </select>
-      </div>
-    </div>`;
-  },
-  setSceneReturnsToHub(checked) {
-    const s = this.data.scenes[this.currentScene];
-    if (!s) return;
-    if (checked) {
-      s.returnsToHub = true;
-      if (!s.hubScene) s.hubScene = this.data.scenes.village_hub ? 'village_hub' : 'village';
-    } else {
-      delete s.returnsToHub;
-    }
-    this.syncHubReturnChoice();
-    this.updateJSONPreview();
-    this.renderSceneEditor();
-  },
-  setSceneHubScene(value) {
-    const s = this.data.scenes[this.currentScene];
-    if (!s) return;
-    if (value) s.hubScene = value;
-    else delete s.hubScene;
-    this.syncHubReturnChoice();
-    this.updateJSONPreview();
-    this.renderSceneEditor();
-  },
-  syncHubReturnChoice() {
-    const s = this.data.scenes[this.currentScene];
-    if (!s?.returnsToHub || !s.hubScene) return;
-    if (!s.choices) s.choices = [];
-    const hub = s.hubScene;
-    const label = hub === 'village_hub' ? '← Вернуться на площадь' : '← Вернуться';
-    let idx = s.choices.findIndex(c => c && (c._hubReturn || c.to === hub));
-    if (idx >= 0) {
-      s.choices[idx].text = label;
-      s.choices[idx].to = hub;
-      s.choices[idx].icon = s.choices[idx].icon || '🏘️';
-      s.choices[idx]._hubReturn = true;
-      return;
-    }
-    s.choices.push({ text: label, to: hub, icon: '🏘️', _hubReturn: true });
-  },
-  setSceneNpcId(npcId) {
-    const s = this.data.scenes[this.currentScene];
-    if (!s) return;
-    if (!npcId) delete s.npcId;
-    else s.npcId = npcId;
-    this.updateJSONPreview();
-  },
-  updateSceneField(field,value){
-    this.data.scenes[this.currentScene][field]=value;
-    this.updateJSONPreview();
-    if (field === 'returnsToHub' || field === 'hubScene') this.syncHubReturnChoice();
-    if(field==='combat'||field==='nextScene') this.renderSceneList();
-  },
-  addDialogue(){ const s=this.data.scenes[this.currentScene]; if(!s.dialogue)s.dialogue=[]; s.dialogue.push({speaker:'',text:''}); this.renderSceneEditor(); },
-  updateDialogue(idx,field,val){ this.data.scenes[this.currentScene].dialogue[idx][field]=val; this.updateJSONPreview(); },
-  removeDialogue(idx){ this.data.scenes[this.currentScene].dialogue.splice(idx,1); this.renderSceneEditor(); },
-  addChoice(){ const s=this.data.scenes[this.currentScene]; if(!s.choices)s.choices=[]; s.choices.push({text:'',to:'',icon:'➡️'}); this.renderSceneEditor(); },
-  updateChoice(idx,field,val){
-    const c=this.data.scenes[this.currentScene].choices[idx];
-    if(field==='doneFlag'&&!val) delete c.doneFlag;
-    else c[field]=val;
-    this.updateJSONPreview();
-    if(field==='icon') this.renderSceneEditor();
-    if(Editor.updateChoicePreview) Editor.updateChoicePreview();
-    this.renderSceneList();
-  },
-  setChoiceIcon(idx,icon){ const s=this.data.scenes[this.currentScene]; if(!s.choices?.[idx]) return; s.choices[idx].icon = icon; this.renderSceneEditor(); this.updateJSONPreview(); },
-  removeChoice(idx){ this.data.scenes[this.currentScene].choices.splice(idx,1); this.renderSceneEditor(); },
-  addEnemyToCombat(eid){ if(!eid)return; const s=this.data.scenes[this.currentScene]; if(!s.combat)s.combat=[]; s.combat.push(eid); this.renderSceneEditor(); this.renderSceneList(); },
-  removeEnemyFromCombat(idx){ this.data.scenes[this.currentScene].combat.splice(idx,1); this.renderSceneEditor(); this.renderSceneList(); },
-  addFlag(){ const s=this.data.scenes[this.currentScene]; if(!s.flags)s.flags={}; s.flags['new_flag']=true; this.renderSceneEditor(); },
-  updateFlagKey(idx,newKey){ const s=this.data.scenes[this.currentScene]; const old=Object.keys(s.flags)[idx]; const val=s.flags[old]; delete s.flags[old]; s.flags[newKey]=val; this.renderSceneEditor(); },
-  updateFlagValue(idx,val){ const s=this.data.scenes[this.currentScene]; const key=Object.keys(s.flags)[idx]; s.flags[key]=val==='true'?true:(val==='false'?false:val); this.updateJSONPreview(); },
-  removeFlag(idx){ const s=this.data.scenes[this.currentScene]; const key=Object.keys(s.flags)[idx]; delete s.flags[key]; this.renderSceneEditor(); },
-  addItem(){ const s=this.data.scenes[this.currentScene]; if(!s.items)s.items=[]; s.items.push('new_item'); this.renderSceneEditor(); },
-  updateItem(idx,val){ this.data.scenes[this.currentScene].items[idx]=val; this.updateJSONPreview(); },
-  removeItem(idx){ this.data.scenes[this.currentScene].items.splice(idx,1); this.renderSceneEditor(); },
-  deleteScene(id){ if(Object.keys(this.data.scenes).length<=1){alert('Нельзя удалить последнюю сцену');return;} if(!confirm('Удалить?'))return; delete this.data.scenes[id]; if(this.currentScene===id) this.currentScene=Object.keys(this.data.scenes)[0]; this.renderSceneList(); this.renderSceneEditor(); },
-
-  updateProjectPanel(){ const p=document.getElementById('project-panel'); if(!this.data){p.innerHTML='Нет проекта';return;} p.innerHTML=`<b>Название:</b> ${this.data.meta?.title||'—'}<br><b>Версия:</b> ${this.data.meta?.version||'—'}<br><b>Автор:</b> ${this.data.meta?.author||'—'}<br><button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="Editor.editMeta()">✏️ Мета</button>`; },
-  editMeta(){ if(!this.data)return; const t=prompt('Название:',this.data.meta?.title||''); if(t===null)return; const a=prompt('Автор:',this.data.meta?.author||''); const d=prompt('Описание:',this.data.meta?.description||''); this.data.meta={...this.data.meta,title:t||this.data.meta?.title,author:a||this.data.meta?.author,description:d||this.data.meta?.description}; this.updateProjectPanel(); this.updateJSONPreview(); },
-  renderStats(){ const p=document.getElementById('stats-panel'); if(!this.data){p.innerHTML='Загрузите данные...';return;} p.innerHTML=`Сцен: ${Object.keys(this.data.scenes||{}).length}<br>Квестов: ${Object.keys(this.data.quests||{}).length}<br>NPC: ${Object.keys(this.data.npcs||{}).length}<br>Врагов: ${Object.keys(this.data.enemies||{}).length}<br>Предметов: ${Object.keys(this.data.items||{}).length}<br>Классов: ${Object.keys(this.data.classes||{}).length}`; },
-  updateJSONPreview(){ const el=document.getElementById('json-preview'); if(!this.data){el.textContent='Нет данных';return;} el.textContent=JSON.stringify(this.data,null,2); },
-  validateAll(){
-    if(!this.data){ alert('Нет данных'); return; }
-    const result = typeof this.validateProject === 'function'
-      ? this.validateProject()
-      : { ok: true, issues: [], errors: [], deadEnds: [], brokenLinks: [] };
-    const sceneIds = new Set(Object.keys(this.data.scenes || {}));
-    const flagCatalog = new Set(ConditionSystem.collectFlagNames(this.data));
-    const itemIds = new Set(Object.keys(this.data.items || {}));
-    const extra = [];
-
-    Object.entries(this.data.scenes || {}).forEach(([id, s]) => {
-      if (!s.text && !s.special) {
-        extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: `Сцена «${id}»: нет текста` });
-      }
-      (s.choices || []).forEach((c, i) => {
-        if (!c.to && !c.skillCheck && !c.action) {
-          extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: `Сцена «${id}», выбор ${i + 1}: нет цели` });
-        }
-        const condErrors = [];
-        ConditionSystem.validateChoiceConditions(c, { sceneId: id, flagCatalog, itemIds, sceneIds: [...sceneIds] }, condErrors, `Сцена «${id}», выбор ${i + 1}`);
-        condErrors.forEach(msg => extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: msg }));
-      });
-      if (s.combat?.length && !s.nextScene) {
-        extra.push({ type: 'warning', severity: 'warning', sceneId: id, message: `Сцена «${id}»: бой без nextScene` });
-      }
-    });
-    Object.entries(this.data.quests || {}).forEach(([id, q]) => {
-      if (!q.stages?.length) extra.push({ type: 'warning', severity: 'warning', message: `Квест «${id}»: нет этапов` });
-    });
-    Object.entries(this.data.enemies || {}).forEach(([id, e]) => {
-      if (!e.name) extra.push({ type: 'warning', severity: 'warning', message: `Враг «${id}»: нет имени` });
-      if (e.hp == null) extra.push({ type: 'warning', severity: 'warning', message: `Враг «${id}»: нет HP` });
-      if (!e.creatureType) extra.push({ type: 'warning', severity: 'warning', message: `Враг «${id}»: не указан тип существа` });
-    });
-
-    const merged = {
-      ok: result.ok && extra.filter(e => e.severity === 'error').length === 0,
-      issues: [...(result.issues || []), ...extra],
-      errors: result.errors || [],
-      deadEnds: result.deadEnds || [],
-      brokenLinks: result.brokenLinks || []
-    };
-    this._lastValidation = merged;
-    if (typeof this.showValidationModal === 'function') {
-      this.showValidationModal(merged);
-    } else if (merged.issues.length === 0) {
-      alert('✅ Ошибок не обнаружено');
-    } else {
-      alert(merged.issues.map(i => i.message).join('\n'));
-    }
-  },
-
-  renderEnemyLootSection(enemyId, enemy) {
-    const loot = Array.isArray(enemy.loot) ? enemy.loot : [];
-    const rows = loot.map((entry, idx) => `
-      <div class="loot-editor-row" style="display:grid;grid-template-columns:2fr 1fr 0.6fr 0.6fr auto;gap:8px;align-items:end;margin-bottom:8px;">
-        <div class="form-group"><label>Предмет</label>${this.renderLootItemSelect(enemyId, entry, idx)}</div>
-        <div class="form-group"><label>Шанс (0–1)</label>
-          <input type="number" min="0" max="1" step="0.05" value="${entry.chance ?? 1}" onchange="Editor.updateEnemyLoot('${enemyId}',${idx},'chance',parseFloat(this.value))">
-        </div>
-        <div class="form-group"><label>Min</label>
-          <input type="number" min="0" value="${entry.min ?? 1}" onchange="Editor.updateEnemyLoot('${enemyId}',${idx},'min',parseInt(this.value)||0)">
-        </div>
-        <div class="form-group"><label>Max</label>
-          <input type="number" min="0" value="${entry.max ?? 1}" onchange="Editor.updateEnemyLoot('${enemyId}',${idx},'max',parseInt(this.value)||0)">
-        </div>
-        <button type="button" class="btn btn-danger" onclick="Editor.removeEnemyLoot('${enemyId}',${idx})">✕</button>
-      </div>`).join('');
-    return `<div class="project-info" style="margin-top:12px;">
-      <h4>Добыча (loot)</h4>
-      ${rows || '<p class="hint">Таблица пуста — с врага ничего не падает.</p>'}
-      <button type="button" class="btn btn-secondary" onclick="Editor.addEnemyLootEntry('${enemyId}')">+ Добавить предмет</button>
-    </div>`;
-  },
-  addEnemyLootEntry(enemyId) {
-    const e = this.data.enemies[enemyId];
-    if (!e) return;
-    if (!Array.isArray(e.loot)) e.loot = [];
-    e.loot.push({ item: '', chance: 1, min: 1, max: 1 });
-    this.renderEnemies();
-    this.updateJSONPreview();
-  },
-  updateEnemyLoot(enemyId, idx, field, val) {
-    const e = this.data.enemies[enemyId];
-    if (!e?.loot?.[idx]) return;
-    e.loot[idx][field] = val;
-    this.updateJSONPreview();
-  },
-  removeEnemyLoot(enemyId, idx) {
-    const e = this.data.enemies[enemyId];
-    if (!e?.loot) return;
-    e.loot.splice(idx, 1);
-    this.renderEnemies();
-    this.updateJSONPreview();
-  },
-  updateEnemy(id, f, val) {
-    if (!this.data.enemies?.[id]) return;
-    this.data.enemies[id][f] = val;
-    this.updateJSONPreview();
-  },
-
-  renderItemBonusesEditor(id, it) {
-    const b = (it.bonuses && typeof it.bonuses === 'object') ? it.bonuses : {};
-    const json = JSON.stringify(b, null, 2);
-    return `<div class="form-group"><label>Бонусы (JSON)</label>
-      <textarea rows="4" style="font-family:monospace;font-size:12px;" onchange="Editor.updateItemBonuses('${id}', this.value)">${json}</textarea>
-      <small>maxHpBonus, acBonus, atkBonus, dmgBonus, str, dex, con, int, wis, cha</small></div>`;
-  },
-  renderItemAccessoryFields(id, it) {
-    const slot = it.slot || 'ring';
-    return `<div class="grid-3">
-      <div class="form-group"><label>Слот аксессуара</label>
-        <select onchange="Editor.updateItemData('${id}','slot',this.value)">
-          <option value="ring" ${slot==='ring'?'selected':''}>Кольцо</option>
-          <option value="necklace" ${slot==='necklace'?'selected':''}>Ожерелье</option>
-          <option value="earrings" ${slot==='earrings'?'selected':''}>Серьги</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Иконка</label>
-        <input value="${it.icon||''}" onchange="Editor.updateItemData('${id}','icon',this.value)">
-      </div>
-    </div>${this.renderItemBonusesEditor(id, it)}`;
-  },
-  updateItemBonuses(id, raw) {
-    try {
-      const parsed = raw.trim() ? JSON.parse(raw) : {};
-      this.data.items[id].bonuses = parsed;
-      this.updateJSONPreview();
-    } catch (e) {
-      alert('Неверный JSON бонусов: ' + e.message);
-    }
-  },
-  renderItemConsumableFields(id, it) {
-    if (!it.use) it.use = { effect: 'heal', formula: '1d4', target: 'self' };
-    const u = it.use;
-    const target = u.target || 'self';
-    const effectOpts = ['heal', 'damage', 'focus_potion', 'rest_material', 'message']
-      .map(e => `<option value="${e}" ${u.effect === e ? 'selected' : ''}>${e}</option>`).join('');
-    const targetOpts = [
-      ['self', 'Себя'],
-      ['ally', 'Союзник (пока = себя)'],
-      ['single_enemy', 'Один враг (только в бою)'],
-      ['all_enemies', 'Все враги (только в бою)']
-    ].map(([v, lab]) => `<option value="${v}" ${target === v ? 'selected' : ''}>${lab}</option>`).join('');
-    return `<div class="project-info" style="margin-top:8px;">
-      <h4>Использование (use)</h4>
-      <div class="grid-3">
-        <div class="form-group"><label>Эффект</label>
-          <select onchange="Editor.updateItemUse('${id}','effect',this.value)">${effectOpts}</select>
-        </div>
-        <div class="form-group"><label>Цель использования</label>
-          <select onchange="Editor.updateItemUse('${id}','target',this.value)">${targetOpts}</select>
-        </div>
-        <div class="form-group"><label>Формула / amount</label>
-          <input value="${u.formula || u.amount || ''}" placeholder="2d4+2" onchange="Editor.updateItemUseFormula('${id}',this.value)">
-        </div>
-      </div>
-      <div class="form-group"><label>Подпись кнопки</label>
-        <input value="${u.label || ''}" placeholder="Выпить" onchange="Editor.updateItemUse('${id}','label',this.value)">
-      </div>
-    </div>`;
-  },
-  updateItemUse(id, field, val) {
-    const it = this.data.items[id];
-    if (!it) return;
-    if (!it.use) it.use = {};
-    it.use[field] = val;
-    this.updateJSONPreview();
-    if (field === 'effect' || field === 'target') this.renderItems();
-  },
-  renderItemEnhancementEditor(id, it) {
-    const max = it.enhancementMax != null ? it.enhancementMax : 3;
-    const costs = Array.isArray(it.enhancementCost) ? it.enhancementCost.join(', ') : '100, 300, 900';
-    const enh = it.enhancement != null ? it.enhancement : 0;
-    return `<div class="project-info" style="margin-top:8px;padding:10px;">
-      <h4 style="margin:0 0 8px;">⚒️ Заточка</h4>
-      <div class="grid-3">
-        <div class="form-group"><label>Старт. уровень (шаблон)</label>
-          <input type="number" min="0" value="${enh}" onchange="Editor.updateItemData('${id}','enhancement',parseInt(this.value)||0)">
-        </div>
-        <div class="form-group"><label>Макс. (+N)</label>
-          <input type="number" min="0" value="${max}" onchange="Editor.updateItemData('${id}','enhancementMax',parseInt(this.value)||0)">
-        </div>
-        <div class="form-group"><label>Цены +1,+2,+3 (через запятую)</label>
-          <input value="${costs}" placeholder="100, 300, 900" onchange="Editor.updateItemEnhancementCosts('${id}',this.value)">
-        </div>
-      </div>
-    </div>`;
-  },
-  updateItemEnhancementCosts(id, raw) {
-    const arr = String(raw).split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-    this.data.items[id].enhancementCost = arr.length ? arr : [100, 300, 900];
-    this.updateJSONPreview();
-  },
-  updateItemUseFormula(id, raw) {
-    const it = this.data.items[id];
-    if (!it?.use) return;
-    if (/^\d+$/.test(String(raw).trim())) it.use.amount = parseInt(raw, 10);
-    else {
-      it.use.formula = raw;
-      delete it.use.amount;
-    }
-    this.updateJSONPreview();
-  },
-  renderItemDetail(id) {
-    const it = this.data?.items?.[id];
-    if (!it) return '<div class="empty-state"><h2>Предмет не найден</h2></div>';
-    const typeOpts = ['weapon', 'armor', 'shield', 'accessory', 'consumable', 'readable', 'misc', 'equipment', 'key', 'quest']
-      .map(t => `<option value="${t}" ${it.type === t ? 'selected' : ''}>${t}</option>`).join('');
-    let extra = '';
-    if (it.type === 'weapon') {
-      extra = `<div class="grid-3">
-        <div class="form-group"><label>Урон</label><input value="${it.dmgRoll || it.damage || '1d6'}" onchange="Editor.updateItemData('${id}','dmgRoll',this.value)"></div>
-        <div class="form-group"><label>Характеристика</label><input value="${it.stat || 'str'}" onchange="Editor.updateItemData('${id}','stat',this.value)"></div>
-      </div>${this.renderItemEnhancementEditor(id, it)}${this.renderItemBonusesEditor(id, it)}`;
-    } else if (it.type === 'armor' || it.type === 'shield') {
-      extra = `<div class="grid-3">
-        <div class="form-group"><label>КД / acBonus</label><input value="${it.ac ?? it.acBonus ?? ''}" onchange="Editor.updateItemData('${id}','ac',parseInt(this.value)||0)"></div>
-      </div>${this.renderItemEnhancementEditor(id, it)}${this.renderItemBonusesEditor(id, it)}`;
-    } else if (it.type === 'accessory') {
-      extra = this.renderItemAccessoryFields(id, it);
-    } else if (it.type === 'consumable') {
-      extra = this.renderItemConsumableFields(id, it);
-    }
-    return `<div class="quest-detail-card">
-      <div class="quest-detail-head">
-        <h3>${this.escapeHtml(it.name || 'Без названия')}</h3>
-        <button class="btn btn-danger" onclick="Editor.deleteItem('${id}')">🗑 Удалить</button>
-      </div>
-      <div class="form-group"><label>ID</label><input value="${this.escapeHtml(id)}" disabled></div>
-      <div class="form-group"><label>Название</label><input value="${this.escapeHtml(it.name || '')}" onchange="Editor.updateItemData('${id}','name',this.value)"></div>
-      <div class="form-group"><label>Тип</label><select onchange="Editor.updateItemData('${id}','type',this.value)">${typeOpts}</select></div>
-      <div class="form-group"><label>Описание</label><textarea onchange="Editor.updateItemData('${id}','desc',this.value)">${this.escapeHtml(it.desc || '')}</textarea></div>
-      ${extra}
-    </div>`;
-  },
-  selectItemToEdit(id) {
-    this.editingItemId = id;
-    this.renderItems();
-  },
-  renderItems() {
-    const c = document.getElementById('items-editor');
-    if (!this.data?.items) {
+  renderSceneEditor() {
+    // Реализация: editor-scene-builder.js через Editor.hooks.replace
+    const c = document.getElementById('scene-editor');
+    if (!c) return;
+    if (!this.data) {
       c.innerHTML = '<div class="empty-state"><h2>Нет данных</h2></div>';
       return;
     }
-    const ids = Object.keys(this.data.items).sort();
-    if (!ids.length) {
-      c.innerHTML = `<div class="quest-manager">
-        <div class="quest-manager-sidebar"><h4>🎒 Предметы</h4><p class="hint">Создайте первый предмет.</p>
-          <button class="btn btn-primary" style="width:100%;" onclick="Editor.createItem()">+ Новый предмет</button></div>
-        <div class="quest-manager-detail"><div class="empty-state"><h2>Пусто</h2></div></div></div>`;
+    if (!this.currentScene || !this.data.scenes?.[this.currentScene]) {
+      c.innerHTML = '<div class="empty-state"><h2>Выберите сцену</h2></div>';
       return;
     }
-    if (!this.editingItemId || !this.data.items[this.editingItemId]) {
-      this.editingItemId = ids[0];
-    }
-    if (typeof this.renderEditorListLayout === 'function') {
-      c.innerHTML = this.renderEditorListLayout({
-        title: 'Предметы',
-        icon: '🎒',
-        ids,
-        getLabel: (id) => this.data.items[id]?.name || id,
-        activeId: this.editingItemId,
-        onSelectMethod: 'Editor.selectItemToEdit',
-        onAddMethod: 'Editor.createItem',
-        addLabel: 'Новый предмет',
-        detailHtml: this.renderItemDetail(this.editingItemId),
-        emptyHint: 'Создайте первый предмет.'
-      });
-      return;
-    }
-    c.innerHTML = this.renderItemDetail(this.editingItemId);
-  },
-  updateItemData(id, f, val) {
-    this.data.items[id][f] = val;
-    this.updateJSONPreview();
-    if (f === 'type') this.renderItems();
-  },
-  createItem(){ const id=prompt('ID предмета:'); if(!id||this.data.items[id])return; this.data.items[id]={name:'Новый предмет',type:'misc',desc:''}; this.editingItemId=id; this.renderItems(); this.updateJSONPreview(); },
-  deleteItem(id){ if(!confirm('Удалить предмет?'))return; delete this.data.items[id]; const ids=Object.keys(this.data.items); this.editingItemId=ids[0]||null; this.renderItems(); this.updateJSONPreview(); },
-
-  renderProgression(){ const c=document.getElementById('progression-editor'); if(!this.data){c.innerHTML='<div class="empty-state"><h2>Нет данных</h2></div>';return;} if(!this.data.progression)this.data.progression={enabled:true,maxLevel:5,expTable:[0,100,220,380,600],defaultHpGain:'1d8',defaults:{enemyExp:20,skillCheckExp:12},skillExp:{},abilities:{}}; const pg=this.data.progression; let html=`<div class="project-info"><h4>Система уровней</h4><div class="form-group"><label><input type="checkbox" ${pg.enabled!==false?'checked':''} onchange="Editor.updateProgression('enabled',this.checked)"> Включена</label></div><div class="form-group"><label>Макс. уровень</label><input type="number" value="${pg.maxLevel||5}" onchange="Editor.updateProgression('maxLevel',parseInt(this.value))"></div><div class="form-group"><label>Пороги опыта (через запятую)</label><input value="${(pg.expTable||[]).join(', ')}" onchange="Editor.updateExpTable(this.value)"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group"><label>XP за врага по умолч.</label><input type="number" value="${pg.defaults?.enemyExp??20}" onchange="Editor.updateProgressionDefault('enemyExp',parseInt(this.value))"></div><div class="form-group"><label>XP за проверку по умолч.</label><input type="number" value="${pg.defaults?.skillCheckExp??12}" onchange="Editor.updateProgressionDefault('skillCheckExp',parseInt(this.value))"></div></div></div>`; html += `<div class="project-info"><h4>Прогрессия классов</h4>`; html += Object.entries(this.data.classes || {}).map(([classId, cls])=>this.renderClassProgressionSection(classId, cls, pg.maxLevel||5)).join(''); html += `</div>`; c.innerHTML=html; },
-  updateProgression(f,val){ if(!this.data.progression)this.data.progression={}; this.data.progression[f]=val; this.updateJSONPreview(); },
-  updateProgressionDefault(f,val){ if(!this.data.progression)this.data.progression={}; if(!this.data.progression.defaults)this.data.progression.defaults={}; this.data.progression.defaults[f]=val; this.updateJSONPreview(); },
-  updateExpTable(str){ const arr=str.split(',').map(s=>parseInt(s.trim(),10)).filter(n=>!isNaN(n)); this.data.progression.expTable=arr; this.updateJSONPreview(); },
-  renderGlobalAbilityEditor(id, ab, idx){ if(!ab)ab={}; if(!ab.effect)ab.effect={}; if (typeof ab.effect === 'string') { const old=ab.effect; if (old.startsWith('heal:')){ab.effect={type:'heal',value:old.slice(5)};} else if (old.startsWith('damage:')){ab.effect={type:'damage',value:old.slice(7)};} else if (old==='extra_attack'){ab.effect={type:'extra_attack'};} else if (old.startsWith('ac_bonus:')){ab.effect={type:'buff',buffType:'ac',value:old.slice(9)};} else if (old==='magic_missile'){ab.effect={type:'magic_missile'};} else if (old.startsWith('aoe_fire:')){ab.effect={type:'damage',value:old.slice(9),damageType:'fire',targeting:{scope:'all_enemies'}};} else if (old.startsWith('smite:')){ab.effect={type:'smite',value:old.slice(6)};} else {ab.effect={type:'custom',desc:old};}} if(!ab.effect.targeting)ab.effect.targeting={scope:'single'}; if(!ab.usage)ab.usage='both'; if(ab.type!=='passive')ab.type='active'; const effectTypes=Editor.ABILITY_EFFECT_TYPES||{damage:'Урон',heal:'Лечение',buff:'Бафф',extra_attack:'Доп. атака',magic_missile:'Маг. снаряд',smite:'Кара',detect_magic:'Обнаружение магии',divine_sense:'Божественное чувство',custom:'Особый'}; const usageOptions={combat:'Только бой',exploration:'Только исследование',both:'Любое'}; const damageTypes={physical:'Физический',fire:'Огонь',cold:'Холод',lightning:'Молния',radiant:'Излучение',necrotic:'Некротический'}; return `<div class="ability-edit-card"><div style="display:flex;justify-content:space-between;align-items:center;"><h4>${this.escapeHtml(ab.name||id)} (${this.escapeHtml(id)})</h4><button class="btn btn-danger" onclick="Editor.deleteGlobalAbility('${this.escapeAttr(id)}')">🗑 Удалить</button></div><div class="grid-2"><div class="form-group"><label>Название</label><input value="${this.escapeHtml(ab.name||'')}" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','name',this.value)"></div><div class="form-group" style="grid-column:1/-1"><label>Иконка</label><div class="icon-picker-row">${this.renderIconEmojiSelect('if(this.value){Editor.updateGlobalAbility(' + JSON.stringify(id) + ',"icon",this.value);}')}<input type="text" value="${this.escapeHtml(ab.icon||'✨')}" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','icon',this.value)">${this.renderIconPreview(ab.icon)}</div><div class="icon-suggestions">${this.renderIconSuggestionButtons(icon => 'Editor.updateGlobalAbility(' + JSON.stringify(id) + ',"icon",' + JSON.stringify(icon) + ')')}</div><div class="icon-hint">Emoji или путь к PNG/SVG.</div></div></div><div class="form-group"><label>Описание</label><textarea rows="2" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','desc',this.value)">${this.escapeHtml(ab.desc||'')}</textarea></div><div class="grid-3"><div class="form-group"><label>Стоимость</label><input type="number" value="${ab.cost??1}" onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','cost',parseInt(this.value)||0)"></div><div class="form-group"><label>Тип</label><select onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','type',this.value)"><option value="active" ${ab.type==='active'?'selected':''}>Активное</option><option value="passive" ${ab.type==='passive'?'selected':''}>Пассивное</option></select></div><div class="form-group"><label>Применение</label><select onchange="Editor.updateGlobalAbility('${this.escapeAttr(id)}','usage',this.value)">${Object.entries(usageOptions).map(([v,l])=>`<option value="${v}" ${ab.usage===v?'selected':''}>${l}</option>`).join('')}</select></div></div><div class="form-group"><label>Тип эффекта</label><select onchange="Editor.updateGlobalAbilityEffectType('${this.escapeAttr(id)}',this.value)">${Object.entries(effectTypes).map(([v,l])=>`<option value="${v}" ${ab.effect?.type===v?'selected':''}>${l}</option>`).join('')}</select></div>${ab.effect?.type==='damage'||ab.effect?.type==='heal'?`<div class="grid-2"><div class="form-group"><label>Формула</label><input value="${this.escapeHtml(ab.effect.value||'1d6')}" onchange="Editor.updateGlobalAbilityEffectValue('${this.escapeAttr(id)}',this.value)"></div>${ab.effect?.type==='damage'?`<div class="form-group"><label>Тип урона</label><select onchange="Editor.updateGlobalAbilityEffectDamageType('${this.escapeAttr(id)}',this.value)">${Object.entries(damageTypes).map(([v,l])=>`<option value="${v}" ${ab.effect.damageType===v?'selected':''}>${l}</option>`).join('')}</select></div>`:''}</div>`:''}${ab.effect?.type==='buff'?`<div class="grid-2"><div class="form-group"><label>Что усиливает</label><select onchange="Editor.updateGlobalAbilityBuffType('${this.escapeAttr(id)}',this.value)"><option value="ac" ${ab.effect.buffType==='ac'?'selected':''}>КД</option><option value="atk" ${ab.effect.buffType==='atk'?'selected':''}>Атака</option><option value="dmg" ${ab.effect.buffType==='dmg'?'selected':''}>Урон</option></select></div><div class="form-group"><label>Величина</label><input type="number" value="${ab.effect.value||2}" onchange="Editor.updateGlobalAbilityEffectValue('${this.escapeAttr(id)}',this.value)"></div></div>`:''}${Editor.renderEffectTypeExtraFields?Editor.renderEffectTypeExtraFields(ab.effect,{value:`Editor.updateGlobalAbilityEffectValue('${this.escapeAttr(id)}',this.value)`,message:`Editor.updateGlobalAbilityEffectMessage('${this.escapeAttr(id)}',this.value)`}):''}<div class="form-group"><label>Область действия</label><select onchange="Editor.updateGlobalAbilityTargeting('${this.escapeAttr(id)}','scope',this.value)">${['single','area','all_enemies','ally','self'].map(v=>`<option value="${v}" ${(ab.effect?.targeting?.scope||'single')===v?'selected':''}>${this.escapeHtml(v)}</option>`).join('')}</select></div><div class="grid-2"><div class="form-group"><label>Дальность</label><input value="${this.escapeHtml(ab.effect?.targeting?.range||'self')}" onchange="Editor.updateGlobalAbilityTargeting('${this.escapeAttr(id)}','range',this.value)"></div><div class="form-group"><label>Радиус</label><input value="${this.escapeHtml(ab.effect?.targeting?.radius||'10ft')}" onchange="Editor.updateGlobalAbilityTargeting('${this.escapeAttr(id)}','radius',this.value)"></div></div><div class="form-group"><label><input type="checkbox" ${ab.effect?.savingThrow?'checked':''} onchange="Editor.toggleGlobalAbilitySavingThrow('${this.escapeAttr(id)}',this.checked)"> Спасбросок</label></div><div id="globalSaveBlock-${this.escapeAttr(id)}" style="${ab.effect?.savingThrow?'':'display:none;'}"><div class="grid-2"><div class="form-group"><label>Навык</label><select onchange="Editor.updateGlobalAbilitySave('${this.escapeAttr(id)}','skill',this.value)">${['strength','dexterity','constitution','intelligence','wisdom','charisma'].map(v=>`<option value="${v}" ${ab.effect?.savingThrow?.skill===v?'selected':''}>${this.escapeHtml(v)}</option>`).join('')}</select></div><div class="form-group"><label>DC</label><input type="number" value="${ab.effect?.savingThrow?.dc||13}" onchange="Editor.updateGlobalAbilitySave('${this.escapeAttr(id)}','dc',parseInt(this.value)||0)"></div></div><div class="form-group"><label><input type="checkbox" ${ab.effect?.savingThrow?.halfOnSave?'checked':''} onchange="Editor.updateGlobalAbilitySave('${this.escapeAttr(id)}','halfOnSave',this.checked)"> Половина на успех</label></div></div>${this.renderAbilitySoundFields('global', id, ab)}${ab.type==='passive'?`<div class="form-group"><label>Пассивный эффект (JSON)</label><textarea rows="2" onchange="Editor.updateGlobalAbilityPassive('${this.escapeAttr(id)}',this.value)">${this.escapeHtml(JSON.stringify(ab.passive||{}))}</textarea></div>`:''}</div>`; },
-  updateGlobalAbility(id, field, value){ if(!this.data.progression) this.data.progression={abilities:{}}; if(!this.data.progression.abilities) this.data.progression.abilities={}; const target=this.data.progression.abilities[id]; if(!target)return; target[field]=value; this.updateJSONPreview(); this.renderAbilities(); },
-  updateGlobalAbilityEffectType(id, type){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; if(Editor.applyAbilityEffectDefaults) Editor.applyAbilityEffectDefaults(target.effect,type); else { target.effect.type=type; if(type==='damage'){target.effect.value='2d6'; target.effect.damageType='fire';} if(type==='heal'){target.effect.value='1d8+2';} if(type==='buff'){target.effect.value=2; target.effect.buffType='ac';} delete target.effect.savingThrow; } this.updateJSONPreview(); this.renderAbilities(); },
-  updateGlobalAbilityEffectValue(id, value){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; target.effect.value=value; this.updateJSONPreview(); },
-  updateGlobalAbilityEffectDamageType(id, dt){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; target.effect.damageType=dt; this.updateJSONPreview(); },
-  updateGlobalAbilityBuffType(id, bt){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; target.effect.buffType=bt; this.updateJSONPreview(); },
-  updateGlobalAbilityTargeting(id, field, value){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; if(!target.effect.targeting) target.effect.targeting={scope:'single'}; target.effect.targeting[field]=value; this.updateJSONPreview(); },
-  toggleGlobalAbilitySavingThrow(id, checked){ const target=this.data.progression?.abilities?.[id]; if(!target) return; if(!target.effect) target.effect={}; if(checked) target.effect.savingThrow={skill:'dexterity',dc:13,halfOnSave:false}; else delete target.effect.savingThrow; this.renderAbilities(); },
-  updateGlobalAbilitySave(id, field, value){ const target=this.data.progression?.abilities?.[id]; if(!target?.effect) return; if(!target.effect.savingThrow) target.effect.savingThrow={}; target.effect.savingThrow[field]=value; this.updateJSONPreview(); },
-  updateGlobalAbilityPassive(id, jsonStr){ const target=this.data.progression?.abilities?.[id]; if(!target) return; try{ target.passive=JSON.parse(jsonStr); }catch(e){ alert('Ошибка JSON: '+e.message); } this.updateJSONPreview(); },
-  addGlobalAbilityToClass(classId, abilityId){ const cls=this.data?.classes?.[classId]; const pool=this.data?.progression?.abilities; if(!cls||!pool||!pool[abilityId]) return; if(!cls.abilities) cls.abilities=[]; if(cls.abilities.some(a=>a.id===abilityId)){ alert('Умение уже добавлено в класс'); return; } cls.abilities.push(JSON.parse(JSON.stringify(pool[abilityId]))); this.renderClasses(); this.updateJSONPreview(); },
-  getClassAbilityOptions(classId) {
-    const cls = this.data?.classes?.[classId];
-    return (cls?.abilities || []).map(ab => ({ id: ab.id, label: `${ab.name || ab.id} (${ab.id})`, icon: ab.icon || '' }));
-  },
-  renderClassProgressionSection(classId, cls, maxLevel) {
-    if (!cls.progression) cls.progression = { levels: {} };
-    if (!cls.progression.levels) cls.progression.levels = {};
-    const options = this.getClassAbilityOptions(classId);
-    const levels = [];
-    for (let level = 2; level <= maxLevel; level += 1) {
-      const cfg = cls.progression.levels[level] || { choices: [] };
-      const chosen = (cfg.choices || []).map(choiceId => {
-        const ab = (cls.abilities || []).find(a => a.id === choiceId) || { name: choiceId, icon: '' };
-        return `<span class="progression-choice-chip">${this.renderIcon(ab.icon)} ${this.escapeHtml(ab.name || choiceId)}<button type="button" onclick="Editor.removeProgressionChoice('${this.escapeAttr(classId)}',${level},${JSON.stringify(choiceId)})">×</button></span>`;
-      }).join('') || '<div class="hint">Нет выбранных умений</div>';
-      const selectHtml = options.length
-        ? `<select class="icon-picker-select" onchange="Editor.addProgressionChoice('${this.escapeAttr(classId)}',${level},this.value); this.value='';"><option value="">+ Добавить умение</option>${options.map(o => `<option value="${this.escapeAttr(o.id)}">${this.escapeHtml(o.icon)} ${this.escapeHtml(o.label)}</option>`).join('')}</select>`
-        : '<div class="hint">Создайте умения для этого класса на вкладке «Классы»</div>';
-      levels.push(`<div class="progression-level-row"><div class="row-title">Уровень ${level}</div><div class="progression-choice-list">${chosen}</div>${selectHtml}</div>`);
-    }
-    return `<div class="class-section"><h4>Прогрессия класса — ${this.escapeHtml(cls.name || classId)}</h4>${levels.join('')}</div>`;
-  },
-  addProgressionChoice(classId, level, abilityId) {
-    if (!abilityId) return;
-    const cls = this.data?.classes?.[classId];
-    if (!cls) return;
-    if (!cls.progression) cls.progression = { levels: {} };
-    if (!cls.progression.levels) cls.progression.levels = {};
-    if (!cls.progression.levels[level]) cls.progression.levels[level] = { choices: [] };
-    const choices = cls.progression.levels[level].choices;
-    if (!choices.includes(abilityId)) choices.push(abilityId);
-    this.renderProgression();
-    this.updateJSONPreview();
-  },
-  removeProgressionChoice(classId, level, abilityId) {
-    const cfg = this.data?.classes?.[classId]?.progression?.levels?.[level];
-    if (!cfg?.choices) return;
-    cfg.choices = cfg.choices.filter(id => id !== abilityId);
-    this.renderProgression();
-    this.updateJSONPreview();
-  },
-
-  // ========== РАСШИРЕННЫЙ РЕДАКТОР КЛАССОВ ==========
-  selectClassToEdit(id){ this.editingClassId=id; this.renderClasses(); },
-  renderClasses(){ const container=document.getElementById('classes-list'); if(!this.data?.classes){ container.innerHTML='<div class="empty-state"><h2>Нет данных</h2></div>'; return; } const ids=Object.keys(this.data.classes); if(!ids.length){ container.innerHTML='<div class="empty-state"><h2>Нет классов</h2><button class="btn btn-primary" onclick="Editor.createClass()">+ Создать класс</button></div>'; return; } if(!this.editingClassId||!this.data.classes[this.editingClassId]) this.editingClassId=ids[0]; const sidebar=ids.map(id=>{ const cls=this.data.classes[id]; const active=id===this.editingClassId?'active':''; return `<button type="button" class="class-pick ${active}" onclick="Editor.selectClassToEdit('${id}')">${this.renderIcon(cls.icon) || '⚔️'} ${this.escapeHtml(cls.name||id)}</button>`; }).join(''); container.innerHTML=`<div class="class-editor-wrap"><div class="class-editor-sidebar">${sidebar}<button type="button" class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="Editor.createClass()">+ Новый класс</button></div><div class="class-editor-detail">${this.renderClassDetail(this.editingClassId)}</div></div>`; },
-  renderClassDetail(id){ const cls=this.data.classes[id]; if(!cls) return ''; if(!cls.stats) cls.stats={str:10,dex:10,con:10,int:10,wis:10,cha:10}; if(!cls.resource) cls.resource={name:'Ресурс',max:2,desc:''}; if(!cls.abilities) cls.abilities=[]; if(!cls.startingItems) cls.startingItems=[]; const weapons=this.getWeaponItems(); const weaponOptions=weapons.map(([wid,w])=>`<option value="${wid}" ${cls.mainWeapon===wid?'selected':''}>${this.escapeHtml(w.name)} (${wid})</option>`).join(''); const itemCheckboxes=this.getAllItemIds().map(itemId=>{ const item=this.data.items[itemId]; const checked=cls.startingItems.includes(itemId)?'checked':''; return `<label style="display:block;font-size:13px;margin:4px 0;"><input type="checkbox" ${checked} onchange="Editor.toggleStartingItem('${id}','${itemId}',this.checked)"> ${this.escapeHtml(item.name)} (${itemId})</label>`; }).join('')||'<p class="hint">Создайте предметы во вкладке «Предметы»</p>'; const globalAbilityOptions=Object.entries(this.data.progression?.abilities||{}).map(([aid,ab])=>`<option value="${this.escapeAttr(aid)}">${this.escapeHtml(ab.icon||'✨')} ${this.escapeHtml(ab.name||aid)}</option>`).join(''); const abilitiesHtml=cls.abilities.map((ab,idx)=>this.renderAbilityEditor(id,ab,idx,cls)).join(''); return `<div class="class-section"><div style="display:flex;justify-content:space-between;"><h4>Основное — ${this.escapeHtml(cls.name)}</h4><button class="btn btn-danger" onclick="Editor.deleteClass('${id}')">🗑 Удалить</button></div><div class="grid-2"><div class="form-group"><label>ID класса</label><input value="${id}" disabled></div><div class="form-group" style="grid-column:1/-1"><label>Иконка</label><div class="icon-picker-row">${this.renderIconEmojiSelect('if(this.value){Editor.updateClass(' + JSON.stringify(id) + ',"icon",this.value);}')}<input type="text" value="${this.escapeHtml(cls.icon||'⚔️')}" onchange="Editor.updateClass('${id}','icon',this.value)">${this.renderIconPreview(cls.icon)}</div><div class="icon-suggestions">${this.renderIconSuggestionButtons(icon => 'Editor.updateClass(' + JSON.stringify(id) + ',"icon",' + JSON.stringify(icon) + ')')}</div><div class="icon-hint">Выберите emoji из списка или вставьте свой / путь к PNG/SVG (например <code>icons/class.png</code>).</div></div></div><div class="form-group"><label>Название</label><input value="${this.escapeHtml(cls.name||'')}" onchange="Editor.updateClass('${id}','name',this.value)"></div></div><div class="class-section"><h4>❤️ Здоровье и защита</h4><div class="grid-3"><div class="form-group"><label>ОЗ</label><input type="number" value="${cls.hp??20}" onchange="Editor.updateClass('${id}','hp',parseInt(this.value)||1)"></div><div class="form-group"><label>КД</label><input type="number" value="${cls.ac??10}" onchange="Editor.updateClass('${id}','ac',parseInt(this.value)||10)"></div><div class="form-group"><label>Инициатива</label><input type="number" value="${cls.initBonus??0}" onchange="Editor.updateClass('${id}','initBonus',parseInt(this.value)||0)"></div></div></div><div class="class-section"><h4>⚡ Ресурс класса</h4><div class="grid-3"><div class="form-group"><label>Название</label><input value="${this.escapeHtml(cls.resource.name)}" onchange="Editor.updateClassResource('${id}','name',this.value)"></div><div class="form-group"><label>Максимум</label><input type="number" value="${cls.resource.max??2}" onchange="Editor.updateClassResource('${id}','max',parseInt(this.value)||0)"></div><div class="form-group"><label>Описание</label><input value="${this.escapeHtml(cls.resource.desc||'')}" onchange="Editor.updateClassResource('${id}','desc',this.value)"></div></div></div><div class="class-section"><h4>📊 Характеристики</h4><div class="grid-6">${['str','dex','con','int','wis','cha'].map(stat=>`<div class="form-group"><label>${stat.toUpperCase()}</label><input type="number" min="1" max="30" value="${cls.stats[stat]??10}" onchange="Editor.updateClassStat('${id}','${stat}',parseInt(this.value)||10)"></div>`).join('')}</div><div class="form-group"><label>Владение навыками</label><input value="${this.escapeHtml(cls.skills||'')}" onchange="Editor.updateClass('${id}','skills',this.value)"></div></div><div class="class-section"><h4>⚔️ Оружие и бой</h4><div class="form-group"><label>Стартовое оружие</label><select onchange="Editor.setClassWeapon('${id}',this.value)"><option value="">— не выбрано —</option>${weaponOptions}</select></div><div class="grid-3"><div class="form-group"><label>Бонус атаки</label><input type="number" value="${cls.atkBonus??0}" onchange="Editor.updateClass('${id}','atkBonus',parseInt(this.value)||0)"></div><div class="form-group"><label>Кубики урона</label><input value="${this.escapeHtml(cls.dmgRoll||'1d6')}" onchange="Editor.updateClass('${id}','dmgRoll',this.value)"></div><div class="form-group"><label>Бонус урона</label><input type="number" value="${cls.dmgBonus??0}" onchange="Editor.updateClass('${id}','dmgBonus',parseInt(this.value)||0)"></div></div><div class="form-group"><label>Звук атаки</label>${this.renderSoundSelect(cls.attackSound||'', `Editor.updateClass('${id}','attackSound',this.value)`)}<div class="hint">Пусто = звук оружия из предмета</div></div></div><div class="class-section"><h4>🎒 Стартовый инвентарь</h4><div style="max-height:160px;overflow-y:auto;border:1px solid var(--border);padding:8px;border-radius:6px;">${itemCheckboxes}</div></div><div class="class-section"><h4>✨ Способности</h4><div class="form-group"><label>Добавить умение из общего пула</label><div style="display:flex;gap:8px;align-items:center;"><select style="flex:1;" onchange="if(this.value){Editor.addGlobalAbilityToClass('${id}',this.value); this.value='';}"><option value="">— Выбрать умение —</option>${globalAbilityOptions}</select><button class="btn btn-secondary" type="button" onclick="Editor.addAbility('${id}')">+ Локальное</button></div></div>${abilitiesHtml}<button class="btn btn-primary" style="margin-top:10px;" onclick="Editor.addAbility('${id}')">+ Добавить способность</button></div>`; },
-  renderAbilityEditor(classId, ab, index, cls) {
-    // Нормализуем старые строковые эффекты
-    if (!ab.effect) ab.effect = {};
-    if (typeof ab.effect === 'string') {
-      const old = ab.effect;
-      ab.effect = {};
-      if (old.startsWith('heal:')) { ab.effect.type='heal'; ab.effect.value=old.slice(5); }
-      else if (old.startsWith('damage:')) { ab.effect.type='damage'; ab.effect.value=old.slice(7); }
-      else if (old==='extra_attack') ab.effect.type='extra_attack';
-      else if (old.startsWith('ac_bonus:')) { ab.effect.type='buff'; ab.effect.value=old.slice(9); ab.effect.buffType='ac'; }
-      else if (old==='magic_missile') ab.effect.type='magic_missile';
-      else if (old.startsWith('aoe_fire:')) { ab.effect.type='damage'; ab.effect.value=old.slice(9); ab.effect.damageType='fire'; ab.effect.targeting={scope:'all_enemies'}; }
-      else if (old.startsWith('smite:')) { ab.effect.type='smite'; ab.effect.value=old.slice(6); }
-      else ab.effect = { type:'custom', desc:old };
-    }
-    if (!ab.targeting && ab.effect?.targeting) ab.targeting = ab.effect.targeting;
-    if (!ab.targeting) ab.targeting = { scope: 'single' };
-    if (!ab.usage) ab.usage = ab.combatOnly ? 'combat' : (ab.combatOnly===false?'exploration':'both');
-    if (ab.type !== 'passive') ab.type = 'active';
-
-    const effectTypes = Editor.ABILITY_EFFECT_TYPES || { damage:'Урон', heal:'Лечение', buff:'Бафф', extra_attack:'Доп. атака', magic_missile:'Маг. снаряд', smite:'Кара', detect_magic:'Обнаружение магии', divine_sense:'Божественное чувство', custom:'Особый' };
-    const scopeOptions = { single:'Одна цель', area:'Область', all_enemies:'Все враги', ally:'Союзник', self:'На себя' };
-    const usageOptions = { combat:'Только бой', exploration:'Только исследование', both:'Любое' };
-    const damageTypes = { physical:'Физический', fire:'Огонь', cold:'Холод', lightning:'Молния', radiant:'Излучение', necrotic:'Некротический' };
-
-    return `<div class="ability-edit-card">
-      <div class="grid-2"><div class="form-group"><label>ID</label><input value="${this.escapeHtml(ab.id||'')}" placeholder="my_ability" onchange="Editor.updateAbility('${classId}',${index},'id',this.value)"></div><div class="form-group" style="grid-column:1/-1"><label>Иконка</label><div class="icon-picker-row">${this.renderIconEmojiSelect('if(this.value){Editor.setAbilityIcon(' + JSON.stringify(classId) + ',' + index + ',this.value);}')}<input type="text" value="${this.escapeHtml(ab.icon||'✨')}" onchange="Editor.updateAbility('${classId}',${index},'icon',this.value)">${this.renderIconPreview(ab.icon)}</div><div class="icon-suggestions">${this.renderIconSuggestionButtons(icon => 'Editor.setAbilityIcon(' + JSON.stringify(classId) + ',' + index + ',' + JSON.stringify(icon) + ')')}</div><div class="icon-hint">Список emoji, быстрые кнопки ниже или свой текст / путь к PNG/SVG (<code>icons/skill.png</code>).</div></div></div>
-      <div class="form-group"><label>Название</label><input value="${this.escapeHtml(ab.name||'')}" onchange="Editor.updateAbility('${classId}',${index},'name',this.value)"></div>
-      <div class="form-group"><label>Описание</label><textarea rows="2" onchange="Editor.updateAbility('${classId}',${index},'desc',this.value)">${this.escapeTextarea(ab.desc||'')}</textarea></div>
-      ${this.renderAbilitySoundFields('class', classId, ab, index)}
-      <div class="grid-3"><div class="form-group"><label>Тип</label><select onchange="Editor.updateAbility('${classId}',${index},'type',this.value)"><option value="active" ${ab.type==='active'?'selected':''}>Активное</option><option value="passive" ${ab.type==='passive'?'selected':''}>Пассивное</option></select></div><div class="form-group"><label>Применение</label><select onchange="Editor.updateAbility('${classId}',${index},'usage',this.value)">${Object.entries(usageOptions).map(([v,l])=>`<option value="${v}" ${ab.usage===v?'selected':''}>${l}</option>`).join('')}</select></div><div class="form-group"><label>Стоимость (${this.escapeHtml(cls.resource?.name||'ресурс')})</label><input type="number" value="${ab.cost??1}" onchange="Editor.updateAbility('${classId}',${index},'cost',parseInt(this.value)||0)"></div></div>
-      ${ab.type==='active'?`<div class="form-group"><label>Тип эффекта</label><select onchange="Editor.updateAbilityEffectType('${classId}',${index},this.value)">${Object.entries(effectTypes).map(([v,l])=>`<option value="${v}" ${ab.effect?.type===v?'selected':''}>${l}</option>`).join('')}</select></div>
-      ${(ab.effect?.type==='damage'||ab.effect?.type==='heal')?`<div class="grid-2"><div class="form-group"><label>Формула (XdY+Z)</label><input value="${this.escapeHtml(ab.effect.value||'1d6')}" placeholder="2d6+3" onchange="Editor.updateAbilityEffectValue('${classId}',${index},this.value)"></div>${ab.effect?.type==='damage'?`<div class="form-group"><label>Тип урона</label><select onchange="Editor.updateAbilityEffectDamageType('${classId}',${index},this.value)">${Object.entries(damageTypes).map(([v,l])=>`<option value="${v}" ${ab.effect.damageType===v?'selected':''}>${l}</option>`).join('')}</select></div>`:''}</div>`:''}
-      ${ab.effect?.type==='buff'?`<div class="grid-2"><div class="form-group"><label>Что усиливает</label><select onchange="Editor.updateAbilityBuffType('${classId}',${index},this.value)"><option value="ac" ${ab.effect.buffType==='ac'?'selected':''}>Класс доспеха</option><option value="atk" ${ab.effect.buffType==='atk'?'selected':''}>Атака</option><option value="dmg" ${ab.effect.buffType==='dmg'?'selected':''}>Урон</option></select></div><div class="form-group"><label>Величина</label><input type="number" value="${ab.effect.value||2}" onchange="Editor.updateAbilityEffectValue('${classId}',${index},this.value)"></div></div>`:''}
-      ${Editor.renderEffectTypeExtraFields ? Editor.renderEffectTypeExtraFields(ab.effect, { value: `Editor.updateAbilityEffectValue('${classId}',${index},this.value)`, message: `Editor.updateAbilityEffectMessage('${classId}',${index},this.value)` }) : ''}
-      <div class="form-group"><label>Область действия</label><select onchange="Editor.updateAbilityTargeting('${classId}',${index},'scope',this.value)">${Object.entries(scopeOptions).map(([v,l])=>`<option value="${v}" ${(ab.effect?.targeting?.scope||ab.targeting?.scope)==v?'selected':''}>${l}</option>`).join('')}</select></div>
-      ${(ab.effect?.targeting?.scope==='area'||ab.targeting?.scope==='area')?`<div class="form-group"><label>Радиус (например: 15ft)</label><input value="${this.escapeHtml((ab.effect?.targeting?.radius||ab.targeting?.radius)||'10ft')}" onchange="Editor.updateAbilityTargeting('${classId}',${index},'radius',this.value)"></div>`:''}
-      <div class="form-group"><label>Дальность</label><input value="${this.escapeHtml((ab.effect?.targeting?.range||ab.targeting?.range)||'self')}" placeholder="30ft / self" onchange="Editor.updateAbilityTargeting('${classId}',${index},'range',this.value)"></div>
-      <div class="form-group"><label><input type="checkbox" id="hasSave-${classId}-${index}" ${ab.effect?.savingThrow?'checked':''} onchange="Editor.toggleSavingThrow('${classId}',${index},this.checked)"> Цель совершает спасбросок</label></div>
-      <div id="saveBlock-${classId}-${index}" style="${ab.effect?.savingThrow?'':'display:none;'}"><div class="grid-2"><div class="form-group"><label>Навык спасброска</label><select onchange="Editor.updateAbilitySave('${classId}',${index},'skill',this.value)"><option value="strength" ${ab.effect?.savingThrow?.skill==='strength'?'selected':''}>Сила</option><option value="dexterity" ${ab.effect?.savingThrow?.skill==='dexterity'?'selected':''}>Ловкость</option><option value="constitution" ${ab.effect?.savingThrow?.skill==='constitution'?'selected':''}>Телосложение</option><option value="intelligence" ${ab.effect?.savingThrow?.skill==='intelligence'?'selected':''}>Интеллект</option><option value="wisdom" ${ab.effect?.savingThrow?.skill==='wisdom'?'selected':''}>Мудрость</option><option value="charisma" ${ab.effect?.savingThrow?.skill==='charisma'?'selected':''}>Харизма</option></select></div><div class="form-group"><label>Сложность (DC)</label><input type="number" value="${ab.effect?.savingThrow?.dc||13}" onchange="Editor.updateAbilitySave('${classId}',${index},'dc',parseInt(this.value))"></div></div><div class="form-group"><label><input type="checkbox" ${ab.effect?.savingThrow?.halfOnSave?'checked':''} onchange="Editor.updateAbilitySave('${classId}',${index},'halfOnSave',this.checked)"> Половина урона при успехе</label></div></div>
-      `:''}
-      ${ab.type==='passive'?`<div class="form-group"><label>Пассивный эффект (JSON)</label><textarea rows="2" onchange="Editor.updateAbilityPassive('${classId}',${index},this.value)">${JSON.stringify(ab.passive||{})}</textarea><div class="hint">Пример: {"maxHpBonus":6, "acBonus":2, "atkBonus":1, "resourceMaxBonus":1}</div></div>`:''}
-      <div style="margin-top:10px;"><label><input type="checkbox" ${ab.oncePerCombat?'checked':''} onchange="Editor.updateAbility('${classId}',${index},'oncePerCombat',this.checked)"> Один раз за бой</label></div>
-      <button class="btn btn-danger" style="margin-top:10px;" onclick="Editor.deleteAbility('${classId}',${index})">🗑 Удалить способность</button>
-    </div>`;
-  },
-  updateAbility(classId, idx, field, value){ this.data.classes[classId].abilities[idx][field]=value; this.updateJSONPreview(); if(field==='name'||field==='icon') this.renderClasses(); },
-  updateAbilityEffectType(classId, idx, type){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect)ab.effect={}; if(Editor.applyAbilityEffectDefaults) Editor.applyAbilityEffectDefaults(ab.effect,type); else { ab.effect.type=type; if(type==='damage'){ab.effect.value='2d6';ab.effect.damageType='fire';} if(type==='heal')ab.effect.value='1d8+2'; if(type==='buff'){ab.effect.buffType='ac';ab.effect.value=2;} delete ab.effect.savingThrow; } this.renderClasses(); this.updateJSONPreview(); },
-  updateAbilityEffectValue(classId, idx, value){ const ab=this.data.classes[classId].abilities[idx]; ab.effect.value=value; this.updateJSONPreview(); },
-  updateAbilityEffectDamageType(classId, idx, dt){ const ab=this.data.classes[classId].abilities[idx]; ab.effect.damageType=dt; this.updateJSONPreview(); },
-  updateAbilityBuffType(classId, idx, bt){ const ab=this.data.classes[classId].abilities[idx]; ab.effect.buffType=bt; this.updateJSONPreview(); },
-  updateAbilityTargeting(classId, idx, field, value){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect)ab.effect={}; if(!ab.effect.targeting)ab.effect.targeting={scope:'single'}; ab.effect.targeting[field]=value; this.updateJSONPreview(); },
-  toggleSavingThrow(classId, idx, checked){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect)ab.effect={}; if(checked) ab.effect.savingThrow={skill:'dexterity',dc:13,halfOnSave:false}; else delete ab.effect.savingThrow; this.renderClasses(); },
-  updateAbilitySave(classId, idx, field, value){ const ab=this.data.classes[classId].abilities[idx]; if(!ab.effect.savingThrow)ab.effect.savingThrow={}; ab.effect.savingThrow[field]=value; this.updateJSONPreview(); },
-  updateAbilityPassive(classId, idx, jsonStr){ const ab=this.data.classes[classId].abilities[idx]; try{ ab.passive=JSON.parse(jsonStr); }catch(e){ alert('Ошибка JSON: '+e.message); } this.updateJSONPreview(); },
-  addAbility(classId){ if(!this.data.classes[classId].abilities)this.data.classes[classId].abilities=[]; const n=this.data.classes[classId].abilities.length+1; this.data.classes[classId].abilities.push({id:classId+'_skill_'+n,name:'Новая способность',cost:1,icon:'✨',desc:'Описание...',combatOnly:true,oncePerCombat:false,effect:'damage:1d6'}); this.renderClasses(); this.updateJSONPreview(); },
-  deleteAbility(classId, idx){ if(!confirm('Удалить способность?'))return; this.data.classes[classId].abilities.splice(idx,1); this.renderClasses(); this.updateJSONPreview(); },
-  updateClass(id, field, value){ if(!this.data.classes[id])return; this.data.classes[id][field]=value; this.updateJSONPreview(); if(field==='name'||field==='icon')this.renderClasses(); },
-  updateClassStat(id, stat, value){ if(!this.data.classes[id].stats)this.data.classes[id].stats={}; this.data.classes[id].stats[stat]=value; this.updateJSONPreview(); },
-  updateClassResource(id, field, value){ if(!this.data.classes[id].resource)this.data.classes[id].resource={name:'Ресурс',max:2,desc:''}; this.data.classes[id].resource[field]=value; this.updateJSONPreview(); if(field==='name')this.renderClasses(); },
-  setClassWeapon(classId, weaponId){ const cls=this.data.classes[classId]; if(!cls)return; cls.mainWeapon=weaponId||null; if(weaponId&&this.data.items[weaponId]){ const w=this.data.items[weaponId]; if(w.dmgRoll)cls.dmgRoll=w.dmgRoll; if(w.dmgBonus!=null)cls.dmgBonus=(cls.dmgBonus??0)+w.dmgBonus; if(!cls.startingItems.includes(weaponId))cls.startingItems.push(weaponId); } this.renderClasses(); this.updateJSONPreview(); },
-  toggleStartingItem(classId, itemId, checked){ const cls=this.data.classes[classId]; if(!cls.startingItems)cls.startingItems=[]; if(checked&&!cls.startingItems.includes(itemId))cls.startingItems.push(itemId); if(!checked)cls.startingItems=cls.startingItems.filter(i=>i!==itemId); this.updateJSONPreview(); },
-  createClass(){ const id=prompt('ID класса (латиница):'); if(!id||!/^[a-z][a-z0-9_]*$/i.test(id)){alert('ID должен быть латиницей');return;} if(this.data.classes[id]){alert('Класс уже существует');return;} this.data.classes[id]={name:'Новый класс',icon:'⚔️',hp:20,ac:14,atkBonus:3,dmgRoll:'1d8',dmgBonus:2,initBonus:2,stats:{str:12,dex:14,con:12,int:10,wis:10,cha:10},skills:'Атлетика, Восприятие',resource:{name:'Энергия',max:2,desc:'Ресурс для способностей.'},mainWeapon:null,startingItems:[],abilities:[{id:id+'_strike',name:'Удар',cost:1,icon:'⚔️',desc:'Базовая атака.',combatOnly:true,oncePerCombat:false,effect:'damage:1d8'}]}; this.editingClassId=id; this.renderClasses(); this.updateJSONPreview(); },
-  deleteClass(id){ if(!confirm('Удалить класс?'))return; delete this.data.classes[id]; this.editingClassId=Object.keys(this.data.classes)[0]||null; this.renderClasses(); this.updateJSONPreview(); }
+    c.innerHTML = '<div class="empty-state"><p class="hint">Редактор сцен подключается модулем scene-builder…</p></div>';
+  }
 };
 
 function editorAppBootstrap() {
@@ -2718,6 +2097,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof I18n !== 'undefined' && I18n._ready) editorAppBootstrap();
 });
 </script>
+<script src="js/data-schema.js"></script>
+<script src="js/editor/editor-hooks.js"></script>
+<script src="js/editor/editor-utils.js"></script>
+<script src="js/editor/editor-data-load.js"></script>
+<script src="js/editor/editor-scene-crud.js"></script>
+<script src="js/editor/editor-core-tabs.js"></script>
+<script src="js/editor/editor-items-panel.js"></script>
+<script src="js/editor/editor-audio-panel.js"></script>
+<script src="js/editor/editor-progression-panel.js"></script>
+<script src="js/editor/editor-enemies-panel.js"></script>
 <script src="js/special-scenes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script src="js/validate-scenes.js"></script>
@@ -2740,6 +2129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="js/editor-nl-condition-bridge.js"></script>
 <script src="js/editor/editor-states.js"></script>
 <script src="js/editor/editor-graph.js"></script>
+<script src="js/editor/editor-story-graph-edit.js"></script>
 <script src="js/editor/editor-theme.js"></script>
 <script src="js/conditions.js"></script>
 <script src="js/actions/action-registry.js"></script>
@@ -2783,6 +2173,11 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="js/editor/pf2e-starter-template.js"></script>
 <script src="js/editor-new-project.js"></script>
 <script src="js/editor/editor-abilities.js"></script>
+<script src="js/editor/editor-classes.js"></script>
+<script src="js/editor/editor-class-presets.js"></script>
+<script src="js/editor/editor-campaign-wizard.js"></script>
+<script src="js/editor/editor-project-search.js"></script>
+<script src="js/editor/editor-click-recovery.js"></script>
 <script src="js/editor/editor-time-settings.js"></script>
 <script src="js/editor/editor-climate.js"></script>
 <script src="js/editor-export.js"></script>
@@ -2794,5 +2189,8 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="js/editor/editor-cover.js"></script>
 <script src="js/editor-help-data.js"></script>
 <script src="js/editor-help.js"></script>
+<script src="js/editor/editor-scene-builder.js"></script>
+<script src="js/editor/editor-no-code-ux.js"></script>
+<script src="js/editor/editor-wizards.js"></script>
 </body>
 </html>

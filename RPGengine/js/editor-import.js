@@ -439,3 +439,31 @@
     Editor.ensureSceneListActions();
   }
 })();
+
+(function patchEditorDataMigrate() {
+  if (typeof Editor === 'undefined') return;
+  const wrapAssign = () => {
+    const migrate = (d) => {
+      if (typeof ProjectDataSchema !== 'undefined' && d) return ProjectDataSchema.migrateProjectData(d);
+      return d;
+    };
+    // after any full data replace common methods
+    ['loadProjectJson', 'confirmNewProject', 'finishCampaignWizard'].forEach((name) => {
+      const orig = Editor[name];
+      if (typeof orig !== 'function') return;
+      Editor[name] = function (...args) {
+        const r = orig.apply(this, args);
+        if (this.data) this.data = migrate(this.data);
+        return r;
+      };
+    });
+    // file load often sets this.data = JSON.parse
+    const origUpdate = Editor.updateJSONPreview?.bind(Editor);
+    if (origUpdate && Editor.hooks?.after) {
+      Editor.hooks.after('updateJSONPreview', function () {
+        /* no-op keep version */
+      });
+    }
+  };
+  wrapAssign();
+})();

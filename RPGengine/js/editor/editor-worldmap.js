@@ -69,16 +69,23 @@
       if (!this.currentScene) return;
       const scene = this.data.scenes[this.currentScene];
       const suggested = (this.currentScene || 'place').replace(/[^a-z0-9_]+/gi, '_').replace(/^_|_$/g, '').toLowerCase() || 'new_place';
-      const id = prompt('ID точки на карте (латиница):', suggested);
-      if (!id || !/^[a-z][a-z0-9_]*$/i.test(id)) {
-        alert('ID: только латиница, цифры и _');
-        return;
+      let id;
+      const labelPrompt = prompt('Название точки на карте:', scene.location || suggested);
+      if (labelPrompt === null) return;
+      if (typeof this.slugifyId === 'function') {
+        id = this.slugifyId(labelPrompt || suggested, '', this.data.worldMap || {});
+      } else {
+        id = prompt('ID точки на карте (латиница):', suggested);
+        if (!id || !/^[a-z][a-z0-9_]*$/i.test(id)) {
+          alert('ID: только латиница, цифры и _');
+          return;
+        }
       }
       this.ensureWorldMap();
       if (this.data.worldMap[id] && !confirm('Точка "' + id + '" уже есть. Привязать сцену к ней?')) return;
       if (!this.data.worldMap[id]) {
         this.data.worldMap[id] = {
-          label: scene.location || id,
+          label: (typeof labelPrompt !== 'undefined' && labelPrompt) ? labelPrompt : (scene.location || id),
           icon: '📍',
           hubScene: this.currentScene
         };
@@ -136,7 +143,7 @@
           <h3>${this.escapeHtml(loc.icon || '📍')} ${this.escapeHtml(loc.label || id)}</h3>
           <button type="button" class="btn btn-danger" onclick="Editor.deleteMapLocation('${mid}')">🗑 Удалить</button>
         </${D}>
-        <${D} class="form-group"><label>ID</label><input value="${this.escapeHtml(id)}" disabled></${D}>
+        <${D} class="form-group"><label>ID <span class="hint">(служебный)</span></label><input value="${this.escapeHtml(id)}" disabled></${D}>
         <${D} class="grid-2">
           <${D} class="form-group"><label>Название в меню</label>
             <input value="${this.escapeAttr(loc.label || '')}" onchange="Editor.updateMapLocation('${mid}','label',this.value)"></${D}>
@@ -149,7 +156,7 @@
             ${this.renderHubSceneOptions(loc.hubScene || '')}
           </select></${D}>
         <${D} class="form-group"><label>Условие показа на карте</label>
-          <${D} class="hint" style="margin-bottom:8px;">Режим: стадия квеста (рекомендуется) или legacy-флаг</${D}>
+          <${D} class="hint" style="margin-bottom:8px;">Когда показывать точку: по заданию или по событию в игре</${D}>
           <${D} style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;">
             ${this.renderQuestIdSelect(questStage?.questId || '', `Editor.updateMapQuestShowIf('${mid}','questId',this.value)`)}
             ${this.renderQuestStageSelect(questStage?.questId || '', questStage?.stage != null ? String(questStage.stage) : '', `Editor.updateMapQuestShowIf('${mid}','stage',this.value)`)}
@@ -157,7 +164,7 @@
           </${D}>
           <${D} class="grid-2">
             <select onchange="Editor.updateMapShowIf('${mid}','flag',this.value)">
-              <option value="">— Legacy-флаг —</option>
+              <option value="">— Событие в игре —</option>
               ${flagNames.map(f => `<option value="${this.escapeAttr(f)}" ${f === flag ? 'selected' : ''}>${this.escapeHtml(f)}</option>`).join('')}
             </select>
             <input placeholder="значение флага" value="${this.escapeAttr(equalsStr)}" onchange="Editor.updateMapShowIf('${mid}','equals',this.value)">

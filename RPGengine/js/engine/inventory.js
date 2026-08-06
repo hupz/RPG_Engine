@@ -295,6 +295,24 @@
       return list;
     },
 
+    /**
+     * Изменение золота с событиями квестов.
+     * @param {number} delta
+     * @param {{ reason?: string, silent?: boolean }} [opts]
+     */
+    changeGold(delta, opts = {}) {
+      const n = Number(delta) || 0;
+      if (!n) return this.state.gold;
+      this.state.gold = Math.max(0, (this.state.gold || 0) + n);
+      if (typeof QuestEvents !== 'undefined') {
+        if (n > 0) QuestEvents.emit('GoldGained', { amount: n, reason: opts.reason, gold: this.state.gold });
+        else QuestEvents.emit('GoldSpent', { amount: -n, reason: opts.reason, gold: this.state.gold });
+        QuestEvents.emit('GoldSync', { gold: this.state.gold });
+      }
+      if (!opts.silent && typeof this.updateStats === 'function') this.updateStats();
+      return this.state.gold;
+    },
+
     addItem(itemId) {
       if (!itemId) return;
       itemId = this.resolveItemId(itemId);
@@ -312,13 +330,22 @@
         this.initItemChargesOnAdd(itemId);
         this.updateUI();
         this.checkAchievements({ type: 'item_gained', itemId });
+        if (typeof QuestEvents !== 'undefined') {
+          QuestEvents.emit('ItemCollected', { itemId, item: itemId, qty: 1 });
+          QuestEvents.emit('InventorySync', { inventory: this.state.inventory.slice() });
+        }
       }
     },
 
     removeItem(itemId) {
       itemId = this.resolveItemId(itemId);
+      const had = (this.state.inventory || []).includes(itemId);
       this.state.inventory = this.state.inventory.filter(i => i !== itemId);
       this.unequipItem(itemId, { silent: true });
+      if (had && typeof QuestEvents !== 'undefined') {
+        // May be delivery or consumption — tasks filter by itemId
+        QuestEvents.emit('ItemRemoved', { itemId, item: itemId });
+      }
       this.updateUI();
     },
 
@@ -546,6 +573,9 @@
         this.playCombatSound(this.resolveSoundId('curse_equip', 'physical_hit'), 0.45);
       } else {
         this.recalculateCurseEffectsFromEquipment();
+      }
+      if (typeof QuestEvents !== 'undefined') {
+        QuestEvents.emit('ItemEquipped', { itemId, item: itemId, slot });
       }
       this.updateUI();
       this.saveGame();
@@ -1209,30 +1239,51 @@
       const container = document.getElementById('active-quests-list');
       if (!container) return;
 
-      const activeEntries = Object.entries(this.state.questStages || {});
+      if (typeof QuestRuntime !== 'undefined') {
+        QuestRuntime.bind(this);
+        const entries = QuestRuntime.getJournalEntries();
+        if (!entries.length) {
+          container.innerHTML = '<div class="hint">У вас пока нет активных заданий.</div>';
+          return;
+        }
+        let html = '';
+        entries.forEach((e) => {
+          const tasksHtml = (e.tasks || []).map((t) => {
+            const mark = t.done ? '✓' : '○';
+            let prog = '';
+            if (!t.done && t.target > 1) prog = ` (${t.progress}/${t.target})`;
+            const cls = t.done ? 'quest-task done' : 'quest-task';
+            return `<div class="${cls}">${mark} ${this.escapeHtml(t.text)}${prog}</div>`;
+          }).join('');
+          html += `
+        <div class="active-quest-item">
+          <div class="quest-title">${this.escapeHtml(e.title)}</div>
+          <div class="quest-hint">${this.escapeHtml(e.hint || e.stageTitle || '')}</div>
+          ${tasksHtml}
+        </div>`;
+        });
+        container.innerHTML = html || '<div class="hint">Все задания выполнены!</div>';
+        return;
+      }
 
+      const activeEntries = Object.entries(this.state.questStages || {});
       if (activeEntries.length === 0) {
         container.innerHTML = '<div class="hint">У вас пока нет активных заданий.</div>';
         return;
       }
-
       let html = '';
       activeEntries.forEach(([id, stageKey]) => {
         const quest = this.data?.quests?.[id];
         if (!quest) return;
         if (stageKey === '__failed__' || stageKey === '__finished__') return;
-
         const stage = QuestSystem.getStageData(quest, stageKey);
-
         if (!stage || stage.finish || stage.failed) return;
-
         html += `
         <div class="active-quest-item">
           <div class="quest-title">${this.escapeHtml(quest.title || id)}</div>
           <div class="quest-hint">${this.escapeHtml(stage.hint || 'Задание выполняется...')}</div>
         </div>`;
       });
-
       container.innerHTML = html || '<div class="hint">Все задания выполнены!</div>';
     },
 

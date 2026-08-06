@@ -12142,3 +12142,12 @@ var GAME_DATA_INLINE = {
   }
 };
 if (typeof window !== "undefined") window.GAME_DATA_INLINE = GAME_DATA_INLINE;
+
+if (typeof ProjectDataSchema !== 'undefined') {
+  if (typeof GAME_DATA !== 'undefined') {
+    try { ProjectDataSchema.migrateProjectData(GAME_DATA); } catch (e) { console.warn('GAME_DATA migrate', e); }
+  }
+  if (typeof window !== 'undefined' && window.GAME_DATA) {
+    try { ProjectDataSchema.migrateProjectData(window.GAME_DATA); } catch (e) { /* */ }
+  }
+}

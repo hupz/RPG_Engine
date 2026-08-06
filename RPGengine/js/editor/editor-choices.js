@@ -683,11 +683,14 @@
       return `<span class="cb-field-label">Флаг выключен</span>${sel('notFlag', rule.notFlag, flagOpts)}`;
     }
     if (type === 'hasItem') {
-      const itemOpts = '<option value="">—</option>' + items.map(id => opt(id, id, rule.hasItem)).join('');
+      const itemOpts = '<option value="">—</option>' + items.map(id => {
+        const name = this.data?.items?.[id]?.name || id;
+        return opt(id, name, rule.hasItem);
+      }).join('');
       return `<span class="cb-field-label">Предмет</span>${sel('hasItem', rule.hasItem, itemOpts)}`;
     }
     if (type === 'notHasItem') {
-      const itemOpts = '<option value="">—</option>' + items.map(id => opt(id, id, rule.notHasItem)).join('');
+      const itemOpts = '<option value="">—</option>' + items.map(id => { const name = this.data?.items?.[id]?.name || id; return opt(id, name, rule.notHasItem); }).join('');
       return `<span class="cb-field-label">Нет предмета</span>${sel('notHasItem', rule.notHasItem, itemOpts)}`;
     }
     if (type === 'goldMin') {
@@ -1641,11 +1644,19 @@
   }
 });
 
-  const _origRenderSceneEditor = Editor.renderSceneEditor.bind(Editor);
-  Editor.renderSceneEditor = function () {
-    _origRenderSceneEditor();
-    if (typeof Editor.initSmartTextareas === 'function') {
-      Editor.initSmartTextareas(document.getElementById('scene-editor'));
-    }
-  };
+  if (Editor.hooks?.after) {
+    Editor.hooks.after('renderSceneEditor', function () {
+      if (typeof Editor.initSmartTextareas === 'function') {
+        Editor.initSmartTextareas(document.getElementById('scene-editor'));
+      }
+    });
+  } else {
+    const _origRenderSceneEditor = Editor.renderSceneEditor.bind(Editor);
+    Editor.renderSceneEditor = function () {
+      _origRenderSceneEditor();
+      if (typeof Editor.initSmartTextareas === 'function') {
+        Editor.initSmartTextareas(document.getElementById('scene-editor'));
+      }
+    };
+  }
 })();

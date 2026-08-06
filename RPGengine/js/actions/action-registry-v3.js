@@ -263,6 +263,9 @@
           }
         }
         engine.addItem(params.resultId);
+        if (typeof QuestEvents !== 'undefined') {
+          QuestEvents.emit('ItemCrafted', { itemId: params.resultId, recipeId: params.recipeId, qty: 1 });
+        }
         const name = engine.data?.items?.[params.resultId]?.name || params.resultId;
         engine.saveGame?.();
         return {
