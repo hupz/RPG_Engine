@@ -1232,12 +1232,20 @@
     }
     if (actionType === 'skillCheck') html += this.renderSkillCheckEditor(idx, c, allScenes);
 
+    // Скрытый блок дополнительных настроек
+    const hasConditions = !!(c.showIf || c.hideIf || c.doneFlag || c.questSet);
+    html += `<details class="advanced-settings" ${hasConditions ? 'open' : ''}>
+      <summary style="cursor:pointer;padding:8px 0;font-weight:600;color:var(--accent);">⚙️ Дополнительные настройки</summary>
+      <div style="margin-top:10px;">`;
+    
     html += `<div class="form-group"><label>doneFlag (один раз)</label>
       <input value="${this.escapeHtml(c.doneFlag||'')}" placeholder="${this.escapeHtml(autoFlag)}" onchange="Editor.updateChoice(${idx},'doneFlag',this.value||undefined)">
       <div class="hint">Авто: <code>${this.escapeHtml(autoFlag)}</code></div></div>`;
     html += this.renderConditionRules(idx, 'show');
     html += this.renderConditionRules(idx, 'hide');
     html += this.renderChoiceQuestSetBlock(idx, c);
+    
+    html += `</div></details>`;
     html += '</div>';
     return html
   },
