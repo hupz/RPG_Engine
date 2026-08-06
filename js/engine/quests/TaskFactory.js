@@ -2,12 +2,12 @@
  * Фабрика задач квестов
  * Создает экземпляры задач по типу
  */
-import TalkToNPCTask from './tasks/TalkToNPCTask.js';
-import CollectItemTask from './tasks/CollectItemTask.js';
-import KillEnemyTask from './tasks/KillEnemyTask.js';
-import VisitLocationTask from './tasks/VisitLocationTask.js';
-import InteractObjectTask from './tasks/InteractObjectTask.js';
-import DeliverItemTask from './tasks/DeliverItemTask.js';
+import TalkToNPCTask from './TalkToNPCTask.js';
+import CollectItemTask from './CollectItemTask.js';
+import KillEnemyTask from './KillEnemyTask.js';
+import VisitLocationTask from './VisitLocationTask.js';
+import InteractObjectTask from './InteractObjectTask.js';
+import DeliverItemTask from './DeliverItemTask.js';
 
 class TaskFactory {
     static taskTypes = {

@@ -10,9 +10,9 @@ export { default as TaskFactory } from './TaskFactory.js';
 export { default as QuestManager, getQuestManager } from './QuestManager.js';
 
 // Задачи
-export { default as TalkToNPCTask } from './tasks/TalkToNPCTask.js';
-export { default as CollectItemTask } from './tasks/CollectItemTask.js';
-export { default as KillEnemyTask } from './tasks/KillEnemyTask.js';
-export { default as VisitLocationTask } from './tasks/VisitLocationTask.js';
-export { default as InteractObjectTask } from './tasks/InteractObjectTask.js';
-export { default as DeliverItemTask } from './tasks/DeliverItemTask.js';
+export { default as TalkToNPCTask } from './TalkToNPCTask.js';
+export { default as CollectItemTask } from './CollectItemTask.js';
+export { default as KillEnemyTask } from './KillEnemyTask.js';
+export { default as VisitLocationTask } from './VisitLocationTask.js';
+export { default as InteractObjectTask } from './InteractObjectTask.js';
+export { default as DeliverItemTask } from './DeliverItemTask.js';
