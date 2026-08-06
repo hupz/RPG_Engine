@@ -6,15 +6,62 @@ import QuestEvent from './QuestEvent.js';
 
 /**
  * Менеджер квестов - центральный управляющий компонент
+ * Интегрируется с gameState.state для сохранения прогресса
  */
 class QuestManager {
     constructor() {
         this.quests = new Map();
         this.eventBus = new QuestEventBus();
         this.taskFactory = TaskFactory;
+        this.initialized = false;
         
         // Подписываемся на события для обновления квестов
         this.setupEventHandling();
+    }
+    
+    /**
+     * Инициализация менеджера квестов
+     * @param {object} gameState - ссылка на состояние игры
+     */
+    init(gameState) {
+        if (this.initialized) return;
+        
+        this.gameState = gameState;
+        this.loadFromState();
+        this.initialized = true;
+        
+        console.log('[QuestManager] Инициализирован');
+    }
+    
+    /**
+     * Загрузить квесты из состояния игры
+     */
+    loadFromState() {
+        if (!this.gameState?.state?.quests) return;
+        
+        const questsData = this.gameState.state.quests;
+        Object.keys(questsData).forEach(questId => {
+            const questData = questsData[questId];
+            const quest = new Quest(questId);
+            quest.deserialize(questData, this.taskFactory);
+            this.quests.set(questId, quest);
+        });
+        
+        console.log(`[QuestManager] Загружено ${this.quests.size} квестов`);
+    }
+    
+    /**
+     * Сохранить квесты в состояние игры
+     */
+    saveToState() {
+        if (!this.gameState?.state) return;
+        
+        const questsData = {};
+        this.quests.forEach((quest, id) => {
+            questsData[id] = quest.serialize();
+        });
+        
+        this.gameState.state.quests = questsData;
     }
 
     /**
@@ -180,7 +227,7 @@ class QuestManager {
     deserialize(data) {
         if (!data || !data.quests) return;
 
-        data.quests.forEach(questData => {
+        Object.values(data.quests).forEach(questData => {
             const quest = new Quest(questData.id);
             quest.deserialize(questData, this.taskFactory);
             this.quests.set(quest.id, quest);
@@ -193,6 +240,19 @@ class QuestManager {
     clear() {
         this.quests.clear();
         this.eventBus.clear();
+        this.initialized = false;
+        this.gameState = null;
+    }
+    
+    /**
+     * Получить экземпляр менеджера (синглтон)
+     * @returns {QuestManager}
+     */
+    static getInstance() {
+        if (!this._instance) {
+            this._instance = new QuestManager();
+        }
+        return this._instance;
     }
 }
 

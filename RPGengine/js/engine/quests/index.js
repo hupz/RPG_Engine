@@ -8,6 +8,7 @@
  * - QuestStage - этап квеста с задачами
  * - QuestTask - базовый класс задачи
  * - TaskFactory - фабрика задач
+ * - Migration - миграция со старой системы
  * - Конкретные типы задач (TalkTo, CollectItem, KillEnemy, etc.)
  */
 
@@ -18,6 +19,7 @@ export { default as QuestTask } from './tasks/QuestTask.js';
 export { default as QuestEvent } from './tasks/QuestEvent.js';
 export { default as QuestEventBus } from './tasks/QuestEventBus.js';
 export { default as TaskFactory } from './tasks/TaskFactory.js';
+export { default as Migration } from './Migration.js';
 
 // Типы задач
 export { default as TalkToTask } from './tasks/TalkToTask.js';
