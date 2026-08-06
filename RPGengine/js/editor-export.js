@@ -35,7 +35,7 @@
     'js/reputation-system.js',
     'js/achievements.js',
     'js/conditions.js',
-    'js/quests.js',
+    'js/engine/quests/index.js',
     'js/enemy-scaling.js',
     'js/scene-templates.js',
     'js/world-hierarchy.js',
@@ -196,7 +196,11 @@
     }
 
     if (typeof SpellSlotProgression !== 'undefined') SpellSlotProgression.applyToGameData(data);
-    if (typeof QuestSystem !== 'undefined') QuestSystem.normalizeAll(data);
+    // Новая система квестов: миграция при экспорте
+    if (typeof initQuestSystem !== 'undefined') {
+      const mockState = { questStages: {}, flags: {} };
+      initQuestSystem(mockState, data);
+    }
     if (typeof ThemeSystem !== 'undefined') ThemeSystem.ensureInData(data);
     if (typeof AchievementSystem !== 'undefined') AchievementSystem.ensureAchievements(data);
     if (typeof SceneElements !== 'undefined') SceneElements.migrateAllScenes(data);

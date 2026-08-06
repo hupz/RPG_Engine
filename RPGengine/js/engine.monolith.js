@@ -2572,9 +2572,9 @@ const GameEngine = {
     if (direct != null && direct !== '') return String(direct);
     const legacy = this.state.flags?.['quest_' + questId];
     if (legacy == null || legacy === '') return null;
-    const quest = this.data?.quests?.[questId];
-    if (quest && typeof QuestSystem !== 'undefined') {
-      return QuestSystem.resolveStageRef(quest, legacy);
+    // Новая система квестов
+    if (window.NewQuestSystem) {
+      return window.NewQuestSystem.resolveLegacyStage(questId, legacy);
     }
     return String(legacy);
   },
@@ -2584,10 +2584,11 @@ const GameEngine = {
     const s = this.state.questStages?.[questId];
     if (s === '__finished__') return true;
     if (this.state.flags?.['quest_' + questId] === 'complete') return true;
-    const quest = this.data?.quests?.[questId];
-    if (!quest || s == null || s === '') return false;
-    const st = QuestSystem.getStageData(quest, s);
-    return !!st?.finish;
+    // Новая система квестов
+    if (window.NewQuestSystem) {
+      return window.NewQuestSystem.isQuestFinished(questId);
+    }
+    return false;
   },
 
   /** Квест провален */
@@ -2595,9 +2596,11 @@ const GameEngine = {
     const s = this.state.questStages?.[questId];
     if (s === '__failed__') return true;
     if (this.state.flags?.['quest_' + questId] === 'failed') return true;
-    const quest = this.data?.quests?.[questId];
-    if (!quest || s == null || s === '') return false;
-    return QuestSystem.isStageFailed(quest, s);
+    // Новая система квестов
+    if (window.NewQuestSystem) {
+      return window.NewQuestSystem.isQuestFailed(questId);
+    }
+    return false;
   },
 
   /**
@@ -2638,22 +2641,30 @@ const GameEngine = {
    */
   updateQuest(questId, stage, opts = {}) {
     if (!questId || !this.data?.quests?.[questId]) return;
+    
+    // Новая система квестов
+    if (window.NewQuestSystem) {
+      const result = window.NewQuestSystem.updateQuestFromEngine(questId, stage, opts);
+      if (result !== false) {
+        this.updateUI();
+        this.checkAchievements({ type: 'quest_update', questId, stage });
+        this.saveGame();
+        return;
+      }
+    }
+    
+    // Fallback для старых квестов без миграции
     const quest = this.data.quests[questId];
-    const stageKey = QuestSystem.resolveStageRef(quest, stage);
-    if (stageKey == null) return;
-
+    const stageKey = String(stage);
+    
     const prev = this.getQuestStage(questId);
-    const failing = !opts.skipFinish && (
-      stage === 'failed' || stageKey === '__failed__' ||
-      QuestSystem.isStageFailed(quest, stageKey)
-    );
+    const failing = !opts.skipFinish && (stage === 'failed' || stageKey === '__failed__');
 
     if (failing) {
       this.state.questStages[questId] = '__failed__';
       this.syncLegacyQuestFlag(questId, 'failed');
-      const st = QuestSystem.getStageData(quest, stageKey);
-      if (!opts.silentLog && st?.log && prev !== '__failed__' && prev !== stageKey) {
-        this.log('❌ ' + st.log, 'log-damage');
+      if (!opts.silentLog && prev !== '__failed__' && prev !== stageKey) {
+        this.log('❌ Квест провален: «' + (quest.title || questId) + '»', 'log-damage');
       }
       this.updateUI();
       this.checkAchievements({ type: 'quest_update', questId, stage: '__failed__' });
@@ -2661,16 +2672,11 @@ const GameEngine = {
       return;
     }
 
-    const finishing = !opts.skipFinish && (
-      stage === 'complete' || stageKey === '__finished__' ||
-      QuestSystem.isStageFinished(quest, stageKey)
-    );
+    const finishing = !opts.skipFinish && (stage === 'complete' || stageKey === '__finished__');
 
     if (finishing) {
       this.state.questStages[questId] = '__finished__';
       this.syncLegacyQuestFlag(questId, 'complete');
-      const st = QuestSystem.getStageData(quest, stageKey);
-      if (!opts.silentLog && st?.log) this.log('📜 ' + st.log, 'log-heal');
       if (prev !== '__finished__' && prev !== stageKey) {
         this.awardQuestExp(questId);
         this.log('✅ Квест завершён: «' + (quest.title || questId) + '»', 'log-heal');
@@ -2679,12 +2685,8 @@ const GameEngine = {
     } else {
       this.state.questStages[questId] = stageKey;
       this.syncLegacyQuestFlag(questId, stageKey);
-      const st = QuestSystem.getStageData(quest, stageKey);
-      if (!opts.silentLog && st?.log && prev !== stageKey) {
-        this.log('📜 ' + st.log, 'log-heal');
-      }
-      if (!opts.silentLog && st?.hint && prev !== stageKey) {
-        this.log('💡 ' + st.hint, 'log-dice');
+      if (!opts.silentLog && prev !== stageKey) {
+        this.log('📜 Задание обновлено: «' + (quest.title || questId) + '»', 'log-heal');
       }
       this.applyQuestMapUnlocks(questId, stageKey);
     }
@@ -2855,11 +2857,13 @@ const GameEngine = {
   shouldApplyQuestStageUpdate(questId, newStageRef) {
     if (!questId || newStageRef == null || newStageRef === '') return false;
     if (this.isQuestFinished(questId) || this.isQuestFailed(questId)) return false;
+    // Новая система квестов обрабатывает это сама
+    if (window.NewQuestSystem) return true;
     const quest = this.data?.quests?.[questId];
     if (!quest) return true;
     const currentKey = this.getQuestStage(questId);
     if (currentKey == null || currentKey === '' || currentKey === '__finished__') return true;
-    const newKey = QuestSystem.resolveStageRef(quest, newStageRef);
+    const newKey = String(newStageRef);
     if (newKey == null) return true;
     const curNum = Number(currentKey);
     const newNum = Number(newKey);
@@ -2945,9 +2949,10 @@ const GameEngine = {
         }
       });
     }
-    if (opts.reputation !== false && typeof QuestSystem !== 'undefined') {
-      QuestSystem.getReputationEntries(rewards).forEach(({ flag, amount }) => {
-        this.changeReputation(flag, amount);
+    // Репутация обрабатывается через новую систему квестов или напрямую
+    if (opts.reputation !== false && rewards.reputation) {
+      Object.entries(rewards.reputation).forEach(([repId, amount]) => {
+        this.changeReputation(repId, Number(amount) || 0);
         applied = true;
       });
     }
@@ -4775,7 +4780,10 @@ const GameEngine = {
     if (typeof CombatManager !== 'undefined') {
       CombatManager.normalizeProgressionAbilities(data, this);
     }
-    if (typeof QuestSystem !== 'undefined') QuestSystem.normalizeAll(data);
+    // Новая система квестов: миграция и инициализация при загрузке данных
+    if (typeof initQuestSystem !== 'undefined') {
+      initQuestSystem(this.state, data);
+    }
     ThemeSystem.ensureInData(data);
     if (!data.races) data.races = {};
     if (!data.meta) data.meta = {};
@@ -6438,6 +6446,12 @@ const GameEngine = {
     const container = document.getElementById('active-quests-list');
     if (!container) return;
 
+    // Новая система квестов использует свой UI-рендерер
+    if (window.NewQuestSystem && typeof renderQuestLogUI !== 'undefined') {
+      renderQuestLogUI(container, this.state, this.data);
+      return;
+    }
+
     const activeEntries = Object.entries(this.state.questStages || {});
 
     if (activeEntries.length === 0) {
@@ -6451,7 +6465,8 @@ const GameEngine = {
       if (!quest) return;
       if (stageKey === '__failed__' || stageKey === '__finished__') return;
 
-      const stage = QuestSystem.getStageData(quest, stageKey);
+      // Fallback для старой системы
+      const stage = quest.stages?.[stageKey] || quest.stages?.[Number(stageKey)];
 
       if (!stage || stage.finish || stage.failed) return;
 

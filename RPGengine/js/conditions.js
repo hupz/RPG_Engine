@@ -136,8 +136,9 @@ const ConditionSystem = {
     if (stages[questId] != null && stages[questId] !== '') return String(stages[questId]);
     const legacy = ctx.flags?.['quest_' + questId];
     if (legacy == null || legacy === '') return null;
-    if (typeof QuestSystem !== 'undefined' && ctx.quests?.[questId]) {
-      return QuestSystem.resolveStageRef(ctx.quests[questId], legacy);
+    // Новая система квестов
+    if (typeof window !== 'undefined' && window.NewQuestSystem) {
+      return window.NewQuestSystem.resolveLegacyStage(questId, legacy);
     }
     return String(legacy);
   },
@@ -510,7 +511,8 @@ const ConditionSystem = {
       if (typeof rep === 'object' && !Array.isArray(rep)) {
         Object.keys(rep).forEach(add);
       } else if (typeof rep === 'string') {
-        add(typeof QuestSystem !== 'undefined' ? QuestSystem.resolveReputationFlag(rep) : rep);
+        // Новая система квестов использует ID репутации напрямую
+        add(rep);
       }
     });
     Object.keys(data?.startingFlags || {}).forEach(add);

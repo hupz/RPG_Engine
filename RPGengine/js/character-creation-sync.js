@@ -28,8 +28,9 @@ function syncCharacterToUI(engine, character) {
   const lvl = c.level ?? engine.state.level ?? 1;
   engine.log(`Персонаж ${c.name || engine.state.charName} создан! ${raceName} ${className}, уровень ${lvl}`, 'log-heal');
 
-  if (typeof QuestSystem !== 'undefined' && QuestSystem.onCharacterCreated) {
-    QuestSystem.onCharacterCreated(engine, c);
+  // Новая система квестов может иметь хуки при создании персонажа
+  if (typeof window !== 'undefined' && window.NewQuestSystem && typeof window.NewQuestSystem.onCharacterCreated === 'function') {
+    window.NewQuestSystem.onCharacterCreated(engine, c);
   }
 }
 
