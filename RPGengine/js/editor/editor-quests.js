@@ -11,15 +11,13 @@
   Object.assign(Editor, {
     editingQuestId: null,
 
-    /** Гарантирует объект quests и нормализует формат стадий */
+    /** Гарантирует объект quests и выполняет миграцию в новый формат */
     ensureQuests() {
       if (!this.data) return;
       if (!this.data.quests || typeof this.data.quests !== 'object') {
         this.data.quests = {};
       }
-      if (typeof QuestSystem !== 'undefined') {
-        QuestSystem.normalizeAll(this.data);
-      }
+      // Миграция происходит автоматически при загрузке через QuestManager
     },
 
     getQuestIds() {
@@ -31,9 +29,15 @@
     getQuestStageKeys(questId) {
       const q = this.data?.quests?.[questId];
       if (!q) return [];
-      return typeof QuestSystem !== 'undefined'
-        ? QuestSystem.getStageKeys(q)
-        : Object.keys(q.stages || {}).sort((a, b) => Number(a) - Number(b));
+      // В новой системе стадии - это массив stages в объекте квеста
+      if (Array.isArray(q.stages)) {
+        return q.stages.map((_, i) => String(i));
+      }
+      // Для старых проектов с объектом stages
+      if (typeof q.stages === 'object') {
+        return Object.keys(q.stages).sort((a, b) => Number(a) - Number(b));
+      }
+      return [];
     },
 
     /** Безопасный onclick/onchange: готовое JS-выражение целиком */
@@ -95,11 +99,11 @@
           <div class="hint">Журнал: ${this.escapeHtml(st.log || '—')}</div>
           <div class="hint">Подсказка: ${this.escapeHtml(st.hint || '—')}</div></div>`;
       }).join('');
-      const rep = typeof QuestSystem !== 'undefined'
-        ? QuestSystem.getPrimaryReputationReward(q.rewards)
+      const rep = q.rewards?.reputation 
+        ? Object.entries(q.rewards.reputation)[0] 
         : { flag: '', amount: 0 };
-      const repLine = rep.flag && rep.amount
-        ? `<div class="hint">Репутация: ${this.escapeHtml(rep.flag)} ${rep.amount > 0 ? '+' : ''}${rep.amount}</div>`
+      const repLine = rep[0] && rep[1]
+        ? `<div class="hint">Репутация: ${this.escapeHtml(rep[0])} ${rep[1] > 0 ? '+' : ''}${rep[1]}</div>`
         : '';
       return `<h4>👁 Превью «${this.escapeHtml(q.title)}»</h4>
         <div class="hint">Золото: ${q.rewards?.gold ?? 0} · Опыт: ${q.rewards?.exp ?? 0}</div>
@@ -145,11 +149,11 @@
 
     renderQuestReputationFields(questId) {
       const q = this.data.quests[questId];
-      const primary = typeof QuestSystem !== 'undefined'
-        ? QuestSystem.getPrimaryReputationReward(q?.rewards)
-        : { flag: '', amount: 0 };
-      const flag = primary.flag || '';
-      const amount = primary.amount ?? 0;
+      const repEntry = q.rewards?.reputation 
+        ? Object.entries(q.rewards.reputation)[0] 
+        : ['', 0];
+      const flag = repEntry[0] || '';
+      const amount = repEntry[1] ?? 0;
       const opts = this.getReputationFlagOptions().map((k) => {
         const name = this.data.reputation[k]?.name || k;
         const sel = k === flag ? ' selected' : '';

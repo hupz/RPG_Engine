@@ -1415,7 +1415,7 @@ Object.assign(GameEngine, {
       if (typeof CombatManager !== 'undefined') {
         CombatManager.normalizeProgressionAbilities(data, this);
       }
-      if (typeof QuestSystem !== 'undefined') QuestSystem.normalizeAll(data);
+      // Новая система квестов не требует нормализации - миграция происходит при загрузке
       ThemeSystem.ensureInData(data);
       if (!data.races) data.races = {};
       if (!data.meta) data.meta = {};

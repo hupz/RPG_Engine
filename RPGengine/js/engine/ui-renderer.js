@@ -1245,9 +1245,9 @@
       const legacy = this.state.flags?.['quest_' + questId];
       if (legacy == null || legacy === '') return null;
       const quest = this.data?.quests?.[questId];
-      if (quest && typeof QuestSystem !== 'undefined') {
-        return QuestSystem.resolveStageRef(quest, legacy);
-      }
+      // Для обратной совместимости: используем legacy как номер стадии
+      if (legacy === 'complete') return '__finished__';
+      if (legacy === 'failed') return '__failed__';
       return String(legacy);
     },
 
@@ -1258,8 +1258,15 @@
       if (this.state.flags?.['quest_' + questId] === 'complete') return true;
       const quest = this.data?.quests?.[questId];
       if (!quest || s == null || s === '') return false;
-      const st = QuestSystem.getStageData(quest, s);
-      return !!st?.finish;
+      // Проверяем, является ли стадия финальной
+      const stages = quest.stages;
+      if (Array.isArray(stages) && stages[s]) {
+        return !!stages[s].finish;
+      }
+      if (typeof stages === 'object' && stages[s]) {
+        return !!stages[s].finish;
+      }
+      return false;
     },
 
     /** Квест провален */
@@ -1269,7 +1276,15 @@
       if (this.state.flags?.['quest_' + questId] === 'failed') return true;
       const quest = this.data?.quests?.[questId];
       if (!quest || s == null || s === '') return false;
-      return QuestSystem.isStageFailed(quest, s);
+      // Проверяем, является ли стадия провальной
+      const stages = quest.stages;
+      if (Array.isArray(stages) && stages[s]) {
+        return !!stages[s].failed;
+      }
+      if (typeof stages === 'object' && stages[s]) {
+        return !!stages[s].failed;
+      }
+      return false;
     },
 
     /**
@@ -1311,19 +1326,19 @@
     updateQuest(questId, stage, opts = {}) {
       if (!questId || !this.data?.quests?.[questId]) return;
       const quest = this.data.quests[questId];
-      const stageKey = QuestSystem.resolveStageRef(quest, stage);
+      const stageKey = String(stage);
       if (stageKey == null) return;
 
       const prev = this.getQuestStage(questId);
       const failing = !opts.skipFinish && (
         stage === 'failed' || stageKey === '__failed__' ||
-        QuestSystem.isStageFailed(quest, stageKey)
+        (Array.isArray(quest.stages) && quest.stages[stageKey]?.failed || typeof quest.stages === 'object' && quest.stages[stageKey]?.failed)
       );
 
       if (failing) {
         this.state.questStages[questId] = '__failed__';
         this.syncLegacyQuestFlag(questId, 'failed');
-        const st = QuestSystem.getStageData(quest, stageKey);
+        const st = Array.isArray(quest.stages) ? quest.stages[stageKey] : quest.stages[stageKey];
         if (!opts.silentLog && st?.log && prev !== '__failed__' && prev !== stageKey) {
           this.log('❌ ' + st.log, 'log-damage');
         }
@@ -1335,13 +1350,13 @@
 
       const finishing = !opts.skipFinish && (
         stage === 'complete' || stageKey === '__finished__' ||
-        QuestSystem.isStageFinished(quest, stageKey)
+        (Array.isArray(quest.stages) && quest.stages[stageKey]?.finish || typeof quest.stages === 'object' && quest.stages[stageKey]?.finish)
       );
 
       if (finishing) {
         this.state.questStages[questId] = '__finished__';
         this.syncLegacyQuestFlag(questId, 'complete');
-        const st = QuestSystem.getStageData(quest, stageKey);
+        const st = Array.isArray(quest.stages) ? quest.stages[stageKey] : quest.stages[stageKey];
         if (!opts.silentLog && st?.log) this.log('📜 ' + st.log, 'log-heal');
         if (prev !== '__finished__' && prev !== stageKey) {
           this.awardQuestExp(questId);
@@ -1351,7 +1366,7 @@
       } else {
         this.state.questStages[questId] = stageKey;
         this.syncLegacyQuestFlag(questId, stageKey);
-        const st = QuestSystem.getStageData(quest, stageKey);
+        const st = Array.isArray(quest.stages) ? quest.stages[stageKey] : quest.stages[stageKey];
         if (!opts.silentLog && st?.log && prev !== stageKey) {
           this.log('📜 ' + st.log, 'log-heal');
         }
@@ -1539,7 +1554,7 @@
       if (!quest) return true;
       const currentKey = this.getQuestStage(questId);
       if (currentKey == null || currentKey === '' || currentKey === '__finished__') return true;
-      const newKey = QuestSystem.resolveStageRef(quest, newStageRef);
+      const newKey = String(newStageRef);
       if (newKey == null) return true;
       const curNum = Number(currentKey);
       const newNum = Number(newKey);
@@ -1626,7 +1641,7 @@
         });
       }
       if (opts.reputation !== false && typeof QuestSystem !== 'undefined') {
-        QuestSystem.getReputationEntries(rewards).forEach(({ flag, amount }) => {
+        Object.entries(rewards.reputation || {}).forEach(([flag, amount]) =>
           this.changeReputation(flag, amount);
           applied = true;
         });
