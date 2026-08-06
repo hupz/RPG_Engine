@@ -1,8 +1,9 @@
+import QuestTask from './QuestTask.js';
+
 /**
- * Фабрика задач квестов
- * Создает экземпляры задач по типу
+ * Фабрика для создания задач по типу
  */
-import TalkToNPCTask from './TalkToNPCTask.js';
+import TalkToTask from './TalkToTask.js';
 import CollectItemTask from './CollectItemTask.js';
 import KillEnemyTask from './KillEnemyTask.js';
 import VisitLocationTask from './VisitLocationTask.js';
@@ -11,7 +12,7 @@ import DeliverItemTask from './DeliverItemTask.js';
 
 class TaskFactory {
     static taskTypes = {
-        'TalkToNPC': TalkToNPCTask,
+        'TalkToNPC': TalkToTask,
         'CollectItem': CollectItemTask,
         'KillEnemy': KillEnemyTask,
         'VisitLocation': VisitLocationTask,
@@ -20,40 +21,40 @@ class TaskFactory {
     };
 
     /**
-     * Зарегистрировать новый тип задачи
-     * @param {string} type 
-     * @param {class} taskClass 
-     */
-    static registerTaskType(type, taskClass) {
-        this.taskTypes[type] = taskClass;
-    }
-
-    /**
      * Создать задачу по типу
-     * @param {string} type 
-     * @param {object} data 
+     * @param {string} type - тип задачи
+     * @param {object} config - конфигурация
      * @returns {QuestTask}
      */
-    static createTask(type, data = {}) {
+    static create(type, config = {}) {
         const TaskClass = this.taskTypes[type];
         if (!TaskClass) {
             console.warn(`Unknown task type: ${type}`);
             return null;
         }
-        return new TaskClass(data);
+        return new TaskClass(config);
     }
 
     /**
      * Создать задачу из сериализованных данных
-     * @param {object} jsonData 
+     * @param {object} data - сериализованные данные задачи
      * @returns {QuestTask}
      */
-    static fromJSON(jsonData) {
-        const task = this.createTask(jsonData.type, jsonData.data);
-        if (task && jsonData.progress !== undefined) {
-            task.deserialize(jsonData);
+    static fromData(data) {
+        const task = this.create(data.type, data.config);
+        if (task) {
+            task.deserialize(data);
         }
         return task;
+    }
+
+    /**
+     * Зарегистрировать новый тип задачи
+     * @param {string} type - тип задачи
+     * @param {class} TaskClass - класс задачи
+     */
+    static registerTaskType(type, TaskClass) {
+        this.taskTypes[type] = TaskClass;
     }
 
     /**
