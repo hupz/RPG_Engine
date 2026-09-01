@@ -54,6 +54,7 @@ const engineFiles = [
   'js/engine/core.js',
   'js/engine/ui-renderer.js',
   'js/engine/inventory.js',
+  'js/quests/quest-stage-actions-bridge.js',
   'js/engine/campaign-hooks.js',
   'js/engine/scene-manager.js',
   'js/engine/combat.js',

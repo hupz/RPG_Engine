@@ -1,4 +1,4 @@
-/* editor-core bundle generated 2026-09-01T20:11:41.774Z */
+/* editor-core bundle generated 2026-09-01T20:43:37.363Z */
 
 ;/* —— js/data-schema.js —— */
 // ============================================================

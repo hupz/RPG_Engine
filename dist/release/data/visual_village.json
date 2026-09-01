@@ -91,7 +91,7 @@
                 }
               ]
             },
-            "uid": "hotspot_31782360"
+            "uid": "hotspot_af7c8a0e"
           },
           {
             "id": "hs_shop",
@@ -123,7 +123,7 @@
                 }
               ]
             },
-            "uid": "hotspot_c678872a"
+            "uid": "hotspot_2402e7b5"
           },
           {
             "id": "hs_smithy",
@@ -155,7 +155,7 @@
                 }
               ]
             },
-            "uid": "hotspot_6c299b35"
+            "uid": "hotspot_6912a1c4"
           },
           {
             "id": "hs_chapel",
@@ -187,7 +187,7 @@
                 }
               ]
             },
-            "uid": "hotspot_5b0405e2"
+            "uid": "hotspot_aba461cc"
           },
           {
             "id": "hs_chest",
@@ -259,7 +259,7 @@
                 }
               ]
             },
-            "uid": "hotspot_5c0518d5"
+            "uid": "hotspot_1057bba5"
           },
           {
             "id": "hs_enemy",
@@ -312,7 +312,7 @@
                 }
               ]
             },
-            "uid": "hotspot_1234442a"
+            "uid": "hotspot_9d268e4d"
           },
           {
             "id": "img_journal",
@@ -346,7 +346,7 @@
                 }
               ]
             },
-            "uid": "image_78254c6b"
+            "uid": "image_a3ee6c5c"
           },
           {
             "id": "img_inventory",
@@ -380,7 +380,7 @@
                 }
               ]
             },
-            "uid": "image_9c832dec"
+            "uid": "image_ae08b120"
           }
         ]
       }
@@ -706,7 +706,7 @@
     "screens": {
       "rpg_hud": {
         "id": "rpg_hud",
-        "uid": "screen_1b1d7688",
+        "uid": "screen_59f8523a",
         "screenType": "custom",
         "scope": "persistent",
         "sceneId": "",
@@ -715,7 +715,7 @@
         "nodes": [
           {
             "id": "rh_bar_bg",
-            "uid": "ui_fca02c2f",
+            "uid": "ui_ec66b7c2",
             "kind": "panel",
             "layer": "hud",
             "transform": {
@@ -740,7 +740,7 @@
           },
           {
             "id": "rh_hp",
-            "uid": "ui_959627ea",
+            "uid": "ui_15386aae",
             "kind": "bar",
             "layer": "hud",
             "transform": {
@@ -763,7 +763,7 @@
           },
           {
             "id": "rh_level",
-            "uid": "ui_e86e4b01",
+            "uid": "ui_d581fc58",
             "kind": "level",
             "layer": "hud",
             "transform": {
@@ -786,7 +786,7 @@
           },
           {
             "id": "rh_gold",
-            "uid": "ui_188072ca",
+            "uid": "ui_f451fe68",
             "kind": "gold",
             "layer": "hud",
             "transform": {
@@ -809,7 +809,7 @@
           },
           {
             "id": "rh_inv",
-            "uid": "ui_69b63532",
+            "uid": "ui_af2a811d",
             "kind": "button",
             "layer": "hud",
             "transform": {
@@ -841,7 +841,7 @@
           },
           {
             "id": "rh_jr",
-            "uid": "ui_8bb373f4",
+            "uid": "ui_f4b4615e",
             "kind": "button",
             "layer": "hud",
             "transform": {
@@ -873,7 +873,7 @@
           },
           {
             "id": "rh_save",
-            "uid": "ui_d4fc986d",
+            "uid": "ui_b0c84dd5",
             "kind": "button",
             "layer": "hud",
             "transform": {
