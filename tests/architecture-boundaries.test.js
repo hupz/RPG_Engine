@@ -82,7 +82,10 @@ for (const f of ['js/quests/quest-events.js', 'js/quests/task-base.js', 'js/ques
 const prod = read('index.prod.html');
 assert(!/js\/editor\/editor-core\.js/.test(prod), 'index.prod.html does not load editor-core');
 assert(!/js\/editor\/editor-hooks\.js/.test(prod), 'index.prod.html does not load editor-hooks');
-assert(/js\/quests\/quest-runtime\.js/.test(prod), 'index.prod.html loads quest-runtime');
+assert(
+  /js\/quests\/quest-runtime\.js/.test(prod) || /dist\/index-prod\.bundle\.js/.test(prod),
+  'index.prod.html loads quest-runtime (direct or index-prod bundle)'
+);
 
 // --- Load core in VM and exercise APIs ---
 const ctx = {
