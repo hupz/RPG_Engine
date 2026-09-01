@@ -81,6 +81,16 @@ node scripts/build.mjs editor-full     # все скрипты editor.html → d
 
 Альтернатива с отдельными тегами: `editor.html`. С одним бандлом: `editor-bundle.html` (после `build:editor-full`).
 
+### Проверка перед коммитом
+
+Перед коммитом в релизном цикле прогоняйте единый гейт качества:
+
+```bash
+npm run verify
+```
+
+Команда последовательно выполняет: `npm test` (все `tests/*.test.js`), `check:native-dialogs` (0 `alert`/`confirm`/`prompt` в `js/editor*`), `check:duplicates` (новые дубли методов `Editor` сверх базлайна). Инвентаризация нативных диалогов рантайма (`js/engine/*`, `js/actions/*`): `npm run check:runtime-dialogs` — отслеживание прогресса до задачи P7.13.
+
 В active production path **нет** `QuestSystem`.
 
 ## 6. Save / Load
