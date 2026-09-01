@@ -983,7 +983,9 @@ const ACTION_REGISTRY = {
     params: [{ name: 'message', type: 'textarea', label: 'Текст' }],
     async execute(engine, params, ctx) {
       const msg = params.message || 'Продолжить?';
-      const ok = typeof window !== 'undefined' ? window.confirm(msg) : true;
+      const ok = typeof GameDialogs !== 'undefined'
+        ? await GameDialogs.confirm('', msg)
+        : true;
       if (ok && params.onConfirm != null) {
         await ActionRunner.resolveBranch(engine, params.onConfirm, ctx);
       } else if (!ok && params.onCancel != null) {

@@ -1364,12 +1364,10 @@
       this.showScene('game_over');
     },
 
-    resetGame() {
-      if (confirm('Начать новую игру? Текущий прогресс будет сброшен.')) {
-        localStorage.removeItem(this.getSaveKey());
-      } else {
-        return;
-      }
+    async resetGame() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (!(await GameDialogs.confirm('', tr('game.dialog.resetGame')))) return;
+      localStorage.removeItem(this.getSaveKey());
       this.state.hp = 25;
       this.state.maxHp = 25;
       this.state.gold = 0;

@@ -47,6 +47,7 @@ function isEditorFile(relPath) {
 /** @returns {boolean} */
 function isRuntimeFile(relPath) {
   const p = relPath.replace(/\\/g, '/');
+  if (p === 'character-creator.js') return true;
   return p.startsWith('engine/') || p.startsWith('actions/');
 }
 
@@ -160,6 +161,11 @@ function classifyAlert(arg) {
   return 'toast';
 }
 
+function isGameDialogWrapper(content, idx) {
+  const chunk = content.slice(Math.max(0, idx - 24), idx);
+  return /GameDialogs\.\s*$/.test(chunk);
+}
+
 function findNativeDialogs(content, relPath) {
   const results = [];
   const re = /(?:\b|window\.)(alert|confirm|prompt)\s*\(/g;
@@ -167,6 +173,7 @@ function findNativeDialogs(content, relPath) {
   while ((m = re.exec(content)) !== null) {
     const idx = m.index;
     const kind = m[1];
+    if (isGameDialogWrapper(content, idx)) continue;
     const line = lineOf(content, idx);
     const lineText = content.split('\n')[line - 1] || '';
 
@@ -204,7 +211,7 @@ function collectRuntimeFiles() {
   const all = walkJsFiles(JS_DIR);
   return all
     .map((full) => ({ full, rel: relative(JS_DIR, full) }))
-    .filter(({ rel }) => isRuntimeFile(rel));
+    .filter(({ rel }) => isRuntimeFile(rel) && rel.replace(/\\/g, '/') !== 'engine/game-dialogs.js');
 }
 
 function scanFiles(files) {
@@ -291,27 +298,18 @@ function runRuntimeMode() {
   }
 
   if (CHECK_MODE) {
-    let baselineTotal = all.length;
-    if (existsSync(RUNTIME_BASELINE_PATH)) {
-      try {
-        const baseline = JSON.parse(readFileSync(RUNTIME_BASELINE_PATH, 'utf8'));
-        if (typeof baseline.total === 'number') baselineTotal = baseline.total;
-      } catch {
-        /* use current scan */
-      }
-    }
-    if (all.length > baselineTotal) {
-      console.error(`find-native-dialogs --runtime --check: ${all.length} вызов(ов), baseline ${baselineTotal} — регрессия`);
+    if (all.length > 0) {
+      console.error(`find-native-dialogs --runtime --check: ${all.length} вызов(ов) alert/confirm/prompt`);
       for (const row of all) {
         console.error(`  ${row.file}:${row.line}  ${row.native}`);
       }
       process.exit(1);
     }
-    console.log(`find-native-dialogs --runtime: js/engine/* + js/actions/* — ${all.length} native dialogs (baseline ${baselineTotal})`);
+    console.log('find-native-dialogs --runtime: js/engine/* + js/actions/* + character-creator.js — 0 native dialogs');
     process.exit(0);
   }
 
-  printInventory('=== Native dialogs в js/engine/* + js/actions/* ===', files, all);
+  printInventory('=== Native dialogs в js/engine/* + js/actions/* + character-creator.js ===', files, all);
 }
 
 function main() {

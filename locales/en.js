@@ -1,4 +1,4 @@
-﻿/* generated from en.json */
+/* generated from en.json */
 window.I18N_LOCALES = window.I18N_LOCALES || {};
 window.I18N_LOCALES['en'] = {
   "lang": {
@@ -32,8 +32,44 @@ window.I18N_LOCALES['en'] = {
     "pageTitle": "MythMill RpgEngine — Editor",
     "title": "MythMill RpgEngine",
     "titleTooltip": "Go to dashboard",
-    "dashboard": "Dashboard",
-    "newProject": "New project",
+    "dashboard": {
+      "title": "Project dashboard",
+      "emptyHint": "Create a new project or load game_data.json.",
+      "newBtn": "New project",
+      "loadBtn": "Load JSON",
+      "saveJson": "Save as JSON",
+      "exportHtml": "Export to HTML",
+      "quickActions": "Quick actions",
+      "newScene": "New scene",
+      "saveJsonFile": "Save JSON",
+      "exportGame": "Export game",
+      "statsScenes": "Scenes",
+      "statsQuests": "Quests",
+      "statsEnemies": "Enemies",
+      "statsItems": "Items",
+      "statsClasses": "Classes",
+      "statsAbilities": "Abilities",
+      "warnTitle": "Warnings",
+      "warnBroken": "Broken links: {errors}, dead ends: {deadEnds}.",
+      "warnOk": "No critical broken links found.",
+      "validateBtn": "Validate project",
+      "themePreview": "UI theme"
+    },
+    "newProject": {
+      "title": "📄 New project",
+      "projectName": "Project name",
+      "namePlaceholder": "My new game",
+      "ruleSystem": "Rule system",
+      "cancel": "Cancel",
+      "create": "Create project",
+      "enterName": "Enter a project name.",
+      "defaultTitle": "My new game",
+      "defaultDescription": "New project",
+      "startLocation": "Start",
+      "startText": "Welcome!",
+      "noTitle": "Untitled",
+      "editMeta": "✏️ Meta"
+    },
     "loadJson": "Load JSON",
     "saveProject": "Save project",
     "saveProjectTitle": "Save or export project",
@@ -175,29 +211,6 @@ window.I18N_LOCALES['en'] = {
       "progression": "📈 Progression",
       "json": "📄 JSON"
     },
-    "dashboard": {
-      "title": "Project dashboard",
-      "emptyHint": "Create a new project or load game_data.json.",
-      "newBtn": "New project",
-      "loadBtn": "Load JSON",
-      "saveJson": "Save as JSON",
-      "exportHtml": "Export to HTML",
-      "quickActions": "Quick actions",
-      "newScene": "New scene",
-      "saveJsonFile": "Save JSON",
-      "exportGame": "Export game",
-      "statsScenes": "Scenes",
-      "statsQuests": "Quests",
-      "statsEnemies": "Enemies",
-      "statsItems": "Items",
-      "statsClasses": "Classes",
-      "statsAbilities": "Abilities",
-      "warnTitle": "Warnings",
-      "warnBroken": "Broken links: {errors}, dead ends: {deadEnds}.",
-      "warnOk": "No critical broken links found.",
-      "validateBtn": "Validate project",
-      "themePreview": "UI theme"
-    },
     "project": {
       "name": "Title",
       "version": "Version",
@@ -205,21 +218,6 @@ window.I18N_LOCALES['en'] = {
       "system": "System",
       "editMeta": "Meta",
       "noProject": "No project"
-    },
-    "newProject": {
-      "title": "📄 New project",
-      "projectName": "Project name",
-      "namePlaceholder": "My new game",
-      "ruleSystem": "Rule system",
-      "cancel": "Cancel",
-      "create": "Create project",
-      "enterName": "Enter a project name.",
-      "defaultTitle": "My new game",
-      "defaultDescription": "New project",
-      "startLocation": "Start",
-      "startText": "Welcome!",
-      "noTitle": "Untitled",
-      "editMeta": "✏️ Meta"
     },
     "export": {
       "htmlModalTitle": "Export to HTML",
@@ -324,6 +322,19 @@ window.I18N_LOCALES['en'] = {
     "lootTitle": "Loot",
     "lootTake": "Take",
     "levelUp": "Level up!",
+    "dialog": {
+      "ok": "OK",
+      "confirm": "Yes",
+      "cancel": "Cancel",
+      "promptPlaceholder": "Enter a value…",
+      "noticeTitle": "Notice",
+      "jsonReadError": "Failed to read JSON: {message}",
+      "returnToPicker": "Return to campaign picker? Unsaved progress may be lost.",
+      "resetGame": "Start a new game? Current progress will be reset.",
+      "deleteSave": "Delete the game save?",
+      "abilityNotFound": "Ability not found in progression.abilities data.",
+      "cancelCharCreation": "Cancel character creation?"
+    },
     "achievementUnlocked": "Achievement unlocked!",
     "hintLabel": "Hint",
     "mobileExpandSidebar": "Expand character panel",
@@ -463,5 +474,4 @@ window.I18N_LOCALES['en'] = {
     "tocTitle": "Contents"
   },
   "help": {}
-}
-
+};

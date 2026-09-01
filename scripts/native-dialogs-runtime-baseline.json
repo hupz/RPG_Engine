@@ -1,55 +1,6 @@
 {
-  "capturedAt": "2026-09-01T20:58:22.242Z",
-  "total": 6,
-  "runtimeFiles": 15,
-  "items": [
-    {
-      "file": "actions/action-registry.js",
-      "line": 986,
-      "native": "confirm",
-      "category": "confirm",
-      "categoryLabel": "(b) confirmDialog",
-      "preview": "msg"
-    },
-    {
-      "file": "engine/core.js",
-      "line": 1552,
-      "native": "alert",
-      "category": "toast",
-      "categoryLabel": "(a) toast",
-      "preview": "'❌ Ошибка чтения JSON: ' + err.message"
-    },
-    {
-      "file": "engine/core.js",
-      "line": 1842,
-      "native": "confirm",
-      "category": "confirm",
-      "categoryLabel": "(b) confirmDialog",
-      "preview": "'Вернуться к выбору игры? Несохранённый прогресс может быть потерян.'"
-    },
-    {
-      "file": "engine/inventory.js",
-      "line": 1368,
-      "native": "confirm",
-      "category": "confirm",
-      "categoryLabel": "(b) confirmDialog",
-      "preview": "'Начать новую игру? Текущий прогресс будет сброшен.'"
-    },
-    {
-      "file": "engine/save-load.js",
-      "line": 293,
-      "native": "confirm",
-      "category": "confirm",
-      "categoryLabel": "(b) confirmDialog",
-      "preview": "'Удалить сохранение игры?'"
-    },
-    {
-      "file": "engine/ui-renderer.js",
-      "line": 3015,
-      "native": "alert",
-      "category": "toast",
-      "categoryLabel": "(a) toast",
-      "preview": "'Умение не найдено в данных progression.abilities'"
-    }
-  ]
+  "capturedAt": "2026-09-01T21:30:00.000Z",
+  "total": 0,
+  "runtimeFiles": 16,
+  "items": []
 }

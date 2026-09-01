@@ -1,4 +1,4 @@
-/* index-prod bundle — 70 scripts from index.html — 2026-09-01T21:16:03.645Z */
+/* index-prod bundle — 70 scripts from index.html — 2026-09-01T21:24:35.904Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -24963,7 +24963,9 @@ const ACTION_REGISTRY = {
     params: [{ name: 'message', type: 'textarea', label: 'Текст' }],
     async execute(engine, params, ctx) {
       const msg = params.message || 'Продолжить?';
-      const ok = typeof window !== 'undefined' ? window.confirm(msg) : true;
+      const ok = typeof GameDialogs !== 'undefined'
+        ? await GameDialogs.confirm('', msg)
+        : true;
       if (ok && params.onConfirm != null) {
         await ActionRunner.resolveBranch(engine, params.onConfirm, ctx);
       } else if (!ok && params.onCancel != null) {
@@ -30566,7 +30568,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 
 ;/* —— dist/engine.bundle.js —— */
-/* engine bundle generated 2026-09-01T21:16:03.634Z */
+/* engine bundle generated 2026-09-01T21:24:35.895Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -35060,7 +35062,11 @@ Object.assign(GameEngine, {
           this.applyGameData(data, 'file-picker');
           this.log('✅ Контент загружен: ' + (data.meta?.title || file.name), 'log-heal');
         } catch (err) {
-          alert('❌ Ошибка чтения JSON: ' + err.message);
+          const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+          await GameDialogs.alert(
+            tr('common.error'),
+            tr('game.dialog.jsonReadError', { message: err.message })
+          );
         }
       };
       input.click();
@@ -35349,9 +35355,11 @@ Object.assign(GameEngine, {
       }
     },
 
-    returnToCampaignPicker() {
-      if (this.state.charName?.trim() && !confirm('Вернуться к выбору игры? Несохранённый прогресс может быть потерян.')) {
-        return;
+    async returnToCampaignPicker() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (this.state.charName?.trim()) {
+        const ok = await GameDialogs.confirm('', tr('game.dialog.returnToPicker'));
+        if (!ok) return;
       }
       document.getElementById('char-creator-screen')?.classList.add('hidden');
       document.getElementById('game-content')?.classList.add('hidden');
@@ -39652,7 +39660,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const ability = this.resolveAbilityDefinition(abilityId);
       if (!ability) {
-        alert('Умение не найдено в данных progression.abilities');
+        const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+        void GameDialogs.alert(tr('common.error'), tr('game.dialog.abilityNotFound'));
         return;
       }
 
@@ -40553,6 +40562,177 @@ document.addEventListener('DOMContentLoaded', () => {
 
   });
 })();
+
+
+;/* —— js/engine/game-dialogs.js —— */
+/**
+ * Внутриигровые модалки alert / confirm / prompt (без window.alert).
+ * Стили: .modal-overlay / .modal-box из css/style.css
+ */
+(function initGameDialogs(global) {
+  const ROOT_ID = 'game-dialog-overlay';
+  let activeResolve = null;
+  let activeKind = null;
+  let queue = Promise.resolve();
+
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function onKeyDown(event) {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    if (activeKind === 'prompt') dismiss(null);
+    else if (activeKind === 'confirm') dismiss(false);
+    else dismiss(undefined);
+  }
+
+  function ensureRoot() {
+    let root = document.getElementById(ROOT_ID);
+    if (root) return root;
+    root = document.createElement('div');
+    root.id = ROOT_ID;
+    root.className = 'modal-overlay hidden game-dialog-overlay';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    document.body.appendChild(root);
+    return root;
+  }
+
+  function dismiss(result) {
+    const root = document.getElementById(ROOT_ID);
+    if (root) {
+      root.classList.add('hidden');
+      root.innerHTML = '';
+      root.onclick = null;
+    }
+    document.removeEventListener('keydown', onKeyDown);
+    const resolve = activeResolve;
+    activeResolve = null;
+    activeKind = null;
+    if (resolve) resolve(result);
+  }
+
+  function showBox(innerHtml, kind) {
+    const root = ensureRoot();
+    activeKind = kind;
+    root.innerHTML = innerHtml;
+    root.classList.remove('hidden');
+    document.addEventListener('keydown', onKeyDown);
+    root.onclick = (event) => {
+      if (event.target !== root) return;
+      if (kind === 'prompt') dismiss(null);
+      else if (kind === 'confirm') dismiss(false);
+      else dismiss(undefined);
+    };
+  }
+
+  function enqueue(factory) {
+    const run = queue.then(() => factory());
+    queue = run.catch(() => {});
+    return run;
+  }
+
+  function alert(title, text) {
+    return enqueue(() => new Promise((resolve) => {
+      activeResolve = () => resolve();
+      const okLabel = tr('game.dialog.ok');
+      const titleHtml = title
+        ? `<div class="modal-title">${escapeHtml(title)}</div>`
+        : '';
+      showBox(`
+        <div class="modal-box paper-sheet game-dialog-box" onclick="event.stopPropagation()">
+          ${titleHtml}
+          <div class="modal-body">${escapeHtml(text || '')}</div>
+          <div class="game-dialog-actions">
+            <button type="button" class="start-btn game-dialog-ok">${escapeHtml(okLabel)}</button>
+          </div>
+        </div>
+      `, 'alert');
+      const root = document.getElementById(ROOT_ID);
+      const okBtn = root.querySelector('.game-dialog-ok');
+      okBtn?.addEventListener('click', () => dismiss(undefined));
+      okBtn?.focus();
+    }));
+  }
+
+  function confirm(title, text) {
+    return enqueue(() => new Promise((resolve) => {
+      activeResolve = resolve;
+      const okLabel = tr('game.dialog.confirm');
+      const cancelLabel = tr('game.dialog.cancel');
+      const titleHtml = title
+        ? `<div class="modal-title">${escapeHtml(title)}</div>`
+        : '';
+      showBox(`
+        <div class="modal-box paper-sheet game-dialog-box" onclick="event.stopPropagation()">
+          ${titleHtml}
+          <div class="modal-body">${escapeHtml(text || '')}</div>
+          <div class="game-dialog-actions">
+            <button type="button" class="choice game-dialog-cancel">${escapeHtml(cancelLabel)}</button>
+            <button type="button" class="start-btn game-dialog-ok">${escapeHtml(okLabel)}</button>
+          </div>
+        </div>
+      `, 'confirm');
+      const root = document.getElementById(ROOT_ID);
+      root.querySelector('.game-dialog-cancel')?.addEventListener('click', () => dismiss(false));
+      root.querySelector('.game-dialog-ok')?.addEventListener('click', () => dismiss(true));
+      root.querySelector('.game-dialog-ok')?.focus();
+    }));
+  }
+
+  function prompt(title, text, defaultValue = '') {
+    return enqueue(() => new Promise((resolve) => {
+      activeResolve = resolve;
+      const okLabel = tr('game.dialog.confirm');
+      const cancelLabel = tr('game.dialog.cancel');
+      const placeholder = tr('game.dialog.promptPlaceholder');
+      const titleHtml = title
+        ? `<div class="modal-title">${escapeHtml(title)}</div>`
+        : '';
+      showBox(`
+        <div class="modal-box paper-sheet game-dialog-box" onclick="event.stopPropagation()">
+          ${titleHtml}
+          <div class="modal-body">${escapeHtml(text || '')}</div>
+          <input type="text" class="game-dialog-input" value="${escapeHtml(defaultValue)}" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
+          <div class="game-dialog-actions">
+            <button type="button" class="choice game-dialog-cancel">${escapeHtml(cancelLabel)}</button>
+            <button type="button" class="start-btn game-dialog-ok">${escapeHtml(okLabel)}</button>
+          </div>
+        </div>
+      `, 'prompt');
+      const root = document.getElementById(ROOT_ID);
+      const input = root.querySelector('.game-dialog-input');
+      const submit = () => dismiss(input ? input.value : '');
+      root.querySelector('.game-dialog-cancel')?.addEventListener('click', () => dismiss(null));
+      root.querySelector('.game-dialog-ok')?.addEventListener('click', submit);
+      input?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          submit();
+        }
+      });
+      input?.focus();
+      input?.select();
+    }));
+  }
+
+  const GameDialogs = { alert, confirm, prompt, dismiss };
+  global.GameDialogs = GameDialogs;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { GameDialogs };
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : window);
 
 
 ;/* —— js/engine/inventory.js —— */
@@ -41922,12 +42102,10 @@ document.addEventListener('DOMContentLoaded', () => {
       this.showScene('game_over');
     },
 
-    resetGame() {
-      if (confirm('Начать новую игру? Текущий прогресс будет сброшен.')) {
-        localStorage.removeItem(this.getSaveKey());
-      } else {
-        return;
-      }
+    async resetGame() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (!(await GameDialogs.confirm('', tr('game.dialog.resetGame')))) return;
+      localStorage.removeItem(this.getSaveKey());
       this.state.hp = 25;
       this.state.maxHp = 25;
       this.state.gold = 0;
@@ -44890,11 +45068,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    deleteSave() {
-      if (confirm('Удалить сохранение игры?')) {
-        localStorage.removeItem(this.getSaveKey());
-        this.log('🗑 Сохранение удалено', 'log-dice');
-      }
+    async deleteSave() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (!(await GameDialogs.confirm('', tr('game.dialog.deleteSave')))) return;
+      localStorage.removeItem(this.getSaveKey());
+      this.log('🗑 Сохранение удалено', 'log-dice');
     }
   });
 })();
@@ -53248,13 +53426,14 @@ if (typeof window !== 'undefined') {
       return true;
     },
 
-    requestCancel() {
+    async requestCancel() {
       const cfg = this._sceneConfig || {};
       if (typeof GameEngine.runSceneHandler === 'function' && cfg.onCancel) {
         GameEngine.runSceneHandler(cfg.onCancel, { sceneId: cfg.sceneId || GameEngine.state.scene });
         return;
       }
-      if (typeof window !== 'undefined' && window.confirm('Отменить создание персонажа?')) {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (await GameDialogs.confirm('', tr('game.dialog.cancelCharCreation'))) {
         GameEngine.returnToCampaignPicker?.();
       }
     },

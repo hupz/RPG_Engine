@@ -73,6 +73,7 @@ const engineFiles = [
   'js/game-ui/ui-runtime.js',
   'js/engine/core.js',
   'js/engine/ui-renderer.js',
+  'js/engine/game-dialogs.js',
   'js/engine/inventory.js',
   'js/quests/quest-stage-actions-bridge.js',
   'js/engine/campaign-hooks.js',

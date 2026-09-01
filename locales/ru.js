@@ -1,4 +1,4 @@
-﻿/* generated from ru.json */
+/* generated from ru.json */
 window.I18N_LOCALES = window.I18N_LOCALES || {};
 window.I18N_LOCALES['ru'] = {
   "lang": {
@@ -32,8 +32,44 @@ window.I18N_LOCALES['ru'] = {
     "pageTitle": "MythMill RpgEngine — Редактор",
     "title": "MythMill RpgEngine",
     "titleTooltip": "На дашборд",
-    "dashboard": "Дашборд",
-    "newProject": "Новый проект",
+    "dashboard": {
+      "title": "Дашборд проекта",
+      "emptyHint": "Создайте новый проект или загрузите game_data.json.",
+      "newBtn": "Новый проект",
+      "loadBtn": "Загрузить JSON",
+      "saveJson": "Сохранить в JSON",
+      "exportHtml": "Экспорт в HTML",
+      "quickActions": "Быстрые действия",
+      "newScene": "Новая сцена",
+      "saveJsonFile": "Сохранить JSON",
+      "exportGame": "Экспорт игры",
+      "statsScenes": "Сцен",
+      "statsQuests": "Квестов",
+      "statsEnemies": "Врагов",
+      "statsItems": "Предметов",
+      "statsClasses": "Классов",
+      "statsAbilities": "Умений",
+      "warnTitle": "Предупреждения",
+      "warnBroken": "Битых ссылок: {errors}, тупиков: {deadEnds}.",
+      "warnOk": "Критичных битых ссылок не найдено.",
+      "validateBtn": "Проверить проект",
+      "themePreview": "Тема интерфейса"
+    },
+    "newProject": {
+      "title": "📄 Новый проект",
+      "projectName": "Название проекта",
+      "namePlaceholder": "Моя новая игра",
+      "ruleSystem": "Система правил",
+      "cancel": "Отмена",
+      "create": "Создать проект",
+      "enterName": "Введите название проекта.",
+      "defaultTitle": "Моя новая игра",
+      "defaultDescription": "Новый проект",
+      "startLocation": "Начало",
+      "startText": "Добро пожаловать!",
+      "noTitle": "Без названия",
+      "editMeta": "✏️ Мета"
+    },
     "loadJson": "Загрузить JSON",
     "saveProject": "Сохранить проект",
     "saveProjectTitle": "Сохранить или экспортировать проект",
@@ -175,29 +211,6 @@ window.I18N_LOCALES['ru'] = {
       "progression": "📈 Прогрессия",
       "json": "📄 JSON"
     },
-    "dashboard": {
-      "title": "Дашборд проекта",
-      "emptyHint": "Создайте новый проект или загрузите game_data.json.",
-      "newBtn": "Новый проект",
-      "loadBtn": "Загрузить JSON",
-      "saveJson": "Сохранить в JSON",
-      "exportHtml": "Экспорт в HTML",
-      "quickActions": "Быстрые действия",
-      "newScene": "Новая сцена",
-      "saveJsonFile": "Сохранить JSON",
-      "exportGame": "Экспорт игры",
-      "statsScenes": "Сцен",
-      "statsQuests": "Квестов",
-      "statsEnemies": "Врагов",
-      "statsItems": "Предметов",
-      "statsClasses": "Классов",
-      "statsAbilities": "Умений",
-      "warnTitle": "Предупреждения",
-      "warnBroken": "Битых ссылок: {errors}, тупиков: {deadEnds}.",
-      "warnOk": "Критичных битых ссылок не найдено.",
-      "validateBtn": "Проверить проект",
-      "themePreview": "Тема интерфейса"
-    },
     "project": {
       "name": "Название",
       "version": "Версия",
@@ -205,21 +218,6 @@ window.I18N_LOCALES['ru'] = {
       "system": "Система",
       "editMeta": "Мета",
       "noProject": "Нет проекта"
-    },
-    "newProject": {
-      "title": "📄 Новый проект",
-      "projectName": "Название проекта",
-      "namePlaceholder": "Моя новая игра",
-      "ruleSystem": "Система правил",
-      "cancel": "Отмена",
-      "create": "Создать проект",
-      "enterName": "Введите название проекта.",
-      "defaultTitle": "Моя новая игра",
-      "defaultDescription": "Новый проект",
-      "startLocation": "Начало",
-      "startText": "Добро пожаловать!",
-      "noTitle": "Без названия",
-      "editMeta": "✏️ Мета"
     },
     "export": {
       "htmlModalTitle": "Экспорт в HTML",
@@ -324,6 +322,19 @@ window.I18N_LOCALES['ru'] = {
     "lootTitle": "Добыча",
     "lootTake": "Забрать",
     "levelUp": "Новый уровень!",
+    "dialog": {
+      "ok": "OK",
+      "confirm": "Да",
+      "cancel": "Отмена",
+      "promptPlaceholder": "Введите значение…",
+      "noticeTitle": "Сообщение",
+      "jsonReadError": "Ошибка чтения JSON: {message}",
+      "returnToPicker": "Вернуться к выбору игры? Несохранённый прогресс может быть потерян.",
+      "resetGame": "Начать новую игру? Текущий прогресс будет сброшен.",
+      "deleteSave": "Удалить сохранение игры?",
+      "abilityNotFound": "Умение не найдено в данных progression.abilities",
+      "cancelCharCreation": "Отменить создание персонажа?"
+    },
     "achievementUnlocked": "Достижение разблокировано!",
     "hintLabel": "Подсказка",
     "mobileExpandSidebar": "Развернуть панель персонажа",
@@ -463,5 +474,4 @@ window.I18N_LOCALES['ru'] = {
     "tocTitle": "Содержание"
   },
   "help": {}
-}
-
+};

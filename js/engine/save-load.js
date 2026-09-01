@@ -289,11 +289,11 @@
       }
     },
 
-    deleteSave() {
-      if (confirm('Удалить сохранение игры?')) {
-        localStorage.removeItem(this.getSaveKey());
-        this.log('🗑 Сохранение удалено', 'log-dice');
-      }
+    async deleteSave() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (!(await GameDialogs.confirm('', tr('game.dialog.deleteSave')))) return;
+      localStorage.removeItem(this.getSaveKey());
+      this.log('🗑 Сохранение удалено', 'log-dice');
     }
   });
 })();

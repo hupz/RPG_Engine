@@ -3012,7 +3012,8 @@
 
       const ability = this.resolveAbilityDefinition(abilityId);
       if (!ability) {
-        alert('Умение не найдено в данных progression.abilities');
+        const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+        void GameDialogs.alert(tr('common.error'), tr('game.dialog.abilityNotFound'));
         return;
       }
 

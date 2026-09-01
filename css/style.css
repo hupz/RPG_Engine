@@ -2629,6 +2629,31 @@ body.campaign-selecting #char-creator-screen {
 }
 #levelup-modal { z-index: 1100; }
 #loot-modal { z-index: 1050; }
+.game-dialog-overlay { z-index: 1250; }
+.game-dialog-box { max-width: 480px; }
+.game-dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.game-dialog-input {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 12px;
+  font-size: 18px;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--border-dark);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.game-dialog-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 .loot-modal-box {
   max-width: 420px;
 }

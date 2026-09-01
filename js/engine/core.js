@@ -1549,7 +1549,11 @@ Object.assign(GameEngine, {
           this.applyGameData(data, 'file-picker');
           this.log('✅ Контент загружен: ' + (data.meta?.title || file.name), 'log-heal');
         } catch (err) {
-          alert('❌ Ошибка чтения JSON: ' + err.message);
+          const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+          await GameDialogs.alert(
+            tr('common.error'),
+            tr('game.dialog.jsonReadError', { message: err.message })
+          );
         }
       };
       input.click();
@@ -1838,9 +1842,11 @@ Object.assign(GameEngine, {
       }
     },
 
-    returnToCampaignPicker() {
-      if (this.state.charName?.trim() && !confirm('Вернуться к выбору игры? Несохранённый прогресс может быть потерян.')) {
-        return;
+    async returnToCampaignPicker() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (this.state.charName?.trim()) {
+        const ok = await GameDialogs.confirm('', tr('game.dialog.returnToPicker'));
+        if (!ok) return;
       }
       document.getElementById('char-creator-screen')?.classList.add('hidden');
       document.getElementById('game-content')?.classList.add('hidden');
