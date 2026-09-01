@@ -17,6 +17,11 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import { parseEditorScripts, SCRIPT_TAG_RE } from './parse-editor-scripts.mjs';
+import {
+  GAME_CSP_POLICY,
+  EDITOR_CSP_POLICY,
+  upsertCspMeta
+} from './csp-policies.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -192,8 +197,14 @@ function generateEditorBundleHtml(html, scriptCount) {
     return full;
   });
 
+  const withCsp = upsertCspMeta(
+    result,
+    EDITOR_CSP_POLICY,
+    'editor-bundle: new Function в editor-модулях; script-src-attr — legacy onclick='
+  );
+
   const banner = `<!-- editor-bundle.html: ${scriptCount} внешних скриптов editor.html → ${bundleRelSrc}. Сгенерировано scripts/build.mjs editor-full -->\n`;
-  writeFileSync(bundleHtmlPath, banner + result, 'utf8');
+  writeFileSync(bundleHtmlPath, banner + withCsp, 'utf8');
   console.log('wrote', bundleHtmlPath);
 }
 
@@ -303,6 +314,12 @@ function generateIndexProdHtml(html, scriptCount) {
   result = result.replace(
     /<!-- Движок: модули js\/engine\/ \(порядок важен\) -->\s*\n/g,
     ''
+  );
+
+  result = upsertCspMeta(
+    result,
+    GAME_CSP_POLICY,
+    'index.prod: рантайм без eval; script-src-attr — legacy onclick='
   );
 
   const banner = `<!-- index.prod.html: тело index.html (${scriptCount} модулей) → ${indexProdBundleRel}. Сгенерировано scripts/build.mjs index-prod. Не править вручную. -->\n`;

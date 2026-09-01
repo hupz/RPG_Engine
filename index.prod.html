@@ -1,9 +1,12 @@
-<!-- index.prod.html: тело index.html (69 модулей) → dist/index-prod.bundle.js. Сгенерировано scripts/build.mjs index-prod. Не править вручную. -->
+<!-- index.prod.html: тело index.html (70 модулей) → dist/index-prod.bundle.js. Сгенерировано scripts/build.mjs index-prod. Не править вручную. -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- CSP (audit v3 ch.6): рантайм без eval; script-src-attr — legacy onclick= в разметке -->
+<!-- CSP (audit v3 ch.6): index.prod: рантайм без eval; script-src-attr — legacy onclick= -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <title>Мельница на Тихой реке — D&D Solo (JSON Edition)</title>
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/dark-ui.css">
@@ -12,7 +15,7 @@
 <script src="locales/en.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/theme.js"></script>
-<script>ThemeSystem.applyStoredMode();</script>
+<script src="js/theme-apply-stored.js"></script>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/combat.css">
 <script src="js/mobile-layout.js"></script>
@@ -479,16 +482,6 @@
 
 
 <div id="ui-tooltip"></div>
-<script>
-function gameAppBootstrap() {
-  ThemeSystem.initAppTheme();
-  ThemeSystem.registerToggleButton(document.getElementById('game-theme-toggle'));
-  if (typeof I18n !== 'undefined' && I18n.isLoaded()) I18n.applyDocument();
-}
-document.addEventListener('i18n-ready', gameAppBootstrap);
-document.addEventListener('DOMContentLoaded', function () {
-  if (typeof I18n !== 'undefined' && I18n._ready) gameAppBootstrap();
-});
-</script>
+
 </body>
 </html>

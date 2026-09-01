@@ -29,6 +29,7 @@
     'locales/en.js',
     'js/i18n.js',
     'js/theme.js',
+    'js/theme-apply-stored.js',
     'js/mobile-layout.js'
   ];
 
@@ -109,8 +110,59 @@
     'js/wait-panel.js',
     'js/character-creator.js',
     'js/scene-template-char-creation.js',
-    'js/components/component-character-creator.js'
+    'js/components/component-character-creator.js',
+    'js/game-bootstrap.js'
   ];
+
+  const CSP_META_RE = /<meta\s+http-equiv=["']Content-Security-Policy["'][^>]*>\s*/gi;
+  const CSP_COMMENT_RE = /<!--\s*CSP \(audit v3 ch\.6\):[\s\S]*?-->\s*/gi;
+
+  /** sha256-хеши inline-<script> для standalone HTML (синхронно с scripts/csp-policies.mjs GAME, без eval). */
+  async function sha256Base64(text) {
+    const normalized = text.replace(/\r\n/g, '\n');
+    const data = new TextEncoder().encode(normalized);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    let binary = '';
+    const bytes = new Uint8Array(digest);
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  async function buildStandaloneCspMeta(html) {
+    const hashes = [];
+    const re = /<script(?![^>]*\bsrc\s*=)([^>]*)>([\s\S]*?)<\/script>/gi;
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      const body = m[2];
+      if (!body.trim()) continue;
+      const hash = await sha256Base64(body);
+      hashes.push(`'sha256-${hash}'`);
+    }
+    const scriptSrc = ["'self'", ...hashes].join(' ');
+    const policy = [
+      "default-src 'self'",
+      `script-src ${scriptSrc}`,
+      "script-src-attr 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data:",
+      "media-src 'self' data:",
+      "connect-src 'self'",
+      "font-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'none'"
+    ].join('; ');
+    return `<!-- CSP (audit v3 ch.6): standalone export — inline-скрипты по sha256-хешам; script-src-attr — onclick= -->\n<meta http-equiv="Content-Security-Policy" content="${policy}">\n`;
+  }
+
+  async function injectStandaloneCsp(html) {
+    let out = html.replace(CSP_META_RE, '').replace(CSP_COMMENT_RE, '');
+    const meta = await buildStandaloneCspMeta(out);
+    if (/<meta\s+name=["']viewport["']/i.test(out)) {
+      return out.replace(/(<meta\s+name=["']viewport["'][^>]*>\s*)/i, `$1${meta}`);
+    }
+    return out.replace(/(<meta\s+charset=["'][^"']+["']>\s*)/i, `$1${meta}`);
+  }
 
   const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
 
@@ -422,17 +474,8 @@
       bodyScripts.push('<script>\n' + content + '\n</script>');
     }
 
-    const bootScript = `<script>
-document.addEventListener('DOMContentLoaded', function () {
-  if (typeof ThemeSystem !== 'undefined') {
-    ThemeSystem.initAppTheme();
-    ThemeSystem.registerToggleButton(document.getElementById('game-theme-toggle'));
-  }
-});
-</script>`;
-
     const scriptBlockRe = /<script src="[^"]+"><\/script>\s*/gi;
-    const endScriptsRe = /<div id="ui-tooltip"><\/div>\s*<script>[\s\S]*?<\/script>\s*(?=<\/body>)/i;
+    const endScriptsRe = /<div id="ui-tooltip"><\/div>\s*<script src="[^"]+"><\/script>\s*(?=<\/body>)/i;
 
     shell = shell.replace(scriptBlockRe, '');
     shell = shell.replace(endScriptsRe, '<div id="ui-tooltip"></div>\n');
@@ -440,7 +483,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const styleInject = `<style id="rpg-inline-css">\n${cssBlock}\n</style>\n${headInline}\n`;
     shell = shell.replace('</head>', styleInject + '</head>');
 
-    shell = shell.replace('</body>', bodyScripts.join('\n') + '\n' + bootScript + '\n</body>');
+    shell = shell.replace('</body>', bodyScripts.join('\n') + '\n</body>');
+
+    shell = await injectStandaloneCsp(shell);
 
     return shell;
   }

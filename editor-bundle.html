@@ -1,9 +1,12 @@
-<!-- editor-bundle.html: 209 внешних скриптов editor.html → dist/editor-full.bundle.js. Сгенерировано scripts/build.mjs editor-full -->
+<!-- editor-bundle.html: 210 внешних скриптов editor.html → dist/editor-full.bundle.js. Сгенерировано scripts/build.mjs editor-full -->
 <!DOCTYPE html>
 <html lang="ru" data-theme-mode="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- CSP (audit v3 ch.6): editor new Function; script-src-attr — legacy onclick= в разметке -->
+<!-- CSP (audit v3 ch.6): editor-bundle: new Function в editor-модулях; script-src-attr — legacy onclick= -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <title>MythMill RpgEngine</title>
 <script src="dist/editor-full.bundle.js"></script>
 <link rel="stylesheet" href="css/theme.css">
@@ -11,7 +14,7 @@
 
 
 
-<script>ThemeSystem.applyStoredMode();</script>
+
 <link rel="stylesheet" href="css/i18n.css">
 <link rel="stylesheet" href="css/editor.css">
 

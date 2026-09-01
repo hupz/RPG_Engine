@@ -120,8 +120,9 @@ assert(prodHtml.includes('Не править вручную'), 'do-not-edit ban
 assert(prodHtml.includes('dist/index-prod.bundle.js'), 'bundle src path correct');
 assert(!prodHtml.includes('src="js/engine/core.js"'), 'dev engine module tag removed');
 assert(!prodHtml.includes('editor-test-keys.js'), 'editor test keys removed from prod html');
-assert(prodHtml.includes('ThemeSystem.applyStoredMode();'), 'head inline theme script preserved');
-assert(prodHtml.includes('function gameAppBootstrap'), 'body inline bootstrap preserved');
+assert(prodHtml.includes('js/theme-apply-stored.js'), 'head theme-apply-stored.js preserved');
+assert(bundleContent.includes('/* —— js/game-bootstrap.js —— */'), 'game-bootstrap embedded in prod bundle');
+assert(prodHtml.includes('Content-Security-Policy'), 'CSP meta preserved in index.prod.html');
 assert(prodHtml.includes('src="locales/ru.js"'), 'head locale script preserved');
 
 const bodyModuleStarted = prodHtml.indexOf(BODY_MODULE_START);

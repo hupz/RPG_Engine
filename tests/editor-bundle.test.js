@@ -53,7 +53,7 @@ const inlineMatch = parseOut.stdout.match(/inline:\s*(\d+)/);
 const extCount = extMatch ? parseInt(extMatch[1], 10) : 0;
 const inlineCount = inlineMatch ? parseInt(inlineMatch[1], 10) : 0;
 assert(extCount >= 190, `editor.html has many external scripts (${extCount})`);
-assert(inlineCount === 1, 'editor.html has exactly one inline script');
+assert(inlineCount === 0, 'editor.html has no inline scripts (CSP: external theme-apply-stored.js)');
 
 const bundleContent = read('dist/editor-full.bundle.js');
 const html = read('editor.html');
@@ -72,7 +72,7 @@ for (const src of localScripts) {
 }
 assert(missing === 0, `all ${localScripts.length} local scripts present in bundle`);
 
-assert(bundleContent.includes('ThemeSystem.applyStoredMode()'), 'inline ThemeSystem call embedded in bundle');
+assert(bundleContent.includes('ThemeSystem.applyStoredMode()'), 'theme-apply-stored.js embedded in bundle');
 assert(
   bundleContent.includes('editorBootSmoke') || bundleContent.includes('runBootSmokeTest'),
   'boot smoke module in bundle'
@@ -80,17 +80,16 @@ assert(
 
 // Порядок: theme.js перед locales в бандле
 const themePos = bundleContent.indexOf('/* —— js/theme.js —— */');
+const themeApplyPos = bundleContent.indexOf('/* —— js/theme-apply-stored.js —— */');
 const ruPos = bundleContent.indexOf('/* —— locales/ru.js —— */');
-const inlinePos = bundleContent.indexOf('ThemeSystem.applyStoredMode()');
 assert(themePos > 0 && ruPos > themePos, 'theme.js before locales/ru.js');
-assert(inlinePos > themePos && inlinePos < ruPos, 'inline after theme, before locales');
+assert(themeApplyPos > themePos && themeApplyPos < ruPos, 'theme-apply-stored after theme, before locales');
 
 console.log('\nEditor bundle — editor-bundle.html wiring');
 
 const extInBundleHtml = (bundleHtml.match(/<script[^>]+src=/gi) || []).length;
 assert(extInBundleHtml === 1, 'editor-bundle.html has exactly one external script tag');
 assert(bundleHtml.includes('dist/editor-full.bundle.js'), 'bundle src path correct');
-assert(bundleHtml.includes('ThemeSystem.applyStoredMode();'), 'inline script preserved in HTML');
 assert(!bundleHtml.includes('src="js/editor/editor-boot-smoke.js"'), 'individual boot-smoke tag removed');
 
 const dup = spawnSync(process.execPath, ['scripts/find-duplicate-editor-methods.mjs', '--check-baseline'], {

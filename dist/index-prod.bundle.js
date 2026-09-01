@@ -1,4 +1,4 @@
-/* index-prod bundle — 69 scripts from index.html — 2026-09-01T20:52:59.000Z */
+/* index-prod bundle — 70 scripts from index.html — 2026-09-01T21:16:03.645Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -30566,7 +30566,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 
 ;/* —— dist/engine.bundle.js —— */
-/* engine bundle generated 2026-09-01T20:52:58.988Z */
+/* engine bundle generated 2026-09-01T21:16:03.634Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -54439,4 +54439,16 @@ if (typeof window !== 'undefined') {
     };
   }
 })();
+
+
+;/* —— js/game-bootstrap.js —— */
+function gameAppBootstrap() {
+  ThemeSystem.initAppTheme();
+  ThemeSystem.registerToggleButton(document.getElementById('game-theme-toggle'));
+  if (typeof I18n !== 'undefined' && I18n.isLoaded()) I18n.applyDocument();
+}
+document.addEventListener('i18n-ready', gameAppBootstrap);
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof I18n !== 'undefined' && I18n._ready) gameAppBootstrap();
+});
 
