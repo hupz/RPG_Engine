@@ -1,0 +1,913 @@
+/* ========== Combat Timeline ========== */
+
+.combat-timeline-host {
+  width: 100%;
+  margin: 0 0 12px;
+  position: sticky;
+  top: 0;
+  z-index: 120;
+}
+
+.combat-timeline-host.hidden {
+  display: none;
+}
+
+.combat-timeline {
+  --ct-card-w: 88px;
+  --ct-card-h: 96px;
+  --ct-active-scale: 1.12;
+  --ct-glow: color-mix(in srgb, var(--accent, #6d4c41) 55%, transparent);
+  --ct-surface: color-mix(in srgb, var(--paper, #faf6f0) 92%, var(--ink, #1a1a1a) 8%);
+  --ct-border: var(--border, #d7cbb8);
+  --ct-ink: var(--ink, #2a2218);
+  --ct-muted: var(--muted, #5d5247);
+
+  background: var(--ct-surface);
+  border: 2px solid var(--ct-border);
+  border-radius: 12px;
+  padding: 10px 12px 12px;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--shadow-sm, rgba(0, 0, 0, 0.12)) 80%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.combat-timeline__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.combat-timeline__title {
+  font-family: var(--font-heading, inherit);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ct-ink);
+  letter-spacing: 0.02em;
+}
+
+.combat-timeline__round {
+  font-size: 0.85rem;
+  color: var(--ct-muted);
+  white-space: nowrap;
+}
+
+.combat-timeline__scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ct-border) transparent;
+  padding-bottom: 4px;
+}
+
+.combat-timeline__scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.combat-timeline__scroll::-webkit-scrollbar-thumb {
+  background: var(--ct-border);
+  border-radius: 4px;
+}
+
+.combat-timeline__track {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 10px;
+  min-height: calc(var(--ct-card-h) * var(--ct-active-scale) + 8px);
+  padding: 4px 2px;
+}
+
+.combat-timeline__next-label {
+  align-self: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ct-muted);
+  padding: 0 4px 0 2px;
+  flex-shrink: 0;
+}
+
+.combat-timeline__card {
+  position: relative;
+  flex: 0 0 var(--ct-card-w);
+  width: var(--ct-card-w);
+  min-height: var(--ct-card-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 8px 6px 10px;
+  border-radius: 10px;
+  border: 2px solid var(--ct-border);
+  background: color-mix(in srgb, var(--card-bg, #fff) 90%, var(--ct-surface));
+  color: var(--ct-ink);
+  transition:
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 320ms ease,
+    border-color 280ms ease,
+    opacity 280ms ease;
+  will-change: transform;
+}
+
+.combat-timeline__card--upcoming {
+  opacity: 0.82;
+  transform: scale(0.94);
+}
+
+.combat-timeline__card--active {
+  --ct-card-w: 100px;
+  width: 100px;
+  min-height: 108px;
+  transform: scale(var(--ct-active-scale));
+  z-index: 2;
+  border-color: var(--accent, #6d4c41);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent),
+    0 8px 24px var(--ct-glow);
+  animation: combat-timeline-pulse 2s ease-in-out infinite;
+}
+
+.combat-timeline__card--player.combat-timeline__card--active {
+  border-color: color-mix(in srgb, var(--success, #2e7d32) 70%, var(--accent));
+}
+
+.combat-timeline__card--enemy.combat-timeline__card--active {
+  border-color: color-mix(in srgb, var(--danger, #c62828) 65%, var(--accent));
+}
+
+.combat-timeline__card--delayed {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+.combat-timeline__card--ready {
+  outline: 2px dotted color-mix(in srgb, var(--info, #1565c0) 60%, var(--accent));
+  outline-offset: 2px;
+}
+
+.combat-timeline__card--animating {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.combat-timeline__card--enter {
+  animation: combat-timeline-enter 360ms ease forwards;
+}
+
+@keyframes combat-timeline-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent),
+      0 8px 20px var(--ct-glow);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent),
+      0 10px 28px var(--ct-glow);
+  }
+}
+
+@keyframes combat-timeline-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.combat-timeline__info {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 18%, var(--ct-surface));
+  color: var(--accent);
+  font-size: 13px;
+  line-height: 1;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.combat-timeline__info:hover,
+.combat-timeline__info:focus-visible {
+  background: color-mix(in srgb, var(--accent) 30%, var(--ct-surface));
+  transform: scale(1.08);
+  outline: none;
+}
+
+.combat-timeline__portrait {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--ink) 15%, transparent));
+}
+
+.combat-timeline__card--active .combat-timeline__portrait {
+  font-size: 2.35rem;
+}
+
+.combat-timeline__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  text-align: center;
+}
+
+.combat-timeline__name {
+  font-size: 0.72rem;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ct-ink);
+}
+
+.combat-timeline__init {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.combat-timeline__badge {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--ct-ink);
+}
+
+.combat-timeline__badge--ready {
+  background: color-mix(in srgb, var(--info, #1565c0) 25%, transparent);
+}
+
+/* Тёмная тема (пресеты с тёмным --page-bg / --paper) */
+body.theme-dark-fantasy .combat-timeline,
+body.theme-midnight .combat-timeline,
+[data-theme="dark"] .combat-timeline {
+  --ct-surface: color-mix(in srgb, var(--paper, #1e1a16) 88%, #000 12%);
+  --ct-ink: var(--ink, #e8e0d4);
+  --ct-muted: color-mix(in srgb, var(--ink) 65%, transparent);
+  --ct-glow: color-mix(in srgb, var(--accent, #c9a227) 45%, #000);
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) .combat-timeline {
+    --ct-surface: color-mix(in srgb, var(--paper, #1c1814) 90%, #0a0a0a);
+  }
+}
+
+/* Мобильная адаптация */
+@media (max-width: 640px) {
+  .combat-timeline-host {
+    margin-bottom: 8px;
+    top: 0;
+  }
+
+  .combat-timeline {
+    padding: 8px 10px 10px;
+    border-radius: 10px;
+  }
+
+  .combat-timeline {
+    --ct-card-w: 76px;
+    --ct-card-h: 86px;
+  }
+
+  .combat-timeline__card--active {
+    width: 88px;
+    min-height: 96px;
+    --ct-active-scale: 1.06;
+  }
+
+  .combat-timeline__portrait {
+    font-size: 1.65rem;
+  }
+
+  .combat-timeline__title {
+    font-size: 0.95rem;
+  }
+}
+
+body.mobile #game-content.in-combat .combat-timeline-host {
+  position: relative;
+  top: auto;
+}
+
+/* ========== Combat zones (far / mid / close) ========== */
+
+.combat-zone-field {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px dashed color-mix(in srgb, var(--border) 80%, var(--accent));
+  background: color-mix(in srgb, var(--paper) 94%, var(--accent) 6%);
+}
+
+.combat-zone-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 80px;
+  border-radius: 8px;
+  padding: 8px;
+  border: 2px solid var(--border);
+}
+
+.combat-zone-column--far {
+  background: color-mix(in srgb, var(--info, #1565c0) 8%, var(--card-bg, #fff));
+  border-color: color-mix(in srgb, var(--info) 35%, var(--border));
+}
+
+.combat-zone-column--mid {
+  background: color-mix(in srgb, var(--accent, #6d4c2b) 6%, var(--card-bg, #fff));
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+}
+
+.combat-zone-column--close {
+  background: color-mix(in srgb, var(--danger, #c62828) 8%, var(--card-bg, #fff));
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+
+.combat-zone-column--frontline {
+  background: color-mix(in srgb, var(--danger, #c62828) 8%, var(--card-bg, #fff));
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+
+.combat-zone-column--backline {
+  background: color-mix(in srgb, var(--info, #1565c0) 8%, var(--card-bg, #fff));
+  border-color: color-mix(in srgb, var(--info) 35%, var(--border));
+}
+
+.combat-zone-column__head {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted, #5d5247);
+  text-align: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.combat-zone-column__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.combat-zone-empty {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 12px 4px;
+  opacity: 0.7;
+}
+
+.combat-zone-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+.combat-zone-badge--far {
+  background: color-mix(in srgb, var(--info) 18%, transparent);
+  color: color-mix(in srgb, var(--info) 85%, var(--ink));
+}
+
+.combat-zone-badge--mid {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: color-mix(in srgb, var(--accent) 85%, var(--ink));
+}
+
+.combat-zone-badge--close {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: color-mix(in srgb, var(--danger) 85%, var(--ink));
+}
+
+.combat-zone-badge--frontline {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: color-mix(in srgb, var(--danger) 85%, var(--ink));
+}
+
+.combat-zone-badge--backline {
+  background: color-mix(in srgb, var(--info) 18%, transparent);
+  color: color-mix(in srgb, var(--info) 85%, var(--ink));
+}
+
+@media (max-width: 520px) {
+  .combat-zone-field--triple {
+    grid-template-columns: 1fr;
+  }
+}
+
+.combat-timeline__zone {
+  display: block;
+  margin: 2px auto 0;
+  font-size: 0.58rem;
+}
+
+.combat-zone-unit {
+  position: relative;
+  padding: 8px 8px 8px 10px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--card-bg, #fff);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.combat-zone-unit--player {
+  border-color: color-mix(in srgb, var(--success, #2e7d32) 50%, var(--border));
+}
+
+.combat-zone-unit--enemy.combat-zone-unit--targetable {
+  cursor: pointer;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.combat-zone-unit--enemy.combat-zone-unit--targetable:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--card-bg));
+}
+
+.combat-zone-unit--dead {
+  opacity: 0.45;
+}
+
+.combat-zone-unit__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.combat-zone-badge--on-card {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+.combat-zone-flank {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.combat-zone-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 10px;
+  line-height: 1.35;
+}
+
+.combat-enemies-list--zones {
+  display: none;
+}
+
+/* ========== Combat Log ========== */
+
+.combat-log-host {
+  width: 100%;
+}
+
+/* Внутри общего журнала внизу экрана */
+.combat-log-host--live .combat-log__scroll {
+  max-height: 220px;
+}
+
+.combat-log-host--archive .combat-log {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+.combat-log-host--archive .combat-log__scroll {
+  max-height: 160px;
+}
+
+.combat-log__btn--dismiss {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  font-weight: 600;
+}
+
+.combat-log__btn.hidden {
+  display: none;
+}
+
+.combat-log {
+  --cl-damage: #c62828;
+  --cl-crit: #e65100;
+  --cl-heal: #2e7d32;
+  --cl-miss: #757575;
+  --cl-effect: #6a1b9a;
+  --cl-combat: #5d4037;
+  --cl-info: #455a64;
+  --cl-death: #4a148c;
+
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-bg, #fff) 92%, var(--ink) 8%);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--shadow-sm) 70%, transparent);
+  overflow: hidden;
+}
+
+.combat-log__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
+  background: color-mix(in srgb, var(--paper) 90%, var(--accent) 10%);
+}
+
+.combat-log__title {
+  font-family: var(--font-heading, inherit);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.combat-log__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.combat-log__btn {
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.combat-log__btn:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--card-bg));
+}
+
+.combat-log__scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 8px 10px 10px;
+  scroll-behavior: smooth;
+}
+
+.combat-log-round {
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: color-mix(in srgb, var(--paper) 96%, transparent);
+}
+
+.combat-log-round--current {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.combat-log-round__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  background: color-mix(in srgb, var(--accent) 10%, var(--paper));
+  color: var(--ink);
+  font-family: var(--font-heading, inherit);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 8px 8px 0 0;
+}
+
+.combat-log-round--collapsed .combat-log-round__head {
+  border-radius: 8px;
+}
+
+.combat-log-round__chevron {
+  display: inline-block;
+  transition: transform 0.2s ease;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.combat-log-round--collapsed .combat-log-round__chevron {
+  transform: rotate(-90deg);
+}
+
+.combat-log-round__count {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.65;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.combat-log-round__body {
+  padding: 4px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combat-log-round--collapsed .combat-log-round__body {
+  display: none;
+}
+
+.combat-log-entry {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  animation: combat-log-entry-in 0.25s ease;
+}
+
+@keyframes combat-log-entry-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.combat-log-entry__icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.combat-log-entry__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.combat-log-entry__text {
+  display: block;
+  word-break: break-word;
+}
+
+.combat-log-entry__meta {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.combat-log-entry--damage {
+  color: var(--cl-damage);
+  border-left-color: var(--cl-damage);
+  background: color-mix(in srgb, var(--cl-damage) 8%, transparent);
+}
+
+.combat-log-entry--crit {
+  color: var(--cl-crit);
+  border-left-color: var(--cl-crit);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--cl-crit) 14%, transparent),
+    color-mix(in srgb, #ffd54f 10%, transparent)
+  );
+  font-weight: 700;
+}
+
+.combat-log-entry--heal {
+  color: var(--cl-heal);
+  border-left-color: var(--cl-heal);
+  background: color-mix(in srgb, var(--cl-heal) 10%, transparent);
+  font-weight: 600;
+}
+
+.combat-log-entry--miss,
+.combat-log-entry--fail {
+  color: var(--cl-miss);
+  border-left-color: var(--cl-miss);
+  background: color-mix(in srgb, var(--cl-miss) 8%, transparent);
+}
+
+.combat-log-entry--effect,
+.combat-log-entry--buff {
+  color: var(--cl-effect);
+  border-left-color: var(--cl-effect);
+  background: color-mix(in srgb, var(--cl-effect) 9%, transparent);
+}
+
+.combat-log-entry--combat,
+.combat-log-entry--ability,
+.combat-log-entry--attack,
+.combat-log-entry--info {
+  color: var(--cl-combat);
+  border-left-color: color-mix(in srgb, var(--cl-combat) 60%, var(--border));
+}
+
+.combat-log-entry--death {
+  color: var(--cl-death);
+  border-left-color: var(--cl-death);
+  background: color-mix(in srgb, var(--cl-death) 12%, transparent);
+  font-weight: 700;
+}
+
+.combat-log-entry--important {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  font-weight: 600;
+}
+
+.combat-log-entry--crit.combat-log-entry--important,
+.combat-log-entry--death.combat-log-entry--important {
+  animation: combat-log-pulse 0.6s ease;
+}
+
+@keyframes combat-log-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
+}
+
+body.theme-dark-fantasy .combat-log,
+body.theme-midnight .combat-log {
+  --cl-damage: #ef5350;
+  --cl-crit: #ffb74d;
+  --cl-heal: #66bb6a;
+  --cl-miss: #9e9e9e;
+  --cl-effect: #ce93d8;
+}
+
+@media (max-width: 520px) {
+  .combat-log__scroll {
+    max-height: 160px;
+  }
+
+  .combat-log__toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .combat-zone-field {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== Status chips (StatusManager) ========== */
+
+.combat-effects-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px 2px 4px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--paper) 90%, var(--ink) 4%);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  cursor: help;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.status-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--shadow-sm, rgba(0, 0, 0, 0.15)) 70%, transparent);
+}
+
+.status-chip__icon {
+  font-size: 0.95rem;
+}
+
+.status-chip__dur {
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-width: 0.85em;
+  text-align: center;
+  color: var(--ink-light, #5d5247);
+}
+
+.status-chip--important {
+  animation: status-chip-pulse 1.2s ease infinite;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+@keyframes status-chip-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+}
+
+.status-chip--fire {
+  border-color: #e65100;
+  background: color-mix(in srgb, #ffccbc 55%, var(--paper));
+}
+.status-chip--poison,
+.status-chip--crimson {
+  border-color: #6a1b9a;
+  background: color-mix(in srgb, #e1bee7 40%, var(--paper));
+}
+.status-chip--green {
+  border-color: #2e7d32;
+  background: color-mix(in srgb, #c8e6c9 50%, var(--paper));
+}
+.status-chip--gold,
+.status-chip--amber {
+  border-color: #f9a825;
+  background: color-mix(in srgb, #fff8e1 55%, var(--paper));
+}
+.status-chip--violet {
+  border-color: #7b1fa2;
+  background: color-mix(in srgb, #f3e5f5 50%, var(--paper));
+}
+.status-chip--steel,
+.status-chip--teal {
+  border-color: #455a64;
+  background: color-mix(in srgb, #cfd8dc 45%, var(--paper));
+}
+.status-chip--slate {
+  border-color: #546e7a;
+  background: color-mix(in srgb, #eceff1 50%, var(--paper));
+}
+
+.combat-timeline__portrait-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.combat-timeline__statuses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: 72px;
+  margin-top: 2px;
+}
+
+.combat-timeline__statuses .status-chip {
+  padding: 1px 4px;
+  font-size: 0.65rem;
+}
+
+.combat-timeline__statuses .status-chip__dur {
+  display: none;
+}

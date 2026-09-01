@@ -1,0 +1,34 @@
+{
+  "_comment": "Справочник полей statusEffects в game_data.json. Новые состояния добавляйте в корневой ключ statusEffects.",
+  "fields": {
+    "id": "уникальный ID (строка)",
+    "label": "название в UI",
+    "icon": "эмодзи для чипа",
+    "description": "текст tooltip",
+    "behavior": "skip_turn | dot | hot | stat_mod | ac_mod | roll_mod | prone | marker",
+    "duration": "длительность в раундах (число); тик в конце раунда",
+    "value": "куб урона/лечения или числовой модификатор",
+    "attribute": "hp | ac | atkBonus",
+    "grants": "{ advantage, disadvantage }",
+    "category": "condition | buff | debuff | dot | defense | position",
+    "color": "CSS-модификатор status-chip--{color}",
+    "stacks": "true — разрешить несколько экземпляров"
+  },
+  "applyInAbility": {
+    "effects": [
+      { "type": "apply_status", "statusId": "prone", "duration": 2, "targeting": { "scope": "single" } }
+    ]
+  },
+  "examples": {
+    "custom_slow": {
+      "id": "slowed",
+      "label": "Замедление",
+      "icon": "🐌",
+      "description": "Помеха на атаки.",
+      "behavior": "roll_mod",
+      "grants": { "disadvantage": true },
+      "duration": 2,
+      "color": "slate"
+    }
+  }
+}

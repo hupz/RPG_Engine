@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme-mode="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MythMill RpgEngine</title>
+<script src="js/mobile-layout.js"></script>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/dark-ui.css">
+<script src="js/engine-version.js"></script>
+<script src="js/editor/editor-dom.js"></script>
+<script src="js/theme.js"></script>
+<script>ThemeSystem.applyStoredMode();</script>
+<link rel="stylesheet" href="css/i18n.css">
+<link rel="stylesheet" href="css/editor.css">
+<script src="locales/ru.js"></script>
+<script src="locales/en.js"></script>
+<script src="js/i18n.js"></script>
+<link rel="stylesheet" href="css/editor-tutorial.css">
+<link rel="stylesheet" href="css/nl-condition-builder.css">
+<script src="js/systems/base-system.js"></script>
+<script src="js/systems/generic.js"></script>
+<script src="js/systems/dnd5e.js"></script>
+<script src="js/systems/pathfinder2e.js"></script>
+<script src="js/systems/registry.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body.editor-app {
+  font-family: var(--ep-font, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.header {
+  background: var(--editor-header-bg);
+  color: var(--editor-header-fg);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.header h1 {
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 600;
+  line-height: 1.3;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.header-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+}
+.header-buttons .btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--success); color: var(--on-success, #fff); }
+.btn-primary:hover { background: var(--success-dark); }
+.btn-secondary { background: var(--paper-dark); color: var(--ink); border: 2px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { filter: brightness(0.85); }
+.btn-info { background: var(--info); color: var(--on-accent); }
+.btn-info:hover { filter: brightness(0.9); }
+
+.container,
+.editor-shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.editor-nav {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border-right: 2px solid var(--border);
+  min-height: 0;
+}
+.editor-nav-brand {
+  flex-shrink: 0;
+  padding: 14px 14px 10px;
+  border-bottom: 2px solid var(--border);
+}
+.editor-nav-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+.editor-nav-writer-badge {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+.editor-nav-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  min-height: 0;
+}
+.editor-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.editor-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-light);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  text-decoration: none;
+  position: relative;
+}
+.editor-nav-item:hover {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--border);
+}
+.editor-nav-item.active {
+  background: color-mix(in srgb, var(--info, #1565c0) 12%, var(--paper-dark));
+  color: var(--info, #1565c0);
+  border-color: color-mix(in srgb, var(--info, #1565c0) 35%, var(--border));
+  font-weight: 600;
+}
+.editor-nav-item--mode-hidden {
+  display: none !important;
+}
+.editor-nav-icon {
+  flex-shrink: 0;
+  width: 1.25em;
+  text-align: center;
+}
+.editor-nav-label {
+  flex: 1;
+  min-width: 0;
+}
+.editor-nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px 10px;
+  padding: 2px 0 2px 8px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  max-height: none;
+  overflow: visible;
+}
+.editor-nav-sub[hidden] {
+  display: none !important;
+}
+.editor-nav-sub-item {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-light);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+}
+.editor-nav-sub-item:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+.editor-nav-sub-item.active {
+  background: var(--paper-dark);
+  color: var(--info, #1565c0);
+  font-weight: 600;
+}
+.editor-nav-footer {
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 2px solid var(--border);
+  font-size: 12px;
+  color: var(--ink-light);
+  max-height: 220px;
+  overflow-y: auto;
+}
+.editor-nav-footer h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint, var(--ink-light));
+  margin: 0 0 6px;
+}
+.editor-nav-footer .sidebar-mode-panel {
+  margin-top: 10px;
+}
+.editor-workspace {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.context-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--card-bg);
+  border-right: 2px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+  display: none;
+}
+.context-sidebar.is-visible {
+  display: block;
+}
+.editor-section-bar {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.editor-section-bar[hidden] {
+  display: none !important;
+}
+.editor-section-tab {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink-light);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+}
+.editor-section-tab:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.editor-section-tab.active {
+  background: color-mix(in srgb, var(--info, #1565c0) 12%, var(--paper-dark));
+  color: var(--info, #1565c0);
+  border-color: color-mix(in srgb, var(--info, #1565c0) 35%, var(--border));
+  font-weight: 600;
+}
+.context-sidebar h3 {
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.sidebar {
+  width: 280px;
+  background: var(--card-bg);
+  border-right: 2px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+}
+.sidebar h3 {
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+.scene-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.scene-item {
+  position: relative;
+  padding: 10px 12px 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.scene-item:hover { background: var(--paper); border-color: var(--border); }
+.scene-item.active { background: var(--paper-dark); border-color: var(--accent); }
+.scene-item .scene-id { font-size: 12px; color: var(--ink-light); font-family: monospace; }
+.scene-item .scene-loc { font-size: 13px; color: var(--accent); font-weight: 500; }
+.scene-item .scene-preview { font-size: 12px; color: var(--ink-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+.main-area {
+  flex: 1;
+  padding: 16px 20px 20px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.main-area > .tab-content.active {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.tabs .tab {
+  position: relative;
+}
+.tab-issue-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.tab-issue-dot--error {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px var(--card-bg);
+}
+.tab-issue-dot--warning {
+  background: #f1c40f;
+  box-shadow: 0 0 0 2px var(--card-bg);
+}
+.tabs .tab.has-validation-error {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+.tabs .tab.has-validation-warning:not(.has-validation-error) {
+  border-color: color-mix(in srgb, #f1c40f 40%, var(--border));
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-light);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.form-group textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+.form-group .hint {
+  font-size: 12px;
+  color: var(--ink-light);
+  margin-top: 4px;
+}
+
+.choices-section {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.choices-section h4 {
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.choice-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1.4fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  background: var(--paper);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.choice-row input,
+.choice-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+.choice-row .choice-icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.icon-picker-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+  background: var(--card-bg);
+}
+.choice-row .btn-remove {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dialogue-section {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.dialogue-row {
+  display: grid;
+  grid-template-columns: 150px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  background: var(--paper);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.dialogue-row input,
+.dialogue-row textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+.dialogue-row textarea { min-height: 60px; resize: vertical; }
+
+.combat-section {
+  background: #ffebee;
+  border: 2px solid var(--danger);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.combat-section h4 { color: var(--danger); margin-bottom: 12px; }
+.enemy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.enemy-tag {
+  background: var(--card-bg);
+  border: 1px solid var(--danger);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.enemy-tag .remove { cursor: pointer; color: var(--danger); font-weight: bold; }
+
+.states-section {
+  background: #f3e5f5;
+  border: 2px solid #7b1fa2;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.states-section h4 { color: #7b1fa2; margin-bottom: 12px; }
+.state-card {
+  background: var(--card-bg);
+  border: 2px solid #ce93d8;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.state-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.state-card-actions { display: flex; gap: 6px; align-items: center; }
+.choice-row-mini {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.flags-section {
+  background: var(--editor-surface-info, color-mix(in srgb, var(--info) 20%, var(--card-bg)));
+  border: 2px solid var(--info);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.flags-section h4 { color: var(--info); margin-bottom: 12px; }
+.flag-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  background: var(--card-bg);
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.choice-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.choice-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cond-block {
+  background: var(--editor-surface-muted, var(--paper-dark));
+  border: 1px dashed var(--border-dark);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 10px 0;
+}
+.cond-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.cond-rule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px;
+  background: var(--card-bg);
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+.skillcheck-block {
+  background: var(--editor-surface-warn, color-mix(in srgb, var(--gold, #f1c40f) 16%, var(--card-bg)));
+  border: 1px solid color-mix(in srgb, var(--gold, #f1c40f) 40%, var(--border));
+  border-radius: 6px;
+  padding: 12px;
+  margin: 10px 0;
+}
+.preview-panel {
+  background: var(--editor-surface-success, color-mix(in srgb, var(--success) 16%, var(--card-bg)));
+  border: 2px solid var(--success);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.preview-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.preview-chips .chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  cursor: pointer;
+}
+.preview-chips .chip.on { background: #c8e6c9; border-color: #4caf50; }
+.preview-results { margin-top: 12px; }
+.preview-choice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.preview-visible { background: #c8e6c9; }
+.preview-visible.used { opacity: 0.7; }
+.preview-hidden { background: #ffcdd2; color: #666; }
+.condition-reason-tooltip {
+  cursor: help;
+  font-size: 13px;
+  opacity: 0.85;
+  line-height: 1;
+}
+.condition-reason-tooltip:hover { opacity: 1; }
+
+.json-preview {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.tabs-bar {
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+.tabs-bar--legacy {
+  display: none !important;
+  visibility: hidden;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+}
+.editor-nav-item.has-validation-error,
+.editor-nav-sub-item.has-validation-error {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+.editor-nav-item.has-validation-warning:not(.has-validation-error),
+.editor-nav-sub-item.has-validation-warning:not(.has-validation-error) {
+  border-color: color-mix(in srgb, #f1c40f 40%, var(--border));
+}
+.editor-nav-item .tab-issue-dot,
+.editor-nav-sub-item .tab-issue-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.editor-history-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.header-buttons .editor-history-controls {
+  margin-right: 4px;
+}
+.editor-history-controls .btn {
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.editor-history-controls .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tabs-bar .tabs {
+  flex: 1;
+  min-width: 0;
+}
+.tabs-bar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 2px;
+  width: 28px;
+  pointer-events: none;
+  background: linear-gradient(to left, var(--card-bg, #fff), transparent);
+}
+.tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+.tabs::-webkit-scrollbar { height: 6px; }
+.tabs::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+.tab {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--ink-light);
+  user-select: none;
+}
+.tab.active {
+  color: var(--info, #1565c0);
+  border-bottom-color: var(--info, #1565c0);
+}
+.tab:hover { color: var(--info, #1565c0); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.hidden { display: none !important; }
+.editor-modal { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.editor-modal.hidden { display: none !important; }
+.editor-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.editor-modal-panel { position: relative; background: var(--card-bg); border: 2px solid var(--border); border-radius: 10px; padding: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.editor-modal-panel--wide { max-width: 720px; }
+.tpl-multi-box { max-height: 160px; overflow: auto; border: 1px solid var(--border); padding: 8px; border-radius: 6px; }
+.tpl-multi-check { display: block; font-size: 13px; margin: 4px 0; }
+.tpl-preview-box { background: var(--paper); border: 1px solid var(--border); padding: 12px; border-radius: 6px; max-height: 240px; overflow: auto; }
+.tpl-preview-text { white-space: pre-wrap; font-size: 13px; margin: 8px 0; }
+.scene-tpl-badge { margin-right: 4px; }
+.tpl-def-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 16px; background: var(--paper); }
+
+.world-hierarchy-layout { display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 16px; margin-top: 12px; }
+.world-hierarchy-tree { border: 1px solid var(--border); border-radius: 8px; padding: 12px; max-height: 70vh; overflow: auto; background: var(--paper); }
+.world-hierarchy-detail { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--card-bg); }
+.wh-tree { list-style: none; padding-left: 0; margin: 0; }
+.wh-tree ul { list-style: none; padding-left: 18px; margin: 4px 0; }
+.wh-tree-btn { display: block; width: 100%; text-align: left; border: none; background: transparent; padding: 4px 6px; cursor: pointer; font-size: 13px; border-radius: 4px; }
+.wh-tree-btn:hover { background: var(--paper); }
+.wh-tree-btn--hub { font-weight: 600; }
+.wh-scene-list { font-size: 13px; line-height: 1.8; }
+.wh-npc-checks label { display: block; margin: 4px 0; }
+.wh-map-diagram { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.wh-map-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.wh-map-hub-block { border: 2px solid var(--border); border-radius: 8px; padding: 10px; min-width: 140px; }
+.wh-map-hub { font-weight: 700; margin: 6px 0; }
+.wh-map-scenes { font-size: 18px; letter-spacing: 4px; }
+.wh-map-inherit-hint { font-size: 11px; color: var(--ink-light); }
+
+.rep-manager-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.rep-faction-grid { display: flex; flex-direction: column; gap: 10px; }
+.rep-faction-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 14px; }
+.rep-faction-card-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.beast-manager-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.beast-card-grid { display: flex; flex-direction: column; gap: 10px; }
+.beast-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 14px; }
+.beast-card-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.beast-edit-form .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.beast-abilities-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.beast-ability-check { font-size: 14px; display: block; }
+.rep-level-card { border-left: 4px solid var(--accent); padding: 10px 12px; margin: 8px 0; background: var(--paper); border-radius: 4px; }
+.rep-level-card-head { font-weight: 600; margin-bottom: 6px; }
+.rep-behavior-tier { border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+.rep-effect-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+.quest-editor {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.quest-editor h4 { color: var(--accent); margin-bottom: 12px; }
+.stage-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr auto;
+  gap: 8px;
+  padding: 8px;
+  background: var(--paper);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.stage-row input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; }
+
+.npc-editor {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.npc-editor h4 { color: var(--accent); margin-bottom: 12px; }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-light);
+}
+.empty-state h2 { margin-bottom: 12px; color: var(--ink); }
+
+.validation-errors {
+  background: #ffebee;
+  border: 2px solid var(--danger);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: var(--danger);
+}
+.validation-errors h4 { margin-bottom: 8px; }
+.validation-errors ul { margin-left: 20px; }
+
+.success-message {
+  background: var(--editor-surface-success, color-mix(in srgb, var(--success) 16%, var(--card-bg)));
+  border: 2px solid var(--success);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: var(--success);
+}
+
+.start-screen {
+  text-align: center;
+  padding: 60px 20px;
+}
+.start-screen h2 {
+  font-size: 28px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.start-screen p {
+  font-size: 16px;
+  color: var(--ink-light);
+  margin-bottom: 32px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+.start-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.start-buttons .btn {
+  padding: 16px 24px;
+  font-size: 16px;
+  width: 100%;
+}
+.project-info {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.project-info h4 { color: var(--accent); margin-bottom: 12px; }
+
+.class-editor-wrap { display: flex; gap: 16px; align-items: flex-start; }
+.class-editor-sidebar {
+  width: 200px; flex-shrink: 0;
+  background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 8px;
+}
+.class-editor-sidebar button.class-pick {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 12px; margin-bottom: 4px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--paper); cursor: pointer; font-size: 14px;
+}
+.class-editor-sidebar button.class-pick.active {
+  border-color: var(--accent); background: var(--paper-dark); font-weight: 600;
+}
+.class-editor-detail { flex: 1; min-width: 0; }
+.item-pick-curse { margin-right: 4px; }
+.item-curse-block {
+  margin-top: 14px; padding: 12px; border: 2px solid #6b3a1f; border-radius: 8px;
+  background: rgba(80, 20, 20, 0.06);
+}
+.item-curse-title { margin: 0 0 10px; color: #6b3a1f; font-size: 15px; }
+.item-curse-fields {
+  overflow: hidden; max-height: 0; opacity: 0;
+  transition: max-height 150ms ease, opacity 150ms ease;
+}
+.item-curse-fields--open { max-height: 520px; opacity: 1; }
+.curse-effects-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.curse-effects-toolbar select { flex: 1; min-width: 140px; }
+.curse-effects-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.curse-effect-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; background: var(--paper-dark); border: 1px solid var(--border); border-radius: 16px;
+}
+.curse-pill-remove { border: none; background: transparent; cursor: pointer; padding: 0 2px; }
+.field-error { border-color: #c62828 !important; }
+.field-error-msg { color: #c62828; font-size: 12px; margin-top: 4px; }
+.curse-effects-group.field-error .curse-effects-pills { outline: 1px solid #c62828; border-radius: 4px; padding: 4px; }
+.craft-editor-wrap { min-height: 420px; }
+.craft-editor-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 12px;
+}
+.craft-editor-title { font-size: 18px; font-weight: 600; color: var(--accent); }
+.craft-editor-toolbar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.craft-editor-filters {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px;
+}
+.craft-editor-filters select { min-width: 140px; }
+.craft-check { display: block; margin: 6px 0; }
+.craft-check-grid { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.craft-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.craft-detail-card .project-info { margin-top: 12px; }
+.craft-ing-list { display: flex; flex-direction: column; gap: 10px; }
+.craft-ing-row {
+  padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--paper);
+}
+.craft-ing-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-weight: 600; }
+.craft-ing-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.craft-ing-toolbar h4 { margin: 0; }
+.craft-result-preview {
+  margin-top: 8px; padding: 10px; border: 1px dashed var(--border); border-radius: 6px; background: var(--paper);
+}
+.craft-wizard { border: 2px solid var(--border); border-radius: 8px; padding: 16px; background: var(--card-bg); }
+.craft-wizard-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.craft-wizard-step h4 { color: var(--accent); margin-bottom: 10px; }
+.craft-rec-unaffordable { opacity: 0.55; }
+.loot-item-select-wrap { display: flex; flex-direction: column; gap: 6px; }
+.loot-filter-select { font-size: 12px; }
+.btn-sm { padding: 2px 8px; font-size: 12px; }
+@media (max-width: 768px) {
+  .craft-editor-wrap.quest-manager { flex-direction: column; }
+  .craft-editor-wrap .quest-manager-sidebar { width: 100%; max-height: 220px; overflow-y: auto; }
+}
+.class-section {
+  background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px;
+  padding: 16px; margin-bottom: 14px;
+}
+.class-section h4 { color: var(--accent); margin-bottom: 12px; font-size: 15px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.ability-edit-card { background: var(--paper); padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px dashed var(--border-dark); }
+.item-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.item-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; background: var(--paper); border: 1px solid var(--border); border-radius: 16px; font-size: 13px;
+}
+.item-chip button { border: none; background: none; color: var(--danger); cursor: pointer; font-weight: bold; }
+.progression-level-row {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--paper);
+}
+.progression-level-row .row-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.progression-choice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin: 4px 4px 0 0;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--card-bg);
+  font-size: 13px;
+}
+.progression-choice-chip button {
+  border: none;
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+.progression-choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.icon-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  margin-left: 8px;
+  font-size: 20px;
+}
+.icon-preview img {
+  max-width: 24px;
+  max-height: 24px;
+}
+.icon-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.icon-suggestion {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  cursor: pointer;
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.icon-suggestion:hover {
+  border-color: var(--accent);
+  background: var(--paper-dark);
+}
+.icon-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.icon-picker-row > input[type="text"] {
+  flex: 1;
+  min-width: 140px;
+  width: auto !important;
+}
+.icon-picker-row .icon-emoji-select {
+  width: auto !important;
+  min-width: 11rem;
+  max-width: 100%;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+.icon-hint {
+  font-size: 12px;
+  color: var(--ink-light);
+  margin-top: 6px;
+}
+
+.theme-editor-panel h2 { color: var(--accent); margin-bottom: 12px; }
+.theme-preset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 10px;
+}
+.theme-preset-card {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, transform 0.12s;
+}
+.theme-preset-card:hover {
+  border-color: var(--preset-accent, var(--accent));
+  transform: translateY(-2px);
+}
+.theme-preset-card.selected {
+  border-color: var(--preset-accent, var(--accent));
+  box-shadow: 0 0 0 2px var(--border-dark);
+}
+.theme-preset-icon { font-size: 22px; line-height: 1; }
+.theme-preset-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.theme-preset-check {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  line-height: 1;
+}
+.theme-preset-user-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 8px;
+  font-weight: 700;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+.theme-preset-delete {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.theme-preset-delete:hover { background: var(--danger); }
+.theme-selected-label {
+  margin: 8px 0 4px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.theme-custom-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px dashed var(--border);
+}
+.theme-custom-section h3 {
+  font-size: 14px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+.theme-save-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+.theme-save-preset-row input {
+  flex: 1 1 180px;
+  min-width: 140px;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--ink);
+}
+.theme-fonts-details {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.theme-fonts-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-light);
+}
+.theme-colors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.theme-color-row {
+  display: grid;
+  grid-template-columns: 1fr auto 72px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--paper);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.theme-color-row label { font-size: 13px; color: var(--ink-light); font-weight: 600; }
+.theme-color-row input[type="color"] {
+  width: 44px;
+  height: 34px;
+  padding: 2px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--card-bg);
+}
+.theme-color-hex {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.sub-label { font-size: 12px; color: var(--ink-faint); display: block; margin-bottom: 4px; }
+.theme-preview { display: flex; gap: 12px; margin: 16px 0; padding: 12px; border: 2px solid var(--border); border-radius: 8px; background: var(--page-bg); min-height: 140px; }
+
+.balance-editor-panel h2 { color: var(--accent); margin-bottom: 12px; }
+.balance-section-title {
+  font-size: 14px;
+  color: var(--accent);
+  margin: 20px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.balance-table-wrap { overflow-x: auto; margin: 12px 0; }
+.balance-scaling-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+}
+.balance-scaling-table th,
+.balance-scaling-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.balance-scaling-table th { background: var(--paper-dark); color: var(--ink-light); font-size: 13px; }
+.balance-scaling-table input { width: 72px; padding: 6px; text-align: center; }
+.balance-actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.balance-report-output { margin-top: 16px; }
+.balance-report-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+}
+.balance-encounter { margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.balance-encounter h4 { color: var(--accent); margin-bottom: 8px; }
+.balance-enemy-block {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 10px 0;
+}
+.balance-level-row {
+  margin: 10px 0;
+  padding: 8px;
+  border-left: 3px solid var(--border);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.balance-rating { font-weight: 700; margin-top: 6px; }
+.balance-rating--normal { color: #2e7d32; }
+.balance-rating--hard { color: #f57c00; }
+.balance-rating--deadly { color: #c62828; }
+.balance-rating--easy { color: var(--ink-light); }
+.balance-recommendations { margin-top: 16px; }
+.balance-recommendations ul { margin: 8px 0 0 20px; }
+.hint-box { padding: 14px; border-radius: 8px; }
+.tp-sidebar { width: 100px; background: var(--paper); border: 2px solid var(--border-dark); padding: 10px; font-size: 13px; color: var(--ink-light); }
+.tp-main { flex: 1; background: var(--card-bg); border: 2px solid var(--border); padding: 12px; border-radius: 4px; }
+.tp-title { font-family: var(--font-heading); color: var(--accent); font-size: 22px; margin-bottom: 8px; }
+.tp-text { color: var(--ink); font-family: var(--font-body); margin-bottom: 10px; }
+.tp-accent { color: var(--accent); }
+.tp-choice { display: block; width: 100%; text-align: left; margin-bottom: 6px; padding: 8px; background: var(--card-bg); border: 2px solid var(--border); border-radius: 6px; color: var(--ink); font-family: var(--font-body); cursor: default; }
+.tp-btn { padding: 8px 16px; background: var(--accent); color: var(--on-accent); border: none; border-radius: 6px; font-family: var(--font-heading); cursor: default; }
+
+
+.worldmap-editor-panel h2 { color: var(--accent); margin-bottom: 12px; }
+.worldmap-list { display: flex; flex-direction: column; gap: 16px; }
+.worldmap-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.worldmap-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.worldmap-card-icon { font-size: 28px; }
+.scene-map-badge {
+  display: block;
+  font-size: 11px;
+  color: var(--info);
+  margin-top: 2px;
+}
+.map-location-block { margin-top: 4px; }
+
+.story-graph-panel { padding: 0 4px 20px; }
+.story-graph-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.story-graph-toolbar h2 { color: var(--accent); margin-bottom: 6px; }
+.story-graph-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.story-graph-search label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.story-graph-search-input {
+  flex: 1;
+  min-width: 180px;
+  max-width: 360px;
+  padding: 8px 10px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+.story-graph-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.story-graph-search-input.story-graph-search-invalid {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--card-bg));
+}
+.story-graph-mermaid {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow: auto;
+  min-height: 320px;
+}
+.story-graph-mermaid svg {
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+.story-graph-mermaid g.node.graph-node-interactive {
+  cursor: pointer;
+}
+/* Бой: class combat */
+.story-graph-mermaid g.node.graph-node-combat > rect,
+.story-graph-mermaid g.node.graph-node-combat > polygon,
+.story-graph-mermaid g.node.graph-node-combat > path {
+  fill: #f96 !important;
+  stroke: #333 !important;
+  stroke-width: 2px !important;
+}
+/* Квест: class quest */
+.story-graph-mermaid g.node.graph-node-quest > rect,
+.story-graph-mermaid g.node.graph-node-quest > polygon,
+.story-graph-mermaid g.node.graph-node-quest > path {
+  fill: #69f !important;
+  stroke: #05a !important;
+}
+/* Финал: class final */
+.story-graph-mermaid g.node.graph-node-final > rect,
+.story-graph-mermaid g.node.graph-node-final > polygon,
+.story-graph-mermaid g.node.graph-node-final > path {
+  fill: #fd2 !important;
+  stroke: #a80 !important;
+  stroke-width: 2px !important;
+}
+/* Сироты: недостижимы из start */
+.story-graph-mermaid g.node.graph-node-orphan > rect,
+.story-graph-mermaid g.node.graph-node-orphan > polygon,
+.story-graph-mermaid g.node.graph-node-orphan > path {
+  fill: #e1bee7 !important;
+  stroke: #7b1fa2 !important;
+  stroke-width: 3px !important;
+}
+.story-graph-mermaid g.node.graph-node-orphan foreignObject > div {
+  background: #e1bee7 !important;
+  outline: 3px solid #7b1fa2 !important;
+}
+.story-graph-orphans {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+}
+.story-graph-orphans-ok { margin: 0; }
+.story-graph-orphans-warn strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #7b1fa2;
+}
+.story-graph-orphan-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.story-graph-orphan-id {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: monospace;
+  border: 1px solid #7b1fa2;
+  border-radius: 4px;
+  background: #f3e5f5;
+  color: #4a148c;
+  cursor: pointer;
+}
+.story-graph-orphan-id:hover {
+  background: #e1bee7;
+}
+.story-graph-mermaid .edgePath path[stroke-dasharray],
+.story-graph-mermaid path.flowchart-link[style*="stroke-dasharray"] {
+  stroke: #d32f2f !important;
+  stroke-width: 2px !important;
+}
+.story-graph-mermaid g.node.graph-node-deadend > rect,
+.story-graph-mermaid g.node.graph-node-deadend > polygon {
+  stroke-dasharray: 4 4 !important;
+  stroke: #e65100 !important;
+}
+/* Модальное окно линтера */
+.editor-validation-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.editor-validation-modal.open {
+  display: flex;
+}
+.editor-validation-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+.editor-validation-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(640px, 100%);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg, #fff);
+  border: 2px solid var(--border, #ccc);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.editor-validation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border, #ccc);
+}
+.editor-validation-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--accent, #5d4037);
+}
+.editor-validation-close {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-light, #666);
+}
+.editor-validation-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+.editor-validation-ok {
+  margin: 0;
+  font-size: 16px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+.editor-validation-section {
+  margin-bottom: 16px;
+}
+.editor-validation-section h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.editor-validation-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.editor-validation-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  background: var(--paper, #fafafa);
+  font-size: 13px;
+  cursor: pointer;
+  color: inherit;
+}
+.editor-validation-link:hover {
+  border-color: var(--accent, #5d4037);
+  background: var(--paper-dark, #f0ebe3);
+}
+.editor-validation-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border, #ccc);
+  text-align: right;
+}
+/* Поиск: яркая подсветка */
+.story-graph-mermaid g.node.graph-node-search > rect,
+.story-graph-mermaid g.node.graph-node-search > polygon,
+.story-graph-mermaid g.node.graph-node-search > path {
+  fill: #ffe082 !important;
+  stroke: #ff6f00 !important;
+  stroke-width: 5px !important;
+  filter: drop-shadow(0 0 8px rgba(255, 111, 0, 0.75));
+}
+/* htmlLabels (foreignObject) */
+.story-graph-mermaid g.node.graph-node-combat foreignObject > div {
+  background: #f96 !important;
+  border: 2px solid #333 !important;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.story-graph-mermaid g.node.graph-node-quest foreignObject > div {
+  background: #69f !important;
+  color: #fff !important;
+  border: 2px solid #05a !important;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.story-graph-mermaid g.node.graph-node-final foreignObject > div {
+  background: #fd2 !important;
+  border: 2px solid #a80 !important;
+}
+.story-graph-mermaid g.node.graph-node-search foreignObject > div {
+  background: #ffe082 !important;
+  outline: 4px solid #ff6f00 !important;
+  box-shadow: 0 0 10px rgba(255, 111, 0, 0.8);
+}
+.story-graph-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: 320px;
+  padding: 10px 12px;
+  background: #1e1e1e;
+  color: #f5f5f5;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.story-graph-tooltip.visible {
+  opacity: 1;
+}
+.story-graph-tooltip strong {
+  color: #ffcc80;
+  font-size: 12px;
+}
+
+.quest-manager { display: flex; gap: 20px; align-items: flex-start; }
+.quest-manager-sidebar { width: 220px; flex-shrink: 0; }
+.quest-pick {
+  display: block; width: 100%; text-align: left; padding: 8px 10px; margin-bottom: 4px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg);
+  cursor: pointer; font-size: 13px;
+}
+.quest-pick.active { border-color: var(--accent); background: var(--paper-dark); }
+.snippet-pick-preview { display: block; font-size: 11px; color: var(--ink-muted, #666); margin-top: 4px; font-family: inherit; }
+.snippet-text-field { width: 100%; min-height: 140px; padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box; }
+.snippet-live-preview { margin-top: 12px; padding: 10px; background: var(--paper); border-radius: 6px; border: 1px solid var(--border); }
+.snippet-manager .quest-pick code { font-size: 12px; }
+.variable-autocomplete-item--snippet { font-family: ui-monospace, Consolas, monospace; }
+.quest-manager-detail { flex: 1; min-width: 0; }
+.quest-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.quest-detail-head h3 { margin: 0; font-size: 18px; }
+.quest-detail-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; padding: 16px; }
+.quest-stage-card { border: 1px dashed var(--border); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+.quest-json-preview { margin-top: 16px; padding: 12px; background: var(--paper); border-radius: 8px; border: 1px solid var(--border); }
+.quest-set-block { background: var(--paper); padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+
+/* Редактор только для ПК */
+#editor-mobile-gate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--paper);
+  color: var(--ink);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+#editor-mobile-gate.active { display: flex; }
+#editor-mobile-gate h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: var(--accent);
+  max-width: 360px;
+}
+#editor-mobile-gate p {
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 400px;
+  margin-bottom: 20px;
+  color: var(--ink-light);
+}
+#editor-mobile-gate .btn-open-game {
+  display: inline-block;
+  padding: 14px 28px;
+  font-size: 17px;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 8px;
+  text-decoration: none;
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/editor-pro-ui.css">
+<link rel="stylesheet" href="css/editor-design-system.css" id="editor-design-system-css">
+<link rel="stylesheet" href="css/editor-touch.css">
+<script src="js/editor/editor-mobile-gate.js"></script>
+</head>
+<body class="editor-app" data-i18n-page-title="editor.pageTitle">
+
+<div id="editor-mobile-gate" aria-hidden="true">
+  <h2 id="editor-mobile-gate-title" data-i18n="editor.mobileGateTitle">Редактор доступен только на ПК</h2>
+  <p id="editor-mobile-gate-body" data-i18n="editor.mobileGateBody">Для создания и правки модулей используйте компьютер с шириной экрана от 768px. На телефоне можно играть и тестировать сценарий.</p>
+  <div class="editor-mobile-gate-actions">
+    <button type="button" id="editor-mobile-gate-writer" class="btn-open-game" hidden data-i18n="editor.mobileGateWriterBtn">✏️ Режим писателя</button>
+    <a class="btn-open-game" href="index.html" data-i18n="editor.mobileGateOpenGame">Открыть игру</a>
+  </div>
+</div>
+
+<div class="header">
+  <h1 style="cursor:pointer;" data-i18n-title="editor.titleTooltip" title="На дашборд" onclick="Editor.showDashboard()" data-i18n="editor.title">🏭 MythMill RpgEngine</h1>
+  <div class="header-buttons">
+    <div class="lang-switch" role="group" data-i18n-aria-label="lang.switchTitle" aria-label="Язык интерфейса">
+      <button type="button" class="lang-switch-btn" data-lang="ru" aria-pressed="true"><span class="lang-flag" aria-hidden="true">🇷🇺</span><span data-i18n="lang.ru">RU</span></button>
+      <button type="button" class="lang-switch-btn" data-lang="en" aria-pressed="false"><span class="lang-flag" aria-hidden="true">🇬🇧</span><span data-i18n="lang.en">EN</span></button>
+    </div>
+    <button class="btn btn-secondary" onclick="Editor.showDashboard()" data-i18n="editor.dashboard">🏠 Дашборд</button>
+    <button class="btn btn-info" onclick="Editor.newProject()" data-i18n="editor.newProject">📄 Новый проект</button>
+    <button class="btn btn-secondary" onclick="Editor.loadData()" data-i18n="editor.loadJson">📂 Загрузить JSON</button>
+    <div class="export-menu-wrap" id="export-menu-wrap">
+      <button type="button" class="btn btn-primary export-menu-toggle" id="export-menu-toggle" aria-haspopup="true" aria-expanded="false" data-i18n-title="editor.saveProjectTitle" title="Сохранить или экспортировать проект">
+        <span data-i18n="editor.saveProject">💾 Сохранить проект</span> <span class="export-menu-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="export-menu-dropdown hidden" id="export-menu-dropdown" role="menu" data-i18n-aria-label="editor.exportMenuLabel" aria-label="Формат сохранения">
+        <button type="button" class="export-menu-item export-menu-item--json" data-export="json" role="menuitem" data-i18n-title="editor.exportJsonTooltip" title="Сохраняет проект для дальнейшего редактирования. Открывается в редакторе.">
+          <span class="export-menu-icon" aria-hidden="true">📁</span>
+          <span class="export-menu-body">
+            <span class="export-menu-title" data-i18n="editor.exportJsonTitle">Сохранить в JSON</span>
+            <span class="export-menu-desc" data-i18n="editor.exportJsonDesc">Продолжить работу в редакторе</span>
+          </span>
+        </button>
+        <div class="export-menu-divider" role="separator"><span data-i18n="editor.exportDivider">или готовая игра</span></div>
+        <button type="button" class="export-menu-item export-menu-item--html" data-export="html" role="menuitem" data-i18n-title="editor.exportHtmlTooltip" title="Создаёт готовую игру для публикации. Нельзя отредактировать позже.">
+          <span class="export-menu-icon" aria-hidden="true">🌐</span>
+          <span class="export-menu-body">
+            <span class="export-menu-title" data-i18n="editor.exportHtmlTitle">Экспортировать в HTML</span>
+            <span class="export-menu-desc" data-i18n="editor.exportHtmlDesc">Один файл для публикации</span>
+          </span>
+        </button>
+        <button type="button" class="export-menu-item export-menu-item--folder" data-export="folder" role="menuitem" data-i18n-title="editor.exportFolderTooltip" title="Папка с index.html и ресурсами (Chrome / Edge)">
+          <span class="export-menu-icon" aria-hidden="true">📦</span>
+          <span class="export-menu-body">
+            <span class="export-menu-title" data-i18n="editor.exportFolderTitle">Экспорт в папку</span>
+            <span class="export-menu-desc" data-i18n="editor.exportFolderDesc">Расширенный вариант (Chrome)</span>
+          </span>
+        </button>
+      </div>
+    </div>
+    <button class="btn btn-danger" onclick="Editor.runProjectValidation()" data-i18n="editor.validate">🔍 Проверить проект</button>
+    <button type="button" id="editor-help-show-all-btn" class="btn btn-secondary" data-i18n-title="editor.hintsTitle" title="Показать все подсказки" aria-pressed="false" data-i18n="editor.hints">❓ Подсказки</button>
+    <button type="button" id="editor-theme-toggle" class="btn btn-secondary theme-toggle-btn" data-i18n-title="common.themeToggle" title="Дневная / ночная тема" aria-label="Переключить дневную и ночную тему">☀️</button>
+    <a class="btn btn-secondary" href="README.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;" data-i18n="common.help">📘 Справка</a>
+    <a class="btn btn-secondary" href="editor-guide.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;" data-i18n="common.guide">📖 Руководство</a>
+  </div>
+</div>
+
+<div class="container editor-shell">
+  <nav class="editor-nav" id="editor-nav" data-i18n-aria-label="editor.nav.label" aria-label="Навигация редактора">
+    <div class="editor-nav-brand">
+      <span class="editor-nav-title">RPG Engine Creator</span>
+      <span class="editor-nav-writer-badge" id="editor-nav-writer-badge" hidden>✏️ Режим писателя</span>
+    </div>
+    <div class="editor-nav-scroll">
+      <div class="editor-nav-list" id="editor-nav-list"></div>
+    </div>
+    <div class="editor-nav-footer">
+      <h4 data-i18n="editor.sidebarStats">📊 Статистика</h4>
+      <div id="stats-panel" style="line-height:1.7;" data-i18n="common.loadDataHint">Загрузите данные...</div>
+      <h4 style="margin-top:10px;" data-i18n="editor.sidebarProject">⚙️ Проект</h4>
+      <div id="project-panel" style="line-height:1.7;" data-i18n="common.noProject">Нет открытого проекта</div>
+      <div class="sidebar-mode-panel">
+        <button type="button" class="btn btn-info" id="editor-mode-toggle" style="width:100%;margin-top:10px;"
+          onclick="Editor.toggleEditorMode()" aria-pressed="false" data-i18n="editor.writerMode">✏️ Writer Mode</button>
+        <p class="hint writer-mode-hint" id="writer-mode-hint" style="margin-top:6px;font-size:11px;" data-i18n="editor.writerModeHint">
+          Скрывает баланс, климат, JSON и другие технические разделы.
+        </p>
+      </div>
+    </div>
+  </nav>
+
+  <div class="editor-workspace">
+    <aside class="context-sidebar" id="context-sidebar" aria-hidden="true">
+      <h3 data-i18n="editor.sidebarScenes">📍 Сцены</h3>
+      <div class="scene-list" id="scene-list"></div>
+      <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="Editor.openSceneWizard()" data-i18n="editor.newScene">+ Новая сцена</button>
+    </aside>
+
+    <div class="main-area">
+    <div class="editor-section-bar" id="editor-section-bar" hidden></div>
+    <div class="tabs-bar tabs-bar--legacy" aria-hidden="true">
+    <div class="tabs" role="tablist" data-i18n-aria-label="editor.tabsLabel" aria-label="Разделы редактора">
+      <div class="tab" data-tab-id="scenes" onclick="Editor.switchTab('scenes', event)" data-i18n="editor.tabs.scenes">🎬 Сцены</div>
+      <div class="tab" data-tab-id="scene_templates" onclick="Editor.switchTab('scene_templates', event)" data-i18n="editor.tabs.scene_templates">📋 Шаблоны</div>
+      <div class="tab" data-tab-id="actions" onclick="Editor.switchTab('actions', event)" data-i18n="editor.tabs.actions">🔗 Действия</div>
+      <div class="tab" data-tab-id="quests" onclick="Editor.switchTab('quests', event)" data-i18n="editor.tabs.quests">📜 Квесты</div>
+      <div class="tab" data-tab-id="snippets" onclick="Editor.switchTab('snippets', event)" data-i18n="editor.tabs.snippets">📝 Сниппеты</div>
+      <div class="tab" data-tab-id="reputation" onclick="Editor.switchTab('reputation', event)" data-i18n="editor.tabs.reputation">🤝 Репутация</div>
+      <div class="tab" data-tab-id="achievements" onclick="Editor.switchTab('achievements', event)" data-i18n="editor.tabs.achievements">🏆 Достижения</div>
+      <div class="tab" data-tab-id="analytics" onclick="Editor.switchTab('analytics', event)" data-i18n="editor.tabs.analytics">📈 Аналитика</div>
+      <div class="tab" data-tab-id="player_characters" onclick="Editor.switchTab('player_characters', event)">🎭 Герой</div>
+      <div class="tab" data-tab-id="npcs" onclick="Editor.switchTab('npcs', event)" data-i18n="editor.tabs.npcs">👥 NPC</div>
+      <div class="tab" data-tab-id="enemies" onclick="Editor.switchTab('enemies', event)" data-i18n="editor.tabs.enemies">⚔️ Враги</div>
+      <div class="tab" data-tab-id="beasts" onclick="Editor.switchTab('beasts', event)" data-i18n="editor.tabs.beasts">🐾 Звери</div>
+      <div class="tab" data-tab-id="balance" onclick="Editor.switchTab('balance', event)" data-i18n="editor.tabs.balance">⚖️ Баланс</div>
+      <div class="tab" data-tab-id="items" onclick="Editor.switchTab('items', event)" data-i18n="editor.tabs.items">🎒 Предметы</div>
+      <div class="tab" data-tab-id="ingredients" onclick="Editor.switchTab('ingredients', event)" data-i18n="editor.tabs.ingredients">🧪 Ингредиенты</div>
+      <div class="tab" data-tab-id="recipes" onclick="Editor.switchTab('recipes', event)" data-i18n="editor.tabs.recipes">🔨 Рецепты</div>
+      <div class="tab" data-tab-id="classes" onclick="Editor.switchTab('classes', event)" data-i18n="editor.tabs.classes">🏅 Классы</div>
+      <div class="tab" data-tab-id="races" onclick="Editor.switchTab('races', event)" data-i18n="editor.tabs.races">🧬 Расы</div>
+      <div class="tab" data-tab-id="abilities" onclick="Editor.switchTab('abilities', event)" data-i18n="editor.tabs.abilities">✨ Умения</div>
+      <div class="tab" data-tab-id="audio" onclick="Editor.switchTab('audio', event)" data-i18n="editor.tabs.audio">🔊 Звуки</div>
+      <div class="tab" data-tab-id="theme" onclick="Editor.switchTab('theme', event)" data-i18n="editor.tabs.theme">🎨 Тема</div>
+      <div class="tab" data-tab-id="climate" onclick="Editor.switchTab('climate', event)" data-i18n="editor.tabs.climate">🌍 Климат</div>
+      <div class="tab" data-tab-id="world" onclick="Editor.switchTab('world', event)" data-i18n="editor.tabs.world">🌍 Мир</div>
+      <div class="tab" data-tab-id="worldmap" onclick="Editor.switchTab('worldmap', event)" data-i18n="editor.tabs.worldmap">🗺️ Карта путешествий</div>
+      <div class="tab" data-tab-id="graph" onclick="Editor.switchTab('graph', event)" data-i18n="editor.tabs.graph">🗺️ Карта сюжета</div>
+      <div class="tab" data-tab-id="progression" onclick="Editor.switchTab('progression', event)" data-i18n="editor.tabs.progression">📈 Прогрессия</div>
+      <div class="tab" data-tab-id="json" data-advanced="export" onclick="Editor.switchTab('json', event)" data-i18n="editor.tabs.json">📦 Данные</div>
+    </div>
+    </div>
+
+    <div class="tab-content" id="tab-dashboard"></div>
+
+    <div class="tab-content" id="tab-scene_templates"><div id="scene-templates-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-actions"><div id="actions-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+
+    <!-- ВКЛАДКА СЦЕН -->
+    <div class="tab-content" id="tab-scenes">
+      <div id="scene-editor">
+        <div class="start-screen" id="start-screen">
+          <h2 data-i18n="editor.startWelcome">Добро пожаловать в редактор!</h2>
+          <p data-i18n="editor.startIntro">Создавайте текстовые RPG с нуля или редактируйте существующие проекты.</p>
+          <div class="start-buttons">
+            <button class="btn btn-info" onclick="Editor.newProject()" data-i18n="editor.startNew">📄 Создать новый проект</button>
+            <button class="btn btn-secondary" onclick="Editor.loadData()" data-i18n="editor.startLoad">📂 Загрузить game_data.json</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-game_ui"><div id="game-ui-editor-root"><div class="empty-state"><h2>Игровой UI</h2><p>Соберите HUD или меню без кода.</p></div></div></div>
+    <div class="tab-content" id="tab-quests"><div id="quests-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-snippets"><div id="snippets-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-reputation"><div id="reputation-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-achievements"><div id="achievements-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-analytics"><div id="analytics-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-player_characters"><div id="player-characters-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-npcs"><div id="npcs-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-enemies"><div id="enemies-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-beasts"><div id="beasts-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-balance"><div id="balance-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-items"><div id="items-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-ingredients"><div id="ingredients-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-recipes"><div id="recipes-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-abilities"><div id="abilities-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-audio"><div id="audio-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-media"><div id="media-assets-editor"><div class="empty-state"><h2>Медиа-ассеты</h2><p>Каталог изображений и файлов проекта. Перетащите на визуальную сцену или игровой UI.</p></div></div></div>
+    <div class="tab-content" id="tab-variables"><div id="variables-editor"><div class="empty-state"><h2>Переменные проекта</h2><p>Каталог флагов для no-code условий и действий без правки JSON.</p></div></div></div>
+    <div class="tab-content" id="tab-prefabs"><div id="prefabs-editor"><div class="empty-state"><h2>Префабы</h2><p>Visual и UI шаблоны: сохранение, вставка, обновление и отвязка экземпляров.</p></div></div></div>
+    <div class="tab-content" id="tab-theme"><div id="theme-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-climate"><div id="climate-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-world"><div id="world-hierarchy-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-worldmap"><div id="worldmap-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-graph"><div id="story-graph-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-progression">
+      <div id="enemy-scaling-editor"></div>
+      <div id="progression-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div>
+    </div>
+    <div class="tab-content" id="tab-classes"><div id="classes-editor"><div id="classes-list"></div></div></div>
+    <div class="tab-content" id="tab-races"><div id="races-editor"><div class="empty-state"><h2>Загрузите данные</h2></div></div></div>
+    <div class="tab-content" id="tab-json">
+      <div class="form-group">
+        <label>Данные проекта</label>
+        <p class="hint">Только для резервной копии или передачи файла. Обычная работа — через формы слева, без правки этого текста.</p>
+        <div class="json-preview" id="json-preview">Загрузите данные...</div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div id="template-scene-modal" class="editor-modal hidden" role="dialog" aria-labelledby="template-scene-modal-title" hidden>
+  <div class="editor-modal-backdrop" onclick="Editor.closeTemplateSceneModal()"></div>
+  <div class="editor-modal-panel editor-modal-panel--wide">
+    <h2 id="template-scene-modal-title">+ Новая сцена</h2>
+    <p class="hint">Legacy modal — используйте <button type="button" class="btn btn-link" onclick="Editor.openSceneWizard()">мастер создания сцены</button>.</p>
+    <div id="template-scene-modal-body"></div>
+  </div>
+</div>
+
+<script src="js/patch-progression.js"></script>
+<script src="js/conditions.js"></script>
+<script src="js/quests/task-base.js"></script>
+<script src="js/quests/task-types.js"></script>
+<script src="js/quests/quest-events.js"></script>
+<script src="js/quests/quest-runtime.js"></script>
+<script src="js/quests/quest-migrate.js"></script>
+<script src="js/enemy-scaling.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/editor/editor-core.js"></script>
+<script src="js/data-schema.js"></script>
+<script src="js/project-schema.js"></script>
+<script src="js/editor/editor-hooks.js"></script>
+<script src="js/editor/editor-terminology.js"></script>
+<script src="js/editor/editor-state.js"></script>
+<script src="js/editor/editor-bootstrap.js"></script>
+<script src="js/editor/editor-utils.js"></script>
+<script src="js/editor/editor-entity-picker.js"></script>
+<script src="js/editor/editor-data-load.js"></script>
+<script src="js/editor/editor-scene-crud.js"></script>
+<script src="js/editor/editor-core-tabs.js"></script>
+<script src="js/editor/editor-items-panel.js"></script>
+<script src="js/editor/editor-items-rewards-index.js"></script>
+<script src="js/editor/editor-combat-authoring-index.js"></script>
+<script src="js/editor/editor-audio-panel.js"></script>
+<script src="js/editor/editor-progression-panel.js"></script>
+<script src="js/editor/editor-enemies-panel.js"></script>
+<script src="js/special-scenes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="js/validate-scenes.js"></script>
+<script src="js/editor/editor-linter.js"></script>
+<script src="js/editor/editor-validation.js"></script>
+<script src="js/editor-validator.js"></script>
+<script src="js/editor/editor-project-validator-ux.js"></script>
+<!-- Phase 1.11 ProjectValidator wired after catalogs (see near action-registry) -->
+<script src="js/reputation-system.js"></script>
+<script src="js/editor/editor-quests.js"></script>
+<script src="js/editor/editor-quest-wizard.js"></script>
+<script src="js/editor/editor-quest-dnd.js"></script>
+<script src="js/editor/editor-quest-authoring-index.js"></script>
+<script src="js/editor/editor-quest-authoring-phase-114.js"></script>
+<script src="js/editor/editor-quest-authoring-ux-phase-114.js"></script>
+<script src="js/editor/editor-gameplay-components-index.js"></script>
+<script src="js/editor/editor-gameplay-components-phase-115.js"></script>
+<script src="js/editor/editor-snippets.js"></script>
+<script src="js/editor/editor-reputation.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/editor/editor-achievements.js"></script>
+<script src="js/editor/editor-analytics.js"></script>
+<script src="js/editor/editor-audio-fields.js"></script>
+<script src="js/editor/editor-assets.js"></script>
+<script src="js/editor/editor-races.js"></script>
+<script src="js/editor/editor-choices.js"></script>
+<script src="js/nl-condition-builder.js"></script>
+<script src="js/editor-nl-condition-bridge.js"></script>
+<script src="js/editor/editor-states.js"></script>
+<script src="js/editor/editor-graph.js"></script>
+<script src="js/editor/editor-story-graph-edit.js"></script>
+<script src="js/editor/editor-story-memory.js"></script>
+<script src="js/editor/editor-story-flow.js"></script>
+<script src="js/editor/editor-theme.js"></script>
+<script src="js/actions/action-registry.js"></script>
+<script src="js/actions/action-registry-v3.js"></script>
+<script src="js/actions/action-context.js"></script>
+<script src="js/actions/action-effects.js"></script>
+<script src="js/actions/action-chain-library.js"></script>
+<script src="js/components/component-base.js"></script>
+<script src="js/components/component-normalize.js"></script>
+<script src="js/scene-components.js"></script>
+<script src="js/components/component-panels.js"></script>
+<script src="js/components/service-menu.js"></script>
+<script src="js/components/trade-interface.js"></script>
+<script src="js/components/dialogue-tree.js"></script>
+<script src="js/components/interactive-panel.js"></script>
+<script src="js/components/component-handlers.js"></script>
+<script src="js/actions/action-runner.js"></script>
+<script src="js/editor/editor-scene-components.js"></script>
+<script src="js/scene-elements.js"></script>
+<script src="js/editor/editor-scene-elements.js"></script>
+<script src="js/editor/editor-action-catalog.js"></script>
+<script src="js/editor/editor-condition-catalog.js"></script>
+<script src="js/editor/editor-project-validator.js"></script>
+<script src="js/editor/editor-validator-navigation.js"></script>
+<script src="js/editor/editor-items-rewards-phase-115.js"></script>
+<script src="js/editor/editor-combat-authoring-phase-116.js"></script>
+<script src="js/editor/editor-project-graph-index.js"></script>
+<script src="js/editor/editor-project-graph-phase-117.js"></script>
+<script src="js/editor/editor-action-builder.js"></script>
+<script src="js/scene-templates.js"></script>
+<script src="js/scene-template-char-creation.js"></script>
+<script src="js/world-hierarchy.js"></script>
+<script src="js/editor/editor-world-hierarchy.js"></script>
+<script src="js/wild-shape.js"></script>
+<script src="js/transformation-system.js"></script>
+<script src="js/editor/editor-enemy-scaling.js"></script>
+<script src="js/editor-import.js"></script>
+<script src="js/editor/editor-player-character.js"></script>
+<script src="js/editor/editor-templates.js"></script>
+<script src="js/editor/editor-scene-template-pack.js"></script>
+<script src="js/editor/editor-story-wizard-content.js"></script>
+<script src="js/editor/editor-story-wizard-heroes-quest.js"></script>
+<script src="js/editor/editor-story-wizard-publish.js"></script>
+<script src="js/editor/editor-beasts.js"></script>
+<script src="js/editor/editor-sidebar-panels.js"></script>
+<script src="js/editor/editor-worldmap.js"></script>
+<script src="js/editor/editor-special.js"></script>
+<script src="js/editor/editor-content-index.js"></script>
+<script src="js/editor/editor-content-workflow.js"></script>
+<script src="js/editor-dashboard.js"></script>
+<script src="js/editor/editor-writer-mode.js"></script>
+<script src="js/editor/editor-touch-ui.js"></script>
+<script src="js/editor/editor-nav-layout.js"></script>
+<script src="js/editor/editor-navigation.js"></script>
+<script src="js/editor-preview.js"></script>
+<script src="js/editor-test-keys.js"></script>
+<script src="js/editor/editor-test-from-here.js"></script>
+<script src="js/editor/editor-test-isolation-phase-112.js"></script>
+<script src="js/editor/editor-preview-workflow.js"></script>
+<script src="js/editor/editor-mvp-proof-phase-117.js"></script>
+<script src="js/editor-tutorial.js"></script>
+<script src="js/editor-visual-tools.js"></script>
+<script src="js/editor/pf2e-starter-template.js"></script>
+<script src="js/editor-new-project.js"></script>
+<script src="js/editor/editor-abilities.js"></script>
+<script src="js/editor/editor-classes.js"></script>
+<script src="js/editor/editor-class-skills.js"></script>
+<script src="js/editor/editor-class-presets.js"></script>
+<script src="js/editor/editor-campaign-wizard.js"></script>
+<script src="js/editor/editor-project-search.js"></script>
+<script src="js/editor/editor-click-recovery.js"></script>
+<script src="js/editor/editor-time-settings.js"></script>
+<script src="js/editor/editor-climate.js"></script>
+<script src="js/editor-export.js"></script>
+<script src="js/editor/editor-save.js"></script>
+<script src="js/editor/editor-project-status.js"></script>
+<script src="js/editor/editor-autosave.js"></script>
+<script src="js/editor/editor-items-curse.js"></script>
+<script src="js/editor/editor-ingredients.js"></script>
+<script src="js/editor/editor-recipes.js"></script>
+<script src="js/editor-history.js"></script>
+<script src="js/editor/editor-history-bridge.js"></script>
+<script src="js/campaign-covers.js"></script>
+<script src="js/editor/editor-cover.js"></script>
+<script src="js/editor-help-data.js"></script>
+<script src="js/editor-help.js"></script>
+<script src="js/editor/editor-scene-builder.js"></script>
+<script src="js/demo-visual-village.js"></script>
+<script src="js/demo-mvp-proof.js"></script>
+<script src="js/editor/editor-starter-projects-index.js"></script>
+<script src="js/editor/editor-starter-projects-phase-118.js"></script>
+<script src="js/game-ui/ui-runtime.js"></script>
+<script src="js/editor/editor-visual-scene.js"></script>
+<script src="js/editor/editor-visual-scene-phase-c.js"></script>
+<script src="js/editor/editor-workspace-scene.js"></script>
+<script src="js/editor/editor-game-ui.js"></script>
+<script src="js/editor/editor-game-ui-phase-d.js"></script>
+<script src="js/editor/editor-action-phase-e.js"></script>
+<script src="js/editor/editor-variables.js"></script>
+<script src="js/editor/editor-prefab-library.js"></script>
+<script src="js/editor/editor-prefabs-phase-f.js"></script>
+<script src="js/editor/editor-flow-phase-g.js"></script>
+<script src="js/editor/editor-play-phase-g.js"></script>
+<script src="js/editor/editor-validation-phase-h.js"></script>
+<script src="js/editor/editor-export-flow.js"></script>
+<script src="js/editor/editor-ux-phase-i.js"></script>
+<script src="js/editor/editor-scene-types.js"></script>
+<script src="js/editor/editor-no-code-ux.js"></script>
+<script src="js/editor/editor-wizards.js"></script>
+<script src="js/editor/editor-inspector.js"></script>
+<script src="js/editor/editor-scene-authoring-index.js"></script>
+<script src="js/editor/editor-scene-authoring-phase-112.js"></script>
+<script src="js/editor/editor-assistant.js"></script>
+<script src="js/editor/editor-assistant-ui.js"></script>
+<script src="js/editor/editor-workspace.js"></script>
+<script src="js/editor/editor-context-ui.js"></script>
+<script src="js/editor/editor-design-system.js"></script>
+<script src="js/editor/editor-visual-polish.js"></script>
+<script src="js/editor/editor-responsive-layout.js"></script>
+<script src="js/editor/editor-nav-redesign.js"></script>
+<script src="js/editor/editor-scene-workspace.js"></script>
+<script src="js/editor/editor-scene-workspace-polish.js"></script>
+<script src="js/editor/editor-author-guidance.js"></script>
+<script src="js/editor/editor-inspector-redesign.js"></script>
+<script src="js/editor/editor-inspector-properties.js"></script>
+<script src="js/editor/editor-project-content-phase-113.js"></script>
+<script src="js/editor/editor-performance.js"></script>
+<script src="js/editor/editor-content-browser.js"></script>
+<script src="js/editor/editor-content-browser-v2.js"></script>
+<script src="js/editor/editor-ui-integration.js"></script>
+<script src="js/editor/editor-product-hardening.js"></script>
+<script src="js/editor/editor-npc-dialogue-index.js"></script>
+<script src="js/editor/editor-npc-dialogue-phase-113.js"></script>
+<script src="js/editor/editor-toast.js"></script>
+<script src="js/editor/editor-command-palette.js"></script>
+<script src="js/editor/editor-command-palette-v2.js"></script>
+<script src="js/editor/editor-boot-smoke.js"></script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Справка — MythMill RPGengine</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/dark-ui.css">
+  <script src="js/theme.js"></script>
+  <script>ThemeSystem.applyStoredMode();</script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/readme.css">
+</head>
+<body class="readme-page">
+
+<div class="readme-topbar">
+  <button type="button" id="readme-theme-toggle" class="btn btn-secondary theme-toggle-btn" title="Переключить тему">☀️</button>
+  <a class="btn btn-secondary" href="editor.html" style="text-decoration:none;">✏️ Редактор</a>
+  <a class="btn btn-primary" href="index.html" style="text-decoration:none;">▶ Играть</a>
+</div>
+
+<header class="readme-hero paper-sheet">
+  <div class="readme-hero-inner">
+    <h1>MythMill RPGengine</h1>
+    <p class="lead">
+      Создавайте текстовые RPG без программирования: сцены, NPC, квесты и бой — в визуальном редакторе.
+      Данные хранятся в <span class="readme-code">game_data.json</span>, игра запускается в браузере.
+    </p>
+    <div class="readme-hero-actions">
+      <a class="btn btn-primary" href="editor.html">Открыть редактор</a>
+      <a class="btn btn-secondary" href="index.html">Запустить игру</a>
+      <a class="btn btn-info" href="editor-guide.html" target="_blank" rel="noopener">Полное руководство</a>
+    </div>
+  </div>
+</header>
+
+<main class="readme-wrap">
+
+  <nav class="readme-toc" aria-label="Содержание">
+    <h2>Содержание</h2>
+    <ol>
+      <li><a href="#quick-start">Быстрый старт</a></li>
+      <li><a href="#first-scene">Создание первой сцены</a></li>
+      <li><a href="#npc">Добавление NPC</a></li>
+      <li><a href="#testing">Тестирование</a></li>
+      <li><a href="#export">Экспорт игры</a></li>
+      <li><a href="#tips">Советы</a></li>
+    </ol>
+  </nav>
+
+  <section class="readme-section" id="quick-start">
+    <h2>Быстрый старт</h2>
+    <p>После распаковки ZIP у вас есть готовый набор файлов. Ничего устанавливать не нужно — достаточно браузера (Chrome, Edge, Firefox).</p>
+
+    <ol class="readme-steps">
+      <li>Откройте <strong>editor.html</strong> двойным щелчком или через «Открыть файл» в браузере.</li>
+      <li>Нажмите <strong>📂 Загрузить JSON</strong> и выберите <span class="readme-code">data/game_data.json</span> — или создайте проект кнопкой <strong>📄 Новый проект</strong>.</li>
+      <li>Редактируйте сцены во вкладке <strong>🎬 Сцены</strong>, сохраняйте проект кнопкой <strong>💾 Сохранить JSON</strong>.</li>
+      <li>Откройте <strong>index.html</strong>, выберите кампанию и нажмите <strong>▶ Играть</strong> — проверьте сюжет в действии.</li>
+    </ol>
+
+    <div class="readme-shot" role="img" aria-label="Скриншот: главный экран редактора">
+      <span class="readme-shot-icon">🖼️</span>
+      <span>Здесь будет скриншот редактора<br><small>(дашборд и вкладка «Сцены»)</small></span>
+    </div>
+
+    <div class="readme-card-grid">
+      <div class="readme-mini-card">
+        <div class="icon">📂</div>
+        <strong>editor.html</strong>
+        <p style="font-size:0.88rem;margin-top:6px;color:var(--ink-light);">Создание и правка игры</p>
+      </div>
+      <div class="readme-mini-card">
+        <div class="icon">▶️</div>
+        <strong>index.html</strong>
+        <p style="font-size:0.88rem;margin-top:6px;color:var(--ink-light);">Запуск для игрока</p>
+      </div>
+      <div class="readme-mini-card">
+        <div class="icon">📄</div>
+        <strong>game_data.json</strong>
+        <p style="font-size:0.88rem;margin-top:6px;color:var(--ink-light);">Все данные проекта</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="readme-section" id="first-scene">
+    <h2>Создание первой сцены</h2>
+    <p>Сцена — это экран с текстом, диалогами, кнопками выбора и опционально боем.</p>
+
+    <ol class="readme-steps">
+      <li>В сайдбаре слева нажмите <strong>+ Новая сцена</strong> или выберите шаблон.</li>
+      <li>Заполните <strong>ID сцены</strong> латиницей без пробелов (например <span class="readme-code">village_square</span>) — по этому ID ссылаются переходы.</li>
+      <li>Укажите <strong>Локацию</strong> (название для игрока) и <strong>Текст</strong> сцены.</li>
+      <li>В блоке <strong>🔀 Выборы</strong> добавьте кнопку: текст, иконка, тип «Переход», целевая сцена в поле <strong>Сцена (переход)</strong>.</li>
+      <li>Сохраните JSON и проверьте проект кнопкой <strong>🔍 Проверить проект</strong> — исправьте битые ссылки, если есть.</li>
+    </ol>
+
+    <div class="readme-shot" role="img" aria-label="Скриншот: редактор сцены">
+      <span class="readme-shot-icon">🎬</span>
+      <span>Здесь будет скриншот формы сцены<br><small>(поля ID, текст, выборы)</small></span>
+    </div>
+
+    <div class="readme-tip">
+      <strong>Совет:</strong> первая сцена в игре задаётся полем <span class="readme-code">scene</span> в сохранении или стартовой сценой в данных.
+      Для нового проекта обычно используется сцена <span class="readme-code">start</span>.
+    </div>
+  </section>
+
+  <section class="readme-section" id="npc">
+    <h2>Добавление NPC</h2>
+    <p>NPC (неигровые персонажи) хранятся во вкладке <strong>👥 NPC</strong> и могут привязываться к сценам для репутации и диалогов.</p>
+
+    <ol class="readme-steps">
+      <li>Откройте вкладку <strong>👥 NPC</strong> → выберите NPC в списке или создайте нового.</li>
+      <li>Укажите <strong>ID</strong>, <strong>Имя</strong> (обязательно), <strong>Иконку</strong> и описание.</li>
+      <li>На сцене в поле <strong>NPC сцены</strong> выберите персонажа — при первом визите сработают эффекты репутации «при разговоре».</li>
+      <li>Диалоги можно добавить в блоке <strong>🗣️ Диалоги</strong> на сцене или через компоненты дерева диалогов (см. полное руководство).</li>
+    </ol>
+
+    <div class="readme-shot" role="img" aria-label="Скриншот: редактор NPC">
+      <span class="readme-shot-icon">👥</span>
+      <span>Здесь будет скриншот вкладки NPC<br><small>(карточка персонажа и поля)</small></span>
+    </div>
+  </section>
+
+  <section class="readme-section" id="testing">
+    <h2>Тестирование</h2>
+    <p>Проверяйте игру на каждом этапе — так вы не сломаете сюжет случайной опечаткой в ID сцены.</p>
+
+    <h3>В редакторе</h3>
+    <ul>
+      <li><strong>🔍 Проверить проект</strong> — линтер: битые переходы, тупики, NPC без имени, квесты без награды.</li>
+      <li><strong>Панель «Ошибки»</strong> внизу — список проблем; клик по строке открывает проблемное место.</li>
+      <li><strong>▶ Play</strong> в превью сцены — быстрый просмотр текста и кнопок без полного запуска игры.</li>
+      <li><strong>↩ / ↪</strong> — отмена и повтор последних правок в текущей сцене или объекте.</li>
+    </ul>
+
+    <h3>В игре (index.html)</h3>
+    <ul>
+      <li>Выберите кампанию, создайте персонажа, пройдите ключевые ветки.</li>
+      <li>Сохранение — автоматически при смене сцены; вручную — через меню 📁 в боковой панели.</li>
+      <li>Кнопка <strong>🏆 Достижения</strong> показывает прогресс трофеев (если настроены в редакторе).</li>
+    </ul>
+
+    <div class="readme-shot" role="img" aria-label="Гифка: тест игры">
+      <span class="readme-shot-icon">🎞️</span>
+      <span>Здесь будет GIF: редактор → игра → переход по выбору<br><small>(placeholder)</small></span>
+    </div>
+  </section>
+
+  <section class="readme-section" id="export">
+    <h2>Экспорт игры</h2>
+    <p>Чтобы отдать игру игрокам без редактора, соберите standalone-пакет.</p>
+
+    <ol class="readme-steps">
+      <li>В редакторе загрузите и сохраните актуальный <span class="readme-code">game_data.json</span>.</li>
+      <li>Нажмите <strong>📦 Экспорт игры</strong> в шапке редактора.</li>
+      <li>Укажите пустую папку — движок скопирует <span class="readme-code">index.html</span>, <span class="readme-code">css/</span>, <span class="readme-code">js/</span> и сгенерирует <span class="readme-code">js/data.js</span> из вашего JSON.</li>
+      <li>Раздайте эту папку целиком. Игрок открывает <strong>index.html</strong> — редактор в пакет не входит.</li>
+    </ol>
+
+    <div class="readme-tip">
+      <strong>Важно:</strong> для работы с локального диска (<span class="readme-code">file://</span>) экспорт встраивает данные в <span class="readme-code">data.js</span>.
+      Если размещаете игру на веб-сервере, можно также положить JSON в <span class="readme-code">data/</span>.
+    </div>
+
+    <div class="readme-shot" role="img" aria-label="Скриншот: экспорт">
+      <span class="readme-shot-icon">📦</span>
+      <span>Здесь будет скриншот кнопки «Экспорт игры»<br><small>(placeholder)</small></span>
+    </div>
+  </section>
+
+  <section class="readme-section" id="tips">
+    <h2>Советы</h2>
+    <ul>
+      <li>Используйте <strong>❓ Подсказки</strong> рядом с полями редактора — не нужно каждый раз листать гайд на 200+ страниц.</li>
+      <li>Держите <strong>ID сцен</strong> короткими и понятными: <span class="readme-code">mill_door</span>, а не <span class="readme-code">scene_47_final_v2</span>.</li>
+      <li>После боя всегда указывайте <strong>Сцену после победы</strong> — иначе игра зависнет на чёрном экране.</li>
+      <li>Квесты ведите через вкладку <strong>📜 Квесты</strong> и стадии — не плодите лишние флаги вручную.</li>
+      <li>Включите <strong>тёмную тему</strong> (☀/🌙 в шапке), если работаете вечером.</li>
+      <li>Регулярно жмите <strong>💾 Сохранить JSON</strong> — браузер не заменяет файловый бэкап на диске.</li>
+    </ul>
+
+    <div class="readme-tip">
+      Нужны детали по условиям, бою, PF2e, карте мира? Откройте
+      <a href="editor-guide.html" target="_blank" rel="noopener"><strong>полное руководство (editor-guide.html)</strong></a>
+      — там пошаговые туториалы и справочник JSON.
+    </div>
+  </section>
+
+  <footer class="readme-footer">
+    <p>MythMill RPGengine · документация для авторов</p>
+    <p>
+      <a href="CHANGELOG.md">CHANGELOG.md</a> ·
+      <a href="editor-guide.html" target="_blank" rel="noopener">Полный гайд</a> ·
+      <a href="editor.html">Редактор</a> ·
+      <a href="index.html">Игра</a>
+    </p>
+  </footer>
+
+</main>
+
+<script>
+  (function () {
+    var btn = document.getElementById('readme-theme-toggle');
+    if (btn && typeof ThemeSystem !== 'undefined') {
+      btn.addEventListener('click', function () { ThemeSystem.toggle(); });
+      function syncIcon() {
+        var mode = ThemeSystem.getMode();
+        btn.textContent = mode === 'dark' ? '🌙' : '☀️';
+        btn.title = mode === 'dark' ? 'Светлая тема' : 'Тёмная тема';
+      }
+      syncIcon();
+      window.addEventListener('rpg-theme-change', syncIcon);
+    }
+  })();
+</script>
+</body>
+</html>

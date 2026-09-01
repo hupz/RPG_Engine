@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <rect width="800" height="450" fill="#3d5c45"/>
+  <rect y="280" width="800" height="170" fill="#5a7a52"/>
+  <rect x="40" y="160" width="140" height="140" fill="#8b6914" stroke="#4a3a10" stroke-width="4"/>
+  <polygon points="40,160 110,90 180,160" fill="#6b3a2a"/>
+  <text x="70" y="240" fill="#fff" font-size="22" font-family="sans-serif">Таверна</text>
+  <rect x="240" y="180" width="120" height="120" fill="#a08060" stroke="#4a3a10" stroke-width="4"/>
+  <polygon points="240,180 300,120 360,180" fill="#5a4a3a"/>
+  <text x="260" y="250" fill="#fff" font-size="20" font-family="sans-serif">Лавка</text>
+  <rect x="420" y="170" width="120" height="130" fill="#6a6a70" stroke="#333" stroke-width="4"/>
+  <polygon points="420,170 480,110 540,170" fill="#444"/>
+  <text x="440" y="250" fill="#fff" font-size="18" font-family="sans-serif">Кузница</text>
+  <rect x="580" y="140" width="160" height="160" fill="#cfc8b8" stroke="#555" stroke-width="4"/>
+  <polygon points="580,140 660,70 740,140" fill="#8b2020"/>
+  <text x="610" y="230" fill="#333" font-size="20" font-family="sans-serif">Часовня</text>
+  <circle cx="700" cy="60" r="36" fill="#f5e6a0"/>
+</svg>

@@ -1,0 +1,119 @@
+/**
+ * Редактор — тач / узкие экраны (body.editor-touch).
+ * Минимальные цели 44px; hover-панели по тапу.
+ */
+
+body.editor-touch {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.editor-touch .btn,
+body.editor-touch .tab,
+body.editor-touch .lang-switch-btn,
+body.editor-touch .editor-layout-fab,
+body.editor-touch .sg-toolbar-actions .btn,
+body.editor-touch .editor-touch-bar .btn,
+body.editor-touch .cb-action,
+body.editor-touch .cb2-row__actions button,
+body.editor-touch .usw-outline__btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+body.editor-touch .btn {
+  padding: 10px 14px;
+}
+
+body.editor-touch .tab {
+  padding: 10px 12px;
+}
+
+/* Hover-only action strips → tap toggle */
+body.editor-touch .cb-scene-card__actions,
+body.editor-touch .cb2-row__actions {
+  display: none !important;
+}
+
+body.editor-touch .cb-scene-card.is-touch-open .cb-scene-card__actions,
+body.editor-touch .cb2-row.is-touch-open .cb2-row__actions {
+  display: flex !important;
+}
+
+body.editor-touch .sg-workspace {
+  flex-direction: column;
+}
+
+body.editor-touch .sg-side {
+  flex: 0 0 auto;
+  max-height: none;
+  width: 100%;
+}
+
+body.editor-touch .sg-canvas-wrap {
+  height: min(52vh, 520px);
+}
+
+body.editor-touch .editor-touch-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+body.editor-touch .editor-touch-bar .btn {
+  flex: 1 1 auto;
+}
+
+body.editor-touch .visual-touch-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+body.editor-touch .sg-node-body {
+  cursor: pointer;
+}
+
+body.editor-touch .sg-move-mode-hint {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--highlight, #f0ebe3);
+  font-size: 14px;
+}
+
+body.editor-touch #editor-mobile-gate .editor-mobile-gate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 20px;
+  width: min(320px, 90vw);
+}
+
+body.editor-touch #editor-mobile-gate .btn-open-game,
+body.editor-touch #editor-mobile-gate #editor-mobile-gate-writer {
+  display: block;
+  text-align: center;
+  padding: 14px 20px;
+  min-height: 44px;
+  font-size: 17px;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+body.editor-touch #editor-mobile-gate #editor-mobile-gate-writer {
+  background: var(--accent, #8b4513);
+  color: var(--on-accent, #fff);
+}
+
+@media (min-width: 768px) {
+  body.editor-touch-device:not(.editor-gated) .header-buttons {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}

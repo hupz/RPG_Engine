@@ -1,0 +1,830 @@
+/**
+ * Editor Pro UI — professional tool chrome (scoped to body.editor-app)
+ * Loaded after inline editor.html styles to override legacy parchment look.
+ */
+
+/* ─── Design tokens (следуют html[data-theme-mode] от ThemeSystem) ─── */
+body.editor-app {
+  --ep-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ep-font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+  --ep-radius-sm: 5px;
+  --ep-radius: 8px;
+  --ep-radius-lg: 10px;
+  --ep-transition: 0.14s ease;
+
+  font-family: var(--ep-font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--page-bg);
+  color: var(--ink);
+}
+
+/* Ночной режим — серый (не чёрный) */
+html[data-theme-mode="dark"] body.editor-app,
+html:not([data-theme-mode="light"]) body.editor-app {
+  --page-bg: #3a3a42;
+  --paper: #45454f;
+  --paper-dark: #3e3e46;
+  --paper-shadow: #34343c;
+  --card-bg: #50505a;
+  --ink: #ececef;
+  --ink-light: #a8a8b0;
+  --ink-faint: #808088;
+  --accent: #6b8fd9;
+  --accent-light: #8aa8e8;
+  --danger: #f05252;
+  --success: #3ecf8e;
+  --success-dark: #2db574;
+  --info: #4d9fff;
+  --info-light: #7ab8ff;
+  --border: #5c5c66;
+  --border-dark: #686872;
+  --pencil: #909098;
+  --on-accent: #ffffff;
+  --on-success: #0a120e;
+  --overlay: rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.35);
+  --highlight: rgba(255, 255, 255, 0.07);
+  --editor-header-bg: #484850;
+  --editor-header-fg: #ececef;
+  --editor-header-border: #5c5c66;
+  --input-bg: #404048;
+  --input-fg: var(--ink);
+  --btn-primary-bg: #4d9fff;
+  --btn-primary-hover: #3a8ef5;
+  --btn-primary-fg: #ffffff;
+  --btn-ghost-hover: rgba(255, 255, 255, 0.08);
+  --btn-ghost-active: rgba(255, 255, 255, 0.12);
+}
+
+/* Дневной режим */
+html[data-theme-mode="light"] body.editor-app,
+body.editor-app[data-theme-mode="light"] {
+  --page-bg: #d8dbe3;
+  --paper: #eef0f4;
+  --paper-dark: #e4e7ec;
+  --paper-shadow: #cdd1d9;
+  --card-bg: #ffffff;
+  --ink: #1a1a22;
+  --ink-light: #5c5c6a;
+  --ink-faint: #888894;
+  --accent: #2563eb;
+  --accent-light: #3b82f6;
+  --danger: #dc3545;
+  --success: #1a9d5c;
+  --success-dark: #15804a;
+  --info: #2563eb;
+  --info-light: #3b82f6;
+  --border: #c8cdd6;
+  --border-dark: #b4bac4;
+  --overlay: rgba(16, 18, 24, 0.4);
+  --shadow-sm: 0 1px 2px rgba(16, 18, 24, 0.07);
+  --shadow-md: 0 4px 14px rgba(16, 18, 24, 0.1);
+  --shadow-lg: 0 10px 32px rgba(16, 18, 24, 0.14);
+  --highlight: rgba(255, 255, 255, 0.85);
+  --editor-header-bg: #f4f5f7;
+  --editor-header-fg: #1a1a22;
+  --editor-header-border: #c8cdd6;
+  --input-bg: #ffffff;
+  --btn-primary-bg: #2563eb;
+  --btn-primary-hover: #1d4ed8;
+  --btn-primary-fg: #ffffff;
+  --btn-ghost-hover: rgba(0, 0, 0, 0.05);
+  --btn-ghost-active: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Header ─── */
+body.editor-app .header {
+  background: var(--editor-header-bg);
+  color: var(--editor-header-fg);
+  border-bottom: 1px solid var(--editor-header-border);
+  padding: 10px 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+body.editor-app .header h1 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--editor-header-fg);
+}
+
+/* ─── Buttons ─── */
+body.editor-app .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--ep-radius-sm);
+  font-family: var(--ep-font);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: background var(--ep-transition), border-color var(--ep-transition),
+    color var(--ep-transition), box-shadow var(--ep-transition), transform 0.1s ease;
+  box-shadow: none;
+}
+
+/* nowrap только для компактных toolbar-кнопок, не для карточек */
+body.editor-app .header-buttons .btn,
+body.editor-app .editor-history-controls .btn,
+body.editor-app .template-filters .btn,
+body.editor-app .tabs .tab,
+body.editor-app .editor-section-tab {
+  white-space: nowrap;
+}
+
+body.editor-app .btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--info) 55%, transparent);
+  outline-offset: 2px;
+}
+
+body.editor-app .btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+body.editor-app .btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+}
+
+body.editor-app .btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border-color: color-mix(in srgb, var(--btn-primary-bg) 80%, #000);
+}
+
+body.editor-app .btn-primary:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--btn-primary-bg) 35%, transparent);
+}
+
+body.editor-app .btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border-dark);
+}
+
+body.editor-app .btn-secondary:hover:not(:disabled) {
+  background: var(--btn-ghost-hover);
+  border-color: color-mix(in srgb, var(--ink-light) 35%, var(--border));
+  color: var(--ink);
+}
+
+body.editor-app .btn-danger {
+  background: color-mix(in srgb, var(--danger) 14%, var(--card-bg));
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+
+body.editor-app .btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 22%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--border));
+}
+
+body.editor-app .btn-info {
+  background: color-mix(in srgb, var(--info) 16%, var(--card-bg));
+  color: var(--info-light);
+  border: 1px solid color-mix(in srgb, var(--info) 38%, var(--border));
+}
+
+body.editor-app .btn-info:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--info) 24%, var(--card-bg));
+}
+
+body.editor-app .btn-sm,
+body.editor-app .header-buttons .btn {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: var(--ep-radius-sm);
+}
+
+body.editor-app .theme-toggle-btn {
+  min-width: 36px;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 17px;
+  line-height: 1;
+  border-radius: var(--ep-radius-sm);
+  border: 1px solid var(--border-dark);
+  background: var(--paper);
+}
+
+body.editor-app .theme-toggle-btn:hover {
+  border-color: color-mix(in srgb, var(--info) 45%, var(--border));
+  background: var(--btn-ghost-hover);
+  transform: none;
+}
+
+html[data-theme-mode="light"] body.editor-app .theme-toggle-btn {
+  background: #fff;
+}
+
+html[data-theme-mode="dark"] body.editor-app .theme-toggle-btn.theme-toggle--dark,
+html:not([data-theme-mode="light"]) body.editor-app .theme-toggle-btn.theme-toggle--dark {
+  background: color-mix(in srgb, var(--info) 12%, var(--paper));
+}
+
+/* ─── Sidebar nav ─── */
+body.editor-app .editor-nav {
+  width: 228px;
+  background: var(--paper-dark);
+  border-right: 1px solid var(--border);
+}
+
+body.editor-app .editor-nav-brand {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+body.editor-app .editor-nav-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+body.editor-app .editor-nav-writer-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--info);
+  background: color-mix(in srgb, var(--info) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--info) 28%, var(--border));
+  border-radius: 999px;
+  padding: 2px 8px;
+  display: inline-block;
+  margin-top: 8px;
+  letter-spacing: 0.06em;
+}
+
+body.editor-app .editor-nav-item {
+  padding: 8px 10px;
+  border-radius: var(--ep-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-light);
+  border: 1px solid transparent;
+}
+
+body.editor-app .editor-nav-item:hover {
+  background: var(--highlight);
+  color: var(--ink);
+  border-color: transparent;
+}
+
+body.editor-app .editor-nav-item.active {
+  background: color-mix(in srgb, var(--info) 14%, var(--card-bg));
+  color: var(--info-light);
+  border-color: color-mix(in srgb, var(--info) 28%, var(--border));
+  font-weight: 600;
+}
+
+body.editor-app .editor-nav-sub {
+  border-left: 1px solid var(--border-dark);
+  margin-left: 12px;
+}
+
+body.editor-app .editor-nav-sub-item {
+  font-size: 12px;
+  border-radius: var(--ep-radius-sm);
+  padding: 5px 10px;
+}
+
+body.editor-app .editor-nav-sub-item.active {
+  background: color-mix(in srgb, var(--info) 10%, var(--paper));
+  color: var(--info-light);
+}
+
+body.editor-app .editor-nav-footer {
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+}
+
+/* ─── Main workspace — «страница» на фоне shell ─── */
+body.editor-app .main-area {
+  background: var(--page-bg);
+  padding: 12px 14px 14px;
+}
+
+body.editor-app .main-area > .tab-content.active {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--ep-radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+body.editor-app .main-area > .tab-content.active .empty-state {
+  color: var(--ink-light);
+}
+
+/* ─── Шаблоны ─── */
+body.editor-app .template-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+body.editor-app .template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+body.editor-app .template-card,
+body.editor-app .template-card.btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 118px;
+  height: auto;
+  padding: 14px 16px;
+  text-align: left;
+  white-space: normal;
+  line-height: 1.45;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+body.editor-app .template-card__icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+body.editor-app .template-card__title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+body.editor-app .template-card__desc {
+  font-size: 12px;
+  color: var(--ink-light);
+  line-height: 1.4;
+  width: 100%;
+}
+
+body.editor-app .template-card:hover {
+  border-color: color-mix(in srgb, var(--info) 40%, var(--border));
+  background: color-mix(in srgb, var(--info) 6%, var(--card-bg));
+}
+
+body.editor-app #scene-templates-editor > h2 {
+  margin-bottom: 4px;
+}
+
+body.editor-app #scene-templates-editor > h3 {
+  margin: 8px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+body.editor-app #scene-template-picker-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+body.editor-app .context-sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--paper-dark);
+}
+
+body.editor-app .editor-section-bar {
+  border-bottom: 1px solid var(--border);
+  gap: 4px;
+}
+
+body.editor-app .editor-section-tab {
+  padding: 5px 12px;
+  border-radius: var(--ep-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-light);
+}
+
+body.editor-app .editor-section-tab:hover {
+  background: var(--highlight);
+  color: var(--ink);
+}
+
+body.editor-app .editor-section-tab.active {
+  background: var(--card-bg);
+  border-color: var(--border-dark);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Tabs ─── */
+body.editor-app .tabs-bar {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+body.editor-app .tab {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-light);
+  border-bottom: 2px solid transparent;
+  border-radius: var(--ep-radius-sm) var(--ep-radius-sm) 0 0;
+  transition: color var(--ep-transition), background var(--ep-transition);
+}
+
+body.editor-app .tab:hover {
+  color: var(--ink);
+  background: var(--highlight);
+}
+
+body.editor-app .tab.active {
+  color: var(--info-light);
+  border-bottom-color: var(--info);
+  background: color-mix(in srgb, var(--info) 6%, transparent);
+}
+
+/* ─── Forms & inputs ─── */
+body.editor-app input,
+body.editor-app textarea,
+body.editor-app select,
+body.editor-app .form-control {
+  font-family: var(--ep-font);
+  font-size: 13px;
+  background: var(--input-bg);
+  color: var(--input-fg);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--ep-radius-sm);
+  padding: 7px 10px;
+  transition: border-color var(--ep-transition), box-shadow var(--ep-transition);
+}
+
+body.editor-app input:focus,
+body.editor-app textarea:focus,
+body.editor-app select:focus,
+body.editor-app .form-control:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--info) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 18%, transparent);
+}
+
+body.editor-app input::placeholder,
+body.editor-app textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+body.editor-app label,
+body.editor-app .form-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-light);
+  letter-spacing: 0.01em;
+}
+
+/* ─── Cards & panels ─── */
+body.editor-app .scene-item,
+body.editor-app .ach-card,
+body.editor-app .beast-card,
+body.editor-app .rep-faction-card,
+body.editor-app .quest-editor,
+body.editor-app .npc-editor,
+body.editor-app .tpl-def-card {
+  border: 1px solid var(--border);
+  border-radius: var(--ep-radius);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+body.editor-app .scene-item:hover {
+  border-color: var(--border-dark);
+  background: color-mix(in srgb, var(--highlight) 80%, var(--card-bg));
+}
+
+body.editor-app .scene-item.active {
+  border-color: color-mix(in srgb, var(--info) 45%, var(--border));
+  background: color-mix(in srgb, var(--info) 8%, var(--card-bg));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--info) 20%, transparent);
+}
+
+body.editor-app .scene-item .scene-loc {
+  color: var(--info-light);
+  font-size: 12px;
+}
+
+body.editor-app .quest-editor h4,
+body.editor-app .npc-editor h4,
+body.editor-app .editor-export-modal-title {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ─── Modals ─── */
+body.editor-app .editor-modal-backdrop {
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+}
+
+body.editor-app .editor-modal-panel {
+  border: 1px solid var(--border-dark);
+  border-radius: var(--ep-radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 22px;
+}
+
+/* ─── Export menu ─── */
+body.editor-app .export-menu-dropdown {
+  border: 1px solid var(--border-dark);
+  border-radius: var(--ep-radius);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+}
+
+body.editor-app .export-menu-item {
+  border-radius: var(--ep-radius-sm);
+  font-size: 13px;
+}
+
+/* ─── JSON preview ─── */
+body.editor-app .json-preview,
+body.editor-app pre {
+  font-family: var(--ep-font-mono);
+  font-size: 12px;
+  background: var(--paper-dark);
+  border: 1px solid var(--border);
+  border-radius: var(--ep-radius);
+}
+
+/* ─── Validation ─── */
+body.editor-app .validation-errors {
+  background: color-mix(in srgb, var(--danger) 10%, var(--card-bg));
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: var(--danger);
+  border-radius: var(--ep-radius);
+}
+
+/* ─── Scrollbars ─── */
+body.editor-app ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.editor-app ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.editor-app ::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 4px;
+}
+
+body.editor-app ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--ink-faint) 60%, var(--border-dark));
+}
+
+/* ─── Command palette (injected by JS) ─── */
+body.editor-app .cmd-palette-overlay {
+  backdrop-filter: blur(6px);
+}
+
+body.editor-app .cmd-palette-panel {
+  border: 1px solid var(--border-dark) !important;
+  border-radius: var(--ep-radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: var(--ep-font) !important;
+}
+
+body.editor-app .cmd-palette-input {
+  font-family: var(--ep-font) !important;
+  border-radius: var(--ep-radius-sm) !important;
+}
+
+body.editor-app .cmd-palette-item:hover,
+body.editor-app .cmd-palette-item.is-active {
+  background: color-mix(in srgb, var(--info) 12%, var(--card-bg)) !important;
+}
+
+/* ─── Phase I / visual editor chrome ─── */
+body.editor-app .ux-context-menu {
+  border-radius: var(--ep-radius) !important;
+  border: 1px solid var(--border-dark) !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: var(--ep-font);
+  font-size: 13px;
+}
+
+body.editor-app .ux-context-menu button {
+  font-family: var(--ep-font);
+  font-size: 13px;
+}
+
+body.editor-app .visual-viewport,
+body.editor-app #game-ui-viewport {
+  border-radius: var(--ep-radius) !important;
+  border: 1px solid var(--border-dark) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* ─── Empty state ─── */
+body.editor-app .empty-state h2 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Headings in workspace ─── */
+body.editor-app .main-area h2,
+body.editor-app .main-area h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+body.editor-app .main-area h2 {
+  font-size: 18px;
+}
+
+body.editor-app .main-area h3 {
+  font-size: 15px;
+}
+
+/* ─── Form controls (editor.css legacy 2px borders) ─── */
+body.editor-app .form-control,
+body.editor-app .smart-textarea-wrapper .smart-textarea,
+body.editor-app .cb-select {
+  border-width: 1px;
+  border-color: var(--border-dark);
+  border-radius: var(--ep-radius-sm);
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+body.editor-app .form-control:focus,
+body.editor-app .smart-textarea-wrapper .smart-textarea:focus {
+  border-color: color-mix(in srgb, var(--info) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 18%, transparent);
+}
+
+body.editor-app .editor-help-trigger {
+  background: color-mix(in srgb, var(--ink-faint) 18%, transparent);
+  color: var(--ink-light);
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+}
+
+body.editor-app .editor-help-trigger:hover {
+  background: color-mix(in srgb, var(--info) 20%, transparent);
+  color: var(--info-light);
+}
+
+body.editor-app .editor-toast-root .editor-toast {
+  font-family: var(--ep-font);
+  border-radius: var(--ep-radius);
+  border: 1px solid var(--border-dark);
+  box-shadow: var(--shadow-lg);
+}
+
+body.editor-app .choice-row,
+body.editor-app .stage-row {
+  border-radius: var(--ep-radius-sm);
+}
+
+body.editor-app .editor-history-controls .btn {
+  min-width: 32px;
+}
+
+/* ─── Phase 1.11 Content Browser / Dashboard ─── */
+body.editor-app .dashboard-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+body.editor-app .dashboard-content-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--ep-radius);
+  background: var(--card-bg);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--ep-transition), background var(--ep-transition);
+}
+
+body.editor-app .dashboard-content-card:hover {
+  border-color: color-mix(in srgb, var(--info) 40%, var(--border));
+  background: color-mix(in srgb, var(--info) 6%, var(--card-bg));
+}
+
+body.editor-app .dashboard-content-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+body.editor-app .dashboard-content-label {
+  font-size: 11px;
+  color: var(--ink-light);
+}
+
+body.editor-app .dashboard-quick-create-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+body.editor-app .content-browser-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+body.editor-app .content-browser-search {
+  flex: 1 1 180px;
+  min-width: 140px;
+}
+
+body.editor-app .content-browser-filter {
+  flex: 0 1 200px;
+  min-width: 140px;
+}
+
+body.editor-app .content-browser-cat {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+body.editor-app .content-browser-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.editor-app .content-browser-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--ep-radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+body.editor-app .content-browser-link:hover {
+  background: var(--highlight);
+}
+
+body.editor-app .content-browser-title {
+  font-weight: 500;
+}
+
+body.editor-app .content-browser-id {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+body.editor-app .content-browser-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--ink-light);
+}
+
+body.editor-app .content-browser-create-row {
+  margin-top: 12px;
+}

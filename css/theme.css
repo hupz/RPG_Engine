@@ -1,0 +1,76 @@
+/* Fallback tokens — overridden by ThemeSystem.apply() */
+:root {
+  --page-bg: #3a3a42;
+  --paper: #45454f;
+  --paper-dark: #3e3e46;
+  --paper-shadow: #34343c;
+  --card-bg: #50505a;
+  --ink: #ececef;
+  --ink-light: #a8a8b0;
+  --ink-faint: #808088;
+  --accent: #6b8fd9;
+  --accent-light: #8aa8e8;
+  --danger: #f05252;
+  --success: #3ecf8e;
+  --success-dark: #2db574;
+  --info: #4d9fff;
+  --info-light: #7ab8ff;
+  --border: #5c5c66;
+  --border-dark: #686872;
+  --pencil: #909098;
+  --on-accent: #ffffff;
+  --on-success: #0a120e;
+  --overlay: rgba(0, 0, 0, 0.5);
+  --tag-combat-bg: #4a3838;
+  --tag-once-bg: #4a4430;
+  --tag-once-fg: #f1c40f;
+  --inv-use-bg: #2a4034;
+  --inv-use-border: #3ecf8e;
+  --inv-use-hover: #345040;
+  --wizard: #9d8ff5;
+  --wizard-light: #b5aaf8;
+  --paladin: #3ecf8e;
+  --paladin-light: #6ee0aa;
+  --warrior: #f05252;
+  --warrior-light: #f47a7a;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.28);
+  --highlight: rgba(255, 255, 255, 0.07);
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --editor-header-bg: #484850;
+  --editor-header-fg: #ececef;
+  --editor-surface-info: color-mix(in srgb, var(--info) 14%, var(--card-bg));
+  --editor-surface-warn: color-mix(in srgb, var(--gold, #f1c40f) 12%, var(--card-bg));
+  --editor-surface-success: color-mix(in srgb, var(--success) 12%, var(--card-bg));
+  --editor-surface-muted: var(--paper-dark);
+  --input-bg: #404048;
+  --input-fg: var(--ink);
+}
+
+[data-theme-mode="light"] {
+  --page-bg: #eef0f4;
+  --paper: #f8f9fb;
+  --paper-dark: #eceef2;
+  --paper-shadow: #dfe2e8;
+  --card-bg: #ffffff;
+  --ink: #18181f;
+  --ink-light: #5c5c6a;
+  --ink-faint: #888894;
+  --accent: #5b4cdb;
+  --accent-light: #7c6cf0;
+  --danger: #dc3545;
+  --success: #1a9d5c;
+  --success-dark: #15804a;
+  --info: #2563eb;
+  --info-light: #3b82f6;
+  --border: #d8dce4;
+  --border-dark: #c4c9d4;
+  --overlay: rgba(16, 18, 24, 0.45);
+  --shadow-sm: 0 1px 2px rgba(16, 18, 24, 0.06);
+  --shadow-md: 0 4px 16px rgba(16, 18, 24, 0.1);
+  --highlight: rgba(255, 255, 255, 0.7);
+  --editor-header-bg: #ffffff;
+  --editor-header-fg: #18181f;
+  --input-bg: #ffffff;
+}

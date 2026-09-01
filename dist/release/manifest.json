@@ -1,0 +1,19 @@
+{
+  "type": "rpgengine-release",
+  "generatedAt": "2026-09-01T20:11:41.793Z",
+  "campaignId": "visual_village",
+  "dataVersion": 5,
+  "files": [
+    "index.html",
+    "js/engine.bundle.js",
+    "js/data.js",
+    "data/visual_village.json",
+    "manifest.json"
+  ],
+  "excludesEditor": true,
+  "validation": {
+    "ok": true,
+    "errors": 0,
+    "warnings": 0
+  }
+}

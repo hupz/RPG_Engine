@@ -1,0 +1,122 @@
+/* Дополнительные стили тёмной/светлой темы — модалки, формы, переключатель */
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 34px;
+  padding: 4px 10px;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 8px;
+  border: 2px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: var(--card-bg);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--accent);
+  background: var(--paper-dark);
+  transform: scale(1.04);
+}
+
+.theme-toggle-btn.theme-toggle--dark {
+  background: color-mix(in srgb, var(--info) 22%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--info) 45%, var(--border));
+}
+
+.theme-toggle-floating {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 12000;
+  box-shadow: 0 4px 16px var(--shadow-md);
+}
+
+[data-theme-mode="dark"] input,
+[data-theme-mode="dark"] textarea,
+[data-theme-mode="dark"] select {
+  background: var(--input-bg, var(--card-bg));
+  color: var(--input-fg, var(--ink));
+  border-color: var(--border);
+}
+
+[data-theme-mode="dark"] input::placeholder,
+[data-theme-mode="dark"] textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+[data-theme-mode="dark"] input:focus,
+[data-theme-mode="dark"] textarea:focus,
+[data-theme-mode="dark"] select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+[data-theme-mode="dark"] .modal-overlay,
+[data-theme-mode="dark"] .editor-modal-backdrop {
+  background: var(--overlay);
+}
+
+[data-theme-mode="dark"] .modal-box,
+[data-theme-mode="dark"] .editor-modal-panel,
+[data-theme-mode="dark"] .paper-sheet {
+  background: var(--card-bg);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+[data-theme-mode="dark"] .choice,
+[data-theme-mode="dark"] button.choice {
+  background: var(--card-bg);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+[data-theme-mode="dark"] .choice:hover:not(:disabled) {
+  background: var(--paper-dark);
+  border-color: var(--accent);
+}
+
+[data-theme-mode="dark"] .hint,
+[data-theme-mode="dark"] .form-group .hint {
+  color: var(--ink-light);
+}
+
+[data-theme-mode="dark"] code {
+  background: var(--paper-dark);
+  color: var(--accent-light);
+  border: 1px solid var(--border);
+}
+
+[data-theme-mode="dark"] .json-preview,
+[data-theme-mode="dark"] pre {
+  background: var(--paper-dark);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+[data-theme-mode="dark"] .btn-primary {
+  color: var(--on-success);
+}
+
+[data-theme-mode="dark"] .btn-danger {
+  color: #fff;
+}
+
+[data-theme-mode="dark"] .scene-item:hover {
+  background: var(--paper-dark);
+}
+
+[data-theme-mode="dark"] .tabs .tab.active {
+  background: var(--card-bg);
+  color: var(--accent);
+}
+
+[data-theme-mode="dark"] .campaign-picker-screen {
+  background: var(--page-bg);
+}

@@ -1,0 +1,90 @@
+{
+  "scout_a": {
+    "id": "scout_a",
+    "name": "Разведчик А",
+    "hp": 11,
+    "maxHp": 11,
+    "ac": 13,
+    "atkBonus": 3,
+    "dmgRoll": "1d6",
+    "dmgBonus": 1,
+    "dex": 2
+  },
+  "scout_b": {
+    "id": "scout_b",
+    "name": "Разведчик Б",
+    "hp": 11,
+    "maxHp": 11,
+    "ac": 13,
+    "atkBonus": 3,
+    "dmgRoll": "1d6",
+    "dmgBonus": 1,
+    "dex": 2
+  },
+  "wolf_a": {
+    "id": "wolf_a",
+    "name": "Волк А",
+    "hp": 11,
+    "maxHp": 11,
+    "ac": 13,
+    "atkBonus": 3,
+    "dmgRoll": "1d6",
+    "dmgBonus": 1,
+    "dex": 2
+  },
+  "wolf_b": {
+    "id": "wolf_b",
+    "name": "Волк Б",
+    "hp": 11,
+    "maxHp": 11,
+    "ac": 13,
+    "atkBonus": 3,
+    "dmgRoll": "1d6",
+    "dmgBonus": 1,
+    "dex": 2
+  },
+  "corvin": {
+    "id": "corvin",
+    "name": "Корвин",
+    "hp": 28,
+    "maxHp": 28,
+    "ac": 16,
+    "atkBonus": 5,
+    "dmgRoll": "1d8",
+    "dmgBonus": 3,
+    "dex": 2
+  },
+  "bruiser": {
+    "id": "bruiser",
+    "name": "Громила",
+    "hp": 16,
+    "maxHp": 16,
+    "ac": 13,
+    "atkBonus": 3,
+    "dmgRoll": "1d6",
+    "dmgBonus": 1,
+    "dex": 1
+  },
+  "archer_a": {
+    "id": "archer_a",
+    "name": "Лучник А",
+    "hp": 8,
+    "maxHp": 8,
+    "ac": 12,
+    "atkBonus": 2,
+    "dmgRoll": "1d4",
+    "dmgBonus": 0,
+    "dex": 3
+  },
+  "archer_b": {
+    "id": "archer_b",
+    "name": "Лучник Б",
+    "hp": 8,
+    "maxHp": 8,
+    "ac": 12,
+    "atkBonus": 2,
+    "dmgRoll": "1d4",
+    "dmgBonus": 0,
+    "dex": 3
+  }
+}
