@@ -650,8 +650,35 @@
 
     // Entity refs inside rules
     const rules = result.rules || [];
+    const varCatalog = data.variables || {};
+    const isKnownRuntimeFlag = (name) => {
+      if (!name) return true;
+      if (data.startingFlags && Object.prototype.hasOwnProperty.call(data.startingFlags, name)) return true;
+      if (/^quest_|^sc_|^ch_|^rep_/.test(name)) return true;
+      if (name !== 'starting' && data.reputation && Object.prototype.hasOwnProperty.call(data.reputation, name)) {
+        return true;
+      }
+      return false;
+    };
     rules.forEach((rule, i) => {
       if (!rule || typeof rule !== 'object') return;
+      const warnMissingProjectVariable = (name, field) => {
+        if (!name || varCatalog[name] || isKnownRuntimeFlag(name)) return;
+        if (!/^[a-z][a-z0-9_]*$/.test(name)) return;
+        push(issue({
+          type: 'unknown_project_variable',
+          severity: SEVERITY.WARNING,
+          message: 'Условие ссылается на «' + name + '», которой нет в каталоге переменных проекта',
+          entityType: ctx.entityType,
+          entityId: ctx.entityId,
+          path: ctx.path + '.rule[' + i + '].' + field,
+          tab: ctx.tab,
+          sceneId: ctx.sceneId,
+          fixHint: 'Добавьте переменную в каталог «Переменные» или используйте флаг из квестов/startingFlags'
+        }));
+      };
+      if (rule.flag) warnMissingProjectVariable(rule.flag, 'flag');
+      if (rule.notFlag) warnMissingProjectVariable(rule.notFlag, 'notFlag');
       if (rule.hasItem && !data.items?.[rule.hasItem]) {
         push(issue({
           type: 'missing_item',

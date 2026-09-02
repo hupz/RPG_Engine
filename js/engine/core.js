@@ -2506,6 +2506,7 @@ Object.assign(GameEngine, {
       this.state.supplies = 0;
       this.state.inventory = [...(cls.startingItems || [])];
       this.state.flags = {};
+      this.state.variables = {};
       this.applyStartingFlags();
       this.state.questStages = {};
       this.state.sceneVisits = {};

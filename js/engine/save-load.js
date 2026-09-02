@@ -215,6 +215,7 @@
         gold: this.state.gold,
         inventory: this.state.inventory,
         flags: this.state.flags,
+        variables: this.state.variables || {},
         scene: this.state.scene,
         supplies: this.state.supplies,
         resources: this.state.resources,
@@ -301,6 +302,11 @@
       this.state.inventory = data.inventory || [];
       this.state.flags = data.flags || {};
       this.applyStartingFlags();
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.applyFromSave) {
+        RuntimeVariables.applyFromSave(this, data.variables);
+      } else {
+        this.state.variables = data.variables && typeof data.variables === 'object' ? { ...data.variables } : {};
+      }
       this.state.scene = data.scene || 'village';
       this.state.supplies = parseInt(data.supplies) || 0;
       this.state.questStages = data.questStages || {};

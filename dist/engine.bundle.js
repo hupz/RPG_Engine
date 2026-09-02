@@ -1,4 +1,4 @@
-/* engine bundle generated 2026-09-02T10:41:18.423Z */
+/* engine bundle generated 2026-09-02T10:47:22.781Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -5449,6 +5449,7 @@ Object.assign(GameEngine, {
       this.state.supplies = 0;
       this.state.inventory = [...(cls.startingItems || [])];
       this.state.flags = {};
+      this.state.variables = {};
       this.applyStartingFlags();
       this.state.questStages = {};
       this.state.sceneVisits = {};
@@ -6244,6 +6245,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return {
         flags: { ...(this.state.flags || {}) },
+        variables: { ...(this.state.variables || {}) },
+        projectVariables: this.data?.variables || {},
         inventory: [...(this.state.inventory || [])],
         gold: this.state.gold ?? 0,
         className: this.state.className || '',
@@ -7747,6 +7750,9 @@ document.addEventListener('DOMContentLoaded', () => {
       Object.assign(start, this.data?.reputation?.starting || {});
       for (const [key, value] of Object.entries(start)) {
         if (this.state.flags[key] === undefined) this.state.flags[key] = value;
+      }
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.initFromCatalog) {
+        RuntimeVariables.initFromCatalog(this);
       }
     },
 
@@ -14446,6 +14452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gold: this.state.gold,
         inventory: this.state.inventory,
         flags: this.state.flags,
+        variables: this.state.variables || {},
         scene: this.state.scene,
         supplies: this.state.supplies,
         resources: this.state.resources,
@@ -14532,6 +14539,11 @@ document.addEventListener('DOMContentLoaded', () => {
       this.state.inventory = data.inventory || [];
       this.state.flags = data.flags || {};
       this.applyStartingFlags();
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.applyFromSave) {
+        RuntimeVariables.applyFromSave(this, data.variables);
+      } else {
+        this.state.variables = data.variables && typeof data.variables === 'object' ? { ...data.variables } : {};
+      }
       this.state.scene = data.scene || 'village';
       this.state.supplies = parseInt(data.supplies) || 0;
       this.state.questStages = data.questStages || {};

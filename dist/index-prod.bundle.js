@@ -1,4 +1,4 @@
-/* index-prod bundle — 70 scripts from index.html — 2026-09-02T10:41:18.433Z */
+/* index-prod bundle — 70 scripts from index.html — 2026-09-02T10:47:22.789Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -17879,12712 +17879,8 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 
-;/* —— js/conditions.js —— */
-// ============================================
-// Условия показа выборов (флаги, инвентарь, золото, класс)
-// Используется в engine.js и editor.html
-// ============================================
-
-const ConditionSystem = {
-  /** Модификатор характеристики D&D 5e (делегирует GameEngine при наличии) */
-  getModifier(score) {
-    if (typeof GameEngine !== 'undefined' && typeof GameEngine.getModifier === 'function') {
-      return GameEngine.getModifier(score);
-    }
-    return Math.floor((Number(score) - 10) / 2);
-  },
-  /** Плоский requires → { all: [...] } */
-  normalize(conditions) {
-    if (!conditions || typeof conditions !== 'object') return null;
-    if (Array.isArray(conditions.all) || Array.isArray(conditions.any)) return conditions;
-
-    const rules = [];
-    const c = conditions;
-    if (c.flag != null && c.flag !== '') {
-      const rule = { flag: c.flag };
-      if (c.min != null) rule.min = c.min;
-      if (c.max != null) rule.max = c.max;
-      if (rule.min == null && rule.max == null) {
-        rule.equals = c.equals !== undefined ? c.equals : (c.value !== undefined ? c.value : true);
-      }
-      rules.push(rule);
-    }
-    if (c.notFlag) rules.push({ flag: c.notFlag, equals: false });
-    if (c.hasItem) rules.push({ hasItem: c.hasItem });
-    if (c.notHasItem) rules.push({ notHasItem: c.notHasItem });
-    if (c.goldMin != null) rules.push({ goldMin: c.goldMin });
-    if (c.goldMax != null) rules.push({ goldMax: c.goldMax });
-    if (c.class) rules.push({ class: c.class });
-    if (c.choiceUsed) rules.push({ choiceUsed: c.choiceUsed });
-    if (c.choiceNotUsed) rules.push({ choiceNotUsed: c.choiceNotUsed });
-    if (c.questStage && typeof c.questStage === 'object') rules.push({ questStage: c.questStage });
-    if (c.questMinStage != null) rules.push({ questMinStage: c.questMinStage });
-    if (c.reputation && typeof c.reputation === 'object') rules.push({ reputation: c.reputation });
-
-    if (!rules.length) return null;
-    return { all: rules };
-  },
-
-  parseEquals(raw) {
-    if (raw === 'true') return true;
-    if (raw === 'false') return false;
-    if (raw === '' || raw == null) return true;
-    const n = Number(raw);
-    if (!Number.isNaN(n) && String(n) === String(raw).trim()) return n;
-    return raw;
-  },
-
-  /** Правило-лист или вложенный блок { all } / { any } */
-  evaluateConditionNode(rule, ctx) {
-    if (!rule || typeof rule !== 'object') return true;
-    if (Array.isArray(rule.all) || Array.isArray(rule.any)) {
-      return this.evaluate(rule, ctx);
-    }
-    return this.evaluateRule(rule, ctx);
-  },
-
-  /** Объяснение провала одного узла (без повторного normalize листа) */
-  explainConditionNode(rule, ctx) {
-    if (!rule || typeof rule !== 'object') {
-      return 'неизвестное правило';
-    }
-    if (Array.isArray(rule.all) || Array.isArray(rule.any)) {
-      return this.explainConditionsFailure(rule, ctx);
-    }
-    return this.explainRuleFailure(rule, ctx);
-  },
-
-  evaluateRule(rule, ctx) {
-    if (!rule || typeof rule !== 'object') return true;
-    const flags = ctx.flags || {};
-    const inventory = ctx.inventory || [];
-
-    if (rule.flag != null && rule.flag !== '') {
-      const val = flags[rule.flag];
-      if (rule.min != null || rule.max != null) {
-        const n = Number(val);
-        if (Number.isNaN(n)) return false;
-        if (rule.min != null && n < Number(rule.min)) return false;
-        if (rule.max != null && n > Number(rule.max)) return false;
-        return true;
-      }
-      const eq = rule.equals !== undefined ? rule.equals : true;
-      if (typeof eq === 'boolean') return !!val === eq;
-      return val == eq;
-    }
-    if (rule.notFlag) return !flags[rule.notFlag];
-    if (rule.hasItem) return inventory.includes(rule.hasItem);
-    if (rule.notHasItem) return !inventory.includes(rule.notHasItem);
-    if (rule.goldMin != null) return (ctx.gold ?? 0) >= rule.goldMin;
-    if (rule.goldMax != null) return (ctx.gold ?? 0) <= rule.goldMax;
-    if (rule.class) return (ctx.className || '') === rule.class;
-    if (rule.choiceUsed) return !!flags[rule.choiceUsed];
-    if (rule.choiceNotUsed) return !flags[rule.choiceNotUsed];
-    if (rule.questStage) {
-      const qs = rule.questStage;
-      const questId = qs.questId || qs.quest;
-      const want = qs.stage != null ? String(qs.stage) : '';
-      const current = this.getQuestStageFromCtx(ctx, questId);
-      if (current == null) return false;
-      return String(current) === want;
-    }
-    if (rule.questMinStage) {
-      const qm = rule.questMinStage;
-      const questId = qm.questId || qm.quest;
-      const min = Number(qm.stage);
-      const current = this.getQuestStageFromCtx(ctx, questId);
-      if (current == null) return false;
-      return Number(current) >= min;
-    }
-    if (rule.reputation && typeof ReputationSystem !== 'undefined') {
-      return ReputationSystem.evaluateReputationRule(rule, flags);
-    }
-    if (rule.reputation?.faction) {
-      const cur = Number(flags[rule.reputation.faction]) || 0;
-      const val = Number(rule.reputation.value);
-      const op = rule.reputation.op || 'gte';
-      if (op === 'gte' || op === '>=') return cur >= val;
-      if (op === 'lte' || op === '<=') return cur <= val;
-      if (op === 'eq') return cur === val;
-      return cur >= val;
-    }
-    return true;
-  },
-
-  /**
-   * Текущая стадия квеста. Source of truth: QuestRuntime.questProgress.
-   * questStages / flags.quest_* — только fallback до hydrate.
-   */
-  getQuestStageFromCtx(ctx, questId) {
-    if (!questId) return null;
-    if (typeof QuestRuntime !== 'undefined') {
-      if (ctx.engine) QuestRuntime.bind(ctx.engine);
-      const key = QuestRuntime.getStageKey(questId);
-      if (key != null && key !== '') return String(key);
-    }
-    // Legacy fallback (pre-hydrate saves / contexts without engine)
-    const progress = ctx.questProgress?.[questId];
-    if (progress) {
-      if (progress.status === 'completed') return '__finished__';
-      if (progress.status === 'failed') return '__failed__';
-      if (progress.stageIndex != null) return String(progress.stageIndex);
-    }
-    const stages = ctx.questStages || {};
-    if (stages[questId] != null && stages[questId] !== '') return String(stages[questId]);
-    const legacy = ctx.flags?.['quest_' + questId];
-    if (legacy == null || legacy === '') return null;
-    if (typeof QuestRuntime !== 'undefined' && ctx.quests?.[questId]) {
-      return QuestRuntime.resolveStageRef(ctx.quests[questId], legacy);
-    }
-    return String(legacy);
-  },
-
-  isQuestActiveFromCtx(ctx, questId) {
-    if (!questId) return false;
-    if (typeof QuestRuntime !== 'undefined') {
-      if (ctx.engine) QuestRuntime.bind(ctx.engine);
-      if (QuestRuntime.isActive(questId)) return true;
-      if (QuestRuntime.isCompleted(questId) || QuestRuntime.isFailed(questId)) return false;
-    }
-    const p = ctx.questProgress?.[questId];
-    if (p) return p.status === 'active';
-    const s = this.getQuestStageFromCtx(ctx, questId);
-    return s != null && s !== '__finished__' && s !== '__failed__' && s !== 'complete' && s !== 'failed';
-  },
-
-  isQuestFinishedFromCtx(ctx, questId) {
-    if (!questId) return false;
-    if (typeof QuestRuntime !== 'undefined') {
-      if (ctx.engine) QuestRuntime.bind(ctx.engine);
-      if (QuestRuntime.isCompleted(questId)) return true;
-    }
-    const p = ctx.questProgress?.[questId];
-    if (p?.status === 'completed') return true;
-    const s = this.getQuestStageFromCtx(ctx, questId);
-    return s === '__finished__' || s === 'complete';
-  },
-
-  evaluate(conditions, ctx) {
-    if (!conditions) return true;
-    const norm = this.normalize(conditions);
-    if (!norm) return true;
-    if (Array.isArray(norm.all)) {
-      return norm.all.length === 0 || norm.all.every((r) => this.evaluateConditionNode(r, ctx));
-    }
-    if (Array.isArray(norm.any)) {
-      return norm.any.length === 0 || norm.any.some((r) => this.evaluateConditionNode(r, ctx));
-    }
-    return true;
-  },
-
-  /** Условие элемента states[] (приоритет: condition → if → when → showIf → requires) */
-  getSceneStateCondition(stateEntry) {
-    if (!stateEntry || typeof stateEntry !== 'object') return null;
-    return (
-      stateEntry.condition
-      ?? stateEntry.if
-      ?? stateEntry.when
-      ?? stateEntry.showIf
-      ?? stateEntry.requires
-      ?? null
-    );
-  },
-
-  /** Проверка условия против контекста игры: ConditionSystem.check(ctx, condition) */
-  check(ctx, condition) {
-    if (!condition) return true;
-    if (!ctx || typeof ctx !== 'object') return true;
-    return this.evaluate(condition, ctx);
-  },
-
-  /** Истинно ли состояние локации для текущего контекста */
-  matchesSceneState(stateEntry, ctx) {
-    const cond = this.getSceneStateCondition(stateEntry);
-    if (!cond) return true;
-    return this.check(ctx, cond);
-  },
-
-  /** Человекочитаемая причина, почему одно правило не выполнилось */
-  explainRuleFailure(rule, ctx) {
-    if (!rule || typeof rule !== 'object') return 'неизвестное правило';
-    const flags = ctx.flags || {};
-    const inventory = ctx.inventory || [];
-
-    if (rule.flag != null && rule.flag !== '') {
-      const val = flags[rule.flag];
-      if (rule.min != null || rule.max != null) {
-        const n = Number(val);
-        if (Number.isNaN(n)) {
-          return `флаг «${rule.flag}» не задан или не число (нужно от ${rule.min ?? '—'} до ${rule.max ?? '—'})`;
-        }
-        if (rule.min != null && n < Number(rule.min)) {
-          return `флаг «${rule.flag}» = ${n} (нужно ≥ ${rule.min})`;
-        }
-        if (rule.max != null && n > Number(rule.max)) {
-          return `флаг «${rule.flag}» = ${n} (нужно ≤ ${rule.max})`;
-        }
-      }
-      const eq = rule.equals !== undefined ? rule.equals : true;
-      if (typeof eq === 'boolean') {
-        return `флаг «${rule.flag}» равен ${!!val} (ожидалось ${eq})`;
-      }
-      return `флаг «${rule.flag}» = ${val} (ожидалось ${eq})`;
-    }
-    if (rule.notFlag) {
-      return `флаг «${rule.notFlag}» установлен (ожидалось, что он выключен)`;
-    }
-    if (rule.hasItem) {
-      return `нет предмета «${rule.hasItem}»`;
-    }
-    if (rule.notHasItem) {
-      return `есть предмет «${rule.notHasItem}» (ожидалось отсутствие)`;
-    }
-    if (rule.goldMin != null) {
-      return `золото ${ctx.gold ?? 0} (нужно ≥ ${rule.goldMin})`;
-    }
-    if (rule.goldMax != null) {
-      return `золото ${ctx.gold ?? 0} (нужно ≤ ${rule.goldMax})`;
-    }
-    if (rule.class) {
-      return `класс «${ctx.className || '—'}» (нужен «${rule.class}»)`;
-    }
-    if (rule.choiceUsed) {
-      return `выбор «${rule.choiceUsed}» ещё не использован`;
-    }
-    if (rule.choiceNotUsed) {
-      return `выбор «${rule.choiceNotUsed}» уже использован`;
-    }
-    if (rule.questStage) {
-      const qs = rule.questStage;
-      const questId = qs.questId || qs.quest;
-      const want = qs.stage != null ? String(qs.stage) : '';
-      const current = this.getQuestStageFromCtx(ctx, questId);
-      return `квест «${questId}»: стадия «${current ?? 'нет'}» (нужна «${want}»)`;
-    }
-    if (rule.questMinStage) {
-      const qm = rule.questMinStage;
-      const questId = qm.questId || qm.quest;
-      const min = Number(qm.stage);
-      const current = this.getQuestStageFromCtx(ctx, questId);
-      return `квест «${questId}»: стадия «${current ?? 'нет'}» (нужна ≥ ${min})`;
-    }
-    if (rule.reputation?.faction) {
-      const cur = Number(flags[rule.reputation.faction]) || 0;
-      const val = Number(rule.reputation.value);
-      const op = rule.reputation.op || 'gte';
-      return `репутация «${rule.reputation.faction}» = ${cur} (нужно ${op} ${val})`;
-    }
-    if (rule.reputation) {
-      return 'условие репутации не выполнено';
-    }
-    return 'условие не выполнено';
-  },
-
-  /**
-   * Первая причина, почему блок условий не выполнен (для showIf — нужно true, для hideIf — объяснение при true).
-   * @returns {string|null} текст причины или null, если блок «провалился» ожидаемо для режима
-   */
-  explainConditionsFailure(conditions, ctx, options) {
-    if (!conditions) return null;
-    const norm = this.normalize(conditions);
-    if (!norm) return null;
-    const opts = options || {};
-
-    if (Array.isArray(norm.all)) {
-      if (norm.all.length === 0) return null;
-      for (let i = 0; i < norm.all.length; i++) {
-        const rule = norm.all[i];
-        if (!this.evaluateConditionNode(rule, ctx)) {
-          const detail = this.explainConditionNode(rule, ctx);
-          const mode = norm.all.length > 1 ? ` (правило ${i + 1} из ${norm.all.length}, all)` : '';
-          return `${detail}${mode}`;
-        }
-      }
-      return opts.whenTrue ? 'все условия (all) выполнены' : null;
-    }
-
-    if (Array.isArray(norm.any)) {
-      if (norm.any.length === 0) return null;
-      if (norm.any.some((r) => this.evaluateConditionNode(r, ctx))) {
-        return opts.whenTrue ? 'хотя бы одно условие (any) выполнено' : null;
-      }
-      const parts = norm.any
-        .map((r) => this.explainConditionNode(r, ctx))
-        .filter(Boolean);
-      const sample = parts[0] || 'ни одно условие не подошло';
-      return `ни одно из условий (any) не выполнено: ${sample}`;
-    }
-
-    return null;
-  },
-
-  explainConditionRefFailure(conditionRef, ctx, args) {
-    if (conditionRef == null || conditionRef === '') return 'ссылка на условие пуста';
-    if (typeof conditionRef === 'string') {
-      const def = this.CONDITION_REGISTRY[conditionRef];
-      if (def) return `условие «${conditionRef}» не выполнено`;
-      return `неизвестное условие «${conditionRef}»`;
-    }
-    if (typeof conditionRef === 'object') {
-      const detail = this.explainConditionsFailure(conditionRef, ctx);
-      return detail ? `условие не выполнено: ${detail}` : 'условие не выполнено';
-    }
-    return 'условие не выполнено';
-  },
-
-  /**
-   * Объяснение видимости выбора для редактора (God Mode / превью).
-   * @returns {{ visible: boolean, reason: string }}
-   */
-  explainChoiceVisibility(choice, ctx) {
-    if (!choice) {
-      return { visible: false, reason: 'Скрыто: пустой выбор' };
-    }
-
-    if (choice.condition != null && choice.condition !== '') {
-      const args = choice.conditionParams || choice.params || null;
-      if (!this.resolveRef(choice.condition, ctx, args)) {
-        const detail = this.explainConditionRefFailure(choice.condition, ctx, args);
-        return { visible: false, reason: `Скрыто: ${detail}` };
-      }
-    }
-
-    const show = choice.showIf || choice.requires;
-    if (show) {
-      const fail = this.explainConditionsFailure(show, ctx);
-      if (fail) {
-        return { visible: false, reason: `Скрыто: ${fail}` };
-      }
-    }
-
-    if (choice.hideIf && this.evaluate(choice.hideIf, ctx)) {
-      const detail = this.explainConditionsFailure(choice.hideIf, ctx, { whenTrue: true });
-      return {
-        visible: false,
-        reason: detail
-          ? `Скрыто: условие hideIf выполнено (${detail})`
-          : 'Скрыто: условие hideIf выполнено'
-      };
-    }
-
-    return { visible: true, reason: '' };
-  },
-
-  /** Имя предмета / квеста / фракции без показа internal-only полей */
-  humanItemName(ctx, itemId) {
-    const it = ctx?.engine?.data?.items?.[itemId] || ctx?.items?.[itemId];
-    return (it && (it.name || it.title)) || itemId || '—';
-  },
-  humanQuestName(ctx, questId) {
-    const q = ctx?.quests?.[questId] || ctx?.engine?.data?.quests?.[questId];
-    return (q && (q.title || q.name)) || questId || '—';
-  },
-  humanStageLabel(ctx, questId, stageKey) {
-    const key = stageKey == null ? '' : String(stageKey);
-    if (key === 'complete' || key === 'done' || key === '__finished__') return 'Завершён';
-    if (key === '__failed__' || key === 'failed') return 'Провален';
-    if (key === '0' || key === 'start' || key === '') return 'Не начат';
-    const q = ctx?.quests?.[questId] || ctx?.engine?.data?.quests?.[questId];
-    const stages = q?.stages;
-    if (Array.isArray(stages)) {
-      const idx = parseInt(key, 10);
-      if (!Number.isNaN(idx) && stages[idx]) {
-        return stages[idx].title || stages[idx].name || ('Этап ' + (idx + 1));
-      }
-      const byId = stages.find((s) => s && (s.id === key || String(s.index) === key));
-      if (byId) return byId.title || byId.name || key;
-    }
-    return 'Этап «' + key + '»';
-  },
-  humanFactionName(ctx, factionId) {
-    const r = ctx?.engine?.data?.reputation?.[factionId] || ctx?.reputation?.[factionId];
-    return (r && r.name) || factionId || '—';
-  },
-  humanClassName(ctx, classId) {
-    const c = ctx?.engine?.data?.classes?.[classId];
-    return (c && (c.name || c.title)) || classId || '—';
-  },
-
-  /**
-   * Статус одного правила: { ok, title, required, current, detail }
-   * Без questProgress / flags / AST в тексте.
-   */
-  explainRuleStatus(rule, ctx) {
-    if (!rule || typeof rule !== 'object') {
-      return { ok: true, title: 'Условие', detail: '' };
-    }
-    if (Array.isArray(rule.all) || Array.isArray(rule.any)) {
-      const nested = this.explainConditionsDetail(rule, ctx);
-      return {
-        ok: nested.ok,
-        title: nested.modeLabel,
-        required: '',
-        current: '',
-        detail: nested.ok ? 'Выполнено' : 'Не выполнено',
-        children: nested.lines
-      };
-    }
-    const ok = this.evaluateRule(rule, ctx);
-    const flags = ctx.flags || {};
-    const inventory = ctx.inventory || [];
-
-    if (rule.hasItem) {
-      const name = this.humanItemName(ctx, rule.hasItem);
-      return {
-        ok,
-        title: 'Предмет «' + name + '»',
-        required: 'есть у игрока',
-        current: inventory.includes(rule.hasItem) ? 'есть' : 'нет',
-        detail: ok ? '✓ Есть' : '❌ Нет в инвентаре'
-      };
-    }
-    if (rule.notHasItem) {
-      const name = this.humanItemName(ctx, rule.notHasItem);
-      return {
-        ok,
-        title: 'Предмет «' + name + '»',
-        required: 'отсутствует',
-        current: inventory.includes(rule.notHasItem) ? 'есть' : 'нет',
-        detail: ok ? '✓ Нет в инвентаре' : '❌ Всё ещё в инвентаре'
-      };
-    }
-    if (rule.goldMin != null) {
-      const g = ctx.gold ?? 0;
-      return {
-        ok,
-        title: 'Золото',
-        required: '≥ ' + rule.goldMin,
-        current: String(g),
-        detail: ok ? '✓ ' + g : '❌ Сейчас: ' + g + ', нужно ≥ ' + rule.goldMin
-      };
-    }
-    if (rule.goldMax != null) {
-      const g = ctx.gold ?? 0;
-      return {
-        ok,
-        title: 'Золото',
-        required: '≤ ' + rule.goldMax,
-        current: String(g),
-        detail: ok ? '✓ ' + g : '❌ Сейчас: ' + g + ', нужно ≤ ' + rule.goldMax
-      };
-    }
-    if (rule.class) {
-      const need = this.humanClassName(ctx, rule.class);
-      const cur = this.humanClassName(ctx, ctx.className) || ctx.className || '—';
-      return {
-        ok,
-        title: 'Класс',
-        required: need,
-        current: cur,
-        detail: ok ? '✓ ' + cur : '❌ Сейчас: ' + cur + ', нужен: ' + need
-      };
-    }
-    if (rule.questStage) {
-      const qs = rule.questStage;
-      const questId = qs.questId || qs.quest;
-      const want = qs.stage != null ? String(qs.stage) : '';
-      const current = this.getQuestStageFromCtx(ctx, questId);
-      const qName = this.humanQuestName(ctx, questId);
-      const wantL = this.humanStageLabel(ctx, questId, want);
-      const curL = this.humanStageLabel(ctx, questId, current);
-      return {
-        ok,
-        title: 'Квест «' + qName + '»',
-        required: wantL,
-        current: curL,
-        detail: ok ? '✓ ' + curL : '❌ Требуется: ' + wantL + '. Сейчас: ' + curL
-      };
-    }
-    if (rule.reputation?.faction) {
-      const fac = rule.reputation.faction;
-      const name = this.humanFactionName(ctx, fac);
-      const cur = Number(flags[fac]) || 0;
-      const val = Number(rule.reputation.value);
-      const op = rule.reputation.op || 'gte';
-      const opL = op === 'lte' || op === '<=' ? '≤' : op === 'eq' ? '=' : '≥';
-      return {
-        ok,
-        title: 'Репутация: ' + name,
-        required: opL + ' ' + val,
-        current: String(cur),
-        detail: ok ? '✓ ' + cur : '❌ Сейчас: ' + cur + ', нужно ' + opL + ' ' + val
-      };
-    }
-    if (rule.flag != null && rule.flag !== '') {
-      // Не светим сырой id; смягчённая формулировка
-      const label = String(rule.flag).replace(/^rep_/, 'репутация ').replace(/_/g, ' ');
-      return {
-        ok,
-        title: 'Состояние: ' + label,
-        required: rule.min != null ? '≥ ' + rule.min : (rule.equals !== undefined ? String(rule.equals) : 'да'),
-        current: String(flags[rule.flag]),
-        detail: ok ? '✓ Выполнено' : '❌ Не выполнено'
-      };
-    }
-    if (rule.notFlag) {
-      const label = String(rule.notFlag).replace(/_/g, ' ');
-      return { ok, title: 'Состояние: ' + label, required: 'выключено', current: flags[rule.notFlag] ? 'включено' : 'выключено', detail: ok ? '✓' : '❌' };
-    }
-    if (rule.choiceUsed) {
-      return { ok, title: 'Выбор уже сделан', required: 'да', current: ok ? 'да' : 'нет', detail: ok ? '✓' : '❌ Ещё не сделан' };
-    }
-    if (rule.choiceNotUsed) {
-      return { ok, title: 'Выбор ещё не сделан', required: 'не сделан', current: ok ? 'не сделан' : 'уже сделан', detail: ok ? '✓' : '❌ Уже использован' };
-    }
-    // fallback to string explainer
-    const fail = this.explainRuleFailure(rule, ctx);
-    return { ok, title: 'Условие', required: '', current: '', detail: ok ? '✓ Выполнено' : '❌ ' + fail };
-  },
-
-  /**
-   * Детальный разбор all/any: { ok, mode, modeLabel, lines: explainRuleStatus[] }
-   */
-  explainConditionsDetail(conditions, ctx, options) {
-    const opts = options || {};
-    const norm = this.normalize(conditions);
-    if (!norm) return { ok: true, mode: 'all', modeLabel: '', lines: [] };
-
-    if (Array.isArray(norm.all)) {
-      const lines = norm.all.map((r) => this.explainRuleStatus(r, ctx));
-      const ok = lines.every((l) => l.ok);
-      return {
-        ok: opts.whenTrue ? !ok : ok,
-        mode: 'all',
-        modeLabel: 'Все условия должны выполняться',
-        lines
-      };
-    }
-    if (Array.isArray(norm.any)) {
-      const lines = norm.any.map((r) => this.explainRuleStatus(r, ctx));
-      const ok = lines.some((l) => l.ok);
-      return {
-        ok: opts.whenTrue ? !ok : ok,
-        mode: 'any',
-        modeLabel: 'Достаточно любого условия',
-        lines
-      };
-    }
-    return { ok: true, mode: 'all', modeLabel: '', lines: [] };
-  },
-
-  /**
-   * Полное объяснение недоступности выбора (для UI «Почему?»).
-   * @returns {{ visible: boolean, title: string, summary: string, sections: Array }}
-   */
-  explainChoiceDetail(choice, ctx) {
-    const base = this.explainChoiceVisibility(choice, ctx);
-    if (base.visible) {
-      return { visible: true, title: '', summary: '', sections: [] };
-    }
-    const choiceLabel = String(choice?.text || 'Выбор').replace(/<[^>]+>/g, '').trim() || 'Выбор';
-    const sections = [];
-
-    const show = choice.showIf || choice.requires;
-    if (show) {
-      const det = this.explainConditionsDetail(show, ctx);
-      sections.push({
-        heading: det.modeLabel || 'Условия доступности',
-        lines: det.lines
-      });
-    }
-    if (choice.hideIf && this.evaluate(choice.hideIf, ctx)) {
-      const det = this.explainConditionsDetail(choice.hideIf, ctx, { whenTrue: true });
-      sections.push({
-        heading: 'Скрыто, потому что',
-        lines: det.lines
-      });
-    }
-    if (choice.condition != null && choice.condition !== '') {
-      sections.push({
-        heading: 'Особое условие',
-        lines: [{ ok: false, title: 'Дополнительная проверка', detail: this.explainConditionRefFailure(choice.condition, ctx) }]
-      });
-    }
-
-    if (!sections.length) {
-      sections.push({
-        heading: 'Причина',
-        lines: [{ ok: false, title: 'Недоступно', detail: base.reason || 'Условие не выполнено' }]
-      });
-    }
-
-    return {
-      visible: false,
-      title: 'Выбор «' + choiceLabel + '» недоступен',
-      summary: 'Недоступно',
-      sections
-    };
-  },
-
-  /** showIf / requires — показать; hideIf — скрыть если условие истинно */
-  isChoiceVisible(choice, ctx) {
-    return this.explainChoiceVisibility(choice, ctx).visible;
-  },
-
-  filterChoices(choices, ctx) {
-    if (!Array.isArray(choices)) return [];
-    return choices.filter(c => this.isChoiceVisible(c, ctx));
-  },
-
-  /** Именованные условия (ссылки в service_menu и JSON) */
-  CONDITION_REGISTRY: {
-    always: { check: () => true },
-    has_jack_bag: {
-      check: (ctx) => (ctx.inventory || []).includes('jack_bag')
-    },
-    jack_quest_active: {
-      check: (ctx) => !!(ctx.flags?.jackQuest) && !ctx.flags?.jackRewarded
-    },
-    has_damaged_equipment: {
-      check: (ctx) => {
-        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
-        if (!engine?.getEquippedItemId) return false;
-        const slots = engine.ENHANCEMENT_SLOTS || ['weapon_main', 'armor', 'shield'];
-        return slots.some((slot) => {
-          const id = engine.getEquippedItemId(slot);
-          return id && (engine.getItemEnhancementLevel?.(id) || 0) > 0;
-        });
-      }
-    },
-    has_cursed_equipped: {
-      check: (ctx) => {
-        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
-        return !!(engine?.getEquippedCursedEntries?.()?.length);
-      }
-    },
-    time_period: {
-      check: (ctx, params) => {
-        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
-        if (!engine?.isTimeSystemEnabled?.()) return true;
-        const period = engine.getTimePeriod();
-        const periods = params?.periods || params?.period;
-        if (Array.isArray(periods)) return periods.includes(period);
-        if (typeof periods === 'string') return periods === period;
-        return true;
-      }
-    },
-    time_between: {
-      check: (ctx, params) => {
-        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
-        const h = engine?.timeSystem?.state?.hour;
-        if (h == null) return true;
-        const from = parseInt(params?.from, 10);
-        const to = parseInt(params?.to, 10);
-        if (Number.isNaN(from) || Number.isNaN(to)) return true;
-        if (from <= to) return h >= from && h < to;
-        return h >= from || h < to;
-      }
-    },
-    is_open: {
-      check: (ctx, params) => {
-        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
-        if (!engine?.isTimeSystemEnabled?.()) return true;
-        const open = params?.openHour ?? params?.open ?? params?.from;
-        const close = params?.closeHour ?? params?.close ?? params?.to;
-        return engine.isOpen(open, close);
-      }
-    },
-    day_of_week: {
-      check: (ctx, params) => {
-        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
-        const day = engine?.timeSystem?.state?.day;
-        if (day == null) return true;
-        const dow = ((day - 1) % 7);
-        const days = params?.days;
-        if (!Array.isArray(days)) return true;
-        return days.includes(dow);
-      }
-    },
-    season_is: {
-      check: (ctx, params) => {
-        const cur = GameEngine?.seasonSystem?.state?.season;
-        if (!cur) return true;
-        const list = params?.seasons || params?.season;
-        if (Array.isArray(list)) return list.includes(cur);
-        return list === cur;
-      }
-    },
-    weather_is: {
-      check: (ctx, params) => {
-        const cur = GameEngine?.weatherSystem?.state?.current;
-        if (!cur) return true;
-        const list = params?.types || params?.weather;
-        if (Array.isArray(list)) return list.includes(cur);
-        return list === cur;
-      }
-    },
-    temp_below: {
-      check: (ctx, params) => {
-        const t = GameEngine?.seasonSystem?.state?.temperature;
-        if (t == null) return true;
-        return t < (parseInt(params?.value, 10) || 0);
-      }
-    },
-    temp_above: {
-      check: (ctx, params) => {
-        const t = GameEngine?.seasonSystem?.state?.temperature;
-        if (t == null) return true;
-        return t > (parseInt(params?.value, 10) || 0);
-      }
-    }
-  },
-
-  /**
-   * conditionRef: строка (имя из CONDITION_REGISTRY), объект ConditionSystem, или { all/any }.
-   */
-  resolveRef(conditionRef, ctx, args) {
-    if (conditionRef == null || conditionRef === '') return true;
-    if (typeof conditionRef === 'string') {
-      const def = this.CONDITION_REGISTRY[conditionRef];
-      if (def && typeof def.check === 'function') {
-        return !!def.check(ctx, args);
-      }
-      return true;
-    }
-    if (typeof conditionRef === 'object') {
-      return this.evaluate(conditionRef, ctx);
-    }
-    return true;
-  },
-
-  /** Сбор имён флагов по всему проекту (для редактора) */
-  collectFlagNames(data) {
-    const set = new Set();
-    const add = (name) => { if (name) set.add(name); };
-
-    Object.entries(data?.scenes || {}).forEach(([sceneId, scene]) => {
-      Object.keys(scene.flags || {}).forEach(add);
-      (scene.states || []).forEach(st => {
-        this.walkConditionFlags(st.condition, add);
-        this.walkConditionFlags(st.if, add);
-        this.walkConditionFlags(st.when, add);
-        this.walkConditionFlags(st.showIf, add);
-        this.walkConditionFlags(st.requires, add);
-      });
-      (scene.choices || []).forEach((c, i) => {
-        add(c.doneFlag);
-        add(c.skillCheck?.doneFlag);
-        add(`sc_${sceneId}_${i}`);
-        add(`ch_${sceneId}_${i}`);
-        this.walkConditionFlags(c.showIf, add);
-        this.walkConditionFlags(c.hideIf, add);
-        this.walkConditionFlags(c.requires, add);
-        Object.keys(c.skillCheck?.successFlags || {}).forEach(add);
-      });
-    });
-    Object.values(data?.quests || {}).forEach(q => {
-      if (!q.rewards?.reputation) return;
-      const rep = q.rewards.reputation;
-      if (typeof rep === 'object' && !Array.isArray(rep)) {
-        Object.keys(rep).forEach(add);
-      } else if (typeof rep === 'string') {
-        add(typeof QuestRuntime !== 'undefined' ? QuestRuntime.resolveReputationFlag(rep) : rep);
-      }
-    });
-    Object.keys(data?.startingFlags || {}).forEach(add);
-    Object.keys(data?.reputation || {}).forEach(k => {
-      if (k !== 'starting') add(k);
-    });
-    Object.keys(data?.quests || {}).forEach(qid => add('quest_' + qid));
-    return [...set].sort();
-  },
-
-  walkConditionFlags(conditions, add) {
-    const norm = this.normalize(conditions);
-    if (!norm) return;
-    const list = norm.all || norm.any || [];
-    list.forEach(r => {
-      if (r.flag) add(r.flag);
-      if (r.notFlag) add(r.notFlag);
-      if (r.choiceUsed) add(r.choiceUsed);
-      if (r.choiceNotUsed) add(r.choiceNotUsed);
-      if (r.questStage?.questId) add('quest_' + r.questStage.questId);
-      if (r.questMinStage?.questId) add('quest_' + r.questMinStage.questId);
-    });
-  },
-
-  validateChoiceConditions(choice, ctxMeta, errors, prefix) {
-    const { sceneId, flagCatalog, itemIds, sceneIds } = ctxMeta;
-    const checkGroup = (label, cond) => {
-      const norm = this.normalize(cond);
-      if (!norm) return;
-      const list = norm.all || norm.any || [];
-      list.forEach((r, ri) => {
-        if (r.hasItem && itemIds && !itemIds.has(r.hasItem)) {
-          errors.push(`${prefix} ${label}, правило ${ri + 1}: неизвестный предмет "${r.hasItem}"`);
-        }
-        if (r.notHasItem && itemIds && !itemIds.has(r.notHasItem)) {
-          errors.push(`${prefix} ${label}, правило ${ri + 1}: неизвестный предмет "${r.notHasItem}"`);
-        }
-        if (r.flag && flagCatalog && !flagCatalog.has(r.flag)) {
-          errors.push(`${prefix} ${label}, правило ${ri + 1}: флаг "${r.flag}" нигде не задаётся (подсказка)`);
-        }
-      });
-    };
-    checkGroup('showIf', choice.showIf || choice.requires);
-    checkGroup('hideIf', choice.hideIf);
-    if (choice.skillCheck) {
-      const sc = choice.skillCheck;
-      if (!sc.skill) errors.push(`${prefix}: skillCheck без навыка`);
-      if (sc.dc == null) errors.push(`${prefix}: skillCheck без DC`);
-      if (sc.successNext && sceneIds && !sceneIds.includes(sc.successNext)) {
-        errors.push(`${prefix}: successNext "${sc.successNext}" не найдена`);
-      }
-      if (sc.failNext && sceneIds && !sceneIds.includes(sc.failNext)) {
-        errors.push(`${prefix}: failNext "${sc.failNext}" не найдена`);
-      }
-      Object.keys(sc.successFlags || {}).forEach(fid => {
-        if (flagCatalog && !flagCatalog.has(fid)) {
-          errors.push(`${prefix}: successFlags."${fid}" — новый флаг (ок, если задумано)`);
-        }
-      });
-      (sc.successItems || []).forEach(iid => {
-        if (itemIds && !itemIds.has(iid)) {
-          errors.push(`${prefix}: successItems "${iid}" — предмет не в каталоге`);
-        }
-      });
-    }
-  }
-};
-
-
-;/* —— js/quests/task-base.js —— */
-// ============================================================
-// Quest tasks — base class and registry
-// ============================================================
-
-/**
- * Thrown when task type is not registered. Never silently map to ManualAdvance.
- */
-class UnknownQuestTaskTypeError extends Error {
-  constructor(typeId, ctx, taskData) {
-    ctx = ctx || {};
-    const questId = ctx.questId != null ? String(ctx.questId) : '?';
-    const stage = ctx.stageIndex != null ? String(ctx.stageIndex) : (ctx.stageId != null ? String(ctx.stageId) : '?');
-    super(
-      'Unknown quest task type «' + typeId + '» (quest=' + questId + ', stage=' + stage + ')'
-    );
-    this.name = 'UnknownQuestTaskTypeError';
-    this.typeId = typeId;
-    this.questId = ctx.questId != null ? ctx.questId : null;
-    this.stageIndex = ctx.stageIndex != null ? ctx.stageIndex : null;
-    this.stageId = ctx.stageId != null ? ctx.stageId : null;
-    this.taskData = taskData || null;
-  }
-}
-
-const QuestTaskRegistry = {
-  _types: {},
-
-  register(typeId, ClassRef) {
-    if (!typeId || !ClassRef) return;
-    this._types[typeId] = ClassRef;
-    ClassRef.typeId = typeId;
-  },
-
-  get(typeId) {
-    return this._types[typeId] || null;
-  },
-
-  list() {
-    return Object.keys(this._types).map((id) => {
-      const C = this._types[id];
-      return {
-        id,
-        label: C.label || id,
-        description: C.description || '',
-        fields: typeof C.getEditorFields === 'function' ? C.getEditorFields() : []
-      };
-    });
-  },
-
-
-  /**
-   * Validate task definition against getEditorFields schema.
-   * @returns {{ ok: boolean, errors: string[] }}
-   */
-  validateDef(def, projectData) {
-    const errors = [];
-    if (!def || typeof def !== 'object') {
-      return { ok: false, errors: ['Нет данных задачи'] };
-    }
-    const typeCheck = this.validateTaskType(def.type);
-    if (!typeCheck.ok) {
-      return { ok: false, errors: [typeCheck.error || ('Неизвестный тип задачи: ' + def.type)] };
-    }
-    const ClassRef = this.get(def.type);
-    const fields = typeof ClassRef.getEditorFields === 'function' ? ClassRef.getEditorFields() : [];
-    for (const f of fields) {
-      if (!f.required) continue;
-      const v = def[f.key];
-      if (v == null || String(v).trim() === '') {
-        errors.push('Укажите: ' + (f.label || f.key));
-        continue;
-      }
-      // Entity existence
-      if (projectData) {
-        if (f.input === 'npc' && projectData.npcs && !projectData.npcs[v]) {
-          errors.push('Персонаж не найден: «' + v + '»');
-        }
-        if (f.input === 'item' && projectData.items && !projectData.items[v]) {
-          errors.push('Предмет не найден: «' + v + '»');
-        }
-        if (f.input === 'enemy' && projectData.enemies && !projectData.enemies[v]) {
-          errors.push('Враг не найден: «' + v + '»');
-        }
-        if (f.input === 'scene' && projectData.scenes && !projectData.scenes[v]) {
-          errors.push('Место не найдено: «' + v + '»');
-        }
-        if (f.input === 'location') {
-          const inScenes = projectData.scenes && projectData.scenes[v];
-          const inMap = projectData.worldMap && projectData.worldMap[v];
-          if (projectData.scenes && projectData.worldMap && !inScenes && !inMap) {
-            errors.push('Локация не найдена: «' + v + '»');
-          }
-        }
-      }
-      if (f.input === 'number') {
-        const n = Number(v);
-        const min = f.min != null ? f.min : 1;
-        if (!Number.isFinite(n) || n < min) {
-          errors.push((f.label || f.key) + ' должно быть числом ≥ ' + min);
-        }
-      }
-    }
-    return { ok: errors.length === 0, errors };
-  },
-
-  listSupported() {
-    return this.list().filter((t) => {
-      if (!t.id || t.id === 'base' || t.id === '__unknown__' || t.id === 'MigrationRequired') return false;
-      const C = this.get(t.id);
-      return C && !C.unsupported && !C.migrationPlaceholder;
-    });
-  },
-  /**
-   * Create a task instance. Unknown types throw UnknownQuestTaskTypeError
-   * (no silent ManualAdvance). Use opts.placeholder to get UnknownTaskType instead.
-   * @param {object} def
-   * @param {{ questId?: string, stageIndex?: number }} [ctx]
-   * @param {{ placeholder?: boolean }} [opts]
-   */
-  create(def, ctx, opts) {
-    opts = opts || {};
-    ctx = ctx || {};
-    if (!def || typeof def !== 'object') {
-      throw new UnknownQuestTaskTypeError('(missing def)', ctx, def);
-    }
-    const typeId = def.type;
-    if (typeId == null || String(typeId).trim() === '') {
-      throw new UnknownQuestTaskTypeError('(empty type)', ctx, def);
-    }
-    const ClassRef = this.get(String(typeId));
-    if (!ClassRef) {
-      if (opts.placeholder) {
-        const Placeholder = (typeof UnknownTaskType !== 'undefined')
-          ? UnknownTaskType
-          : (typeof window !== 'undefined' ? window.UnknownTaskType : null);
-        if (Placeholder) {
-          return new Placeholder({ ...def, type: String(typeId), _unknownType: String(typeId) }, ctx);
-        }
-      }
-      throw new UnknownQuestTaskTypeError(String(typeId), ctx, def);
-    }
-    return new ClassRef(def, ctx);
-  },
-
-  /**
-   * @returns {{ ok: boolean, typeId: string, registered: boolean, unsupported: boolean, label?: string, error?: string }}
-   */
-  validateTaskType(typeId) {
-    const id = typeId == null ? '' : String(typeId).trim();
-    if (!id) {
-      return { ok: false, typeId: id, registered: false, unsupported: false, error: 'Тип задачи не указан' };
-    }
-    const ClassRef = this.get(id);
-    if (!ClassRef) {
-      return { ok: false, typeId: id, registered: false, unsupported: false, error: 'Неизвестный тип задачи: ' + id };
-    }
-    if (ClassRef.unsupported) {
-      return {
-        ok: false, typeId: id, registered: true, unsupported: true,
-        label: ClassRef.label || id,
-        error: 'Тип «' + (ClassRef.label || id) + '» пока не поддерживается движком'
-      };
-    }
-    return { ok: true, typeId: id, registered: true, unsupported: false, label: ClassRef.label || id };
-  }
-};
-
-class QuestTaskBase {
-  static typeId = 'base';
-  static label = 'Задача';
-  static description = '';
-
-  /** Поля редактора: [{ key, label, input, options? }] */
-  static getEditorFields() {
-    return [];
-  }
-
-  constructor(def, ctx) {
-    this.def = def && typeof def === 'object' ? { ...def } : {};
-    this.type = this.def.type || this.constructor.typeId;
-    this.id = this.def.id || this.type + '_' + Math.random().toString(36).slice(2, 8);
-    this.optional = !!this.def.optional;
-    this._completed = !!this.def._completed;
-    this._progress = Number(this.def._progress) || 0;
-    this._ctx = ctx || {};
-  }
-
-  get target() {
-    return Math.max(1, Number(this.def.count) || Number(this.def.amount) || 1);
-  }
-
-  getProgress() {
-    if (this._completed) return this.target;
-    return Math.min(this.target, Math.max(0, this._progress));
-  }
-
-  isCompleted() {
-    return !!this._completed || this.getProgress() >= this.target;
-  }
-
-  reset() {
-    this._completed = false;
-    this._progress = 0;
-  }
-
-  markComplete() {
-    this._completed = true;
-    this._progress = this.target;
-  }
-
-  /**
-   * Called when task becomes active on a stage.
-   * Check current world state (not synthetic events).
-   * @param {object} world — snapshot from engine.state
-   */
-  onActivate(world) {
-    if (this.isCompleted()) return;
-    this.applyWorldState(world || {});
-  }
-
-  /**
-   * Shared state check used by onActivate (and optionally by onEvent wrappers).
-   * Override in task types that care about current state.
-   */
-  applyWorldState(/* world */) {
-    // default: no initial sync
-  }
-
-  /** @param {{ type: string, payload?: object }} event */
-  onEvent(/* event */) {
-    // override
-  }
-
-  getDescription() {
-    if (this.def.description) return String(this.def.description);
-    return this.constructor.label || this.type;
-  }
-
-  serialize() {
-    return {
-      id: this.id,
-      type: this.type,
-      optional: this.optional,
-      _completed: this.isCompleted(),
-      _progress: this.getProgress(),
-      // params preserved from def (without runtime keys)
-      ...this._serializeParams()
-    };
-  }
-
-  _serializeParams() {
-    const skip = new Set(['id', 'type', 'optional', '_completed', '_progress', 'description']);
-    const out = {};
-    for (const [k, v] of Object.entries(this.def)) {
-      if (skip.has(k)) continue;
-      out[k] = v;
-    }
-    if (this.def.description) out.description = this.def.description;
-    return out;
-  }
-
-  static deserialize(data, ctx) {
-    return QuestTaskRegistry.create(data, ctx);
-  }
-}
-
-class UnknownTaskType extends QuestTaskBase {
-  static typeId = '__unknown__';
-  static label = 'Неизвестный тип';
-  static unsupported = true;
-  static getEditorFields() {
-    return [
-      { key: '_unknownType', label: 'Исходный тип (только чтение)', input: 'text' },
-      { key: 'description', label: 'Описание', input: 'text' }
-    ];
-  }
-  constructor(def, ctx) {
-    super(def, ctx);
-    this._unknownType = (def && (def._unknownType || def.type)) || '__unknown__';
-    this.type = this._unknownType;
-  }
-  onEvent() {}
-  isCompleted() { return false; }
-  getProgress() { return 0; }
-  getDescription() {
-    return '⚠ Неизвестный тип задачи: ' + (this._unknownType || '?');
-  }
-  serialize() {
-    const base = super.serialize();
-    base.type = this._unknownType || this.def.type || '__unknown__';
-    base._unknownType = this._unknownType;
-    base._isUnknown = true;
-    return base;
-  }
-}
-
-if (typeof window !== 'undefined') {
-  window.QuestTaskRegistry = QuestTaskRegistry;
-  window.QuestTaskBase = QuestTaskBase;
-  window.UnknownQuestTaskTypeError = UnknownQuestTaskTypeError;
-  window.UnknownTaskType = UnknownTaskType;
-}
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { QuestTaskRegistry, QuestTaskBase, UnknownQuestTaskTypeError, UnknownTaskType };
-}
-
-
-;/* —— js/quests/task-types.js —— */
-// ============================================================
-// Concrete quest task types
-// ============================================================
-
-(function registerQuestTaskTypes() {
-  if (typeof QuestTaskBase === 'undefined' || typeof QuestTaskRegistry === 'undefined') {
-    console.error('task-types.js: QuestTaskBase/Registry missing');
-    return;
-  }
-
-  function matchId(a, b) {
-    if (a == null || b == null) return false;
-    return String(a) === String(b);
-  }
-
-  function inc(task, n) {
-    task._progress = Math.min(task.target, (task._progress || 0) + (n || 1));
-    if (task._progress >= task.target) task._completed = true;
-  }
-
-  // ----- ManualAdvance: completes when stage is set by content/migration -----
-  class ManualAdvanceTask extends QuestTaskBase {
-    static typeId = 'ManualAdvance';
-    static label = 'Продолжение';
-    static description = 'Игрок продолжает по кнопке «Продолжить»';
-    static getEditorFields() {
-      return [
-        { key: 'description', label: 'Описание для журнала', input: 'text' },
-        { key: 'stageKey', label: 'Служебный ключ этапа', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      // StageActivated / StageSet = «этап стал активным», НЕ «задача выполнена»
-      if (event.type === 'TaskManualComplete') {
-        const p = event.payload || {};
-        if (p.taskId && matchId(p.taskId, this.id)) {
-          this.markComplete();
-          return;
-        }
-        if (p.questId && p.stageIndex != null &&
-            matchId(p.questId, this._ctx.questId) &&
-            Number(p.stageIndex) === Number(this._ctx.stageIndex) &&
-            !p.taskId) {
-          this.markComplete();
-        }
-      }
-    }
-    getDescription() {
-      if (this.def.description) return String(this.def.description);
-      return 'После нажатия «Продолжить»';
-    }
-  }
-
-  class TalkToNPCTask extends QuestTaskBase {
-    static typeId = 'TalkToNPC';
-    static label = 'Поговорить';
-    static description = 'Завершается после разговора с персонажем';
-    static getEditorFields() {
-      return [
-        { key: 'npcId', label: 'Персонаж', input: 'npc', required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (!this.def.npcId) return; // invalid config — editor must set npcId
-      if (event.type === 'NPCDialogueFinished' || event.type === 'NPCTalked') {
-        const npcId = event.payload?.npcId || event.payload?.npc;
-        if (matchId(npcId, this.def.npcId)) this.markComplete();
-      }
-    }
-    getDescription() {
-      if (this.def.description) return this.def.description;
-      const name = this.def.npcId || 'NPC';
-      return 'Поговорить с: ' + name;
-    }
-  }
-
-  class CollectItemTask extends QuestTaskBase {
-    static typeId = 'CollectItem';
-    static label = 'Собрать предмет';
-    static description = 'Собрать N экземпляров предмета';
-    static getEditorFields() {
-      return [
-        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
-        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    applyWorldState(world) {
-      if (!this.def.itemId || !world) return;
-      const inv = world.inventory || [];
-      const n = inv.filter((id) => matchId(id, this.def.itemId)).length;
-      this._progress = Math.min(this.target, n);
-      if (this._progress >= this.target) this._completed = true;
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'ItemCollected' || event.type === 'ItemAdded') {
-        const p = event.payload || {};
-        if (this.def.itemId && !matchId(p.itemId || p.item, this.def.itemId)) return;
-        inc(this, Number(p.qty) || Number(p.count) || 1);
-      }
-      if (event.type === 'InventorySync' && this.def.itemId) {
-        this.applyWorldState({ inventory: event.payload?.inventory || [] });
-      }
-    }
-    getDescription() {
-      if (this.def.description) return this.def.description;
-      const c = this.target;
-      const id = this.def.itemId || 'предмет';
-      return c > 1 ? `Собрать: ${id} (${this.getProgress()}/${c})` : `Найти: ${id}`;
-    }
-  }
-
-  class KillEnemyTask extends QuestTaskBase {
-    static typeId = 'KillEnemy';
-    static label = 'Победить врага';
-    static description = 'Убить N врагов указанного типа';
-    static getEditorFields() {
-      return [
-        { key: 'enemyId', label: 'Враг', input: 'enemy', required: true },
-        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'EnemyKilled') {
-        const p = event.payload || {};
-        const id = p.enemyId || p.id || p.templateId;
-        if (this.def.enemyId && !matchId(id, this.def.enemyId)) return;
-        inc(this, Number(p.count) || 1);
-      }
-    }
-    getDescription() {
-      if (this.def.description) return this.def.description;
-      const c = this.target;
-      const id = this.def.enemyId || 'враг';
-      return c > 1 ? `Победить: ${id} (${this.getProgress()}/${c})` : `Победить: ${id}`;
-    }
-  }
-
-  class VisitLocationTask extends QuestTaskBase {
-    static typeId = 'VisitLocation';
-    static label = 'Посетить локацию';
-    static description = 'Войти в указанную сцену/локацию';
-    static getEditorFields() {
-      return [
-        { key: 'sceneId', label: 'Место', input: 'scene', required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    applyWorldState(world) {
-      if (!this.def.sceneId || !world?.scene) return;
-      if (matchId(world.scene, this.def.sceneId)) this.markComplete();
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (!this.def.sceneId) return;
-      if (event.type === 'LocationVisited' || event.type === 'SceneEntered') {
-        const p = event.payload || {};
-        if (matchId(p.sceneId || p.scene, this.def.sceneId)) {
-          this.markComplete();
-        }
-      }
-    }
-    getDescription() {
-      if (this.def.description) return this.def.description;
-      return 'Посетить: ' + (this.def.location || this.def.sceneId || 'локацию');
-    }
-  }
-
-  class DeliverItemTask extends QuestTaskBase {
-    static typeId = 'DeliverItem';
-    static label = 'Доставить предмет';
-    static description = 'Отдать предмет NPC';
-    static getEditorFields() {
-      return [
-        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
-        { key: 'npcId', label: 'Персонаж', input: 'npc', required: true },
-        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      // Только ItemDelivered — ItemRemoved не означает доставку (иначе double-count)
-      if (event.type === 'ItemDelivered') {
-        const p = event.payload || {};
-        if (this.def.itemId && !matchId(p.itemId || p.item, this.def.itemId)) return;
-        if (this.def.npcId && p.npcId && !matchId(p.npcId, this.def.npcId)) return;
-        inc(this, Number(p.qty) || Number(p.count) || 1);
-      }
-    }
-    getDescription() {
-      if (this.def.description) return this.def.description;
-      return 'Доставить: ' + (this.def.itemId || 'предмет') +
-        (this.def.npcId ? ' → ' + this.def.npcId : '');
-    }
-  }
-
-  class UseItemTask extends QuestTaskBase {
-    static typeId = 'UseItem';
-    static label = 'Использовать предмет';
-    static getEditorFields() {
-      return [
-        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
-        { key: 'count', label: 'Раз', input: 'number', min: 1 },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'ItemUsed') {
-        const p = event.payload || {};
-        if (this.def.itemId && !matchId(p.itemId || p.item, this.def.itemId)) return;
-        inc(this, 1);
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Использовать: ' + (this.def.itemId || 'предмет'));
-    }
-  }
-
-  class CraftItemTask extends QuestTaskBase {
-    static typeId = 'CraftItem';
-    static label = 'Создать предмет';
-    static getEditorFields() {
-      return [
-        { key: 'itemId', label: 'Предмет или рецепт', input: 'item' },
-        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'ItemCrafted') {
-        const p = event.payload || {};
-        if (this.def.itemId && !matchId(p.itemId || p.recipeId, this.def.itemId)) return;
-        inc(this, Number(p.qty) || 1);
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Создать: ' + (this.def.itemId || 'предмет'));
-    }
-  }
-
-  class ChooseDialogueOptionTask extends QuestTaskBase {
-    static typeId = 'ChooseDialogueOption';
-    static label = 'Выбрать реплику';
-    static description = 'Завершается при выборе реплики (по id или тексту)';
-    static getEditorFields() {
-      return [
-        { key: 'choiceId', label: 'Выбор в диалоге', input: 'text', required: true },
-        { key: 'sceneId', label: 'Место (необязательно)', input: 'scene' },
-        { key: 'textContains', label: 'Текст содержит (если нет id)', input: 'text' },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      // ChoiceSelected / DialogueChoiceSelected — semantic events (not quest flags)
-      if (event.type !== 'ChoiceSelected' && event.type !== 'DialogueChoiceSelected') return;
-      const p = event.payload || {};
-      if (this.def.sceneId && p.sceneId && !matchId(p.sceneId, this.def.sceneId)) return;
-
-      const wantId = this.def.choiceId || this.def.choiceFlag; // choiceFlag = legacy alias only
-      if (wantId) {
-        const got = p.choiceId || p.id || p.flag;
-        if (got && matchId(got, wantId)) {
-          this.markComplete();
-          return;
-        }
-      }
-      const needle = this.def.textContains || this.def.textMatch;
-      if (needle && p.text && String(p.text).toLowerCase().includes(String(needle).toLowerCase())) {
-        this.markComplete();
-      }
-    }
-    getDescription() {
-      if (this.def.description) return this.def.description;
-      const id = this.def.choiceId || this.def.choiceFlag;
-      return id ? ('Выбор: ' + id) : 'Сделать выбор в диалоге';
-    }
-  }
-
-  class AcquireGoldTask extends QuestTaskBase {
-    static typeId = 'AcquireGold';
-    static label = 'Получить золото';
-    static getEditorFields() {
-      return [
-        { key: 'amount', label: 'Сумма', input: 'number', min: 1 },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    get target() {
-      return Math.max(1, Number(this.def.amount) || 1);
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'GoldGained') {
-        inc(this, Number(event.payload?.amount) || 0);
-      }
-    }
-    getDescription() {
-      return this.def.description || `Накопить ${this.target} зм (${this.getProgress()}/${this.target})`;
-    }
-  }
-
-  class SpendGoldTask extends QuestTaskBase {
-    static typeId = 'SpendGold';
-    static label = 'Потратить золото';
-    static getEditorFields() {
-      return [
-        { key: 'amount', label: 'Сумма', input: 'number', min: 1 },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    get target() {
-      return Math.max(1, Number(this.def.amount) || 1);
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'GoldSpent') {
-        inc(this, Number(event.payload?.amount) || 0);
-      }
-    }
-    getDescription() {
-      return this.def.description || `Потратить ${this.target} зм`;
-    }
-  }
-
-  class ReachLevelTask extends QuestTaskBase {
-    static typeId = 'ReachLevel';
-    static label = 'Достичь уровня';
-    static getEditorFields() {
-      return [
-        { key: 'level', label: 'Уровень', input: 'number', min: 1 },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    get target() {
-      return Math.max(1, Number(this.def.level) || 1);
-    }
-    applyWorldState(world) {
-      const lvl = Number(world?.level) || 0;
-      if (lvl >= this.target) {
-        this._progress = this.target;
-        this._completed = true;
-      }
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'PlayerLevelChanged' || event.type === 'LevelChanged' || event.type === 'LevelUp') {
-        this.applyWorldState({ level: Number(event.payload?.level) || 0 });
-      }
-    }
-    getDescription() {
-      return this.def.description || `Достичь ${this.target} уровня`;
-    }
-  }
-
-  class EquipItemTask extends QuestTaskBase {
-    static typeId = 'EquipItem';
-    static label = 'Экипировать предмет';
-    static getEditorFields() {
-      return [
-        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    applyWorldState(world) {
-      if (!this.def.itemId || !world?.equipped) return;
-      const ids = Object.values(world.equipped).filter(Boolean).map(String);
-      if (ids.some((id) => matchId(id, this.def.itemId))) this.markComplete();
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'ItemEquipped') {
-        const p = event.payload || {};
-        if (!this.def.itemId || matchId(p.itemId || p.item, this.def.itemId)) {
-          this.markComplete();
-        }
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Надеть: ' + (this.def.itemId || 'предмет'));
-    }
-  }
-
-  class InteractObjectTask extends QuestTaskBase {
-    static typeId = 'InteractObject';
-    static label = 'Взаимодействовать с объектом';
-    static description = 'Завершается событием ObjectInteracted (не флагами)';
-    static getEditorFields() {
-      return [
-        { key: 'objectId', label: 'Объект', input: 'text', required: true },
-        { key: 'sceneId', label: 'Место (необязательно)', input: 'scene' },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      // Only ObjectInteracted — FlagSet is not interaction semantics
-      if (event.type !== 'ObjectInteracted') return;
-      const p = event.payload || {};
-      if (this.def.sceneId && p.sceneId && !matchId(p.sceneId, this.def.sceneId)) return;
-      if (!this.def.objectId) return;
-      if (matchId(p.objectId || p.id, this.def.objectId)) {
-        this.markComplete();
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Взаимодействовать: ' + (this.def.objectId || 'объект'));
-    }
-  }
-
-  class DiscoverLocationTask extends QuestTaskBase {
-    static typeId = 'DiscoverLocation';
-    static label = 'Открыть локацию на карте';
-    static getEditorFields() {
-      return [
-        { key: 'locationId', label: 'Локация', input: 'location', required: true },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    applyWorldState(world) {
-      if (!this.def.locationId || !world?.visitedLocations) return;
-      if (world.visitedLocations[this.def.locationId]) this.markComplete();
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'LocationDiscovered') {
-        const p = event.payload || {};
-        if (!this.def.locationId || matchId(p.locationId, this.def.locationId)) {
-          this.markComplete();
-        }
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Открыть: ' + (this.def.locationId || 'локацию'));
-    }
-  }
-
-  class WaitTimeTask extends QuestTaskBase {
-    static typeId = 'WaitTime';
-    static label = 'Подождать время';
-    static getEditorFields() {
-      return [
-        { key: 'hours', label: 'Часов', input: 'number', min: 0 },
-        { key: 'minutes', label: 'Минут', input: 'number', min: 0 },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    /** Цель в минутах */
-    get target() {
-      const h = Number(this.def.hours) || 0;
-      const m = Number(this.def.minutes) || 0;
-      const total = h * 60 + m;
-      return Math.max(1, total || 60);
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'TimePassed') {
-        const mins = Number(event.payload?.minutes) || (Number(event.payload?.hours) || 0) * 60;
-        if (mins > 0) inc(this, mins);
-      }
-    }
-    getDescription() {
-      if (this.def.description) return this.def.description;
-      const h = Math.floor(this.target / 60);
-      const m = this.target % 60;
-      if (h && m) return `Подождать ${h} ч. ${m} мин. (${this.getProgress()}/${this.target} мин.)`;
-      if (h) return `Подождать ${h} ч. (${this.getProgress()}/${this.target} мин.)`;
-      return `Подождать ${this.target} мин. (${this.getProgress()}/${this.target})`;
-    }
-  }
-
-  class LearnSkillTask extends QuestTaskBase {
-    static typeId = 'LearnSkill';
-    static label = 'Изучить навык';
-    static getEditorFields() {
-      return [
-        { key: 'skillId', label: 'Навык', input: 'text' },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    applyWorldState(world) {
-      if (!this.def.skillId || !world) return;
-      const skills = world.skills || {};
-      if (skills[this.def.skillId] != null && skills[this.def.skillId] !== false) {
-        this.markComplete();
-        return;
-      }
-      const inc = world.skillIncreases || [];
-      if (inc.some((s) => {
-        if (typeof s === 'string') return matchId(s, this.def.skillId);
-        return matchId(s?.id || s?.skillId, this.def.skillId);
-      })) this.markComplete();
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'SkillLearned' || event.type === 'SkillUnlocked') {
-        const p = event.payload || {};
-        if (!this.def.skillId || matchId(p.skillId, this.def.skillId)) this.markComplete();
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Изучить: ' + (this.def.skillId || 'навык'));
-    }
-  }
-
-  class EscortNPCTask extends QuestTaskBase {
-    static unsupported = true;
-    static unsupportedReason = 'NPCEscorted event not emitted by engine yet';
-    static typeId = 'EscortNPC';
-    static label = 'Сопроводить NPC';
-    static getEditorFields() {
-      return [
-        { key: 'npcId', label: 'Персонаж', input: 'npc' },
-        { key: 'sceneId', label: 'Куда идти', input: 'scene' },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'NPCEscorted') {
-        const p = event.payload || {};
-        if (this.def.npcId && p.npcId && !matchId(p.npcId, this.def.npcId)) return;
-        if (this.def.sceneId && p.sceneId && !matchId(p.sceneId, this.def.sceneId)) return;
-        this.markComplete();
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Сопроводить: ' + (this.def.npcId || 'NPC'));
-    }
-  }
-
-  class ProtectNPCTask extends QuestTaskBase {
-    static unsupported = true;
-    static unsupportedReason = 'NPCProtected event not emitted by engine yet';
-    static typeId = 'ProtectNPC';
-    static label = 'Защитить NPC';
-    static getEditorFields() {
-      return [
-        { key: 'npcId', label: 'Персонаж', input: 'npc' },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'NPCProtected') {
-        const p = event.payload || {};
-        if (!this.def.npcId || matchId(p.npcId, this.def.npcId)) this.markComplete();
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Защитить: ' + (this.def.npcId || 'NPC'));
-    }
-  }
-
-  class ActivateObjectTask extends QuestTaskBase {
-    static unsupported = true;
-    static unsupportedReason = 'ObjectActivated event not emitted by engine yet';
-    static typeId = 'ActivateObject';
-    static label = 'Активировать объект';
-    static getEditorFields() {
-      return [
-        { key: 'objectId', label: 'Объект', input: 'text' },
-        { key: 'description', label: 'Описание', input: 'text' }
-      ];
-    }
-    onEvent(event) {
-      if (this.isCompleted()) return;
-      if (event.type === 'ObjectActivated') {
-        const p = event.payload || {};
-        if (!this.def.objectId || matchId(p.objectId, this.def.objectId)) this.markComplete();
-      }
-    }
-    getDescription() {
-      return this.def.description || ('Активировать: ' + (this.def.objectId || 'объект'));
-    }
-  }
-
-  const ALL = [
-    ManualAdvanceTask, TalkToNPCTask, CollectItemTask, KillEnemyTask, VisitLocationTask,
-    DeliverItemTask, UseItemTask, CraftItemTask, ChooseDialogueOptionTask,
-    AcquireGoldTask, SpendGoldTask, ReachLevelTask, EquipItemTask,
-    InteractObjectTask, DiscoverLocationTask, WaitTimeTask, LearnSkillTask,
-    EscortNPCTask, ProtectNPCTask, ActivateObjectTask
-  ];
-  ALL.forEach((C) => QuestTaskRegistry.register(C.typeId, C));
-  class MigrationRequiredTask extends QuestTaskBase {
-    static typeId = 'MigrationRequired';
-    static label = 'Требует проверки (миграция)';
-    static description = 'Автоматически создано при миграции — задайте тип задачи вручную';
-    static unsupported = false; // visible so author can fix; does not auto-complete
-    static migrationPlaceholder = true;
-    static getEditorFields() {
-      return [
-        { key: 'description', label: 'Описание (из старого этапа)', input: 'text' },
-        { key: 'legacyHint', label: 'Старая подсказка', input: 'text' }
-      ];
-    }
-    onEvent() { /* never auto-complete — author must replace type */ }
-    isCompleted() { return false; }
-    getProgress() { return 0; }
-    getDescription() {
-      return this.def.description ||
-        ('⚠ Нужна ручная настройка задачи (миграция): ' + (this.def.legacyHint || this.def.legacyId || ''));
-    }
-    serialize() {
-      const base = super.serialize();
-      base.type = 'MigrationRequired';
-      base.legacyData = this.def.legacyData || null;
-      base.legacyHint = this.def.legacyHint || '';
-      base.legacyId = this.def.legacyId || '';
-      base._migrationRequired = true;
-      return base;
-    }
-  }
-
-
-  QuestTaskRegistry.register('MigrationRequired', MigrationRequiredTask);
-})();
-
-
-;/* —— js/quests/quest-events.js —— */
-// ============================================================
-// Quest event bus — engine systems emit, tasks consume
-// ============================================================
-
-const QuestEvents = {
-  _listeners: [],
-
-  on(fn) {
-    if (typeof fn === 'function') this._listeners.push(fn);
-    return () => {
-      this._listeners = this._listeners.filter((f) => f !== fn);
-    };
-  },
-
-  off(fn) {
-    this._listeners = this._listeners.filter((f) => f !== fn);
-  },
-
-  /**
-   * @param {string} type
-   * @param {object} [payload]
-   */
-  emit(type, payload) {
-    if (!type) return;
-    const event = { type: String(type), payload: payload || {}, ts: Date.now() };
-    // Prefer QuestRuntime if bound
-    if (typeof QuestRuntime !== 'undefined' && QuestRuntime.handleEvent) {
-      try {
-        QuestRuntime.handleEvent(event);
-      } catch (e) {
-        console.warn('QuestRuntime.handleEvent', e);
-      }
-    }
-    for (const fn of this._listeners.slice()) {
-      try {
-        fn(event);
-      } catch (e) {
-        console.warn('QuestEvents listener', e);
-      }
-    }
-  }
-};
-
-if (typeof window !== 'undefined') {
-  window.QuestEvents = QuestEvents;
-}
-
-
-;/* —— js/quests/quest-runtime.js —— */
-// ============================================================
-// QuestRuntime — stages/tasks progress, completion, journal API
-// ============================================================
-
-const QuestRuntime = {
-  /** @type {object|null} engine ref */
-  engine: null,
-
-  /**
-   * state.questProgress shape:
-   * {
-   *   [questId]: {
-   *     status: 'inactive'|'active'|'completed'|'failed',
-   *     stageIndex: number,
-   *     stages: { [index]: { tasks: [serialized tasks] } }
-   *   }
-   * }
-   */
-
-  bind(engine) {
-    this.engine = engine;
-    if (engine && engine.state && !engine.state.questProgress) {
-      engine.state.questProgress = {};
-    }
-  },
-
-  get data() {
-    return this.engine?.data || null;
-  },
-
-  get state() {
-    return this.engine?.state || null;
-  },
-
-  ensureProgressStore() {
-    if (!this.state) return null;
-    if (!this.state.questProgress || typeof this.state.questProgress !== 'object') {
-      this.state.questProgress = {};
-    }
-    return this.state.questProgress;
-  },
-
-  getQuestDef(questId) {
-    return this.data?.quests?.[questId] || null;
-  },
-
-  /** Build live task instances for a stage */
-  buildStageTasks(questId, stageIndex, savedStage) {
-    const quest = this.getQuestDef(questId);
-    if (!quest) return [];
-    const stageDef = (quest.stages || [])[stageIndex];
-    if (!stageDef) return [];
-    const defs = Array.isArray(stageDef.tasks) ? stageDef.tasks : [];
-    const savedTasks = savedStage?.tasks || [];
-    return defs.map((def, i) => {
-      const saved = savedTasks.find((t) => t && t.id === def.id) || savedTasks[i] || null;
-      const merged = saved ? { ...def, ...saved, type: def.type || saved.type } : { ...def };
-      const ctx = { questId, stageIndex };
-      try {
-        return QuestTaskRegistry.create(merged, ctx);
-      } catch (err) {
-        if (err && err.name === 'UnknownQuestTaskTypeError') {
-          console.warn('[QuestRuntime]', err.message, err.taskData || merged);
-          // Preserve data — do NOT convert to ManualAdvance
-          return QuestTaskRegistry.create(merged, ctx, { placeholder: true });
-        }
-        throw err;
-      }
-    }).filter(Boolean);
-  },
-
-  getProgress(questId) {
-    const store = this.ensureProgressStore();
-    return store?.[questId] || null;
-  },
-
-  isActive(questId) {
-    const p = this.getProgress(questId);
-    return p && p.status === 'active';
-  },
-
-  isCompleted(questId) {
-    const p = this.getProgress(questId);
-    // questProgress is source of truth when entry exists
-    if (p) return p.status === 'completed';
-    // legacy mirror only if no progress entry yet
-    if (this.state?.questStages?.[questId] === '__finished__') return true;
-    if (this.state?.flags?.['quest_' + questId] === 'complete') return true;
-    return false;
-  },
-
-  isFailed(questId) {
-    const p = this.getProgress(questId);
-    if (p) return p.status === 'failed';
-    if (this.state?.questStages?.[questId] === '__failed__') return true;
-    if (this.state?.flags?.['quest_' + questId] === 'failed') return true;
-    return false;
-  },
-
-  /**
-   * Start or ensure quest is active at stage 0 (or given index).
-   */
-  startQuest(questId, opts = {}) {
-    const quest = this.getQuestDef(questId);
-    if (!quest) return false;
-    const store = this.ensureProgressStore();
-    if ((this.isCompleted(questId) || this.isFailed(questId)) && !opts.force) return false;
-
-    const existing = store[questId];
-    if (existing && existing.status === 'active' && !opts.force) return true;
-
-    const stageIndex = Number(opts.stageIndex) || 0;
-    store[questId] = {
-      status: 'active',
-      stageIndex,
-      stages: opts.force ? {} : (existing?.stages || {})
-    };
-    if (opts.force) store[questId].stages = {};
-    this._ensureStageRuntime(questId, stageIndex);
-    this._syncLegacyStage(questId);
-    this._logStageEnter(questId, stageIndex, opts);
-    this._notifyUI();
-    return true;
-  },
-
-  /** Snapshot of engine state for Task.onActivate (no synthetic events). */
-  _worldSnapshot() {
-    const s = this.state || {};
-    return {
-      level: Number(s.level) || 1,
-      inventory: Array.isArray(s.inventory) ? s.inventory.slice() : [],
-      gold: Number(s.gold) || 0,
-      equipped: s.equipped && typeof s.equipped === 'object' ? { ...s.equipped } : {},
-      skills: s.skills && typeof s.skills === 'object' ? { ...s.skills } : {},
-      skillIncreases: Array.isArray(s.skillIncreases) ? s.skillIncreases.slice() : [],
-      visitedLocations: s.visitedLocations && typeof s.visitedLocations === 'object' ? { ...s.visitedLocations } : {},
-      flags: s.flags && typeof s.flags === 'object' ? { ...s.flags } : {},
-      scene: s.scene || null,
-      className: s.className || null
-    };
-  },
-
-  _ensureStageRuntime(questId, stageIndex) {
-    const store = this.ensureProgressStore();
-    const qp = store[questId];
-    if (!qp) return [];
-    if (!qp.stages) qp.stages = {};
-    const key = String(stageIndex);
-    let tasks;
-    const firstBuild = !qp.stages[key];
-    if (firstBuild) {
-      tasks = this.buildStageTasks(questId, stageIndex, null);
-    } else {
-      tasks = this.buildStageTasks(questId, stageIndex, qp.stages[key]);
-    }
-    // Initial state sync once when stage tasks are first built (not on every ensure)
-    let activatedComplete = false;
-    if (firstBuild && !this._activatingTasks && !this._checkingStage) {
-      this._activatingTasks = true;
-      try {
-        const world = this._worldSnapshot();
-        for (const task of tasks) {
-          if (task && !task.isCompleted() && typeof task.onActivate === 'function') {
-            task.onActivate(world);
-          }
-          if (task && task.isCompleted()) activatedComplete = true;
-        }
-      } finally {
-        this._activatingTasks = false;
-      }
-    }
-    qp.stages[key] = { tasks: tasks.map((t) => t.serialize()) };
-    if (firstBuild && activatedComplete && !this._checkingStage) {
-      this._checkingStage = true;
-      try {
-        this._checkStageCompletion(questId);
-      } finally {
-        this._checkingStage = false;
-      }
-    }
-    return tasks;
-  },
-
-  getLiveTasks(questId) {
-    const p = this.getProgress(questId);
-    if (!p || p.status !== 'active') return [];
-    return this._ensureStageRuntime(questId, p.stageIndex);
-  },
-
-  /**
-   * Process game event against all active quest tasks.
-   */
-  handleEvent(event) {
-    if (!this.state || !event) return;
-    const store = this.ensureProgressStore();
-    let any = false;
-    for (const [questId, prog] of Object.entries(store)) {
-      if (!prog || prog.status !== 'active') continue;
-      const tasks = this._ensureStageRuntime(questId, prog.stageIndex);
-      let stageChanged = false;
-      for (const task of tasks) {
-        if (task.isCompleted()) continue;
-        const wasCompleted = task.isCompleted();
-        const before = task.getProgress();
-        task.onEvent(event);
-        const after = task.getProgress();
-        const nowCompleted = task.isCompleted();
-        if (nowCompleted && !wasCompleted) {
-          any = true;
-          stageChanged = true;
-        } else if (after !== before) {
-          // прогресс изменился, задача ещё не завершена — обновить журнал/сейв
-          any = true;
-        }
-      }
-      // persist task state
-      prog.stages[String(prog.stageIndex)] = {
-        tasks: tasks.map((t) => t.serialize())
-      };
-      if (stageChanged || any) {
-        this._checkStageCompletion(questId);
-      }
-    }
-    if (any) {
-      this._notifyUI();
-      if (this.engine?.saveGame) this.engine.saveGame();
-    }
-  },
-
-  _checkStageCompletion(questId) {
-    const p = this.getProgress(questId);
-    if (!p || p.status !== 'active') return;
-    const tasks = this._ensureStageRuntime(questId, p.stageIndex);
-    const quest = this.getQuestDef(questId);
-    const stageDef = (quest?.stages || [])[p.stageIndex] || {};
-    // Advanced: completionRule 'all' (default) | 'any'
-    // Optional tasks excluded from 'all' requirement unless all tasks optional
-    const rule = stageDef.completionRule || stageDef.logic || 'all';
-    const required = tasks.filter((t) => !t.optional);
-    const list = required.length ? required : tasks;
-    if (!list.length) return;
-    const done = rule === 'any'
-      ? list.some((t) => t.isCompleted())
-      : list.every((t) => t.isCompleted());
-    if (!done) return;
-
-    const stages = quest?.stages || [];
-
-    if (stageDef?.failed) {
-      this.failQuest(questId);
-      return;
-    }
-
-    // log stage complete
-    if (this.engine?.log && stageDef?.log) {
-      this.engine.log('📜 ' + stageDef.log, 'log-heal');
-    }
-
-    if (stageDef?.finish || p.stageIndex >= stages.length - 1) {
-      this.completeQuest(questId);
-      return;
-    }
-
-    // advance
-    const next = p.stageIndex + 1;
-    p.stageIndex = next;
-    this._ensureStageRuntime(questId, next);
-    if (typeof QuestEvents !== 'undefined') {
-      QuestEvents.emit('StageActivated', {
-        questId,
-        stageIndex: next,
-        stageKey: String(next)
-      });
-    }
-    this._syncLegacyStage(questId);
-    this._logStageEnter(questId, next, {});
-    if (typeof this.engine?.applyQuestMapUnlocks === 'function') {
-      this.engine.applyQuestMapUnlocks(questId, String(next));
-    }
-    if (typeof this.engine?.checkAchievements === 'function') {
-      this.engine.checkAchievements({ type: 'quest_update', questId, stage: String(next) });
-    }
-  },
-
-  _logStageEnter(questId, stageIndex, opts) {
-    if (opts?.silentLog) return;
-    const quest = this.getQuestDef(questId);
-    const stage = quest?.stages?.[stageIndex];
-    if (!stage) return;
-    if (this.engine?.log) {
-      if (stage.log) this.engine.log('📜 ' + stage.log, 'log-heal');
-      else if (stage.hint || stage.title) {
-        this.engine.log('💡 ' + (stage.hint || stage.title), 'log-dice');
-      }
-    }
-  },
-
-  completeQuest(questId, opts = {}) {
-    const store = this.ensureProgressStore();
-    const quest = this.getQuestDef(questId);
-    if (!quest) return false;
-    const prev = store[questId];
-    if (prev?.status === 'completed') return false;
-
-    store[questId] = {
-      ...(prev || {}),
-      status: 'completed',
-      stageIndex: (quest.stages || []).length - 1
-    };
-    if (this.state.questStages) this.state.questStages[questId] = '__finished__';
-    this._syncLegacyFlag(questId, 'complete');
-
-    if (!opts.silentLog && this.engine?.log) {
-      this.engine.log('✅ Квест завершён: «' + (quest.title || questId) + '»', 'log-heal');
-    }
-    if (typeof this.engine?.awardQuestExp === 'function') {
-      this.engine.awardQuestExp(questId);
-    }
-    if (typeof this.engine?.applyQuestNpcReputation === 'function') {
-      this.engine.applyQuestNpcReputation(questId);
-    }
-    // Награды из quest.rewards (gold/items/reputation) — если метод есть
-    if (typeof this.engine?.applyQuestRewards === 'function') {
-      this.engine.applyQuestRewards(questId);
-    }
-    if (typeof this.engine?.checkAchievements === 'function') {
-      this.engine.checkAchievements({ type: 'quest_update', questId, stage: '__finished__' });
-    }
-    this._notifyUI();
-    if (this.engine?.saveGame) this.engine.saveGame();
-    return true;
-  },
-
-  failQuest(questId, opts = {}) {
-    const store = this.ensureProgressStore();
-    const quest = this.getQuestDef(questId);
-    const prev = store[questId];
-    if (prev?.status === 'failed') return false;
-
-    store[questId] = {
-      ...(prev || {}),
-      status: 'failed'
-    };
-    if (this.state.questStages) this.state.questStages[questId] = '__failed__';
-    this._syncLegacyFlag(questId, 'failed');
-
-    if (!opts.silentLog && this.engine?.log) {
-      const stages = quest?.stages || [];
-      const failStage = stages.find((s) => s.failed);
-      if (failStage?.log) this.engine.log('❌ ' + failStage.log, 'log-damage');
-      else this.engine.log('❌ Квест провален: «' + (quest?.title || questId) + '»', 'log-damage');
-    }
-    if (typeof this.engine?.checkAchievements === 'function') {
-      this.engine.checkAchievements({ type: 'quest_update', questId, stage: '__failed__' });
-    }
-    this._notifyUI();
-    if (this.engine?.saveGame) this.engine.saveGame();
-    return true;
-  },
-
-  /**
-   * Compatibility: set stage by index or legacy key (from old questSet in scenes).
-   * Completes tasks of intermediate stages and activates target stage.
-   */
-  setStage(questId, stageRef, opts = {}) {
-    const quest = this.getQuestDef(questId);
-    if (!quest) return;
-    if ((this.isCompleted(questId) || this.isFailed(questId)) && !opts.force) return;
-
-    const stages = quest.stages || [];
-    let index = this.resolveStageIndex(quest, stageRef);
-
-    if (stageRef === 'failed' || stageRef === '__failed__' ||
-        (index != null && stages[index]?.failed)) {
-      this.startQuest(questId, { silentLog: true, force: !!opts.force });
-      this.failQuest(questId, opts);
-      return;
-    }
-    if (!opts.force && (stageRef === 'complete' || stageRef === '__finished__' ||
-        (index != null && stages[index]?.finish && index === stages.length - 1))) {
-      this.startQuest(questId, { silentLog: true });
-      if (index != null) {
-        this._forceCompleteStageTasks(questId, index);
-        const store = this.ensureProgressStore();
-        if (store[questId]) store[questId].stageIndex = index;
-      }
-      this.completeQuest(questId, opts);
-      return;
-    }
-
-    if (index == null) index = 0;
-    this.startQuest(questId, { stageIndex: 0, silentLog: true, force: !!opts.force });
-
-    const store = this.ensureProgressStore();
-    const p = store[questId];
-    if (!p) return;
-
-    // Auto-complete previous stages' tasks
-    for (let i = 0; i < index; i++) {
-      this._forceCompleteStageTasks(questId, i);
-    }
-
-    p.status = 'active';
-    p.stageIndex = index;
-    this._ensureStageRuntime(questId, index);
-
-    // Land on stage only. ManualAdvance does NOT auto-complete on StageActivated —
-    // use completeTask / completeCurrentStage / TaskManualComplete.
-
-    // Special: if stage has finish flag and is last, complete
-    if (stages[index]?.finish && index >= stages.length - 1) {
-      this._forceCompleteStageTasks(questId, index);
-      this.completeQuest(questId, opts);
-      return;
-    }
-    if (stages[index]?.failed) {
-      this.failQuest(questId, opts);
-      return;
-    }
-
-    this._syncLegacyStage(questId);
-    if (!opts.silentLog) this._logStageEnter(questId, index, opts);
-    if (typeof this.engine?.applyQuestMapUnlocks === 'function') {
-      this.engine.applyQuestMapUnlocks(questId, String(index));
-    }
-    if (typeof this.engine?.checkAchievements === 'function') {
-      this.engine.checkAchievements({ type: 'quest_update', questId, stage: String(index) });
-    }
-    this._notifyUI();
-    if (this.engine?.saveGame) this.engine.saveGame();
-  },
-
-  _forceCompleteStageTasks(questId, stageIndex) {
-    const store = this.ensureProgressStore();
-    const p = store[questId];
-    if (!p) return;
-    const tasks = this._ensureStageRuntime(questId, stageIndex);
-    tasks.forEach((t) => t.markComplete());
-    if (!p.stages) p.stages = {};
-    p.stages[String(stageIndex)] = { tasks: tasks.map((t) => t.serialize()) };
-  },
-
-  /**
-   * Mark current stage tasks complete (or specific) — used when scene signals objective done.
-   */
-  /**
-   * Explicitly complete a task (or all ManualAdvance on current stage).
-   * Emits TaskManualComplete so ManualAdvance / other listeners can react.
-   */
-  completeTask(questId, taskId, opts = {}) {
-    const p = this.getProgress(questId);
-    if (!p || p.status !== 'active') {
-      this.startQuest(questId, { silentLog: true });
-    }
-    const prog = this.getProgress(questId);
-    if (!prog) return false;
-    const stageIndex = prog.stageIndex;
-    const tasks = this._ensureStageRuntime(questId, stageIndex);
-    if (taskId) {
-      const task = tasks.find((t) => t && t.id === taskId);
-      if (task && !task.isCompleted()) task.markComplete();
-    }
-    if (typeof QuestEvents !== 'undefined') {
-      QuestEvents.emit('TaskManualComplete', {
-        questId,
-        stageIndex,
-        taskId: taskId || null
-      });
-    }
-    // Persist + re-check after event (ManualAdvance may complete via event)
-    const live = this._ensureStageRuntime(questId, stageIndex);
-    if (!prog.stages) prog.stages = {};
-    prog.stages[String(stageIndex)] = { tasks: live.map((t) => t.serialize()) };
-    this._checkStageCompletion(questId);
-    this._notifyUI();
-    if (!opts.silent && this.engine?.saveGame) this.engine.saveGame();
-    return true;
-  },
-
-  completeCurrentStage(questId, opts = {}) {
-    const p = this.getProgress(questId);
-    if (!p || p.status !== 'active') {
-      this.startQuest(questId, { silentLog: true });
-    }
-    const prog = this.getProgress(questId);
-    if (!prog) return;
-    this._forceCompleteStageTasks(questId, prog.stageIndex);
-    this._checkStageCompletion(questId);
-    this._notifyUI();
-  },
-
-  resolveStageIndex(quest, stageRef) {
-    if (!quest || stageRef == null || stageRef === '') return null;
-    const stages = quest.stages || [];
-    const s = String(stageRef);
-    if (s === '__finished__' || s === 'complete') {
-      const fi = stages.findIndex((st) => st.finish && !st.failed);
-      return fi >= 0 ? fi : stages.length - 1;
-    }
-    if (s === '__failed__' || s === 'failed') {
-      const fi = stages.findIndex((st) => st.failed);
-      return fi >= 0 ? fi : null;
-    }
-    const asNum = Number(s);
-    if (!Number.isNaN(asNum) && asNum >= 0 && asNum < stages.length) return asNum;
-    // match by id / legacyKey
-    for (let i = 0; i < stages.length; i++) {
-      const st = stages[i];
-      if (st.id && String(st.id) === s) return i;
-      if (st.legacyId && String(st.legacyId) === s) return i;
-      if (st.stageKey && String(st.stageKey) === s) return i;
-    }
-    if (quest.legacyStageMap && quest.legacyStageMap[s] != null) {
-      return this.resolveStageIndex(quest, quest.legacyStageMap[s]);
-    }
-    return null;
-  },
-
-  /** For conditions / old API: current stage key as string index */
-  getStageKey(questId) {
-    if (this.isCompleted(questId)) return '__finished__';
-    if (this.isFailed(questId)) return '__failed__';
-    const p = this.getProgress(questId);
-    if (p && p.status === 'active') return String(p.stageIndex);
-    // fall back to legacy questStages
-    const legacy = this.state?.questStages?.[questId];
-    if (legacy != null && legacy !== '') return String(legacy);
-    const flag = this.state?.flags?.['quest_' + questId];
-    if (flag != null && flag !== '') {
-      const quest = this.getQuestDef(questId);
-      const idx = this.resolveStageIndex(quest, flag);
-      return idx != null ? String(idx) : String(flag);
-    }
-    return null;
-  },
-
-  _syncLegacyStage(questId) {
-    if (!this.state) return;
-    if (!this.state.questStages) this.state.questStages = {};
-    const key = this.getStageKey(questId);
-    if (key != null) this.state.questStages[questId] = key;
-    this._syncLegacyFlag(questId, key);
-  },
-
-  _syncLegacyFlag(questId, stageKey) {
-    if (!this.state?.flags) return;
-    const quest = this.getQuestDef(questId);
-    let legacyVal = stageKey;
-    if (quest?.legacyStageMap && stageKey != null) {
-      const entry = Object.entries(quest.legacyStageMap).find(([, v]) => String(v) === String(stageKey));
-      if (entry) legacyVal = entry[0];
-    }
-    if (stageKey === '__finished__') legacyVal = 'complete';
-    if (stageKey === '__failed__') legacyVal = 'failed';
-    this.state.flags['quest_' + questId] = legacyVal;
-  },
-
-  /**
-   * Journal entries for UI.
-   * @returns {Array<{ questId, title, status, stageTitle, tasks: Array<{ text, done, progress, target }> }>}
-   */
-
-  // ----- Editor / conditions helpers (ex-QuestSystem) -----
-
-  getStageKeys(quest) {
-    if (!quest?.stages) return [];
-    if (Array.isArray(quest.stages)) {
-      return quest.stages.map((_, i) => String(i));
-    }
-    return Object.keys(quest.stages).sort((a, b) => Number(a) - Number(b));
-  },
-
-  /** Resolve stage ref → string key (index) for legacy conditions */
-  resolveStageRef(quest, stageRef) {
-    const idx = this.resolveStageIndex(quest, stageRef);
-    if (idx != null) return String(idx);
-    if (stageRef == null || stageRef === '') return null;
-    const keys = this.getStageKeys(quest);
-    return keys[0] || '0';
-  },
-
-  getStageData(quest, stageKey) {
-    if (!quest?.stages || stageKey == null) return null;
-    if (Array.isArray(quest.stages)) {
-      const n = Number(stageKey);
-      const st = quest.stages[n];
-      if (!st) return null;
-      return {
-        log: st.log || '',
-        hint: st.hint || st.title || '',
-        finish: !!st.finish,
-        failed: !!st.failed,
-        title: st.title,
-        tasks: st.tasks
-      };
-    }
-    return quest.stages[String(stageKey)] || null;
-  },
-
-  isStageFinished(quest, stageKey) {
-    const st = this.getStageData(quest, stageKey);
-    return !!st?.finish && !st?.failed;
-  },
-
-  isStageFailed(quest, stageKey) {
-    const st = this.getStageData(quest, stageKey);
-    return !!st?.failed;
-  },
-
-  resolveReputationFlag(flag) {
-    const alias = { village_hero: 'rep_village', jack_friend: 'rep_village' };
-    return alias[flag] || flag;
-  },
-
-  getReputationEntries(rewards) {
-    const rep = rewards?.reputation;
-    if (rep == null || rep === '') return [];
-    const legacyDefault = { village_hero: 10, jack_friend: 8, rep_village: 10 };
-    if (typeof rep === 'object' && !Array.isArray(rep)) {
-      return Object.entries(rep)
-        .map(([flag, amount]) => ({
-          flag: this.resolveReputationFlag(flag),
-          amount: Number(amount) || 0
-        }))
-        .filter((e) => e.flag && e.amount !== 0);
-    }
-    if (typeof rep === 'string') {
-      const flag = this.resolveReputationFlag(rep);
-      const fromField = Number(rewards.reputationAmount);
-      const amount = Number.isFinite(fromField) ? fromField : (legacyDefault[rep] ?? 10);
-      return amount !== 0 ? [{ flag, amount }] : [];
-    }
-    return [];
-  },
-
-  getPrimaryReputationReward(rewards) {
-    const entries = this.getReputationEntries(rewards || {});
-    if (entries.length) return entries[0];
-    return { flag: '', amount: 0 };
-  },
-
-  getJournalEntries() {
-    // Source of truth: questProgress only (legacy questStages handled in hydrateFromSave)
-    const store = this.ensureProgressStore() || {};
-    const out = [];
-    for (const [questId, prog] of Object.entries(store)) {
-      if (!prog || prog.status !== 'active') continue;
-      const quest = this.getQuestDef(questId);
-      if (!quest) continue;
-      const stage = (quest.stages || [])[prog.stageIndex] || {};
-      const tasks = this._ensureStageRuntime(questId, prog.stageIndex);
-      out.push({
-        questId,
-        title: quest.title || questId,
-        status: prog.status,
-        stageIndex: prog.stageIndex,
-        stageTitle: stage.title || stage.hint || '',
-        hint: stage.hint || stage.title || '',
-        tasks: tasks.map((t) => ({
-          id: t.id,
-          text: t.getDescription(),
-          done: t.isCompleted(),
-          progress: t.getProgress(),
-          target: t.target
-        }))
-      });
-    }
-    return out;
-  },
-
-  /**
-   * Load path:
-   * - Save V2 (questProgress present) → use as source of truth
-   * - Save V1 (only questStages / flags.quest_*) → migrate into questProgress
-   * After hydrate, Runtime reads only questProgress. questStages is rewritten as mirror.
-   */
-  hydrateFromSave(engine) {
-    this.bind(engine);
-    const store = this.ensureProgressStore();
-    const hasProgress = store && Object.keys(store).length > 0;
-
-    if (!hasProgress) {
-      // V1 migration: questStages + flags → questProgress
-      const qs = { ...(engine.state.questStages || {}) };
-      const flags = engine.state.flags || {};
-      for (const [k, v] of Object.entries(flags)) {
-        if (!k.startsWith('quest_')) continue;
-        const questId = k.slice(6);
-        if (qs[questId] == null || qs[questId] === '') qs[questId] = v;
-      }
-
-      for (const [questId, stageKey] of Object.entries(qs)) {
-        if (stageKey == null || stageKey === '') continue;
-        const finished = stageKey === '__finished__' || stageKey === 'complete';
-        const failed = stageKey === '__failed__' || stageKey === 'failed';
-        const quest = this.getQuestDef(questId);
-        const stages = quest?.stages || [];
-
-        if (finished) {
-          const last = Math.max(0, stages.length - 1);
-          store[questId] = { status: 'completed', stageIndex: last, stages: {} };
-          for (let i = 0; i <= last; i++) this._forceCompleteStageTasks(questId, i);
-          continue;
-        }
-        if (failed) {
-          store[questId] = { status: 'failed', stageIndex: 0, stages: {} };
-          continue;
-        }
-
-        const idx = this.resolveStageIndex(quest, stageKey) ??
-          (Number.isFinite(Number(stageKey)) ? Number(stageKey) : 0);
-        store[questId] = { status: 'active', stageIndex: idx, stages: {} };
-        for (let i = 0; i < idx; i++) this._forceCompleteStageTasks(questId, i);
-        this._ensureStageRuntime(questId, idx);
-      }
-    }
-
-    // Always rebuild questStages mirror from questProgress (compat for old condition readers)
-    this._mirrorProgressToLegacyStages();
-  },
-
-  /** questProgress → questStages + flags.quest_* (mirror only, not source of truth) */
-  _mirrorProgressToLegacyStages() {
-    if (!this.state) return;
-    if (!this.state.questStages) this.state.questStages = {};
-    const store = this.ensureProgressStore() || {};
-    for (const [questId, prog] of Object.entries(store)) {
-      if (!prog) continue;
-      if (prog.status === 'completed') this.state.questStages[questId] = '__finished__';
-      else if (prog.status === 'failed') this.state.questStages[questId] = '__failed__';
-      else this.state.questStages[questId] = String(prog.stageIndex);
-      this._syncLegacyFlag(questId, this.state.questStages[questId]);
-    }
-  },
-
-  _notifyUI() {
-    if (typeof this.engine?.renderActiveQuests === 'function') {
-      this.engine.renderActiveQuests();
-    }
-    if (typeof this.engine?.updateUI === 'function') {
-      // avoid deep recursion — only quests panel when possible
-    }
-  },
-
-  /** Serialize for save */
-  serializeAll() {
-    return this.ensureProgressStore() || {};
-  }
-};
-
-if (typeof window !== 'undefined') {
-  window.QuestRuntime = QuestRuntime;
-}
-
-
-;/* —— js/quests/quest-stage-actions-bridge.js —— */
-/**
- * Phase 1.14 — Optional stage entry/reward actions (NOT QuestRuntime).
- * Listens QuestEvents.StageActivated + quest completion transitions.
- */
-(function attachQuestStageActionsBridge() {
-  'use strict';
-
-  if (typeof QuestEvents === 'undefined') return;
-
-  const prevStatus = Object.create(null);
-
-  function getEngine() {
-    return typeof GameEngine !== 'undefined' ? GameEngine : null;
-  }
-
-  function runSteps(engine, steps) {
-    if (!engine || !Array.isArray(steps)) return;
-    steps.forEach((step) => {
-      if (!step?.action) return;
-      if (typeof ActionRunner !== 'undefined' && ActionRunner.runV2) {
-        ActionRunner.runV2(engine, step.action, step.params || {}, { source: 'quest_stage' });
-      } else if (typeof engine.runAction === 'function') {
-        engine.runAction(step.action, step.params || {});
-      } else if (step.action === 'update_quest' && typeof engine.updateQuest === 'function') {
-        engine.updateQuest(step.params?.questId, step.params?.stage);
-      }
-    });
-  }
-
-  function runStageActions(quest, stageIndex, field) {
-    const engine = getEngine();
-    if (!engine || !quest) return;
-    const st = quest.stages?.[stageIndex];
-    if (!st) return;
-    runSteps(engine, st[field]);
-  }
-
-  function onStageActivated(payload) {
-    const questId = payload?.questId;
-    const stageIndex = Number(payload?.stageIndex);
-    if (!questId || !Number.isFinite(stageIndex)) return;
-    const engine = getEngine();
-    const quest = engine?.data?.quests?.[questId];
-    if (!quest) return;
-    if (stageIndex > 0) runStageActions(quest, stageIndex - 1, 'rewardActions');
-    runStageActions(quest, stageIndex, 'entryActions');
-  }
-
-  function onAnyQuestEvent() {
-    const engine = getEngine();
-    if (!engine?.state?.questProgress) return;
-    Object.entries(engine.state.questProgress).forEach(([questId, prog]) => {
-      const was = prevStatus[questId];
-      const now = prog?.status;
-      if (was !== 'completed' && now === 'completed') {
-        const quest = engine.data?.quests?.[questId];
-        const lastIdx = (quest?.stages?.length || 1) - 1;
-        if (lastIdx >= 0) runStageActions(quest, lastIdx, 'rewardActions');
-      }
-      prevStatus[questId] = now;
-    });
-  }
-
-  QuestEvents.on((event) => {
-    if (event?.type === 'StageActivated') onStageActivated(event.payload);
-    onAnyQuestEvent();
-  });
-})();
-
-
-;/* —— js/quests/quest-migrate.js —— */
-// ============================================================
-// Migrate v1 stage-marker quests → v2 stages with tasks
-// ============================================================
-
-const QuestMigrate = {
-  /**
-   * Normalize + migrate all quests in data to v2 task format.
-   * Idempotent: already-v2 quests only lightly normalized.
-   */
-  _report: null,
-
-  beginReport() {
-    this._report = {
-      migratedAutomatically: [],
-      requiresManualReview: [],
-      unsupported: [],
-      skippedV2: []
-    };
-  },
-
-  getLastReport() {
-    return this._report || {
-      migratedAutomatically: [],
-      requiresManualReview: [],
-      unsupported: [],
-      skippedV2: []
-    };
-  },
-
-  formatReport(report) {
-    report = report || this.getLastReport();
-    const lines = [];
-    lines.push('Migrated automatically: ' + (report.migratedAutomatically?.length || 0));
-    (report.migratedAutomatically || []).forEach((x) => lines.push('  ✓ ' + x));
-    lines.push('Requires manual review: ' + (report.requiresManualReview?.length || 0));
-    (report.requiresManualReview || []).forEach((x) => lines.push('  ⚠ ' + x));
-    lines.push('Unsupported: ' + (report.unsupported?.length || 0));
-    (report.unsupported || []).forEach((x) => lines.push('  ✗ ' + x));
-    if (report.skippedV2?.length) {
-      lines.push('Already v2 (unchanged): ' + report.skippedV2.length);
-    }
-    return lines.join('\n');
-  },
-
-  migrateAll(data) {
-    if (!data) return data;
-    if (!data.quests || typeof data.quests !== 'object') data.quests = {};
-    this.beginReport();
-    for (const [id, quest] of Object.entries(data.quests)) {
-      const wasV2 = this.isV2(quest) && Array.isArray(quest.stages) &&
-        quest.stages.every((s) => s && Array.isArray(s.tasks));
-      data.quests[id] = this.migrateQuest(id, quest);
-      if (wasV2 && quest.questFormat === 2) {
-        this._report.skippedV2.push(id);
-      }
-    }
-    data.questsVersion = 2;
-    data.questMigrationReport = this.getLastReport();
-    return data;
-  },
-
-  isV2(quest) {
-    if (!quest || typeof quest !== 'object') return false;
-    if (!Array.isArray(quest.stages)) return false;
-    if (!quest.stages.length) return true;
-    // v2: stages are array of { tasks: [] }
-    return quest.stages.every((s) => s && (Array.isArray(s.tasks) || s.tasks == null));
-  },
-
-  migrateQuest(questId, quest) {
-    if (!quest || typeof quest !== 'object') {
-      return {
-        id: questId,
-        title: questId,
-        stages: [{
-          id: 'stage_0',
-          title: 'Начало',
-          hint: 'Начало',
-          tasks: [{
-            type: 'MigrationRequired',
-            id: 't0',
-            description: 'Пустой квест — настройте задачи',
-            legacyData: { questId, reason: 'empty_quest_def' }
-          }]
-        }],
-        rewards: {},
-        hidden: false
-      };
-    }
-
-    // Already array of stages with tasks
-    if (Array.isArray(quest.stages) && quest.stages.length &&
-        quest.stages.every((s) => s && Array.isArray(s.tasks))) {
-      return this.normalizeV2(questId, quest);
-    }
-
-    // Object stages map "0","1" from old normalize
-    if (quest.stages && !Array.isArray(quest.stages) && typeof quest.stages === 'object') {
-      return this.fromStageMap(questId, quest);
-    }
-
-    // Array stages without tasks (old data/quests.json style)
-    if (Array.isArray(quest.stages)) {
-      return this.fromStageArray(questId, quest);
-    }
-
-    return this.normalizeV2(questId, {
-      ...quest,
-      stages: [{
-        id: 'stage_0',
-        title: 'Начало',
-        hint: quest.description || 'Начало',
-        log: quest.description || '',
-        tasks: [{
-          type: 'MigrationRequired',
-          id: questId + '_t0',
-          description: quest.description || 'Требуется ручная настройка',
-          legacyData: { questId, description: quest.description, reason: 'no_stages_structure' }
-        }]
-      }]
-    });
-  },
-
-  fromStageMap(questId, quest) {
-    const keys = Object.keys(quest.stages).sort((a, b) => Number(a) - Number(b));
-    const legacyStageMap = { ...(quest.legacyStageMap || {}) };
-    const stages = keys.map((k, i) => {
-      const st = quest.stages[k] || {};
-      const legacyId = Object.keys(legacyStageMap).find((lid) => String(legacyStageMap[lid]) === String(k));
-      return this.stageFromOld(questId, i, {
-        id: legacyId || st.id || ('stage_' + k),
-        name: st.hint || st.name || st.title,
-        description: st.log || st.description,
-        hint: st.hint,
-        log: st.log,
-        finish: !!st.finish,
-        failed: !!st.failed
-      }, quest);
-    });
-    return this.normalizeV2(questId, {
-      ...quest,
-      stages,
-      legacyStageMap: this.buildLegacyMap(stages, legacyStageMap)
-    });
-  },
-
-  fromStageArray(questId, quest) {
-    const arr = quest.stages || [];
-    const stages = arr.map((st, i) => this.stageFromOld(questId, i, st, quest));
-    return this.normalizeV2(questId, {
-      ...quest,
-      stages,
-      legacyStageMap: this.buildLegacyMap(stages, quest.legacyStageMap || {})
-    });
-  },
-
-  stageFromOld(questId, index, st, quest) {
-    const legacyId = st.id || st.legacyId || ('stage_' + index);
-    const finish = legacyId === 'complete' || !!st.finish;
-    const failed = legacyId === 'failed' || !!st.failed;
-    const title = st.name || st.hint || st.title || ('Этап ' + (index + 1));
-    const hint = st.hint || st.name || title;
-    const log = st.description || st.log || '';
-    const tasks = this.inferTasks(questId, index, {
-      legacyId, title, hint, log, finish, failed, giver: quest.giver
-    });
-    return {
-      id: legacyId,
-      legacyId,
-      title,
-      hint,
-      log,
-      finish,
-      failed,
-      tasks
-    };
-  },
-
-  /**
-   * Heuristic: turn old stage text into a concrete task when possible.
-   * Ambiguous stages → MigrationRequired (not ManualAdvance).
-   * Explicit finish/failed markers → ManualAdvance (scene-driven legacy).
-   */
-  inferTasks(questId, index, info) {
-    const text = ((info.hint || '') + ' ' + (info.log || '') + ' ' + (info.title || '')).toLowerCase();
-    const tasks = [];
-    const tid = (suffix) => questId + '_s' + index + '_' + suffix;
-    const path = questId + ' / stage ' + index + ' («' + (info.title || info.legacyId || index) + '»)';
-    const report = this._report;
-
-    const pushMigrationRequired = (reason) => {
-      tasks.push({
-        type: 'MigrationRequired',
-        id: tid('mig'),
-        description: info.hint || info.log || info.title || 'Требуется ручная настройка задачи',
-        legacyHint: info.hint || info.title || '',
-        legacyId: info.legacyId || '',
-        legacyData: {
-          questId,
-          stageIndex: index,
-          legacyId: info.legacyId,
-          title: info.title,
-          hint: info.hint,
-          log: info.log,
-          finish: !!info.finish,
-          failed: !!info.failed,
-          giver: info.giver,
-          reason: reason || 'unrecognized_stage_text'
-        }
-      });
-      if (report) report.requiresManualReview.push(path + ' — ' + (reason || 'неоднозначный текст этапа'));
-    };
-
-    // Failed stage: explicit fail marker in old data — ManualAdvance is OK (scene-driven)
-    if (info.failed) {
-      tasks.push({
-        type: 'ManualAdvance',
-        id: tid('fail'),
-        description: info.hint || 'Квест провален',
-        stageKey: info.legacyId || 'failed'
-      });
-      if (report) report.migratedAutomatically.push(path + ' → ManualAdvance (failed)');
-      return tasks;
-    }
-
-    // Finish stage with no other cue — ManualAdvance (old questSet complete)
-    if (info.finish && !/поговори|найд|убей|побед|верн|достав|отправ|посетите/.test(text)) {
-      tasks.push({
-        type: 'ManualAdvance',
-        id: tid('fin'),
-        description: info.hint || info.log || 'Завершите задание',
-        stageKey: info.legacyId || 'complete'
-      });
-      if (report) report.migratedAutomatically.push(path + ' → ManualAdvance (finish)');
-      return tasks;
-    }
-
-    // Unambiguous heuristics only
-    if (/поговори|поговорите|узнайте|расспроси/.test(text)) {
-      const npc = info.giver && info.giver !== 'auto' ? info.giver : undefined;
-      if (npc) {
-        tasks.push({
-          type: 'TalkToNPC',
-          id: tid('talk'),
-          npcId: npc,
-          description: info.hint || info.log || 'Поговорить с NPC'
-        });
-        if (report) report.migratedAutomatically.push(path + ' → TalkToNPC(' + npc + ')');
-      } else {
-        pushMigrationRequired('TalkToNPC без npcId (giver не задан)');
-      }
-    } else if (/верн|достав|отнес|отда/.test(text) && /сумк|письм|предмет|медаль|кольц/.test(text)) {
-      let itemId;
-      if (/сумк/.test(text)) itemId = 'jack_bag';
-      if (/медаль/.test(text)) itemId = itemId || 'elsa_locket';
-      if (/кольц/.test(text)) itemId = itemId || 'lukorn_signet_ring';
-      if (itemId) {
-        tasks.push({
-          type: 'DeliverItem',
-          id: tid('deliver'),
-          itemId,
-          count: 1,
-          description: info.hint || info.log || 'Доставить предмет'
-        });
-        if (report) report.migratedAutomatically.push(path + ' → DeliverItem(' + itemId + ')');
-      } else {
-        pushMigrationRequired('DeliverItem без однозначного itemId');
-      }
-    } else if (/найд|собери|собрать|подбер/.test(text)) {
-      let itemId;
-      if (/сумк/.test(text)) itemId = 'jack_bag';
-      if (/медаль/.test(text)) itemId = itemId || 'elsa_locket';
-      if (/трава|лунолист|herb/.test(text)) itemId = itemId || undefined;
-      if (itemId) {
-        tasks.push({
-          type: 'CollectItem',
-          id: tid('collect'),
-          itemId,
-          count: 1,
-          description: info.hint || info.log || 'Найти предмет'
-        });
-        if (report) report.migratedAutomatically.push(path + ' → CollectItem(' + itemId + ')');
-      } else {
-        pushMigrationRequired('CollectItem без однозначного itemId');
-      }
-    } else if (/убей|побед|сраз|убейте|главарь|босс|бандит/.test(text)) {
-      // Kill without specific enemy id → manual review (cannot invent enemyId)
-      pushMigrationRequired('KillEnemy без однозначного enemyId');
-    } else if (/отправ|достигн|посетите|иди\b|идите|осмотрите/.test(text) &&
-               /мельниц|деревн|склад|погреб|локац|таверн|площад/.test(text)) {
-      let sceneId;
-      if (/мельниц/.test(text)) sceneId = 'mill_arrival';
-      if (/погреб/.test(text)) sceneId = sceneId || 'cellar';
-      if (/таверн/.test(text)) sceneId = sceneId || 'tavern';
-      if (sceneId) {
-        tasks.push({
-          type: 'VisitLocation',
-          id: tid('visit'),
-          sceneId,
-          description: info.hint || info.log || 'Посетить локацию'
-        });
-        if (report) report.migratedAutomatically.push(path + ' → VisitLocation(' + sceneId + ')');
-      } else {
-        pushMigrationRequired('VisitLocation без однозначного sceneId');
-      }
-    } else {
-      pushMigrationRequired('текст этапа не распознан однозначно');
-    }
-
-    if (!tasks.length) {
-      pushMigrationRequired('пустой результат эвристики');
-    }
-    return tasks;
-  },
-
-  buildLegacyMap(stages, existing) {
-    const map = { ...(existing || {}) };
-    stages.forEach((st, i) => {
-      if (st.legacyId) map[st.legacyId] = String(i);
-      if (st.id) map[st.id] = String(i);
-      map[String(i)] = String(i);
-    });
-    if (stages.some((s) => s.finish)) {
-      const fi = stages.findIndex((s) => s.finish);
-      map.complete = String(fi);
-    }
-    if (stages.some((s) => s.failed)) {
-      const fi = stages.findIndex((s) => s.failed);
-      map.failed = String(fi);
-    }
-    return map;
-  },
-
-  normalizeV2(questId, quest) {
-    const stages = (quest.stages || []).map((st, i) => {
-      const tasks = Array.isArray(st.tasks) ? st.tasks.map((t, j) => {
-        if (!t || typeof t !== 'object') {
-          return {
-            type: 'MigrationRequired',
-            id: questId + '_s' + i + '_t' + j,
-            description: String(t || 'Требуется ручная настройка'),
-            legacyData: { raw: t, reason: 'string_task_entry' }
-          };
-        }
-        if (!t.type) {
-          return {
-            ...t,
-            type: 'MigrationRequired',
-            id: t.id || (questId + '_s' + i + '_t' + j),
-            description: t.description || 'Требуется ручная настройка',
-            legacyData: { ...(t.legacyData || {}), reason: 'task_missing_type' }
-          };
-        }
-        return {
-          ...t,
-          type: t.type,
-          id: t.id || (questId + '_s' + i + '_t' + j)
-        };
-      }) : [{
-        type: 'MigrationRequired',
-        id: questId + '_s' + i + '_t0',
-        description: st.hint || st.title || 'Требуется ручная настройка',
-        legacyData: { hint: st.hint, title: st.title, reason: 'v2_stage_without_tasks' }
-      }];
-      return {
-        id: st.id || st.legacyId || ('stage_' + i),
-        legacyId: st.legacyId || st.id || ('stage_' + i),
-        title: st.title || st.hint || st.name || ('Этап ' + (i + 1)),
-        hint: st.hint || st.title || '',
-        log: st.log || st.description || '',
-        finish: !!st.finish,
-        failed: !!st.failed,
-        completionRule: st.completionRule === 'any' ? 'any' : 'all',
-        // Advanced (not shown in basic editor): optional future AND/OR trees
-        advanced: st.advanced || null,
-        description: st.description || st.log || '',
-        entryActions: Array.isArray(st.entryActions) ? st.entryActions.slice() : undefined,
-        rewardActions: Array.isArray(st.rewardActions) ? st.rewardActions.slice() : undefined,
-        startConditions: st.startConditions && typeof st.startConditions === 'object' ? st.startConditions : undefined,
-        tasks
-      };
-    });
-    if (!stages.length) {
-      stages.push({
-        id: 'stage_0',
-        title: 'Начало',
-        hint: 'Начало',
-        log: '',
-        finish: false,
-        failed: false,
-        tasks: [{
-          type: 'MigrationRequired',
-          id: questId + '_t0',
-          description: 'Требуется ручная настройка',
-          legacyData: { reason: 'empty_stages' }
-        }]
-      });
-    }
-    return {
-      id: quest.id || questId,
-      title: quest.title || questId,
-      description: quest.description,
-      giver: quest.giver,
-      hidden: !!quest.hidden,
-      rewards: quest.rewards || {},
-      stages,
-      legacyStageMap: this.buildLegacyMap(stages, quest.legacyStageMap || {}),
-      questFormat: 2,
-      // Preserve legacy metadata when present
-      legacyFlags: quest.legacyFlags || quest.flags || undefined,
-      legacyConditions: quest.legacyConditions || quest.conditions || undefined,
-      legacyData: quest.legacyData || undefined
-    };
-  },
-
-  /** Migrate scene questSet stage refs remain valid via legacyStageMap */
-  migrateSaveQuestProgress(state, data) {
-    if (!state) return;
-    if (!state.questProgress) state.questProgress = {};
-  },
-
-  /**
-   * Old saves: find_albert completed without reward — reopen at stage 3 (compat only).
-   */
-  migrateAlbertSaveState(engine) {
-    if (!engine?.state) return;
-    const f = engine.state.flags || {};
-    if (!f.albertSaved) return;
-    if (f.find_albert_rewardClaimed) {
-      if (!f.albertAtVillage) f.albertAtVillage = true;
-      return;
-    }
-    const stage = typeof engine.getQuestStage === 'function' ? engine.getQuestStage('find_albert') : null;
-    const finished =
-      (typeof engine.isQuestFinished === 'function' && engine.isQuestFinished('find_albert')) ||
-      stage === '4' || stage === '__finished__' || f.quest_find_albert === 'complete';
-    if (!finished) return;
-    f.albertAtVillage = true;
-    if (typeof QuestRuntime !== 'undefined') {
-      QuestRuntime.bind(engine);
-      QuestRuntime.setStage('find_albert', 3, { force: true, silentLog: true });
-    } else if (typeof engine.updateQuest === 'function') {
-      engine.updateQuest('find_albert', 3, { force: true, silentLog: true });
-    }
-  }
-};
-
-if (typeof window !== 'undefined') {
-  window.QuestMigrate = QuestMigrate;
-}
-
-
-
-
-;/* —— js/enemy-scaling.js —— */
-// ============================================
-// Масштабирование врагов по таблице уровней
-// ============================================
-
-const EnemyScaling = {
-  /** Таблица по умолчанию (D&D 5e, уровни 1–10) */
-  DEFAULT_SCALING: {
-    1: { hpRate: 1.0, atkBonus: 0, acBonus: 0 },
-    2: { hpRate: 1.2, atkBonus: 1, acBonus: 0 },
-    3: { hpRate: 1.4, atkBonus: 2, acBonus: 1 },
-    4: { hpRate: 1.6, atkBonus: 3, acBonus: 1 },
-    5: { hpRate: 2.0, atkBonus: 4, acBonus: 2 },
-    6: { hpRate: 2.2, atkBonus: 4, acBonus: 2 },
-    7: { hpRate: 2.5, atkBonus: 5, acBonus: 2 },
-    8: { hpRate: 2.8, atkBonus: 5, acBonus: 3 },
-    9: { hpRate: 3.0, atkBonus: 6, acBonus: 3 },
-    10: { hpRate: 3.5, atkBonus: 6, acBonus: 3 }
-  },
-
-  DEFAULT_BOSS_HP_RATE: 1.5,
-  DEFAULT_BASE_LEVEL: 1,
-
-  REPORT_LEVELS: [1, 3, 5, 10],
-
-  /** Нормализация конфига из game_data.enemyScaling */
-  ensureConfig(raw) {
-    const cfg = raw && typeof raw === 'object' ? { ...raw } : {};
-    if (cfg.enabled == null) cfg.enabled = true;
-    if (cfg.baseLevel == null) cfg.baseLevel = this.DEFAULT_BASE_LEVEL;
-    if (cfg.bossHpRate == null) cfg.bossHpRate = this.DEFAULT_BOSS_HP_RATE;
-
-    if (!cfg.scaling || typeof cfg.scaling !== 'object' || !Object.keys(cfg.scaling).length) {
-      cfg.scaling = JSON.parse(JSON.stringify(this.DEFAULT_SCALING));
-    } else {
-      cfg.scaling = this.normalizeScalingTable(cfg.scaling);
-    }
-
-    return cfg;
-  },
-
-  normalizeScalingTable(table) {
-    const out = {};
-    Object.keys(table).forEach((k) => {
-      const lvl = parseInt(k, 10);
-      if (!lvl || lvl < 1) return;
-      const row = table[k] || {};
-      out[lvl] = {
-        hpRate: Math.max(1, Number(row.hpRate) || 1),
-        atkBonus: Math.max(0, parseInt(row.atkBonus, 10) || 0),
-        acBonus: Math.max(0, parseInt(row.acBonus, 10) || 0)
-      };
-    });
-    if (!Object.keys(out).length) {
-      return JSON.parse(JSON.stringify(this.DEFAULT_SCALING));
-    }
-    return out;
-  },
-
-  getScalingLevels(cfg) {
-    const table = cfg?.scaling || this.DEFAULT_SCALING;
-    return Object.keys(table)
-      .map((k) => parseInt(k, 10))
-      .filter((n) => n > 0)
-      .sort((a, b) => a - b);
-  },
-
-  getRowForLevel(cfg, playerLevel) {
-    const table = cfg?.scaling || this.DEFAULT_SCALING;
-    const levels = this.getScalingLevels(cfg);
-    const lvl = Math.max(1, parseInt(playerLevel, 10) || 1);
-    let pick = levels[0];
-    levels.forEach((n) => {
-      if (n <= lvl) pick = n;
-    });
-    const row = table[pick] || table[levels[0]] || { hpRate: 1, atkBonus: 0, acBonus: 0 };
-    return { level: pick, ...row };
-  },
-
-  /** Среднее значение кости (для отчёта) */
-  averageRoll(formula) {
-    const m = String(formula || '').match(/(\d+)d(\d+)/i);
-    if (!m) return parseInt(formula, 10) || 0;
-    const count = parseInt(m[1], 10);
-    const sides = parseInt(m[2], 10);
-    return count * (sides + 1) / 2;
-  },
-
-  /** Масштабирование врага; scaleWithPlayerLevel === false → базовые статы */
-  scaleEnemy(enemy, playerLevel, config) {
-    if (!enemy) return enemy;
-    const cfg = this.ensureConfig(config);
-    const level = Math.max(1, parseInt(playerLevel, 10) || 1);
-    const scaled = { ...enemy };
-    scaled.scaledLevel = level;
-
-    const useScaling = enemy.scaleWithPlayerLevel !== false;
-    const baseLevel = Math.max(1, parseInt(cfg.baseLevel, 10) || 1);
-
-    if (!cfg.enabled || !useScaling || level < baseLevel) {
-      const baseHp = parseInt(enemy.hp ?? enemy.maxHp, 10) || 1;
-      scaled.hp = baseHp;
-      scaled.maxHp = baseHp;
-      scaled.atkBonus = parseInt(enemy.atkBonus, 10) || 0;
-      scaled.ac = parseInt(enemy.ac, 10) || 10;
-      scaled.dmgRoll = enemy.dmgRoll || '1d6';
-      scaled._baseDmgBonus = parseInt(enemy.dmgBonus, 10) || 0;
-      scaled.dmgBonus = scaled._baseDmgBonus;
-      return scaled;
-    }
-
-    const row = this.getRowForLevel(cfg, level);
-    const baseHp = parseInt(enemy.hp ?? enemy.maxHp, 10) || 1;
-    let hpMult = Math.max(1, Number(row.hpRate) || 1);
-    if (enemy.boss === true) {
-      hpMult *= Math.max(1, Number(cfg.bossHpRate) || this.DEFAULT_BOSS_HP_RATE);
-    }
-    const hp = Math.max(1, Math.floor(baseHp * hpMult));
-
-    scaled.hp = hp;
-    scaled.maxHp = hp;
-    scaled.atkBonus = (parseInt(enemy.atkBonus, 10) || 0) + (row.atkBonus || 0);
-    scaled.ac = (parseInt(enemy.ac, 10) || 10) + (row.acBonus || 0);
-    scaled.dmgRoll = enemy.dmgRoll || '1d6';
-    scaled._baseDmgBonus = parseInt(enemy.dmgBonus, 10) || 0;
-    scaled.dmgBonus = scaled._baseDmgBonus;
-
-    return scaled;
-  },
-
-  /** Упрощённый билд воина для отчёта баланса */
-  buildReportPlayer(level) {
-    const lvl = Math.max(1, parseInt(level, 10) || 1);
-    const prof = lvl <= 4 ? 2 : lvl <= 8 ? 3 : 4;
-    const strMod = 3;
-    const conMod = 2;
-    const dexMod = 1;
-    const hp = 10 + conMod + Math.max(0, lvl - 1) * (5 + conMod);
-    return {
-      level: lvl,
-      hp,
-      maxHp: hp,
-      ac: 16 + dexMod,
-      atkBonus: prof + strMod,
-      dmgRoll: '1d8',
-      dmgBonus: strMod,
-      hitChance: 0.65
-    };
-  },
-
-  estimateEnemyDamagePerTurn(enemy) {
-    const avg = this.averageRoll(enemy.dmgRoll) + (parseInt(enemy.dmgBonus, 10) || 0);
-    return Math.max(1, Math.round(avg));
-  },
-
-  estimatePlayerDamagePerTurn(player) {
-    const avg = this.averageRoll(player.dmgRoll) + (player.dmgBonus || 0);
-    return Math.max(1, Math.round(avg * (player.hitChance || 0.65)));
-  },
-
-  rateDifficulty(playerTurnsToDie) {
-    const t = playerTurnsToDie;
-    if (t == null || t <= 0) return { id: 'unknown', label: '—', icon: '⚪' };
-    if (t >= 7) return { id: 'easy', label: 'ЛЕГКО', icon: '⚪' };
-    if (t >= 3 && t <= 6) return { id: 'normal', label: 'НОРМАЛЬНО', icon: '✅' };
-    if (t >= 2 && t < 3) return { id: 'hard', label: 'СЛОЖНО', icon: '🟡' };
-    return { id: 'deadly', label: 'СЛИШКОМ СЛОЖНО', icon: '🔴' };
-  },
-
-  analyzeEncounter(enemyTemplate, count, playerLevel, config) {
-    const cfg = this.ensureConfig(config);
-    const scaled = this.scaleEnemy(enemyTemplate, playerLevel, cfg);
-    const player = this.buildReportPlayer(playerLevel);
-    const enemyDpt = this.estimateEnemyDamagePerTurn(scaled);
-    const playerDpt = this.estimatePlayerDamagePerTurn(player);
-    const totalEnemyHp = scaled.hp * Math.max(1, count);
-    const playerTurnsToDie = Math.ceil(player.hp / Math.max(1, enemyDpt * count));
-    const enemyTurnsToDie = Math.ceil(totalEnemyHp / Math.max(1, playerDpt));
-    const rating = this.rateDifficulty(playerTurnsToDie);
-
-    return {
-      playerLevel,
-      scaled,
-      player,
-      enemyDpt,
-      playerDpt,
-      count,
-      playerTurnsToDie,
-      enemyTurnsToDie,
-      rating,
-      scales: enemyTemplate.scaleWithPlayerLevel !== false
-    };
-  },
-
-  /** Отчёт по всем боевым сценам проекта */
-  generateBalanceReport(data) {
-    const cfg = this.ensureConfig(data?.enemyScaling);
-    const scenes = data?.scenes || {};
-    const enemies = data?.enemies || {};
-    const reportLevels = this.REPORT_LEVELS;
-    const encounters = [];
-    const recommendations = [];
-
-    Object.entries(scenes).forEach(([sceneId, scene]) => {
-      const combat = scene?.combat;
-      if (!Array.isArray(combat) || !combat.length) return;
-
-      const counts = {};
-      combat.forEach((eid) => {
-        counts[eid] = (counts[eid] || 0) + 1;
-      });
-
-      const enemyBlocks = [];
-      Object.entries(counts).forEach(([eid, count]) => {
-        const template = enemies[eid];
-        if (!template) {
-          recommendations.push(`Сцена «${scene.location || sceneId}»: враг «${eid}» не найден в данных.`);
-          return;
-        }
-
-        const levelResults = reportLevels.map((lvl) => ({
-          level: lvl,
-          ...this.analyzeEncounter(template, count, lvl, cfg)
-        }));
-
-        const worst = levelResults.reduce((a, b) => {
-          const order = { deadly: 0, hard: 1, normal: 2, easy: 3, unknown: 4 };
-          return (order[a.rating.id] ?? 4) < (order[b.rating.id] ?? 4) ? a : b;
-        }, levelResults[0]);
-
-        if (worst.rating.id === 'deadly' && worst.playerLevel <= 3) {
-          recommendations.push(
-            `Сцена «${scene.location || sceneId}»: «${template.name || eid}» (×${count}) слишком опасен на ${worst.playerLevel} ур. — уменьшите число врагов или ослабьте таблицу.`
-          );
-        }
-        if (template.scaleWithPlayerLevel === false) {
-          recommendations.push(
-            `Враг «${template.name || eid}» не масштабируется — на высоких уровнях может стать слишком лёгким.`
-          );
-        }
-
-        enemyBlocks.push({
-          enemyId: eid,
-          name: template.name || eid,
-          count,
-          template,
-          levelResults
-        });
-      });
-
-      encounters.push({
-        sceneId,
-        location: scene.location || sceneId,
-        enemies: enemyBlocks
-      });
-    });
-
-    if (!encounters.length) {
-      recommendations.push('В проекте нет сцен с полем combat — добавьте врагов в сцены для проверки баланса.');
-    }
-
-    return {
-      generatedAt: new Date().toISOString(),
-      config: cfg,
-      encounters,
-      recommendations: [...new Set(recommendations)]
-    };
-  }
-};
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { EnemyScaling };
-}
-
-
-;/* —— js/scene-templates.js —— */
-// ============================================
-// Шаблоны сцен — генерация из типа + параметров
-// ============================================
-
-const SceneTemplateEngine = (function () {
-  /** 9 базовых шаблонов (неизменяемые определения) */
-  const BASE_TEMPLATES = {
-    village_hub: {
-      id: 'village_hub',
-      icon: '🏘️',
-      label: 'Деревня (хаб)',
-      special: null,
-      fields: ['id', 'name', 'bg', 'locations', 'exit']
-    },
-    shop: {
-      id: 'shop',
-      icon: '🏪',
-      label: 'Магазин',
-      special: 'shop',
-      fields: ['id', 'name', 'bg', 'merchant', 'inventory', 'exit']
-    },
-    tavern: {
-      id: 'tavern',
-      icon: '🏚️',
-      label: 'Таверна',
-      special: null,
-      fields: ['id', 'name', 'bg', 'innkeeper', 'menu', 'roomPrice', 'exit']
-    },
-    blacksmith: {
-      id: 'blacksmith',
-      icon: '⚒️',
-      label: 'Кузница',
-      special: 'blacksmith',
-      fields: ['id', 'name', 'bg', 'blacksmith', 'services', 'exit']
-    },
-    temple: {
-      id: 'temple',
-      icon: '⛪',
-      label: 'Храм',
-      special: null,
-      fields: ['id', 'name', 'bg', 'priest', 'services', 'exit']
-    },
-    dungeon: {
-      id: 'dungeon',
-      icon: '🕳️',
-      label: 'Подземелье',
-      special: null,
-      fields: ['id', 'name', 'bg', 'difficulty', 'enemies', 'loot', 'exit']
-    },
-    dialogue: {
-      id: 'dialogue',
-      icon: '💬',
-      label: 'Диалог',
-      special: null,
-      fields: ['id', 'name', 'bg', 'npc', 'topics', 'exit']
-    },
-    combat: {
-      id: 'combat',
-      icon: '⚔️',
-      label: 'Бой',
-      special: null,
-      fields: ['id', 'name', 'bg', 'enemies', 'loot', 'winScene', 'loseScene', 'exit']
-    },
-    loot_search: {
-      id: 'loot_search',
-      icon: '🔍',
-      label: 'Поиск добычи',
-      special: null,
-      fields: ['id', 'name', 'bg', 'items', 'dc', 'skill', 'exit']
-    },
-    character_creation: {
-      id: 'character_creation',
-      icon: '🧝',
-      label: 'Создание персонажа',
-      special: 'character_creation',
-      fields: ['id', 'name', 'bg', 'introText', 'nextScene', 'exit']
-    }
-  };
-
-  /** Тексты по умолчанию (можно переопределить в data.sceneTemplateDefs.custom) */
-  const DEFAULT_STRINGS = {
-    village_hub: {
-      intro: 'Вы на площади {locationName}. Отсюда расходятся дороги посёлка.\n\nКуда направитесь?',
-      rest: '🛏️ Отдохнуть (короткий отдых)',
-      exit: '🚪 Покинуть площадь'
-    },
-    shop: {
-      greeting: '{merchantName} приветствует вас.\n\n«{greetingLine}»\n\nНа прилавке: {itemList}.',
-      greetingLine: 'У меня есть всё нужное для путника.',
-      buyBtn: '💰 Купить {itemName} ({price} зм)',
-      sellBtn: '💰 Продать предмет',
-      talkBtn: '🗣️ Поговорить',
-      leaveBtn: '🚪 Уйти'
-    },
-    tavern: {
-      intro: 'Вы входите в {locationName}. Пахнет едой и дымом очага.\n\n{innkeeperName} кивает вам с порога.',
-      menuBtn: '🍺 Заказать из меню',
-      roomBtn: '🛏️ Снять комнату ({roomPrice} зм)',
-      rumorsBtn: '📰 Спросить о слухах',
-      restBtn: '🛏️ Отдохнуть',
-      leaveBtn: '🚪 Выйти'
-    },
-    blacksmith: {
-      intro: 'Жар кузницы обжигает лицо. {blacksmithName} откладывает молот:\n\n«Нужна заточка или ремонт — говори.»',
-      enhanceBtn: '⚒️ Заточить снаряжение',
-      leaveBtn: '🚪 Уйти'
-    },
-    temple: {
-      intro: 'В {locationName} тихо и прохладно. {priestName} поднимает глаза от молитвы.',
-      healBtn: '✨ Лечение ({healPrice} зм)',
-      curseBtn: '☦️ Снять проклятие',
-      blessBtn: '🙏 Благословение',
-      leaveBtn: '🚪 Выйти'
-    },
-    dungeon: {
-      intro: 'Перед вами {locationName}. Во мраке слышны капли воды. Сложность: {difficultyLabel}.',
-      enterBtn: '⚔️ Войти и сразиться',
-      trapBtn: '🪤 Осторожно искать ловушки',
-      leaveBtn: '🚪 Отступить'
-    },
-    dialogue: {
-      greeting: '{npcName} смотрит на вас.\n\n«{greetingLine}»',
-      greetingLine: 'Чем могу помочь?',
-      leaveBtn: '🚪 Закончить разговор'
-    },
-    combat: {
-      intro: '{locationName}. Враги преграждают путь!\n\n{enemyList}',
-      fightBtn: '⚔️ Вступить в бой',
-      fleeBtn: '🏃 Отступить'
-    },
-    loot_search: {
-      intro: 'Вы осматриваете {locationName}, ища что-нибудь ценное.',
-      searchBtn: '🔍 Обыскать (проверка {skillLabel}, КС {dc})',
-      leaveBtn: '🚪 Уйти'
-    }
-  };
-
-  function getStrings(data, templateId) {
-    const custom = data?.sceneTemplateDefs?.custom?.[templateId]?.strings || {};
-    const base = DEFAULT_STRINGS[templateId] || {};
-    return Object.assign({}, base, custom);
-  }
-
-  function getTemplateMeta(templateId) {
-    return BASE_TEMPLATES[templateId] || null;
-  }
-
-  function getTemplateIcon(templateId) {
-    return BASE_TEMPLATES[templateId]?.icon || '📄';
-  }
-
-  function listBaseTemplates() {
-    return Object.values(BASE_TEMPLATES);
-  }
-
-  function escapeRe(s) {
-    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  /** Подстановка {key} в строках шаблона */
-  function substitute(str, ctx) {
-    if (str == null) return '';
-    let out = String(str);
-    Object.entries(ctx || {}).forEach(([k, v]) => {
-      out = out.replace(new RegExp('\\{' + escapeRe(k) + '\\}', 'g'), v == null ? '' : String(v));
-    });
-    return out;
-  }
-
-  function getNpc(data, npcId) {
-    return data?.npcs?.[npcId] || null;
-  }
-
-  function getNpcName(data, npcId, fallback) {
-    const n = getNpc(data, npcId);
-    return n?.name || fallback || npcId || 'Незнакомец';
-  }
-
-  function getSceneLabel(data, sceneId) {
-    const s = data?.scenes?.[sceneId];
-    return s?.location || sceneId || '—';
-  }
-
-  /** Разрешить список ID предметов: массив, shopInventories, shopItems NPC */
-  function resolveInventory(data, inventoryParam, merchantId) {
-    if (Array.isArray(inventoryParam)) return inventoryParam.filter(Boolean);
-    const key = String(inventoryParam || '').trim();
-    if (!key) {
-      const npc = getNpc(data, merchantId);
-      if (npc?.shopItems?.length) return [...npc.shopItems];
-      return [];
-    }
-    const inv = data?.shopInventories?.[key];
-    if (inv) {
-      if (Array.isArray(inv)) return inv;
-      if (Array.isArray(inv.items)) return inv.items;
-    }
-    if (data?.items?.[key]) return [key];
-    const npc = getNpc(data, merchantId);
-    if (npc?.shopItems?.length) return [...npc.shopItems];
-    return [];
-  }
-
-  function getItemDisplayName(data, itemId) {
-    return data?.items?.[itemId]?.name || itemId;
-  }
-
-  function buildItemList(data, itemIds) {
-    return itemIds.map((id) => getItemDisplayName(data, id)).join(', ') || '—';
-  }
-
-  function hubReturnChoice(exitId) {
-    return {
-      text: '← Вернуться на площадь',
-      to: exitId,
-      icon: '🏘️',
-      _hubReturn: true
-    };
-  }
-
-  function applyAudioBg(scene, params) {
-    if (params?.bg) {
-      scene.bg = params.bg;
-      if (!scene.audio) scene.audio = {};
-      if (typeof scene.audio === 'string') scene.audio = { ambient: scene.audio };
-      scene.audio.bg = params.bg;
-    }
-  }
-
-  function applyCommonMeta(scene, spec) {
-    const id = spec.id || spec.params?.id || 'scene';
-    scene.id = id;
-    scene.location = spec.name || spec.params?.name || scene.location || id;
-    scene.dialogue = scene.dialogue || [];
-    scene.flags = scene.flags || {};
-    scene.items = scene.items || [];
-    scene.gold = scene.gold || 0;
-    scene.combat = scene.combat || null;
-    scene.sceneTemplate = spec.template;
-    scene.templateParams = { ...(spec.params || {}) };
-    scene.overrides = spec.overrides || {};
-    scene.templateDetached = false;
-    return scene;
-  }
-
-  function applyOverrides(scene, overrides, data) {
-    if (!overrides || typeof overrides !== 'object') return scene;
-    const o = overrides;
-    if (o.text != null) scene.text = o.text;
-    if (o.location != null) scene.location = o.location;
-    if (o.greetingText != null) scene.text = o.greetingText;
-    if (Array.isArray(o.choices)) scene.choices = o.choices;
-    if (o.shopConfig && scene.shopConfig) {
-      scene.shopConfig = { ...scene.shopConfig, ...o.shopConfig };
-    }
-    if (o.customPrices && scene.shopConfig) {
-      scene.shopConfig.customPrices = { ...(scene.shopConfig.customPrices || {}), ...o.customPrices };
-    }
-    if (o.flags) scene.flags = { ...scene.flags, ...o.flags };
-    return scene;
-  }
-
-  // ——— Генераторы по типам ———
-
-  function generateVillageHub(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'village_hub');
-    const locationName = spec.name || p.name || 'Деревня';
-    const exit = p.exit || p.exitScene || 'world_map';
-    const locations = Array.isArray(p.locations) ? p.locations : [];
-
-    const choices = locations.map((loc) => {
-      if (typeof loc === 'string') {
-        const sid = loc;
-        const label = getSceneLabel(data, sid);
-        return { text: label, to: sid, icon: '📍' };
-      }
-      return {
-        text: loc.label || getSceneLabel(data, loc.id || loc.to),
-        to: loc.to || loc.id,
-        icon: loc.icon || '📍'
-      };
-    });
-
-    choices.push({
-      text: str.rest,
-      action: 'rest_short',
-      icon: '🛏️'
-    });
-    if (exit) {
-      choices.push({ text: str.exit, to: exit, icon: '🚪' });
-    }
-
-    const scene = applyCommonMeta({
-      text: substitute(str.intro, { locationName }),
-      choices,
-      mapLocation: p.mapLocation || spec.id
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return scene;
-  }
-
-  function generateShop(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'shop');
-    const merchantId = p.merchant || p.merchantId || 'merchant';
-    const merchant = getNpc(data, merchantId);
-    const merchantName = getNpcName(data, merchantId, 'Торговец');
-    const itemIds = resolveInventory(data, p.inventory, merchantId);
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const greetingLine = spec.overrides?.greetingLine || merchant?.dialogues?.default?.[0]?.text?.slice(0, 80) || str.greetingLine;
-
-    const scene = applyCommonMeta({
-      text: substitute(str.greeting, {
-        merchantName,
-        greetingLine,
-        itemList: buildItemList(data, itemIds)
-      }),
-      choices: [
-        { text: str.talkBtn, to: p.dialogueScene || `${spec.id}_dialogue`, icon: '💬' },
-        { text: str.leaveBtn, to: exit, icon: '🚪' }
-      ],
-      special: 'shop',
-      shopConfig: {
-        merchant: merchantId,
-        inventory: itemIds,
-        sellMultiplier: Number(p.sellMultiplier) || 1,
-        buyMultiplier: p.buyMultiplier != null ? Number(p.buyMultiplier) : 0.5,
-        repFlag: p.repFlag || null,
-        exitScene: exit,
-        customPrices: { ...(p.customPrices || {}) }
-      },
-      npcId: merchantId
-    }, spec);
-
-    if (p.returnsToHub !== false && exit) {
-      scene.returnsToHub = true;
-      scene.hubScene = p.hubScene || exit;
-    }
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  function generateTavern(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'tavern');
-    const innkeeperId = p.innkeeper || p.innkeeperId || 'marta';
-    const innkeeperName = getNpcName(data, innkeeperId, 'Хозяин таверны');
-    const locationName = spec.name || p.name || 'Таверна';
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const roomPrice = Math.max(0, parseInt(p.roomPrice, 10) || 5);
-    const menuIds = resolveInventory(data, p.menu || p.menuInventory, innkeeperId);
-
-    const choices = [];
-    if (menuIds.length) {
-      choices.push({ text: str.menuBtn, to: `${spec.id}_menu`, icon: '🍺' });
-    }
-    choices.push({
-      text: substitute(str.roomBtn, { roomPrice }),
-      action: 'tavern_rent_room',
-      icon: '🛏️',
-      once: true,
-      flags: { [`${spec.id}_room_rented`]: true },
-      showIf: { goldMin: roomPrice }
-    });
-    choices.push({ text: str.rumorsBtn, to: `${spec.id}_rumors`, icon: '📰' });
-    choices.push({ text: str.restBtn, action: 'rest_short', icon: '🛏️' });
-    choices.push({ text: str.leaveBtn, to: exit, icon: '🚪', _hubReturn: true });
-
-    const scene = applyCommonMeta({
-      text: substitute(str.intro, { locationName, innkeeperName }),
-      choices,
-      npcId: innkeeperId,
-      returnsToHub: true,
-      hubScene: p.hubScene || exit,
-      tavernConfig: {
-        innkeeper: innkeeperId,
-        menu: menuIds,
-        roomPrice,
-        exitScene: exit
-      }
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  /** Дочерние сцены таверны (меню, слухи) */
-  function generateTavernChildScenes(data, spec, parentScene) {
-    const p = spec.params || {};
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const menuIds = resolveInventory(data, p.menu || p.menuInventory, p.innkeeper);
-    const scenes = {};
-    const sid = spec.id;
-
-    if (menuIds.length) {
-      scenes[`${sid}_menu`] = applyCommonMeta({
-        location: (spec.name || 'Таверна') + ' — меню',
-        text: 'На доске меню:\n\n' + buildItemList(data, menuIds) + '\n\nЧто закажете?',
-        choices: menuIds.map((itemId) => {
-          const price = parentScene?.tavernConfig?.menuPrices?.[itemId]
-            || data?.items?.[itemId]?.price
-            || 5;
-          return {
-            text: `🍽 ${getItemDisplayName(data, itemId)} (${price} зм)`,
-            to: sid,
-            icon: '🍽',
-            showIf: { goldMin: price },
-            goldCost: price,
-            grantItems: [itemId]
-          };
-        }).concat([{ text: '← Назад', to: sid, icon: '↩️' }]),
-        returnsToHub: true,
-        hubScene: p.hubScene || exit
-      }, { ...spec, id: `${sid}_menu` });
-    }
-
-    scenes[`${sid}_rumors`] = applyCommonMeta({
-      location: (spec.name || 'Таверна') + ' — слухи',
-      text: getNpcName(data, p.innkeeper, 'Хозяин') + ' наклоняется ближе:\n\n«Слыхал, что на мельнице не всё чисто. Дорога в лес опасна — береги кинжал.»',
-      choices: [{ text: '← Назад', to: sid, icon: '↩️' }],
-      returnsToHub: true,
-      hubScene: p.hubScene || exit
-    }, { ...spec, id: `${sid}_rumors` });
-
-    return scenes;
-  }
-
-  function generateBlacksmith(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'blacksmith');
-    const npcId = p.blacksmith || p.blacksmithId || 'blacksmith_npc';
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const services = p.services || { enhance: true, repair: true };
-
-    const scene = applyCommonMeta({
-      text: substitute(str.intro, {
-        blacksmithName: getNpcName(data, npcId, 'Кузнец')
-      }),
-      choices: [],
-      special: 'blacksmith',
-      exitScene: exit,
-      returnsToHub: true,
-      hubScene: p.hubScene || exit,
-      blacksmithConfig: services,
-      npcId: npcId
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  function generateTemple(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'temple');
-    const priestId = p.priest || p.priestId || 'priest';
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const services = p.services || { heal: true, curse: true, bless: true };
-    const healPrice = Math.max(1, parseInt(p.healPrice, 10) || 25);
-
-    const choices = [];
-    if (services.heal !== false) {
-      choices.push({
-        text: substitute(str.healBtn, { healPrice }),
-        action: 'temple_heal',
-        icon: '✨',
-        showIf: { goldMin: healPrice }
-      });
-    }
-    if (services.curse !== false) {
-      choices.push({
-        text: str.curseBtn,
-        to: p.curseScene || 'temple_priest',
-        icon: '☦️'
-      });
-    }
-    if (services.bless !== false) {
-      choices.push({
-        text: str.blessBtn,
-        action: 'temple_bless',
-        icon: '🙏',
-        once: true
-      });
-    }
-    choices.push({ text: str.leaveBtn, to: exit, icon: '🚪', _hubReturn: true });
-
-    const scene = applyCommonMeta({
-      text: substitute(str.intro, {
-        locationName: spec.name || p.name || 'Храм',
-        priestName: getNpcName(data, priestId, 'Священник')
-      }),
-      choices,
-      returnsToHub: true,
-      hubScene: p.hubScene || exit,
-      templeConfig: { priest: priestId, healPrice, services },
-      npcId: priestId
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  function generateDungeon(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'dungeon');
-    const enemies = Array.isArray(p.enemies) ? p.enemies : [];
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const diff = p.difficulty || p.difficultyLevel || 1;
-    const diffLabels = { 1: 'лёгкая', 2: 'средняя', 3: 'опасная', 4: 'смертельная' };
-
-    const scene = applyCommonMeta({
-      text: substitute(str.intro, {
-        locationName: spec.name || p.name || 'Подземелье',
-        difficultyLabel: diffLabels[diff] || `уровень ${diff}`
-      }),
-      choices: [
-        { text: str.enterBtn, to: `${spec.id}_combat`, icon: '⚔️' },
-        {
-          text: str.trapBtn,
-          skillCheck: {
-            skill: p.trapSkill || 'perception',
-            dc: Math.max(8, parseInt(p.trapDc, 10) || 12 + Number(diff)),
-            successText: 'Вы замечаете ловушку и обходите её.',
-            failText: 'Ловушка срабатывает! Вы получаете урон.',
-            successNext: `${spec.id}_combat`,
-            failNext: exit,
-            successFlags: { [`${spec.id}_traps_disarmed`]: true }
-          },
-          icon: '🪤'
-        },
-        { text: str.leaveBtn, to: exit, icon: '🚪' }
-      ],
-      dungeonConfig: { enemies, loot: p.loot || [], difficulty: diff }
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  function generateDungeonCombatScene(data, spec) {
-    const p = spec.params || {};
-    const enemies = Array.isArray(p.enemies) ? p.enemies : [];
-    const win = p.winScene || p.victoryScene || p.exit || 'village_hub';
-    const sid = `${spec.id}_combat`;
-
-    return applyCommonMeta({
-      location: (spec.name || 'Подземелье') + ' — бой',
-      text: 'Из темноты появляются враги!',
-      combat: enemies.length ? [...enemies] : null,
-      nextScene: win,
-      choices: enemies.length ? [] : [{ text: '← Назад', to: spec.id, icon: '↩️' }],
-      flags: { [`${spec.id}_entered`]: true }
-    }, { ...spec, id: sid });
-  }
-
-  function generateDialogue(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'dialogue');
-    const npcId = p.npc || p.npcId || 'npc';
-    const npcName = getNpcName(data, npcId, 'Собеседник');
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const topics = Array.isArray(p.topics) ? p.topics : [];
-
-    const choices = topics.map((t, i) => {
-      if (typeof t === 'string') {
-        return { text: t, to: `${spec.id}_topic_${i}`, icon: '💬' };
-      }
-      return {
-        text: t.label || t.text || `Тема ${i + 1}`,
-        to: t.scene || `${spec.id}_topic_${t.id || i}`,
-        icon: t.icon || '💬'
-      };
-    });
-    choices.push({ text: str.leaveBtn, to: exit, icon: '🚪' });
-
-    const scene = applyCommonMeta({
-      text: substitute(str.greeting, {
-        npcName,
-        greetingLine: p.greetingLine || str.greetingLine
-      }),
-      choices,
-      npcId: npcId
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  function generateDialogueTopicScenes(data, spec) {
-    const p = spec.params || {};
-    const topics = Array.isArray(p.topics) ? p.topics : [];
-    const exit = spec.id;
-    const scenes = {};
-
-    topics.forEach((t, i) => {
-      const tid = typeof t === 'object' ? (t.id || i) : i;
-      const sceneId = typeof t === 'object' && t.scene ? t.scene : `${spec.id}_topic_${tid}`;
-      const label = typeof t === 'object' ? (t.label || t.text) : t;
-      const body = typeof t === 'object' ? (t.reply || t.text || `Ответ по теме «${label}».`) : `Вы говорите о «${t}».`;
-
-      scenes[sceneId] = applyCommonMeta({
-        location: (spec.name || 'Разговор') + ' — ' + (label || 'тема'),
-        text: body,
-        choices: [{ text: '← Вернуться к разговору', to: exit, icon: '↩️' }],
-        npcId: p.npc || p.npcId
-      }, { ...spec, id: sceneId });
-    });
-
-    return scenes;
-  }
-
-  function generateCombat(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'combat');
-    const enemies = Array.isArray(p.enemies) ? p.enemies : [];
-    const enemyList = enemies.map((eid) => data?.enemies?.[eid]?.name || eid).join(', ') || 'противники';
-    const win = p.winScene || p.victoryScene || p.exit || 'village_hub';
-    const exit = p.exit || p.fleeScene || win;
-
-    const scene = applyCommonMeta({
-      text: substitute(str.intro, {
-        locationName: spec.name || p.name || 'Поле боя',
-        enemyList
-      }),
-      choices: [
-        { text: str.fightBtn, action: 'template_start_combat', icon: '⚔️' },
-        { text: str.fleeBtn, to: exit, icon: '🏃' }
-      ],
-      combat: null,
-      nextScene: win,
-      templateCombat: {
-        enemies: [...enemies],
-        loot: p.loot || [],
-        winScene: win,
-        loseScene: p.loseScene || p.defeatScene || 'game_over'
-      }
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  function generateLootSearch(data, spec) {
-    const p = spec.params || {};
-    const str = getStrings(data, 'loot_search');
-    const exit = p.exit || p.exitScene || 'village_hub';
-    const items = Array.isArray(p.items) ? p.items : [];
-    const dc = Math.max(5, parseInt(p.dc, 10) || 12);
-    const skill = p.skill || 'investigation';
-    const skillLabels = {
-      perception: 'Восприятие',
-      investigation: 'Расследование',
-      survival: 'Выживание'
-    };
-
-    const scene = applyCommonMeta({
-      text: substitute(str.intro, { locationName: spec.name || p.name || 'Место обыска' }),
-      choices: [
-        {
-          text: substitute(str.searchBtn, {
-            skillLabel: skillLabels[skill] || skill,
-            dc
-          }),
-          skillCheck: {
-            skill,
-            dc,
-            successText: items.length
-              ? 'Вы находите: ' + buildItemList(data, items) + '.'
-              : 'Вы ничего ценного не находите.',
-            failText: 'Поиск не увенчался успехом.',
-            successItems: items,
-            successNext: exit,
-            failNext: exit,
-            successFlags: { [`${spec.id}_searched`]: true }
-          },
-          icon: '🔍'
-        },
-        { text: str.leaveBtn, to: exit, icon: '🚪' }
-      ],
-      lootSearchConfig: { items, dc, skill }
-    }, spec);
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  function generateCharacterCreation(data, spec) {
-    const p = spec.params || {};
-    const sceneId = spec.id || p.id || 'char_creation';
-    const exit = p.nextScene || p.exitScene || p.exit || 'start';
-    const intro =
-      p.introText ||
-      'Перед вами чистый лист судьбы. Выберите происхождение, класс и навыки — ' +
-      'от этого зависит, как сложится ваше приключение.';
-
-    const scene = {
-      id: sceneId,
-      location: spec.name || p.name || 'Создание персонажа',
-      title: 'Создание персонажа',
-      text: intro,
-      special: 'character_creation',
-      sceneTemplate: 'character_creation',
-      templateParams: { ...p, id: sceneId, nextScene: exit },
-      templateDetached: false,
-      skipStandardExit: true,
-      exitScene: exit,
-      components: [
-        {
-          component: 'character_creator',
-          params: {
-            displayMode: p.displayMode || 'embedded',
-            preset: p.preset || null,
-            startingLevel: p.startingLevel || 1,
-            pointBuy: p.pointBuy !== false,
-            rolledStats: !!p.rolledStats,
-            onComplete: p.onComplete || 'char_creation_complete',
-            onCancel: p.onCancel || 'char_creation_cancel',
-            showCancel: p.showCancel !== false
-          }
-        }
-      ],
-      onEnter: [
-        { action: 'apply_scene_visibility', visibility: { sidebar: false, combat: false, dock: false, log: false } },
-        { action: 'hide_sidebar' },
-        { action: 'hide_combat_ui' },
-        { action: 'hide_dock' },
-        { action: 'push_state', state: { inCharacterCreation: true } }
-      ],
-      onExit: [
-        { action: 'show_sidebar' },
-        { action: 'show_dock' },
-        { action: 'pop_state', keys: ['inCharacterCreation'] },
-        { action: 'apply_scene_visibility', visibility: { sidebar: true, dock: true, log: true } }
-      ],
-      handlers: {
-        char_creation_complete: [
-          { action: 'set_character', source: 'component.output.draft' },
-          { action: 'run_script', script: 'syncCharacterToUI' },
-          { action: 'save_game', slot: 'auto' },
-          { action: 'transition', target: exit }
-        ],
-        char_creation_cancel: [
-          {
-            action: 'confirm',
-            message: 'Прогресс будет потерян. Вернуться к выбору кампании?',
-            onConfirm: [{ action: 'return_to_campaign_picker' }],
-            onCancel: [{ action: 'resume_character_creation' }]
-          }
-        ]
-      },
-      visibility: { sidebar: false, combat: false, dock: false, log: false },
-      choices: []
-    };
-
-    applyAudioBg(scene, p);
-    return applyOverrides(scene, spec.overrides, data);
-  }
-
-  /** Публичная генерация (учитывает патчи, напр. character_creation). */
-  function runGenerateSceneFromTemplate(data, spec) {
-    if (typeof window !== 'undefined' && window.SceneTemplateEngine?.generateSceneFromTemplate) {
-      const pub = window.SceneTemplateEngine.generateSceneFromTemplate;
-      if (pub !== generateSceneFromTemplate) return pub(data, spec);
-    }
-    return generateSceneFromTemplate(data, spec);
-  }
-
-  /**
-   * Главная функция: сгенерировать объект сцены из шаблона.
-   * @param {object} data — game_data
-   * @param {object} spec — { template, id, name, params, overrides }
-   */
-  function generateSceneFromTemplate(data, spec) {
-    const templateId = spec?.template || spec?.sceneTemplate;
-    if (!templateId || !BASE_TEMPLATES[templateId]) {
-      throw new Error('Неизвестный шаблон: ' + templateId);
-    }
-    spec = {
-      template: templateId,
-      id: spec.id || spec.params?.id,
-      name: spec.name || spec.params?.name,
-      params: { ...(spec.params || {}) },
-      overrides: spec.overrides || {}
-    };
-    spec.params.id = spec.id;
-
-    switch (templateId) {
-      case 'village_hub':
-        return generateVillageHub(data, spec);
-      case 'shop':
-        return generateShop(data, spec);
-      case 'tavern':
-        return generateTavern(data, spec);
-      case 'blacksmith':
-        return generateBlacksmith(data, spec);
-      case 'temple':
-        return generateTemple(data, spec);
-      case 'dungeon':
-        return generateDungeon(data, spec);
-      case 'dialogue':
-        return generateDialogue(data, spec);
-      case 'combat':
-        return generateCombat(data, spec);
-      case 'loot_search':
-        return generateLootSearch(data, spec);
-      case 'character_creation':
-        return generateCharacterCreation(data, spec);
-      default:
-        throw new Error('Шаблон не реализован: ' + templateId);
-    }
-  }
-
-  /** Дополнительные сцены, создаваемые вместе с основной */
-  function generateCompanionScenes(data, spec) {
-    const templateId = spec?.template || spec?.sceneTemplate;
-    const main = runGenerateSceneFromTemplate(data, spec);
-    const extra = {};
-
-    if (templateId === 'tavern') {
-      Object.assign(extra, generateTavernChildScenes(data, spec, main));
-    }
-    if (templateId === 'dungeon') {
-      extra[`${spec.id}_combat`] = generateDungeonCombatScene(data, spec);
-    }
-    if (templateId === 'dialogue') {
-      Object.assign(extra, generateDialogueTopicScenes(data, spec));
-    }
-
-    return { main, extra };
-  }
-
-  /** Развернуть сохранённую сцену с привязкой к шаблону */
-  function materializeScene(data, stored) {
-    if (!stored?.sceneTemplate || stored.templateDetached) {
-      return stored;
-    }
-    const spec = {
-      template: stored.sceneTemplate,
-      id: stored.id,
-      name: stored.location || stored.templateParams?.name,
-      params: { ...(stored.templateParams || {}), id: stored.id },
-      overrides: stored.overrides || {}
-    };
-    let scene;
-    try {
-      scene = runGenerateSceneFromTemplate(data, spec);
-    } catch (e) {
-      console.warn('[SceneTemplateEngine]', e);
-      return stored;
-    }
-    scene.sceneTemplate = stored.sceneTemplate;
-    scene.templateParams = stored.templateParams;
-    scene.templateDetached = false;
-    scene.overrides = stored.overrides || {};
-    if (stored.mapLocation) scene.mapLocation = stored.mapLocation;
-    return applyOverrides(scene, stored.overrides, data);
-  }
-
-  function ensureTemplateData(data) {
-    if (!data) return;
-    if (!data.sceneTemplateDefs) {
-      data.sceneTemplateDefs = { custom: {} };
-    }
-    if (!data.shopInventories) {
-      data.shopInventories = {
-        village_shop: {
-          name: 'Деревенская лавка',
-          items: ['healing_potion', 'rope', 'supplies', 'fireball_scroll', 'focus_potion']
-        },
-        tavern_menu: {
-          name: 'Меню таверны',
-          items: ['healing_potion', 'water_flask', 'supplies']
-        }
-      };
-    }
-  }
-
-  function bindGameEngine() {
-    if (typeof GameEngine === 'undefined') return;
-    GameEngine.generateSceneFromTemplate = function (spec) {
-      return runGenerateSceneFromTemplate(this.data, spec);
-    };
-  }
-  bindGameEngine();
-  if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', bindGameEngine);
-  }
-
-  return {
-    BASE_TEMPLATES,
-    DEFAULT_STRINGS,
-    listBaseTemplates,
-    getTemplateMeta,
-    getTemplateIcon,
-    getStrings,
-    substitute,
-    resolveInventory,
-    generateSceneFromTemplate,
-    generateCompanionScenes,
-    materializeScene,
-    applyOverrides,
-    ensureTemplateData
-  };
-})();
-
-if (typeof window !== 'undefined') {
-  window.SceneTemplateEngine = SceneTemplateEngine;
-}
-
-
-;/* —— js/world-hierarchy.js —— */
-// ============================================
-// Иерархия мира: Мир → Регион → Хаб → Сцена
-// Наследование inherited / ownState
-// ============================================
-
-const WorldHierarchy = (function () {
-  const TIME_LABELS = {
-    morning: 'Утро',
-    day: 'День',
-    evening: 'Вечер',
-    night: 'Ночь'
-  };
-  const WEATHER_LABELS = {
-    clear: 'Ясно',
-    cloudy: 'Облачно',
-    rain: 'Дождь',
-    snow: 'Снег',
-    fog: 'Туман'
-  };
-
-  const HUB_TYPE_ICONS = {
-    village: '🏘️',
-    city: '🏰',
-    dungeon: '🕳️',
-    wilderness: '🌲',
-    default: '📍'
-  };
-
-  /** Глубокое слияние объектов (массивы заменяются) */
-  function deepMerge(...layers) {
-    const out = {};
-    layers.forEach((layer) => {
-      if (!layer || typeof layer !== 'object') return;
-      Object.keys(layer).forEach((key) => {
-        const val = layer[key];
-        if (val && typeof val === 'object' && !Array.isArray(val) && typeof out[key] === 'object' && !Array.isArray(out[key])) {
-          out[key] = deepMerge(out[key], val);
-        } else {
-          out[key] = val;
-        }
-      });
-    });
-    return out;
-  }
-
-  function ensureWorldHierarchy(data) {
-    if (!data) return;
-    if (!data.worlds || typeof data.worlds !== 'object') data.worlds = {};
-    if (!data.regions || typeof data.regions !== 'object') data.regions = {};
-    if (!data.hubs || typeof data.hubs !== 'object') data.hubs = {};
-
-    // Миграция: деревня Тихая река (один раз, если хаба ещё нет)
-    if (!data.hubs.village_tihaya && data.scenes?.village_hub) {
-      migrateVillageHub(data);
-    }
-  }
-
-  /** Привязка существующих сцен деревни к хабу village_tihaya */
-  function migrateVillageHub(data) {
-    if (!data.worlds.world_main) {
-      data.worlds.world_main = {
-        name: 'Основной мир',
-        regions: ['region_tihaya_river']
-      };
-    }
-    if (!data.regions.region_tihaya_river) {
-      data.regions.region_tihaya_river = {
-        name: 'Долина Тихой реки',
-        parent: 'world_main',
-        hubs: ['village_tihaya'],
-        inherited: {
-          climate: 'temperate',
-          factionBase: 'rep_village'
-        }
-      };
-    }
-
-    const childScenes = [
-      'village_hub',
-      'tavern',
-      'jack_shop',
-      'blacksmith',
-      'temple',
-      'forest_path'
-    ].filter((id) => data.scenes[id]);
-
-    data.hubs.village_tihaya = {
-      name: 'Деревня Тихая река',
-      parent: 'region_tihaya_river',
-      type: 'village',
-      hubScene: 'village_hub',
-      scenes: childScenes,
-      inherited: {
-        music: 'buff',
-        timeOfDay: 'morning',
-        weather: 'clear',
-        reputation: { rep_village: 0 },
-        ambient: 'buff',
-        npcsAvailable: ['marta', 'jack']
-      }
-    };
-
-    const sceneOwnState = {
-      tavern: { innkeeper: 'marta', menu: 'tavern_menu', roomPrice: 5 },
-      jack_shop: { merchant: 'jack', inventory: 'village_shop' },
-      blacksmith: { blacksmith: 'blacksmith_npc' },
-      temple: { priest: 'priest', healPrice: 25 }
-    };
-
-    childScenes.forEach((sid) => {
-      const sc = data.scenes[sid];
-      if (!sc) return;
-      sc.parent = 'village_tihaya';
-      if (sc.inherits == null) sc.inherits = true;
-      if (sceneOwnState[sid] && !sc.ownState) sc.ownState = sceneOwnState[sid];
-      if (!sc.hubScene) sc.hubScene = 'village_hub';
-      if (sid !== 'village_hub' && sc.returnsToHub == null) {
-        sc.returnsToHub = true;
-      }
-    });
-  }
-
-  function getHubIdForScene(data, sceneId) {
-    const scene = data?.scenes?.[sceneId];
-    if (scene?.parent && data?.hubs?.[scene.parent]) return scene.parent;
-    for (const [hubId, hub] of Object.entries(data?.hubs || {})) {
-      if (hub.scenes?.includes(sceneId)) return hubId;
-      if (hub.hubScene === sceneId) return hubId;
-    }
-    return null;
-  }
-
-  /** Цепочка узлов снизу вверх: [hub, region, world] */
-  function getParentChain(data, sceneId) {
-    const chain = [];
-    const scene = data?.scenes?.[sceneId];
-    if (!scene) return chain;
-
-    let hubId = scene.parent && data.hubs?.[scene.parent] ? scene.parent : getHubIdForScene(data, sceneId);
-    if (hubId && data.hubs[hubId]) {
-      chain.push({ type: 'hub', id: hubId, node: data.hubs[hubId] });
-      const regionId = data.hubs[hubId].parent;
-      if (regionId && data.regions[regionId]) {
-        chain.push({ type: 'region', id: regionId, node: data.regions[regionId] });
-        const worldId = data.regions[regionId].parent;
-        if (worldId && data.worlds[worldId]) {
-          chain.push({ type: 'world', id: worldId, node: data.worlds[worldId] });
-        }
-      }
-    }
-    return chain;
-  }
-
-  function getRuntimeInherited(gameState, type, id) {
-    const bucket = gameState?.worldState?.[`${type}s`]?.[id]?.inherited;
-    return bucket && typeof bucket === 'object' ? bucket : {};
-  }
-
-  function getStaticInherited(data, type, id) {
-    if (type === 'hub') return data?.hubs?.[id]?.inherited || {};
-    if (type === 'region') return data?.regions?.[id]?.inherited || {};
-    if (type === 'world') return data?.worlds?.[id]?.inherited || {};
-    return {};
-  }
-
-  function getNodeMergedInherited(data, gameState, type, id) {
-    return deepMerge(
-      getStaticInherited(data, type, id),
-      getRuntimeInherited(gameState, type, id)
-    );
-  }
-
-  /**
-   * Итоговое состояние сцены (регион → хаб → ownState).
-   * @param {object} data — game_data
-   * @param {object} [gameState] — сохранение игрока (worldState)
-   * @param {string} sceneId
-   */
-  function getSceneState(data, gameState, sceneId) {
-    const scene = data?.scenes?.[sceneId];
-    if (!scene) return {};
-
-    const chain = getParentChain(data, sceneId);
-    const layers = [];
-
-    // Сверху вниз: world → region → hub (в chain порядок hub, region, world — развернём)
-    const ordered = [...chain].reverse();
-    ordered.forEach((link) => {
-      layers.push(getNodeMergedInherited(data, gameState, link.type, link.id));
-    });
-
-    if (scene.inherits !== false) {
-      if (scene.ownState && typeof scene.ownState === 'object') {
-        layers.push(scene.ownState);
-      }
-    } else if (scene.ownState) {
-      return { ...scene.ownState };
-    }
-
-    return deepMerge(...layers);
-  }
-
-  function ensureWorldState(gameState) {
-    if (!gameState.worldState) {
-      gameState.worldState = { worlds: {}, regions: {}, hubs: {} };
-    }
-    if (!gameState.worldState.hubs) gameState.worldState.hubs = {};
-    if (!gameState.worldState.regions) gameState.worldState.regions = {};
-    if (!gameState.worldState.worlds) gameState.worldState.worlds = {};
-  }
-
-  /**
-   * Изменить наследуемое состояние хаба (сохраняется в прохождении).
-   */
-  function setHubState(data, gameState, hubId, key, value) {
-    if (!data?.hubs?.[hubId]) return false;
-    ensureWorldState(gameState);
-    if (!gameState.worldState.hubs[hubId]) {
-      gameState.worldState.hubs[hubId] = { inherited: {} };
-    }
-    if (!gameState.worldState.hubs[hubId].inherited) {
-      gameState.worldState.hubs[hubId].inherited = {};
-    }
-    if (key === 'reputation' && value && typeof value === 'object') {
-      gameState.worldState.hubs[hubId].inherited.reputation = deepMerge(
-        gameState.worldState.hubs[hubId].inherited.reputation || {},
-        value
-      );
-      Object.entries(value).forEach(([flag, val]) => {
-        if (!gameState.flags) gameState.flags = {};
-        gameState.flags[flag] = val;
-      });
-    } else {
-      gameState.worldState.hubs[hubId].inherited[key] = value;
-    }
-    return true;
-  }
-
-  function setRegionState(data, gameState, regionId, key, value) {
-    if (!data?.regions?.[regionId]) return false;
-    ensureWorldState(gameState);
-    if (!gameState.worldState.regions[regionId]) {
-      gameState.worldState.regions[regionId] = { inherited: {} };
-    }
-    gameState.worldState.regions[regionId].inherited[key] = value;
-    return true;
-  }
-
-  /** Аудио из inherited: music / ambient → id для AudioEngine */
-  function resolveInheritedAudio(state) {
-    if (!state) return null;
-    const id = state.music || state.ambient;
-    if (!id) return null;
-    return String(id).replace(/\.mp3$/i, '');
-  }
-
-  function formatAtmosphereLine(state) {
-    if (!state) return '';
-    const parts = [];
-    if (state.timeOfDay && TIME_LABELS[state.timeOfDay]) {
-      parts.push(TIME_LABELS[state.timeOfDay]);
-    }
-    if (state.weather && WEATHER_LABELS[state.weather]) {
-      parts.push(WEATHER_LABELS[state.weather]);
-    }
-    if (state.climate) parts.push(state.climate);
-    return parts.length ? `🌤 ${parts.join(' · ')}` : '';
-  }
-
-  function applyReputationFromState(gameState, state) {
-    if (!state?.reputation || typeof state.reputation !== 'object') return;
-    if (!gameState.flags) gameState.flags = {};
-    Object.entries(state.reputation).forEach(([flag, val]) => {
-      if (gameState.flags[flag] == null) gameState.flags[flag] = val;
-    });
-  }
-
-  /** После отдыха в дочерней сцене — сдвиг времени суток в хабе */
-  function onRestInScene(data, gameState, sceneId, restType) {
-    const hubId = getHubIdForScene(data, sceneId);
-    if (!hubId) return;
-    const nextTime = restType === 'short' ? 'day' : 'evening';
-    setHubState(data, gameState, hubId, 'timeOfDay', nextTime);
-    const hubStatic = data.hubs[hubId]?.inherited || {};
-    if (nextTime === 'evening' && hubStatic.musicEvening) {
-      setHubState(data, gameState, hubId, 'music', hubStatic.musicEvening);
-    } else if (nextTime === 'evening') {
-      setHubState(data, gameState, hubId, 'music', 'buff');
-    }
-  }
-
-  function getHubIcon(hub) {
-    return HUB_TYPE_ICONS[hub?.type] || HUB_TYPE_ICONS.default;
-  }
-
-  function buildTree(data) {
-    ensureWorldHierarchy(data);
-    const roots = Object.keys(data.worlds || {});
-    return roots.map((worldId) => {
-      const world = data.worlds[worldId];
-      const regions = (world.regions || [])
-        .filter((rid) => data.regions[rid])
-        .map((regionId) => {
-          const region = data.regions[regionId];
-          const hubs = (region.hubs || [])
-            .filter((hid) => data.hubs[hid])
-            .map((hubId) => {
-              const hub = data.hubs[hubId];
-              const scenes = (hub.scenes || [])
-                .filter((sid) => data.scenes[sid])
-                .map((sid) => ({
-                  id: sid,
-                  name: data.scenes[sid].name || data.scenes[sid].location || sid,
-                  type: data.scenes[sid].type || data.scenes[sid].sceneTemplate || ''
-                }));
-              return {
-                id: hubId,
-                name: hub.name || hubId,
-                type: 'hub',
-                icon: getHubIcon(hub),
-                hubScene: hub.hubScene,
-                scenes
-              };
-            });
-          return {
-            id: regionId,
-            name: region.name || regionId,
-            type: 'region',
-            icon: '❄️',
-            hubs
-          };
-        });
-      return {
-        id: worldId,
-        name: world.name || worldId,
-        type: 'world',
-        icon: '🌍',
-        regions
-      };
-    });
-  }
-
-  function bindGameEngine() {
-    if (typeof GameEngine === 'undefined') return;
-    GameEngine.getSceneState = function (sceneId) {
-      return getSceneState(this.data, this.state, sceneId || this.state?.scene);
-    };
-    GameEngine.setHubState = function (hubId, key, value) {
-      const ok = setHubState(this.data, this.state, hubId, key, value);
-      if (ok && getHubIdForScene(this.data, this.state?.scene) === hubId) {
-        this.applyInheritedSceneAmbience?.(this.state.scene);
-      }
-      if (ok) this.saveGame?.();
-      return ok;
-    };
-    GameEngine.getHubIdForScene = function (sceneId) {
-      return getHubIdForScene(this.data, sceneId || this.state?.scene);
-    };
-    GameEngine.applyInheritedSceneAmbience = function (sceneId) {
-      const st = getSceneState(this.data, this.state, sceneId);
-      applyReputationFromState(this.state, st);
-      const atmo = formatAtmosphereLine(st);
-      if (atmo) {
-        const loc = document.getElementById('location');
-        if (loc && !loc.dataset.atmoAppended) {
-          const base = loc.textContent.replace(/\s*🌤.*$/, '');
-          loc.textContent = base + (base ? ' ' : '') + atmo;
-          loc.dataset.atmoAppended = '1';
-        }
-      }
-      this._lastInheritedState = st;
-    };
-  }
-
-  bindGameEngine();
-  if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', bindGameEngine);
-  }
-
-  return {
-    TIME_LABELS,
-    WEATHER_LABELS,
-    ensureWorldHierarchy,
-    migrateVillageHub,
-    getHubIdForScene,
-    getParentChain,
-    getSceneState,
-    setHubState,
-    setRegionState,
-    resolveInheritedAudio,
-    formatAtmosphereLine,
-    applyReputationFromState,
-    onRestInScene,
-    getHubIcon,
-    buildTree,
-    deepMerge
-  };
-})();
-
-if (typeof window !== 'undefined') {
-  window.WorldHierarchy = WorldHierarchy;
-}
-
-
-;/* —— js/audio.js —— */
-// ============================================
-// ЗВУКОВОЙ ДВИЖОК — SFX + фоновая музыка (эмбиент)
-// ============================================
-
-const AudioEngine = {
-  enabled: true,
-  /** @deprecated используйте sfxVolume / musicVolume */
-  volume: 0.75,
-  musicVolume: 0.6,
-  sfxVolume: 0.85,
-  catalog: {},
-  defaults: {},
-  cache: new Map(),
-  ctx: null,
-  _unlockBound: false,
-  _unlocked: false,
-
-  _ambientEl: null,
-  _ambientId: null,
-  _ambientPath: null,
-  _ambientSceneVolume: null,
-  _ambientFadeGen: 0,
-  _pendingAmbient: null,
-
-  FADE_MS: 900,
-
-  init(audioConfig) {
-    const cfg = audioConfig || {};
-    this.catalog = cfg.catalog || {};
-    this.defaults = cfg.defaults || {};
-    this.cache.clear();
-    this.loadSettings();
-    this.bindUnlock();
-  },
-
-  loadSettings() {
-    try {
-      const stored = localStorage.getItem('melnitsa_audio_enabled');
-      if (stored !== null) this.enabled = stored === '1';
-      const mv = localStorage.getItem('melnitsa_music_volume');
-      const sv = localStorage.getItem('melnitsa_sfx_volume');
-      if (mv != null) this.musicVolume = this.clamp01(parseFloat(mv));
-      if (sv != null) this.sfxVolume = this.clamp01(parseFloat(sv));
-    } catch (_) { /* ignore */ }
-    this.volume = this.sfxVolume;
-  },
-
-  saveSettings() {
-    try {
-      localStorage.setItem('melnitsa_audio_enabled', this.enabled ? '1' : '0');
-      localStorage.setItem('melnitsa_music_volume', String(this.musicVolume));
-      localStorage.setItem('melnitsa_sfx_volume', String(this.sfxVolume));
-    } catch (_) { /* ignore */ }
-  },
-
-  clamp01(n) {
-    if (Number.isNaN(n)) return 0;
-    return Math.max(0, Math.min(1, n));
-  },
-
-  setMusicVolume(value) {
-    this.musicVolume = this.clamp01(value);
-    this.saveSettings();
-    this.applyAmbientVolume();
-  },
-
-  setSfxVolume(value) {
-    this.sfxVolume = this.clamp01(value);
-    this.volume = this.sfxVolume;
-    this.saveSettings();
-  },
-
-  getMusicVolume() {
-    return this.enabled ? this.musicVolume : 0;
-  },
-
-  getSfxVolume() {
-    return this.enabled ? this.sfxVolume : 0;
-  },
-
-  bindUnlock() {
-    if (this._unlockBound) return;
-    this._unlockBound = true;
-    const unlock = () => {
-      this.unlock();
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('keydown', unlock);
-      window.removeEventListener('click', unlock);
-    };
-    window.addEventListener('pointerdown', unlock, { once: true, passive: true });
-    window.addEventListener('keydown', unlock, { once: true, passive: true });
-    window.addEventListener('click', unlock, { once: true, passive: true });
-  },
-
-  setEnabled(on) {
-    this.enabled = !!on;
-    this.saveSettings();
-    if (!on) this.stopAmbient(true);
-    else this.applyAmbientVolume();
-  },
-
-  unlock() {
-    const ctx = this.ensureContext();
-    if (!ctx) return;
-    const done = () => {
-      this._unlocked = true;
-      this.flushPendingAmbient();
-    };
-    if (ctx.state === 'suspended') {
-      const p = ctx.resume();
-      if (p && typeof p.then === 'function') p.then(done).catch(done);
-      else done();
-      return;
-    }
-    done();
-  },
-
-  flushPendingAmbient() {
-    if (!this._pendingAmbient) return;
-    const { id, opts } = this._pendingAmbient;
-    this._pendingAmbient = null;
-    this.playAmbient(id, opts);
-  },
-
-  ensureContext() {
-    if (!this.ctx) {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (Ctx) this.ctx = new Ctx();
-    }
-    return this.ctx;
-  },
-
-  resolveEntry(soundId) {
-    if (!soundId) return null;
-    const entry = this.catalog[soundId];
-    if (!entry) return { id: soundId, procedural: true };
-    if (typeof entry === 'string') return { id: soundId, file: entry };
-    return {
-      id: soundId,
-      file: entry.file || entry.path || null,
-      volume: entry.volume,
-      procedural: entry.procedural,
-      loop: entry.loop
-    };
-  },
-
-  /** Короткие эффекты (бой, UI) — громкость sfxVolume */
-  playSFX(soundId, opts = {}) {
-    if (!this.enabled || !soundId) return;
-    this.unlock();
-    const entry = this.resolveEntry(soundId);
-    if (!entry) return;
-    const base = opts.volume ?? entry.volume ?? 1;
-    const vol = base * this.getSfxVolume();
-    if (entry.file && !entry.procedural) {
-      this.playFile(entry.file, vol, soundId);
-    } else {
-      this.playProcedural(soundId, vol);
-    }
-  },
-
-  /** Алиас для совместимости */
-  play(soundId, opts = {}) {
-    return this.playSFX(soundId, opts);
-  },
-
-  applyAmbientVolume() {
-    if (!this._ambientEl || !this._ambientId) return;
-    const entry = this.resolveEntry(this._ambientId);
-    const base = this._ambientSceneVolume ?? entry?.volume ?? 1;
-    this._ambientEl.volume = this.clamp01(base * this.getMusicVolume());
-  },
-
-  _bumpFadeGen() {
-    this._ambientFadeGen += 1;
-    return this._ambientFadeGen;
-  },
-
-  _fadeVolume(el, from, to, durationMs, gen) {
-    return new Promise(resolve => {
-      if (!el || gen !== this._ambientFadeGen) {
-        resolve();
-        return;
-      }
-      const steps = Math.max(8, Math.floor(durationMs / 40));
-      const stepMs = durationMs / steps;
-      let i = 0;
-      const tick = () => {
-        if (gen !== this._ambientFadeGen || !el) {
-          resolve();
-          return;
-        }
-        i += 1;
-        const t = i / steps;
-        el.volume = this.clamp01(from + (to - from) * t);
-        if (i >= steps) resolve();
-        else setTimeout(tick, stepMs);
-      };
-      tick();
-    });
-  },
-
-  /** Плавная остановка текущего эмбиента */
-  stopAmbient(immediate = false) {
-    const el = this._ambientEl;
-    if (!el) {
-      this._ambientId = null;
-      this._ambientPath = null;
-      return Promise.resolve();
-    }
-    const gen = this._bumpFadeGen();
-    if (immediate || !this.enabled) {
-      try {
-        el.pause();
-        el.currentTime = 0;
-      } catch (_) { /* ignore */ }
-      this._ambientEl = null;
-      this._ambientId = null;
-      this._ambientPath = null;
-      return Promise.resolve();
-    }
-    const startVol = el.volume;
-    return this._fadeVolume(el, startVol, 0, this.FADE_MS, gen).then(() => {
-      if (gen !== this._ambientFadeGen) return;
-      try {
-        el.pause();
-        el.currentTime = 0;
-      } catch (_) { /* ignore */ }
-      if (this._ambientEl === el) {
-        this._ambientEl = null;
-        this._ambientId = null;
-        this._ambientPath = null;
-      }
-    });
-  },
-
-  /**
-   * Фоновая музыка из catalog: loop + crossfade при смене трека.
-   */
-  playAmbient(soundId, opts = {}) {
-    if (!this.enabled || !soundId) {
-      return this.stopAmbient();
-    }
-
-    this.unlock();
-
-    const entry = this.resolveEntry(soundId);
-    if (!entry) return Promise.resolve();
-
-    if (this._ambientId === soundId && this._ambientEl && !this._ambientEl.paused) {
-      this.applyAmbientVolume();
-      return Promise.resolve();
-    }
-
-    const path = entry.file || null;
-    if (!path || entry.procedural) {
-      this._ambientId = soundId;
-      return Promise.resolve();
-    }
-
-    if (!this._unlocked) {
-      this._pendingAmbient = { id: soundId, opts };
-      return Promise.resolve();
-    }
-
-    const gen = this._bumpFadeGen();
-    const baseVol = opts.volume ?? entry.volume ?? 1;
-    this._ambientSceneVolume = opts.volume != null ? opts.volume : null;
-    const targetVol = this.clamp01(baseVol * this.getMusicVolume());
-
-    const startNew = () => {
-      if (gen !== this._ambientFadeGen) return Promise.resolve();
-
-      let base = this.cache.get('ambient:' + path);
-      if (!base) {
-        base = new Audio(path);
-        base.preload = 'auto';
-        this.cache.set('ambient:' + path, base);
-      }
-      const audio = base.cloneNode();
-      audio.loop = opts.loop !== false;
-      audio.volume = 0;
-      this._ambientEl = audio;
-      this._ambientId = soundId;
-      this._ambientPath = path;
-
-      const p = audio.play();
-      const afterPlay = () => this._fadeVolume(audio, 0, targetVol, this.FADE_MS, gen);
-
-      if (p && typeof p.then === 'function') {
-        return p.then(afterPlay).catch(() => {
-          this._ambientEl = null;
-          this._ambientId = null;
-          this._ambientPath = null;
-        });
-      }
-      return afterPlay();
-    };
-
-    if (this._ambientEl) {
-      const old = this._ambientEl;
-      const oldVol = old.volume;
-      return this._fadeVolume(old, oldVol, 0, this.FADE_MS, gen).then(() => {
-        try {
-          old.pause();
-          old.currentTime = 0;
-        } catch (_) { /* ignore */ }
-        if (this._ambientEl === old) {
-          this._ambientEl = null;
-          this._ambientId = null;
-          this._ambientPath = null;
-        }
-        return startNew();
-      });
-    }
-
-    return startNew();
-  },
-
-  playFile(path, volume, fallbackId) {
-    let base = this.cache.get(path);
-    if (!base) {
-      base = new Audio(path);
-      base.preload = 'auto';
-      this.cache.set(path, base);
-    }
-    const audio = base.cloneNode();
-    audio.volume = this.clamp01(volume);
-    const p = audio.play();
-    if (p && typeof p.catch === 'function') {
-      p.catch(() => this.playProcedural(fallbackId, volume));
-    }
-  },
-
-  playProcedural(soundId, volume = 0.75) {
-    const ctx = this.ensureContext();
-    if (!ctx) return;
-    const t0 = ctx.currentTime;
-    const vol = Math.max(0.05, Math.min(1, volume));
-    const master = ctx.createGain();
-    master.gain.value = vol;
-    master.connect(ctx.destination);
-
-    const tone = (freq, type, start, dur, peak = 0.2) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, start);
-      g.gain.setValueAtTime(0.0001, start);
-      g.gain.exponentialRampToValueAtTime(peak, start + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-      osc.connect(g);
-      g.connect(master);
-      osc.start(start);
-      osc.stop(start + dur + 0.05);
-    };
-
-    const noise = (start, dur, peak = 0.15, filterFreq = 800) => {
-      const bufferSize = Math.floor(ctx.sampleRate * dur);
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-      const src = ctx.createBufferSource();
-      src.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = filterFreq;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(peak, start);
-      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-      src.connect(filter);
-      filter.connect(g);
-      g.connect(master);
-      src.start(start);
-      src.stop(start + dur + 0.05);
-    };
-
-    const id = String(soundId).toLowerCase();
-
-    if (id.includes('fire') || id === 'aoe_fire') {
-      noise(t0, 0.12, 0.22, 1200);
-      tone(180, 'sawtooth', t0, 0.25, 0.12);
-      tone(90, 'sine', t0 + 0.05, 0.35, 0.18);
-      return;
-    }
-    if (id.includes('cold') || id.includes('frost')) {
-      tone(880, 'sine', t0, 0.2, 0.1);
-      tone(660, 'triangle', t0 + 0.08, 0.35, 0.08);
-      noise(t0, 0.15, 0.06, 4000);
-      return;
-    }
-    if (id.includes('lightning') || id.includes('arcane') || id.includes('magic')) {
-      tone(520, 'square', t0, 0.08, 0.06);
-      tone(1040, 'sine', t0 + 0.04, 0.15, 0.1);
-      tone(780, 'sine', t0 + 0.1, 0.2, 0.07);
-      return;
-    }
-    if (id.includes('heal')) {
-      tone(392, 'sine', t0, 0.25, 0.12);
-      tone(523, 'sine', t0 + 0.12, 0.35, 0.1);
-      tone(659, 'sine', t0 + 0.22, 0.4, 0.08);
-      return;
-    }
-    if (id.includes('staff') || id.includes('blunt')) {
-      noise(t0, 0.06, 0.2, 400);
-      tone(120, 'sine', t0, 0.15, 0.25);
-      return;
-    }
-    if (id.includes('slash') || id.includes('sword') || id.includes('cleave') || id.includes('physical')) {
-      noise(t0, 0.05, 0.28, 2500);
-      tone(2400, 'triangle', t0, 0.07, 0.04);
-      tone(800, 'sine', t0 + 0.02, 0.1, 0.06);
-      return;
-    }
-    if (id.includes('miss') || id.includes('whoosh')) {
-      noise(t0, 0.08, 0.08, 600);
-      return;
-    }
-    if (id.includes('buff') || id.includes('shield')) {
-      tone(330, 'sine', t0, 0.2, 0.1);
-      tone(440, 'sine', t0 + 0.1, 0.3, 0.08);
-      return;
-    }
-    if (id.includes('crit')) {
-      noise(t0, 0.08, 0.25, 1800);
-      tone(660, 'sawtooth', t0, 0.15, 0.12);
-      tone(990, 'sine', t0 + 0.06, 0.2, 0.1);
-      return;
-    }
-    if (id.includes('radiant') || id.includes('smite')) {
-      tone(440, 'sine', t0, 0.2, 0.14);
-      tone(880, 'triangle', t0 + 0.08, 0.35, 0.1);
-      return;
-    }
-    if (id.includes('necrotic')) {
-      tone(110, 'sawtooth', t0, 0.4, 0.1);
-      noise(t0, 0.25, 0.08, 300);
-      return;
-    }
-
-    tone(440, 'sine', t0, 0.12, 0.08);
-  }
-};
-
-
-;/* —— js/special-scenes.js —— */
-// Реестр обработчиков special-сцен (Plugin API).
-// Встроенные — registerMany; JSON — plugins.specialScenes; свои — register() из внешнего JS.
-
-const SpecialSceneRegistry = {
-  _entries: {},
-
-  /**
-   * Регистрация кастомного обработчика.
-   * @param {string} id — уникальный ID (совпадает с полем scene.special)
-   * @param {string} label — человекочитаемое название для редактора
-   * @param {function|string} handler — функция(engine, sceneId, scene) ИЛИ строка-имя метода GameEngine
-   */
-  register(id, label, handler) {
-    if (!id || !handler) return;
-    this._entries[id] = { label: label || id, handler };
-  },
-
-  /** Массовая регистрация из массива [id, label, handler] */
-  registerMany(list) {
-    if (!Array.isArray(list)) return;
-    list.forEach(([id, label, handler]) => this.register(id, label, handler));
-  },
-
-  has(id) {
-    return !!this._entries[id];
-  },
-
-  list() {
-    return Object.entries(this._entries).map(([id, e]) => ({ id, label: e.label }));
-  },
-
-  allIds() {
-    return Object.keys(this._entries);
-  },
-
-  /**
-   * Выполнение обработчика.
-   * Поддерживает: функцию, строку-метод GameEngine, JSON-конфиг из plugins.specialScenes.
-   * @returns {boolean} true если обработчик найден и выполнен
-   */
-  run(engine, sceneId, scene) {
-    const entry = this._entries[scene?.special];
-    if (!entry) return false;
-
-    if (typeof entry.handler === 'function') {
-      try {
-        entry.handler(engine, sceneId, scene);
-      } catch (e) {
-        console.error(`[PluginAPI] Error in special "${scene.special}":`, e);
-      }
-      return true;
-    }
-
-    if (typeof entry.handler === 'string') {
-      const method = engine[entry.handler];
-      if (typeof method === 'function') {
-        method.call(engine, sceneId, scene);
-        return true;
-      }
-      console.warn(`[PluginAPI] Method "${entry.handler}" not found on GameEngine`);
-      return false;
-    }
-
-    return false;
-  }
-};
-
-/**
- * Создаёт функцию-обработчик из JSON-конфига.
- * Поддерживает: choices, flags, items, gold, text, dialogue.
- */
-function createJsonSpecialHandler(config) {
-  return function jsonSpecialHandler(engine, sceneId, scene) {
-    if (config.flags && typeof config.flags === 'object') {
-      engine.applyFlags(config.flags);
-    }
-
-    if (Array.isArray(config.items)) {
-      config.items.forEach((itemId) => engine.addItem(itemId));
-    }
-
-    if (typeof config.gold === 'number' && config.gold > 0) {
-      engine.state.gold += config.gold;
-      engine.updateStats();
-      engine.log(`💰 +${config.gold} зм`, 'log-heal');
-    }
-
-    engine.setLocation(scene?.location || config.location || '—');
-
-    if (config.text) engine.setText(config.text);
-    else if (scene?.text) engine.setText(scene.text);
-
-    if (Array.isArray(config.dialogue)) engine.setDialogue(config.dialogue);
-    else engine.clearDialogue();
-
-    if (Array.isArray(config.choices)) {
-      engine.setChoices(config.choices);
-    } else {
-      engine.setChoices([]);
-    }
-
-  };
-}
-
-/** Регистрация встроенных обработчиков и plugins.specialScenes — после загрузки game_data */
-SpecialSceneRegistry._registerBuiltins = function (engine) {
-  const eng = engine || { data: {} };
-
-  SpecialSceneRegistry.registerMany([
-    ['haggle', 'Торг (Марта)', 'handleHaggle'],
-    ['shop_jack', 'Лавка Джека', 'handleShopJack'],
-    ['shop', 'Универсальная лавка (JSON)', 'handleShop'],
-    ['blacksmith', 'Кузница (заточка)', 'handleBlacksmith'],
-    ['temple_priest', 'Храм — снятие проклятия', 'handleTemplePriest'],
-    ['forest_loot_check', 'Обыск в лесу', 'handleForestLoot'],
-    ['barn_chest', 'Сундук в сарае', 'handleBarnChest'],
-    ['attic', 'Чердак мельницы', 'handleAttic'],
-    ['jack_buy_potion', 'Покупка зелья', 'handleJackBuyPotion'],
-    ['jack_buy_rope', 'Покупка верёвки', 'handleJackBuyRope'],
-    ['jack_buy_supplies', 'Покупка припасов', 'handleJackBuySupplies'],
-    ['jack_buy_fireball_scroll', 'Покупка свитка Огненного шара', 'handleJackBuyFireballScroll'],
-    ['jack_buy_focus_potion', 'Покупка зелья фокусировки', 'handleJackBuyFocusPotion'],
-    ['gear_top', 'Шестерня (верх)', 'handleGearTop'],
-    ['gear_mid', 'Шестерня (середина)', 'handleGearMid'],
-    ['gear_bot', 'Шестерня (низ)', 'handleGearBot'],
-    ['boss_talk', 'Разговор с боссом', 'handleBossTalk'],
-    ['boss_albert', 'Альберт (босс)', 'handleBossAlbert'],
-    ['boss_mercy', 'Пощада боссу', 'handleBossMercy'],
-    ['cellar_first', 'Погреб (первый раз)', 'handleCellarFirst'],
-    ['cellar_intimidate', 'Погреб (запугивание)', 'handleCellarIntimidate'],
-    ['cellar_after', 'Погреб (после)', 'handleCellarAfter'],
-    ['cellar_search', 'Погреб (обыск)', 'handleCellarSearch'],
-    ['marta_find_albert_reward', 'Награда за спасение Альберта', 'handleMartaFindAlbertReward'],
-    ['reset', 'Сброс игры', 'handleResetFromSpecial']
-  ]);
-
-  const plugins = eng.data?.plugins?.specialScenes;
-  if (plugins && typeof plugins === 'object') {
-    for (const [id, config] of Object.entries(plugins)) {
-      if (!config || typeof config !== 'object') continue;
-      if (SpecialSceneRegistry.has(id)) {
-        console.warn(`[PluginAPI] special "${id}" already registered, skipping JSON override`);
-        continue;
-      }
-      const handler = createJsonSpecialHandler(config);
-      SpecialSceneRegistry.register(id, config.label || id, handler);
-    }
-  }
-};
-
-if (typeof window !== 'undefined') {
-  window.SpecialSceneRegistry = SpecialSceneRegistry;
-  window.createJsonSpecialHandler = createJsonSpecialHandler;
-}
-
-// Встроенные ID в datalist редактора до загрузки game_data
-SpecialSceneRegistry._registerBuiltins({ data: {} });
-
-
-;/* —— js/systems/base-system.js —— */
-// ============================================
-// Базовый класс системы правил (Rule System)
-// ============================================
-
-class RuleSystem {
-  get id() { return 'generic'; }
-  get label() { return 'Generic d20'; }
-  get description() { return 'Универсальная система на основе d20.'; }
-
-  getStatKeys() { return ['str', 'dex', 'con', 'int', 'wis', 'cha']; }
-  getStatLabels() {
-    return { str: 'СИЛ', dex: 'ЛОВ', con: 'ТЕЛ', int: 'ИНТ', wis: 'МУД', cha: 'ХАР' };
-  }
-
-  getModifier(score) {
-    return Math.floor((Number(score) - 10) / 2);
-  }
-
-  getPointBuyConfig() { return { total: 27, min: 8, max: 15 }; }
-
-  pointCost(score) {
-    const cfg = this.getPointBuyConfig();
-    const s = Math.max(cfg.min, Math.min(cfg.max, Number(score) || cfg.min));
-    if (s <= cfg.min) return 0;
-    let cost = 0;
-    for (let v = cfg.min + 1; v <= s; v++) cost += v <= 13 ? 1 : 2;
-    return cost;
-  }
-
-  validateCharacter(draft) { return true; }
-
-  calculateHP(classKey, level, stats, data, conMod) {
-    const mod = conMod != null ? conMod : this.getModifier(stats?.con ?? 10);
-    return Math.max(1, 10 + mod);
-  }
-
-  calculateAC(stats, equipment, data, engine) {
-    const dexMod = this.getModifier(stats?.dex ?? 10);
-    return 10 + dexMod;
-  }
-
-  getProficiencyBonus(level) {
-    const lvl = Math.max(1, parseInt(level, 10) || 1);
-    return Math.max(2, 2 + Math.floor((lvl - 1) / 4));
-  }
-
-  rollAttack(attacker, target, engine) {
-    return { hit: false, dmg: 0, crit: false };
-  }
-
-  rollDamage(weapon, attacker, engine) {
-    return 0;
-  }
-
-  getMaxLevel(data) { return data?.progression?.maxLevel || 10; }
-  getExpTable(data) { return data?.progression?.expTable || [0]; }
-  getLevelConfig(level, classKey, data) {
-    return data?.classes?.[classKey]?.progression?.levels?.[String(level)] || {};
-  }
-
-  getResourceMode(classKey, level, data, engine) { return 'energy'; }
-
-  initResources(classKey, level, data, engine) {
-    const cls = data?.classes?.[classKey];
-    const max = cls?.resource?.max ?? 2;
-    return { mode: 'energy', current: max, max, spellSlots: null };
-  }
-
-  scaleEnemy(enemy, playerLevel, config, data) {
-    return enemy ? { ...enemy } : enemy;
-  }
-
-  getSkillDefs() { return {}; }
-
-  getStatForSkill(skill) {
-    const defs = this.getSkillDefs();
-    const key = String(skill || '').toLowerCase();
-    if (defs[key]?.stat) return defs[key].stat;
-    const byRu = Object.values(defs).find((d) => d.ru === skill);
-    return byRu?.stat || 'int';
-  }
-
-  getSkillBonus(skill, stats, classData, engine) {
-    const statKey = this.getStatForSkill(skill);
-    const statValue = stats?.[statKey] ?? 10;
-    return this.getModifier(statValue);
-  }
-}
-
-if (typeof window !== 'undefined') window.RuleSystem = RuleSystem;
-
-
-;/* —— js/systems/generic.js —— */
-// Generic d20 — использует базовые реализации RuleSystem
-
-class GenericRuleSystem extends RuleSystem {
-  get id() { return 'generic'; }
-  get label() { return 'Generic d20'; }
-  get description() { return 'Универсальная d20-система без привязки к конкретной игре.'; }
-}
-
-const GenericSystem = new GenericRuleSystem();
-if (typeof window !== 'undefined') window.GenericSystem = GenericSystem;
-
-
-;/* —— js/systems/dnd5e.js —— */
-// D&D 5e — системно-зависимая логика (вынесена из engine.js / character-creator)
-
-class DnD5eRuleSystem extends RuleSystem {
-  get id() { return 'dnd5e'; }
-  get label() { return 'D&D 5e'; }
-  get description() { return 'Dungeons & Dragons 5th Edition — модификаторы, КД, ячейки, proficiency.'; }
-
-  getPointBuyConfig() { return { total: 27, min: 8, max: 15 }; }
-
-  getSkillDefs() {
-    return {
-      acrobatics: { stat: 'dex', ru: 'Акробатика' },
-      animal_handling: { stat: 'wis', ru: 'Уход за животными' },
-      arcana: { stat: 'int', ru: 'Магия (тайные знания)' },
-      athletics: { stat: 'str', ru: 'Атлетика' },
-      deception: { stat: 'cha', ru: 'Обман' },
-      history: { stat: 'int', ru: 'История' },
-      insight: { stat: 'wis', ru: 'Проницательность' },
-      intimidation: { stat: 'cha', ru: 'Устрашение' },
-      investigation: { stat: 'int', ru: 'Расследование' },
-      medicine: { stat: 'wis', ru: 'Медицина' },
-      nature: { stat: 'int', ru: 'Природа' },
-      perception: { stat: 'wis', ru: 'Восприятие' },
-      performance: { stat: 'cha', ru: 'Выступление' },
-      persuasion: { stat: 'cha', ru: 'Убеждение' },
-      religion: { stat: 'int', ru: 'Религия' },
-      sleight_of_hand: { stat: 'dex', ru: 'Ловкость рук' },
-      stealth: { stat: 'dex', ru: 'Скрытность' },
-      survival: { stat: 'wis', ru: 'Выживание' },
-      magic: { stat: 'int', ru: 'Магия' },
-      dexterity: { stat: 'dex', ru: null },
-      strength: { stat: 'str', ru: null },
-      wisdom: { stat: 'wis', ru: null },
-      charisma: { stat: 'cha', ru: null },
-      intelligence: { stat: 'int', ru: null },
-      constitution: { stat: 'con', ru: null }
-    };
-  }
-
-  getStatForSkill(skill) {
-    const defs = this.getSkillDefs();
-    const key = String(skill || '').toLowerCase();
-    if (defs[key]?.stat) return defs[key].stat;
-    const byRu = Object.values(defs).find((d) => d.ru === skill);
-    return byRu?.stat || 'int';
-  }
-
-  calculateHP(classKey, level, stats, data, conMod) {
-    const hitDie = { warrior: 10, wizard: 6, paladin: 10 };
-    const cls = data?.classes?.[classKey];
-    const base = hitDie[classKey] ?? cls?.hpHitDie ?? cls?.hp ?? 10;
-    const mod = conMod != null ? conMod : this.getModifier(stats?.con ?? 10);
-    return Math.max(1, Number(base) + mod);
-  }
-
-  /** КД: броня + щит + DEX (ограничения light/medium/heavy) */
-  calculateAC(stats, equipment, data, engine) {
-    const dexMod = this.getModifier(stats?.dex ?? 10);
-    const shieldBonus = typeof engine?.getShieldAcBonus === 'function' ? engine.getShieldAcBonus() : 0;
-    const itemsData = equipment?.itemsData || data?.items || {};
-    const getEquipped = equipment?.getEquippedItem || ((slot) => engine?.getEquippedItem?.(slot));
-
-    const armor = typeof getEquipped === 'function' ? getEquipped('armor') : null;
-
-    if (armor && (armor.type === 'armor' || (armor.type === 'equipment' && armor.slot === 'armor'))) {
-      const baseAc = parseInt(armor.ac ?? armor.baseAc, 10);
-      if (!Number.isNaN(baseAc)) {
-        const armorType = String(armor.armorType || 'heavy').toLowerCase();
-        let ac = baseAc;
-        if (armorType === 'light') ac += dexMod;
-        else if (armorType === 'medium') ac += Math.min(dexMod, 2);
-        return ac + shieldBonus;
-      }
-    }
-
-    return 10 + dexMod + shieldBonus;
-  }
-
-  getResourceMode(classKey, level, data, engine) {
-    const cls = data?.classes?.[classKey];
-    if (!cls) return 'energy';
-    const lvl = level ?? 1;
-    const slots = typeof engine?.getSlotsArrayForLevel === 'function'
-      ? engine.getSlotsArrayForLevel(classKey, lvl)
-      : [];
-    if (!slots || !slots.length) return 'energy';
-    if (cls.spellcasting && slots.length >= 1) return 'spellSlots';
-    if (cls.halfCaster && lvl >= 2 && slots.length >= 1) return 'spellSlots';
-    if (slots.length === 1 && !cls.spellcasting && !cls.halfCaster) return 'energy';
-    if (slots.length > 1) return 'spellSlots';
-    return 'energy';
-  }
-
-  initResources(classKey, level, data, engine) {
-    const mode = this.getResourceMode(classKey, level, data, engine);
-    const cls = data?.classes?.[classKey];
-    if (mode === 'spellSlots') {
-      const arr = typeof engine?.getSlotsArrayForLevel === 'function'
-        ? engine.getSlotsArrayForLevel(classKey, level) || [2]
-        : [2];
-      const spellSlots = typeof engine?.buildSpellSlotsFromArray === 'function'
-        ? engine.buildSpellSlotsFromArray(arr)
-        : {};
-      return { mode: 'spellSlots', spellSlots, current: 0, max: 0 };
-    }
-    const arr = typeof engine?.getSlotsArrayForLevel === 'function'
-      ? engine.getSlotsArrayForLevel(classKey, level)
-      : null;
-    let max = cls?.resource?.max ?? 2;
-    if (arr && arr.length === 1) max = Number(arr[0]) || max;
-    return { mode: 'energy', current: max, max, spellSlots: null };
-  }
-
-  getSkillBonus(skill, stats, classData, engine) {
-    if (!classData || !stats) return 0;
-
-    const defs = this.getSkillDefs();
-    const key = String(skill || '').toLowerCase();
-    let def = defs[key];
-    let skillNameRu = skill;
-
-    if (def) {
-      skillNameRu = def.ru || skill;
-    } else {
-      const byRu = Object.values(defs).find((d) => d.ru === skill);
-      if (byRu) {
-        def = byRu;
-        skillNameRu = skill;
-      }
-    }
-
-    const statKey = def?.stat || this.getStatForSkill(skill);
-    const profList = engine?.getProficientSkillIds?.() || classData.skillIds || [];
-    const playerSkills = classData.skills || '';
-    const inList = profList.includes(key);
-    const proficientByRu = def?.ru && (inList || playerSkills.includes(skillNameRu));
-    const proficientById = !def?.ru && (inList || playerSkills.includes(skill));
-    const level = engine?.state?.level ?? 1;
-    const proficiency = proficientByRu || proficientById
-      ? this.getProficiencyBonus(level)
-      : 0;
-
-    const statValue = stats[statKey] || 10;
-    return this.getModifier(statValue) + proficiency;
-  }
-
-  scaleEnemy(enemy, playerLevel, config, data) {
-    if (typeof EnemyScaling !== 'undefined') {
-      return EnemyScaling.scaleEnemy(enemy, playerLevel, config);
-    }
-    return enemy ? { ...enemy } : enemy;
-  }
-}
-
-const DnD5eSystem = new DnD5eRuleSystem();
-if (typeof window !== 'undefined') window.DnD5eSystem = DnD5eSystem;
-
-
-;/* —— js/systems/pathfinder2e.js —— */
-// Pathfinder 2e — полная реализация RuleSystem
-
-class Pathfinder2eRuleSystem extends RuleSystem {
-  get id() { return 'pf2e'; }
-  get label() { return 'Pathfinder 2e'; }
-  get description() { return '3 действия за ход, 4 степени успеха, proficiency ranks.'; }
-
-  get PROFICIENCY_RANKS() {
-    return ['untrained', 'trained', 'expert', 'master', 'legendary'];
-  }
-
-  /** Бонус ранга к проверке навыка (PF2e Remastered) */
-  get RANK_BONUS() {
-    return {
-      untrained: -2,
-      trained: 2,
-      expert: 4,
-      master: 6,
-      legendary: 8
-    };
-  }
-
-  get RANK_SHORT() {
-    return {
-      untrained: 'U',
-      trained: 'T',
-      expert: 'E',
-      master: 'M',
-      legendary: 'L'
-    };
-  }
-
-  getSkillDefs() {
-    return {
-      acrobatics: { stat: 'dex', ru: 'Акробатика' },
-      arcana: { stat: 'int', ru: 'Магия (тайные знания)' },
-      athletics: { stat: 'str', ru: 'Атлетика' },
-      crafting: { stat: 'int', ru: 'Ремесло' },
-      deception: { stat: 'cha', ru: 'Обман' },
-      diplomacy: { stat: 'cha', ru: 'Дипломатия' },
-      intimidation: { stat: 'cha', ru: 'Запугивание' },
-      medicine: { stat: 'wis', ru: 'Медицина' },
-      nature: { stat: 'wis', ru: 'Природа' },
-      occultism: { stat: 'int', ru: 'Оккультизм' },
-      performance: { stat: 'cha', ru: 'Выступление' },
-      religion: { stat: 'wis', ru: 'Религия' },
-      society: { stat: 'int', ru: 'Общество' },
-      stealth: { stat: 'dex', ru: 'Скрытность' },
-      survival: { stat: 'wis', ru: 'Выживание' },
-      thievery: { stat: 'dex', ru: 'Воровство' },
-      perception: { stat: 'wis', ru: 'Восприятие' }
-    };
-  }
-
-  getAllSkillIds() {
-    return Object.keys(this.getSkillDefs());
-  }
-
-  normalizeSkillId(raw) {
-    const s = String(raw || '').trim().toLowerCase().replace(/\s+/g, '_');
-    if (this.getSkillDefs()[s]) return s;
-    const aliases = {
-      thievery: 'thievery',
-      stealth: 'stealth',
-      arcane: 'arcana',
-      lore: 'society'
-    };
-    return aliases[s] || s;
-  }
-
-  getNextRank(rank) {
-    const order = this.PROFICIENCY_RANKS;
-    const i = order.indexOf(rank || 'untrained');
-    if (i < 0 || i >= order.length - 1) return null;
-    return order[i + 1];
-  }
-
-  getModifier(score) {
-    return Math.floor((Number(score) - 10) / 2);
-  }
-
-  getPointBuyConfig() {
-    return {
-      mode: 'ability_boosts',
-      totalBoosts: 4,
-      minScore: 8,
-      maxScore: 18,
-      boostValue: 2
-    };
-  }
-
-  pointCost() {
-    return 0;
-  }
-
-  getProficiencyBonus(level, rank) {
-    const r = rank || 'trained';
-    if (r === 'untrained' || rank == null) return 0;
-    const rankBonus = { trained: 2, expert: 4, master: 6, legendary: 8 }[r] || 0;
-    return rankBonus + Math.max(1, parseInt(level, 10) || 1);
-  }
-
-  get PF2E_SKILL_TO_STAT() {
-    return {
-      acrobatics: 'dex',
-      athletics: 'str',
-      crafting: 'int',
-      deception: 'cha',
-      diplomacy: 'cha',
-      intimidation: 'cha',
-      medicine: 'wis',
-      nature: 'wis',
-      occultism: 'int',
-      performance: 'cha',
-      religion: 'wis',
-      society: 'int',
-      stealth: 'dex',
-      survival: 'wis',
-      thievery: 'dex',
-      perception: 'wis',
-      persuasion: 'cha',
-      investigation: 'int',
-      insight: 'wis',
-      arcana: 'int',
-      athletics_ru: 'str'
-    };
-  }
-
-  getStatForSkill(skill) {
-    const key = String(skill || '').toLowerCase();
-    return this.PF2E_SKILL_TO_STAT[key] || 'int';
-  }
-
-  /** Ранг навыка: state.skills → classData.skillProficiency → legacy строка skills */
-  getSkillProficiencyRank(skill, classData, engine) {
-    const key = this.normalizeSkillId(skill);
-    const stateSkills = engine?.state?.skills;
-    if (stateSkills && typeof stateSkills === 'object' && stateSkills[key]) {
-      return stateSkills[key];
-    }
-    if (!classData) return 'untrained';
-    const ranks = classData.skillProficiency || {};
-    if (ranks[key]) return ranks[key];
-    const skills = String(classData.skills || '').toLowerCase();
-    if (skills.includes(key)) return 'trained';
-    return 'untrained';
-  }
-
-  getSkillBonus(skill, stats, classData, engine) {
-    if (!stats) return 0;
-    const level = Math.max(1, parseInt(engine?.state?.level, 10) || 1);
-    const key = this.normalizeSkillId(skill);
-    const rank = this.getSkillProficiencyRank(key, classData, engine);
-    const rankBonus = this.RANK_BONUS[rank] ?? this.RANK_BONUS.untrained;
-    const statKey = this.getStatForSkill(key);
-    const statMod = this.getModifier(stats[statKey] || 10);
-    return level + statMod + rankBonus;
-  }
-
-  getSkillBonusBreakdown(skill, stats, classData, engine) {
-    const level = Math.max(1, parseInt(engine?.state?.level, 10) || 1);
-    const key = this.normalizeSkillId(skill);
-    const rank = this.getSkillProficiencyRank(key, classData, engine);
-    const rankBonus = this.RANK_BONUS[rank] ?? this.RANK_BONUS.untrained;
-    const statKey = this.getStatForSkill(key);
-    const statMod = this.getModifier(stats[statKey] || 10);
-    return { level, statMod, rank, rankBonus, total: level + statMod + rankBonus };
-  }
-
-  calculateHP(classKey, level, stats, data, conMod, engine) {
-    const cls = data?.classes?.[classKey];
-    if (!cls) return 10;
-    const draftRaceKey = engine?.CharacterCreator?.draft?.raceKey;
-    const raceKey = engine?.state?.raceKey || draftRaceKey || '';
-    const raceHp = raceKey && data?.races?.[raceKey]?.hp != null
-      ? data.races[raceKey].hp
-      : null;
-    const ancestryKey = cls.ancestry || 'human';
-    const ancestryHp = raceHp ?? data?.ancestries?.[ancestryKey]?.hp ?? cls.hp ?? 8;
-    const classHpPerLevel = cls.hpPerLevel ?? 8;
-    const mod = conMod != null ? conMod : this.getModifier(stats?.con ?? 10);
-    const lvl = Math.max(1, parseInt(level, 10) || 1);
-    return Math.max(1, ancestryHp + classHpPerLevel * lvl + mod * lvl);
-  }
-
-  calculateAC(stats, equipment, data, engineOrState) {
-    const statsSafe = stats || {};
-    const dexMod = this.getModifier(statsSafe.dex ?? 10);
-    const engine = engineOrState?.getEquippedItem ? engineOrState : null;
-    const playerState = engine?.state || engineOrState || {};
-    const level = playerState.level || 1;
-    const classKey = playerState.className;
-    const cls = data?.classes?.[classKey];
-    const armorProfRank = cls?.armorProficiency || playerState.armorProficiency || 'trained';
-
-    let armor = null;
-    if (engine?.getEquippedItem) {
-      armor = engine.getEquippedItem('armor');
-    } else if (equipment?.getEquippedItem) {
-      armor = equipment.getEquippedItem('armor');
-    } else {
-      const armorId = equipment?.armor || playerState.equipped?.armor;
-      armor = armorId ? (data?.items?.[armorId] || equipment?.itemsData?.[armorId]) : null;
-    }
-
-    const shieldBonus = engine?.getShieldAcBonus ? engine.getShieldAcBonus() : 0;
-
-    if (armor && (armor.type === 'armor' || armor.slot === 'armor')) {
-      const baseAc = parseInt(armor.ac ?? armor.baseAc, 10) || 10;
-      const dexCap = armor.dexCap != null ? parseInt(armor.dexCap, 10) : 5;
-      const effectiveDex = Math.min(dexMod, dexCap);
-      const profBonus = this.getProficiencyBonus(level, armorProfRank);
-      return baseAc + effectiveDex + profBonus + shieldBonus;
-    }
-
-    const unarmoredProf = this.getProficiencyBonus(level, armorProfRank);
-    return 10 + dexMod + unarmoredProf + shieldBonus;
-  }
-
-  getDegreeOfSuccess(total, dc) {
-    if (total >= dc + 10) return 'critical_success';
-    if (total >= dc) return 'success';
-    if (total <= dc - 10) return 'critical_failure';
-    return 'failure';
-  }
-
-  rollAttack(attacker, target, engine, options = {}) {
-    const map = options.mapPenalty || 0;
-    const roll = engine.d20();
-    const atkBonus = attacker?.atkBonus || 0;
-    const total = roll + atkBonus + map;
-    const ac = target?.ac || 10;
-    let degree = this.getDegreeOfSuccess(total, ac);
-    if (roll === 1) degree = 'critical_failure';
-    if (roll === 20 && degree !== 'critical_failure') degree = 'critical_success';
-
-    let dmg = 0;
-    let crit = false;
-    const dmgRoll = attacker?.dmgRoll || '1d6';
-    const dmgBonus = attacker?.dmgBonus || 0;
-
-    if (degree === 'critical_success') {
-      dmg = engine.parseRoll(dmgRoll) * 2 + dmgBonus * 2;
-      crit = true;
-    } else if (degree === 'success') {
-      dmg = engine.parseRoll(dmgRoll) + dmgBonus;
-    }
-
-    return {
-      roll,
-      total,
-      degree,
-      hit: degree === 'success' || degree === 'critical_success',
-      crit,
-      dmg,
-      map
-    };
-  }
-
-  getActionsPerTurn() { return 3; }
-
-  getResourceMode(classKey, level, data) {
-    const cls = data?.classes?.[classKey];
-    if (!cls) return 'energy';
-    if (cls.hasFocusPoints) return 'focus';
-    if (cls.spellcasting && (cls.baseSlots || cls.progression)) return 'spellSlots';
-    return 'energy';
-  }
-
-  initResources(classKey, level, data, engine) {
-    const cls = data?.classes?.[classKey];
-    if (!cls) {
-      return { mode: 'energy', current: 0, max: 0, spellSlots: null };
-    }
-    if (cls.hasFocusPoints) {
-      const maxFocus = Math.min(3, Math.max(1, parseInt(cls.focusPoints, 10) || 1));
-      return { mode: 'focus', current: maxFocus, max: maxFocus, spellSlots: null };
-    }
-    if (cls.spellcasting && cls.baseSlots) {
-      const slots = {};
-      (cls.baseSlots || []).forEach((max, i) => {
-        const n = Number(max) || 0;
-        if (n > 0) slots[String(i + 1)] = { c: n, m: n };
-      });
-      return { mode: 'spellSlots', spellSlots: slots, current: 0, max: 0 };
-    }
-    const max = cls.resource?.max ?? this.getActionsPerTurn();
-    return { mode: 'energy', current: max, max, spellSlots: null };
-  }
-
-  scaleEnemy(enemy, playerLevel, config, data) {
-    if (typeof EnemyScaling !== 'undefined') {
-      return EnemyScaling.scaleEnemy(enemy, playerLevel, config);
-    }
-    if (!enemy) return enemy;
-    const copy = { ...enemy };
-    copy.hp = parseInt(enemy.hp ?? enemy.maxHp, 10) || 1;
-    copy.maxHp = copy.hp;
-    return copy;
-  }
-
-  getMaxLevel(data) {
-    return data?.progression?.maxLevel || 20;
-  }
-
-  validateCharacter(draft) {
-    if (!draft) return false;
-    const cfg = this.getPointBuyConfig();
-    const boosts = draft.boostsRemaining != null ? draft.boostsRemaining : 0;
-    return boosts === 0;
-  }
-}
-
-const Pathfinder2eSystem = new Pathfinder2eRuleSystem();
-if (typeof window !== 'undefined') {
-  window.Pathfinder2eSystem = Pathfinder2eSystem;
-}
-
-
-;/* —— js/systems/registry.js —— */
-// Реестр систем правил RPG
-
-const SystemRegistry = {
-  _systems: {},
-
-  register(system) {
-    if (!system?.id) return;
-    this._systems[system.id] = system;
-  },
-
-  get(id) {
-    return this._systems[id] || this._systems.dnd5e || Object.values(this._systems)[0];
-  },
-
-  list() {
-    return Object.values(this._systems).map((s) => ({
-      id: s.id,
-      label: s.label,
-      description: s.description
-    }));
-  },
-
-  getDefault() { return 'dnd5e'; }
-};
-
-if (typeof window !== 'undefined') {
-  window.SystemRegistry = SystemRegistry;
-  if (typeof DnD5eSystem !== 'undefined') SystemRegistry.register(DnD5eSystem);
-  if (typeof Pathfinder2eSystem !== 'undefined') SystemRegistry.register(Pathfinder2eSystem);
-  if (typeof GenericSystem !== 'undefined') SystemRegistry.register(GenericSystem);
-}
-
-
-;/* —— js/sidebar-dock.js —— */
-/**
- * Боковой dock: иконки 🎒 🔊 📁 открывают overlay-панели.
- * Одновременно активна только одна панель; повторный клик — закрытие.
- */
-const SidebarDock = {
-  activePanel: null,
-
-  init() {
-    const dock = document.getElementById('sidebar-dock');
-    if (!dock || dock.dataset.bound === '1') return;
-    dock.dataset.bound = '1';
-
-    dock.querySelectorAll('.dock-icon').forEach(btn => {
-      btn.addEventListener('click', () => this.toggle(btn.dataset.panel));
-    });
-
-    document.querySelectorAll('.panel-close').forEach(btn => {
-      btn.addEventListener('click', () => this.close(btn.dataset.panel));
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.activePanel) this.closeAll();
-    });
-
-    this.bindMobilePanelSwipe();
-    window.addEventListener('rpg-mobile-change', () => this.bindMobilePanelSwipe());
-  },
-
-  /** Свайп вниз для закрытия bottom sheet на мобильном */
-  bindMobilePanelSwipe() {
-    if (!document.body.classList.contains('mobile')) return;
-
-    document.querySelectorAll('.panel-overlay-inner').forEach(inner => {
-      if (inner.dataset.swipeBound === '1') return;
-      inner.dataset.swipeBound = '1';
-
-      let startY = 0;
-      let tracking = false;
-
-      inner.addEventListener('touchstart', (e) => {
-        if (inner.scrollTop > 8) return;
-        startY = e.touches[0].clientY;
-        tracking = true;
-      }, { passive: true });
-
-      inner.addEventListener('touchmove', (e) => {
-        if (!tracking) return;
-        const dy = e.touches[0].clientY - startY;
-        if (dy > 0) {
-          const panel = inner.closest('.panel-overlay');
-          if (panel) panel.classList.add('panel-swiping');
-          inner.style.transform = `translateY(${Math.min(dy, 120)}px)`;
-        }
-      }, { passive: true });
-
-      inner.addEventListener('touchend', (e) => {
-        if (!tracking) return;
-        tracking = false;
-        const dy = e.changedTouches[0].clientY - startY;
-        inner.style.transform = '';
-        const panel = inner.closest('.panel-overlay');
-        if (panel) panel.classList.remove('panel-swiping');
-        if (dy > 72) {
-          const id = panel?.dataset?.panel;
-          if (id) this.close(id);
-        }
-      }, { passive: true });
-    });
-  },
-
-  /** Показать/скрыть dock вместе с основным sidebar (экран выбора кампании) */
-  setVisible(visible) {
-    const dock = document.getElementById('sidebar-dock');
-    const wrap = document.getElementById('sidebar-panels-wrap');
-    if (dock) dock.classList.toggle('hidden', !visible);
-    if (wrap) {
-      wrap.classList.toggle('hidden', !visible);
-      wrap.setAttribute('aria-hidden', visible ? 'false' : 'true');
-    }
-    if (!visible) this.closeAll();
-  },
-
-  toggle(panelId) {
-    if (!panelId) return;
-    if (this.activePanel === panelId) {
-      this.closeAll();
-    } else {
-      this.open(panelId);
-    }
-  },
-
-  open(panelId) {
-    this.closeAll();
-    const panel = document.getElementById('panel-' + panelId);
-    const icon = document.querySelector(`.dock-icon[data-panel="${panelId}"]`);
-    if (panel) {
-      panel.classList.add('panel-active');
-      panel.setAttribute('aria-hidden', 'false');
-    }
-    if (icon) icon.classList.add('dock-icon-active');
-    this.activePanel = panelId;
-
-    const wrap = document.getElementById('sidebar-panels-wrap');
-    if (wrap) wrap.setAttribute('aria-hidden', 'false');
-    if (document.body.classList.contains('mobile')) {
-      document.body.style.overflow = 'hidden';
-    }
-    if (panelId === 'crafting' && typeof CraftingUI !== 'undefined') {
-      CraftingUI.render();
-    }
-    if (panelId === 'wait' && typeof WaitPanel !== 'undefined') {
-      WaitPanel.init(GameEngine);
-      WaitPanel.refresh();
-    }
-  },
-
-  close(panelId) {
-    if (this.activePanel === panelId) this.closeAll();
-  },
-
-  closeAll() {
-    document.querySelectorAll('.panel-overlay').forEach(p => {
-      p.classList.remove('panel-active');
-      p.setAttribute('aria-hidden', 'true');
-    });
-    document.querySelectorAll('.dock-icon').forEach(i => i.classList.remove('dock-icon-active'));
-    this.activePanel = null;
-
-    const wrap = document.getElementById('sidebar-panels-wrap');
-    if (wrap && !document.querySelector('.panel-overlay.panel-active')) {
-      wrap.setAttribute('aria-hidden', 'true');
-    }
-    if (document.body.classList.contains('mobile')) {
-      document.body.style.overflow = '';
-    }
-    document.querySelectorAll('.panel-overlay-inner').forEach(inner => {
-      inner.style.transform = '';
-    });
-  }
-};
-
-
-;/* —— js/actions/action-registry.js —— */
-// ============================================
-// Реестр атомарных действий (Action Registry)
-// ============================================
-
-const ACTION_CATEGORIES = {
-  inventory: { label: 'Инвентарь', icon: '📦' },
-  economy: { label: 'Экономика', icon: '💰' },
-  health: { label: 'Здоровье', icon: '❤️' },
-  scene: { label: 'Сцены', icon: '🎭' },
-  dialogue: { label: 'Диалог', icon: '🗣️' },
-  combat: { label: 'Бой', icon: '⚔️' },
-  effects: { label: 'Эффекты', icon: '🔮' },
-  utility: { label: 'Универсальные', icon: '🧩' }
-};
-
-const ACTION_REGISTRY = {
-  // ——— Инвентарь ———
-  add_item: {
-    id: 'add_item',
-    name: 'Добавить предмет',
-    category: 'inventory',
-    params: [
-      { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
-      { name: 'count', type: 'number', default: 1, label: 'Количество' }
-    ],
-    execute(engine, params) {
-      const count = Math.max(1, parseInt(params.count, 10) || 1);
-      const id = params.itemId;
-      if (!id) return false;
-      for (let i = 0; i < count; i++) engine.addItem(id);
-      const name = engine.data?.items?.[id]?.name || id;
-      engine.log(`📦 Получено: ${name} ×${count}`, 'log-heal');
-      engine.updateStats?.();
-      return true;
-    }
-  },
-
-  remove_item: {
-    id: 'remove_item',
-    name: 'Удалить предмет',
-    category: 'inventory',
-    params: [
-      { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
-      { name: 'count', type: 'number', default: 1, label: 'Количество' }
-    ],
-    returns: 'boolean',
-    execute(engine, params) {
-      const count = Math.max(1, parseInt(params.count, 10) || 1);
-      const id = params.itemId;
-      if (!id) return false;
-      let removed = 0;
-      for (let i = 0; i < count; i++) {
-        const idx = engine.state.inventory.indexOf(id);
-        if (idx === -1) break;
-        engine.state.inventory.splice(idx, 1);
-        removed++;
-      }
-      if (!removed) return false;
-      if (!engine.state.inventory.includes(id)) engine.unequipItem?.(id, { silent: true });
-      const name = engine.data?.items?.[id]?.name || id;
-      engine.log(`📦 Потеряно: ${name} ×${removed}`, 'log-damage');
-      engine.updateStats?.();
-      return removed >= count;
-    }
-  },
-
-  check_item: {
-    id: 'check_item',
-    name: 'Проверить наличие предмета',
-    category: 'inventory',
-    params: [
-      { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
-      { name: 'count', type: 'number', default: 1, label: 'Минимум' }
-    ],
-    returns: 'boolean',
-    execute(engine, params) {
-      const need = Math.max(1, parseInt(params.count, 10) || 1);
-      const have = (engine.state.inventory || []).filter((id) => id === params.itemId).length;
-      return have >= need;
-    }
-  },
-
-  // ——— Экономика ———
-  add_gold: {
-    id: 'add_gold',
-    name: 'Дать золото',
-    category: 'economy',
-    params: [{ name: 'amount', type: 'number', default: 10, label: 'Количество' }],
-    execute(engine, params) {
-      const amount = Math.max(0, parseInt(params.amount, 10) || 0);
-      engine.state.gold += amount;
-      engine.updateStats?.();
-      engine.log(`💰 +${amount} зм`, 'log-heal');
-      return true;
-    }
-  },
-
-  remove_gold: {
-    id: 'remove_gold',
-    name: 'Забрать золото',
-    category: 'economy',
-    params: [{ name: 'amount', type: 'number', default: 10, label: 'Количество' }],
-    returns: 'boolean',
-    execute(engine, params) {
-      const amount = Math.max(0, parseInt(params.amount, 10) || 0);
-      if (engine.state.gold < amount) return false;
-      engine.state.gold -= amount;
-      engine.updateStats?.();
-      engine.log(`💰 −${amount} зм`, 'log-gold');
-      return true;
-    }
-  },
-
-  check_gold: {
-    id: 'check_gold',
-    name: 'Проверить золото',
-    category: 'economy',
-    params: [{ name: 'amount', type: 'number', default: 1, label: 'Минимум' }],
-    returns: 'boolean',
-    execute(engine, params) {
-      const amount = Math.max(0, parseInt(params.amount, 10) || 0);
-      return engine.state.gold >= amount;
-    }
-  },
-
-  // ——— Здоровье ———
-  heal: {
-    id: 'heal',
-    name: 'Вылечить',
-    category: 'health',
-    params: [
-      { name: 'target', type: 'select', options: ['self', 'party'], label: 'Цель' },
-      { name: 'amount', type: 'text', default: '2d4+2', label: 'Формула (2d4+2 или 10)' },
-      { name: 'restoreResources', type: 'boolean', default: false, label: 'Восстановить ресурс' }
-    ],
-    execute(engine, params) {
-      const amount = engine.parseRollAmount(params.amount);
-      const target = params.target || 'self';
-      if (target === 'party' && Array.isArray(engine.state.party) && engine.state.party.length) {
-        engine.state.party.forEach((m) => {
-          m.hp = Math.min(m.maxHp || m.hp, (m.hp || 0) + amount);
-        });
-      } else {
-        engine.state.hp = Math.min(engine.state.maxHp, engine.state.hp + amount);
-      }
-      if (params.restoreResources) engine.restoreAllResources?.();
-      engine.updateStats?.();
-      engine.log(`❤️ Восстановлено ${amount} ОЗ`, 'log-heal');
-      return true;
-    }
-  },
-
-  damage: {
-    id: 'damage',
-    name: 'Нанести урон',
-    category: 'health',
-    params: [
-      { name: 'target', type: 'select', options: ['self', 'enemy'], label: 'Цель' },
-      { name: 'amount', type: 'text', default: '1d6', label: 'Формула' }
-    ],
-    execute(engine, params) {
-      const amount = engine.parseRollAmount(params.amount);
-      if (params.target === 'enemy' && engine.state.enemies?.length) {
-        const e = engine.state.enemies[0];
-        e.hp = Math.max(0, (e.hp || 0) - amount);
-        engine.log(`💥 ${e.name}: −${amount} ОЗ`, 'log-damage');
-        engine.renderCombat?.();
-      } else {
-        engine.takeDamage?.(amount) || (engine.state.hp = Math.max(0, engine.state.hp - amount));
-        engine.log(`💥 Вы получили ${amount} урона`, 'log-damage');
-        engine.updateStats?.();
-      }
-      return true;
-    }
-  },
-
-  apply_effect: {
-    id: 'apply_effect',
-    name: 'Наложить эффект',
-    category: 'health',
-    params: [
-      { name: 'target', type: 'select', options: ['self', 'enemy'], label: 'Цель' },
-      { name: 'effect', type: 'text', default: 'poisoned', label: 'Эффект' },
-      { name: 'duration', type: 'number', default: 3, label: 'Длительность (ходов)' }
-    ],
-    execute(engine, params) {
-      const dur = parseInt(params.duration, 10) || 3;
-      const spec = { id: params.effect, duration: dur };
-      if (params.target === 'enemy' && engine.state.enemies?.[0]) {
-        const enemy = engine.state.enemies[0];
-        if (typeof StatusManager !== 'undefined') {
-          const holder = StatusManager.getEnemyHolder(engine, enemy);
-          StatusManager.apply(engine, holder, spec, 'действие');
-        } else {
-          if (!enemy.effects) enemy.effects = [];
-          enemy.effects.push({ id: params.effect, duration: dur });
-        }
-      } else if (typeof StatusManager !== 'undefined') {
-        const holder = StatusManager.getPlayerHolder(engine);
-        StatusManager.apply(engine, holder, spec, 'действие');
-      } else {
-        if (!engine.state.combat) engine.state.combat = { effects: [] };
-        if (!engine.state.combat.effects) engine.state.combat.effects = [];
-        engine.state.combat.effects.push({ id: params.effect, duration: dur });
-      }
-      engine.log(`☠️ Эффект: ${params.effect} (${dur} ход.)`, 'log-dice');
-      return true;
-    }
-  },
-
-  remove_effect: {
-    id: 'remove_effect',
-    name: 'Снять эффект',
-    category: 'health',
-    params: [
-      { name: 'target', type: 'select', options: ['self', 'enemy'], label: 'Цель' },
-      { name: 'effect', type: 'text', label: 'Эффект' }
-    ],
-    execute(engine, params) {
-      const eff = params.effect;
-      if (params.target === 'enemy' && engine.state.enemies?.[0]) {
-        if (typeof StatusManager !== 'undefined') {
-          const holder = StatusManager.getEnemyHolder(engine, engine.state.enemies[0]);
-          StatusManager.remove(engine, holder, eff);
-        } else if (engine.state.enemies[0].effects) {
-          engine.state.enemies[0].effects = engine.state.enemies[0].effects.filter(
-            (e) => (e.id || e) !== eff
-          );
-        }
-      } else if (typeof StatusManager !== 'undefined') {
-        const holder = StatusManager.getPlayerHolder(engine);
-        StatusManager.remove(engine, holder, eff);
-      }
-      if (engine.state.flags) delete engine.state.flags[`effect_${eff}`];
-      engine.log(`✨ Снят эффект: ${eff}`, 'log-heal');
-      return true;
-    }
-  },
-
-  // ——— Сцены ———
-  change_scene: {
-    id: 'change_scene',
-    name: 'Сменить сцену',
-    category: 'scene',
-    params: [{ name: 'sceneId', type: 'select', source: 'scenes', label: 'Сцена' }],
-    execute(engine, params) {
-      if (params.sceneId) engine.showScene(params.sceneId);
-      return true;
-    }
-  },
-
-  set_flag: {
-    id: 'set_flag',
-    name: 'Изменить состояние игры',
-    category: 'scene',
-    params: [
-      { name: 'flag', type: 'text', label: 'Состояние' },
-      { name: 'value', type: 'select', options: [true, false, 'toggle'], label: 'Значение' }
-    ],
-    execute(engine, params) {
-      if (!params.flag) return false;
-      if (!engine.state.flags) engine.state.flags = {};
-      let val = params.value;
-      if (val === 'toggle') val = !engine.state.flags[params.flag];
-      engine.state.flags[params.flag] = val;
-      return true;
-    }
-  },
-
-  check_flag: {
-    id: 'check_flag',
-    name: 'Проверить состояние',
-    category: 'scene',
-    params: [
-      { name: 'flag', type: 'text', label: 'Состояние' },
-      { name: 'expected', type: 'select', options: [true, false], label: 'Ожидается' }
-    ],
-    returns: 'boolean',
-    execute(engine, params) {
-      const actual = !!engine.state.flags?.[params.flag];
-      const expected = params.expected === true || params.expected === 'true';
-      return actual === expected;
-    }
-  },
-
-  update_quest: {
-    id: 'update_quest',
-    name: 'Обновить квест',
-    category: 'scene',
-    params: [
-      { name: 'questId', type: 'text', label: 'ID квеста' },
-      { name: 'stage', type: 'text', label: 'Стадия (complete)' }
-    ],
-    execute(engine, params) {
-      if (params.questId && params.stage != null) {
-        engine.updateQuest?.(params.questId, params.stage);
-      }
-      return true;
-    }
-  },
-
-  // ——— Диалог ———
-  say: {
-    id: 'say',
-    name: 'Сказать (NPC)',
-    category: 'dialogue',
-    params: [
-      { name: 'npcId', type: 'select', source: 'npcs', label: 'NPC' },
-      { name: 'text', type: 'textarea', label: 'Текст' }
-    ],
-    execute(engine, params) {
-      const npc = engine.data?.npcs?.[params.npcId];
-      const icon = npc?.icon || '💬';
-      const name = npc?.name || params.npcId || 'NPC';
-      const body = params.text || '';
-      engine.setText(`${icon} **${name}:** ${body}`);
-      return true;
-    }
-  },
-
-  show_choices: {
-    id: 'show_choices',
-    name: 'Показать выборы',
-    category: 'dialogue',
-    params: [{ name: 'choices', type: 'json', label: 'Выборы (JSON)' }],
-    execute(engine, params) {
-      const raw = params.choices;
-      const list = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : []);
-      const choices = list.map((c) => {
-        if (typeof c === 'string') return { text: c };
-        const ch = { text: c.text || c.label || '…', icon: c.icon };
-        if (c.to) ch.to = c.to;
-        if (c.chain) ch.action = `chain:${c.chain}`;
-        if (c.action) ch.action = c.action;
-        return ch;
-      });
-      engine.setChoices(choices);
-      return true;
-    }
-  },
-
-  // ——— Бой ———
-  start_combat: {
-    id: 'start_combat',
-    name: 'Начать бой',
-    category: 'combat',
-    params: [
-      { name: 'enemies', type: 'json', label: 'ID врагов (массив)' },
-      { name: 'nextScene', type: 'select', source: 'scenes', label: 'Сцена после победы' }
-    ],
-    execute(engine, params) {
-      const ids = Array.isArray(params.enemies) ? params.enemies : [params.enemies].filter(Boolean);
-      const enemies = ids.map((eid) => {
-        const e = engine.data?.enemies?.[eid];
-        if (!e) return null;
-        return {
-          ...e,
-          id: eid,
-          maxHp: e.hp,
-          creatureType: e.creatureType || engine.getDefaultCreatureType?.()
-        };
-      }).filter(Boolean);
-      if (!enemies.length) return false;
-      engine.startCombat(enemies, params.nextScene || null, ids);
-      return true;
-    }
-  },
-
-  end_combat: {
-    id: 'end_combat',
-    name: 'Закончить бой',
-    category: 'combat',
-    params: [{ name: 'victory', type: 'boolean', default: true, label: 'Победа' }],
-    execute(engine, params) {
-      if (!engine.state.combat) return false;
-      if (params.victory !== false) {
-        engine.endCombatVictory?.() || engine.fleeCombat?.();
-      } else {
-        engine.showScene?.('game_over');
-      }
-      return true;
-    }
-  },
-
-  // ——— Эффекты / баффы ———
-  apply_buff: {
-    id: 'apply_buff',
-    name: 'Бафф (усиление)',
-    category: 'effects',
-    params: [
-      { name: 'stat', type: 'select', options: ['str', 'dex', 'con', 'int', 'wis', 'cha', 'ac', 'atk'], label: 'Характеристика' },
-      { name: 'value', type: 'number', default: 1, label: 'Бонус' },
-      { name: 'duration', type: 'number', default: 3, label: 'Длительность (ходов)' }
-    ],
-    execute(engine, params) {
-      if (!engine.state.actionBuffs) engine.state.actionBuffs = [];
-      engine.state.actionBuffs.push({
-        stat: params.stat,
-        value: Number(params.value) || 0,
-        duration: parseInt(params.duration, 10) || 3
-      });
-      engine.log(`🔮 Бафф ${params.stat} +${params.value}`, 'log-combat');
-      return true;
-    }
-  },
-
-  // ——— Универсальные ———
-  roll_dice: {
-    id: 'roll_dice',
-    name: 'Бросить кости',
-    category: 'utility',
-    params: [{ name: 'formula', type: 'text', default: '2d6', label: 'Формула' }],
-    returns: 'number',
-    execute(engine, params) {
-      const n = engine.parseRollAmount(params.formula);
-      engine.log(`🎲 Бросок ${params.formula} = ${n}`, 'log-dice');
-      return n;
-    }
-  },
-
-  check_skill: {
-    id: 'check_skill',
-    name: 'Проверка навыка',
-    category: 'utility',
-    params: [
-      { name: 'skill', type: 'select', source: 'skills', label: 'Навык' },
-      { name: 'dc', type: 'number', default: 12, label: 'Сложность (DC)' }
-    ],
-    returns: 'boolean',
-    execute(engine, params) {
-      const bonus = engine.getSkillBonus?.(params.skill) ?? 0;
-      const roll = engine.d20();
-      const total = roll + bonus;
-      engine.log(`🎲 ${params.skill}: ${roll}+${bonus}=${total} vs DC ${params.dc}`, 'log-dice');
-      return total >= (parseInt(params.dc, 10) || 12);
-    }
-  },
-
-  skill_check: {
-    id: 'skill_check',
-    name: 'Проверка навыка (с ветвлением)',
-    category: 'utility',
-    params: [
-      { name: 'skill', type: 'select', source: 'skills', label: 'Навык' },
-      { name: 'dc', type: 'number', default: 12, label: 'Сложность (DC)' },
-      { name: 'successText', type: 'textarea', label: 'Текст при успехе' },
-      { name: 'failText', type: 'textarea', label: 'Текст при провале' }
-    ],
-    returns: 'boolean',
-    execute(engine, params) {
-      const bonus = engine.getSkillBonus?.(params.skill) ?? 0;
-      const roll = engine.d20();
-      const total = roll + bonus;
-      const dc = parseInt(params.dc, 10) || 12;
-      const ok = total >= dc;
-      engine.log(`🎲 ${params.skill}: ${roll}+${bonus}=${total} vs DC ${dc}`, 'log-dice');
-      if (ok && params.successText) engine.setText?.(params.successText);
-      if (!ok && params.failText) engine.setText?.(params.failText);
-      return ok;
-    }
-  },
-
-  unlock_achievement: {
-    id: 'unlock_achievement',
-    name: 'Разблокировать достижение',
-    category: 'scene',
-    params: [
-      { name: 'achievementId', type: 'text', label: 'ID достижения' }
-    ],
-    execute(engine, params) {
-      const id = params.achievementId;
-      if (!id || typeof AchievementSystem === 'undefined') return false;
-      const ach = engine.data?.achievements?.[id];
-      return AchievementSystem.unlock(engine, id, ach);
-    }
-  },
-
-  show_image: {
-    id: 'show_image',
-    name: 'Показать изображение',
-    category: 'scene',
-    params: [
-      { name: 'src', type: 'text', label: 'Путь к изображению' },
-      { name: 'caption', type: 'text', label: 'Подпись' }
-    ],
-    execute(engine, params) {
-      if (typeof SceneElementRunner !== 'undefined') {
-        SceneElementRunner._showImage(engine, { src: params.src, caption: params.caption });
-      }
-      return true;
-    }
-  },
-
-  random: {
-    id: 'random',
-    name: 'Случайное число',
-    category: 'utility',
-    params: [
-      { name: 'min', type: 'number', default: 1, label: 'От' },
-      { name: 'max', type: 'number', default: 100, label: 'До' }
-    ],
-    returns: 'number',
-    execute(engine, params) {
-      const min = parseInt(params.min, 10) || 1;
-      const max = parseInt(params.max, 10) || 100;
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-  },
-
-  log: {
-    id: 'log',
-    name: 'Сообщение в лог',
-    category: 'utility',
-    params: [
-      { name: 'message', type: 'textarea', label: 'Текст' },
-      { name: 'type', type: 'select', options: ['info', 'success', 'warning', 'danger', 'heal', 'gold'], label: 'Тип' }
-    ],
-    execute(engine, params) {
-      const cls = params.type === 'success' ? 'log-heal' : params.type === 'danger' ? 'log-damage' : `log-${params.type || 'info'}`;
-      engine.log(params.message || '…', cls);
-      return true;
-    }
-  },
-
-  wait: {
-    id: 'wait',
-    name: 'Ожидание (игровое время)',
-    category: 'utility',
-    params: [
-      { name: 'minutes', type: 'number', default: 60, label: 'Игровые минуты' },
-      { name: 'until', type: 'string', label: 'До периода (dawn/dusk/noon/midnight)' },
-      { name: 'rest', type: 'boolean', label: 'Отдыхать' },
-      { name: 'camp', type: 'boolean', label: 'Лагерь' }
-    ],
-    validate(ctx, params) {
-      if (ctx.engine?.state?.combat) {
-        return { ok: false, error: 'cannot_wait_in_combat' };
-      }
-      return { ok: true };
-    },
-    async execute(engine, params) {
-      if (params?.seconds != null && params.minutes == null && !params.until) {
-        const ms = Math.max(0, (parseFloat(params.seconds) || 0) * 1000);
-        if (ms > 0) await new Promise((r) => setTimeout(r, ms));
-        return true;
-      }
-
-      let minutes = parseInt(params.minutes, 10) || 0;
-      const ts = engine.timeSystem;
-      if (params.until && ts) {
-        switch (params.until) {
-          case 'dawn': minutes = ts.minutesUntilPeriod('dawn'); break;
-          case 'dusk': minutes = ts.minutesUntilPeriod('dusk'); break;
-          case 'noon': minutes = ts.minutesUntilHour(12); break;
-          case 'midnight': minutes = ts.minutesUntilHour(0); break;
-          default: break;
-        }
-      }
-      if (minutes <= 0) {
-        return { success: false, error: 'no_time_to_wait', log: 'Уже это время или нечего ждать.' };
-      }
-
-      const result = await engine.waitSystem?.executeWait?.(minutes, {
-        reason: params.reason || 'waiting',
-        rest: !!params.rest,
-        camp: !!params.camp
-      });
-
-      return {
-        effects: [
-          { type: 'ui_update', panels: ['clock', 'stats', 'scene', 'climate'] },
-          { type: 'refresh_scene' }
-        ],
-        log: result?.log || `⏳ Прошло ${ts?.formatDuration?.(minutes) || minutes + ' мин.'}.`
-      };
-    }
-  },
-
-  delay: {
-    id: 'delay',
-    name: 'Пауза (реальное время)',
-    category: 'utility',
-    params: [{ name: 'seconds', type: 'number', default: 1, label: 'Секунды' }],
-    async execute(engine, params) {
-      const ms = Math.max(0, (parseFloat(params.seconds) || 0) * 1000);
-      if (ms > 0) await new Promise((r) => setTimeout(r, ms));
-      return true;
-    }
-  },
-
-  advance_time: {
-    id: 'advance_time',
-    name: 'Продвинуть игровое время',
-    category: 'utility',
-    params: [{ name: 'minutes', type: 'number', default: 60, label: 'Игровые минуты' }],
-    execute(engine, params) {
-      const minutes = parseInt(params.minutes, 10) || 60;
-      engine.advanceTime?.(minutes);
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      const label = hours > 0
-        ? `${hours} ч.${mins ? ` ${mins} мин.` : ''}`
-        : `${minutes} мин.`;
-      return {
-        effects: [{ type: 'ui_update', panels: ['clock'] }],
-        log: `⏳ Прошло ${label}.`
-      };
-    }
-  },
-
-  rest_short_time: {
-    id: 'rest_short_time',
-    name: 'Короткий отдых (+1 час)',
-    category: 'utility',
-    execute(engine) {
-      engine.rest?.('short');
-      return {
-        effects: [{ type: 'ui_update', panels: ['clock', 'stats'] }],
-        log: 'Вы отдыхаете 1 час.'
-      };
-    }
-  },
-
-  rest_long_time: {
-    id: 'rest_long_time',
-    name: 'Долгий отдых (+8 часов)',
-    category: 'utility',
-    execute(engine) {
-      engine.rest?.('long');
-      return {
-        effects: [{ type: 'ui_update', panels: ['clock', 'stats'] }],
-        log: 'Вы спите всю ночь.'
-      };
-    }
-  },
-
-  refresh_ui: {
-    id: 'refresh_ui',
-    name: 'Обновить UI сцены',
-    category: 'utility',
-    params: [],
-    execute(engine) {
-      engine.refreshSceneComponents?.();
-      engine.updateStats?.();
-      return true;
-    }
-  },
-
-  roll_check: {
-    id: 'roll_check',
-    name: 'Проверка броска (d20 ≥ DC)',
-    category: 'utility',
-    params: [{ name: 'dc', type: 'number', default: 10, label: 'Сложность' }],
-    returns: 'boolean',
-    execute(engine, params) {
-      const roll = engine.d20();
-      const dc = parseInt(params.dc, 10) || 10;
-      engine.log(`🎲 Бросок ${roll} vs DC ${dc}`, 'log-dice');
-      return roll >= dc;
-    }
-  },
-
-  // ——— UI / сцена (создание персонажа и спец-сцены) ———
-  hide_sidebar: {
-    id: 'hide_sidebar',
-    name: 'Скрыть боковую панель',
-    category: 'scene',
-    params: [],
-    execute(engine) {
-      document.getElementById('sidebar')?.classList.add('hidden');
-      return true;
-    }
-  },
-
-  show_sidebar: {
-    id: 'show_sidebar',
-    name: 'Показать боковую панель',
-    category: 'scene',
-    params: [],
-    execute(engine) {
-      if (typeof engine.ensurePlayerUIVisible === 'function') {
-        engine.ensurePlayerUIVisible({ force: true });
-      } else {
-        const sidebar = document.getElementById('sidebar');
-        const hasHero = !!(engine.state?.charName?.trim() || engine.state?.className);
-        if (sidebar && hasHero) sidebar.classList.remove('hidden');
-      }
-      return true;
-    }
-  },
-
-  hide_combat_ui: {
-    id: 'hide_combat_ui',
-    name: 'Скрыть UI боя',
-    category: 'scene',
-    params: [],
-    execute(engine) {
-      document.getElementById('combat-area')?.classList.add('hidden');
-      return true;
-    }
-  },
-
-  show_combat_ui: {
-    id: 'show_combat_ui',
-    name: 'Показать UI боя',
-    category: 'scene',
-    params: [],
-    execute(engine) {
-      if (engine.state?.combat) {
-        document.getElementById('combat-area')?.classList.remove('hidden');
-      }
-      return true;
-    }
-  },
-
-  hide_dock: {
-    id: 'hide_dock',
-    name: 'Скрыть док панелей',
-    category: 'scene',
-    params: [],
-    execute() {
-      document.getElementById('sidebar-dock')?.classList.add('hidden');
-      return true;
-    }
-  },
-
-  show_dock: {
-    id: 'show_dock',
-    name: 'Показать док панелей',
-    category: 'scene',
-    params: [],
-    execute(engine) {
-      if (typeof SidebarDock !== 'undefined') SidebarDock.setVisible(true);
-      else document.getElementById('sidebar-dock')?.classList.remove('hidden');
-      if (engine && typeof engine.ensurePlayerUIVisible === 'function') {
-        engine.ensurePlayerUIVisible({ force: true });
-      }
-      return true;
-    }
-  },
-
-  apply_scene_visibility: {
-    id: 'apply_scene_visibility',
-    name: 'Видимость UI сцены',
-    category: 'scene',
-    params: [{ name: 'visibility', type: 'json', label: 'visibility' }],
-    execute(engine, params) {
-      const vis = params.visibility || params;
-      if (vis.sidebar === false) ACTION_REGISTRY.hide_sidebar.execute(engine, {});
-      if (vis.sidebar === true) ACTION_REGISTRY.show_sidebar.execute(engine, {});
-      if (vis.combat === false) ACTION_REGISTRY.hide_combat_ui.execute(engine, {});
-      if (vis.dock === false) ACTION_REGISTRY.hide_dock.execute(engine, {});
-      if (vis.dock === true) ACTION_REGISTRY.show_dock.execute(engine, {});
-      if (vis.log === false) document.body.classList.add('scene-hide-log');
-      if (vis.log === true) document.body.classList.remove('scene-hide-log');
-      return true;
-    }
-  },
-
-  /**
-   * Open a standard game UI panel (dock overlay or journal focus).
-   * panel: inventory | abilities | achievements | crafting | location | wait |
-   *        audio | menu | relations | journal | quests
-   */
-  open_panel: {
-    id: 'open_panel',
-    name: 'Открыть панель',
-    category: 'utility',
-    params: [
-      {
-        name: 'panel',
-        type: 'select',
-        options: [
-          'inventory',
-          'abilities',
-          'achievements',
-          'crafting',
-          'location',
-          'wait',
-          'audio',
-          'menu',
-          'relations',
-          'journal',
-          'quests'
-        ],
-        label: 'Панель'
-      }
-    ],
-    execute(engine, params) {
-      const panel = String(params.panel || params.id || '').toLowerCase();
-      if (!panel) return false;
-      if (panel === 'journal' || panel === 'quests') {
-        if (typeof engine?.renderQuestLog === 'function') {
-          try {
-            engine.renderQuestLog();
-          } catch (_) { /* optional */ }
-        }
-        if (typeof document !== 'undefined') {
-          const el =
-            document.getElementById('journal-wrap') ||
-            document.querySelector('.journal-card') ||
-            document.getElementById('log');
-          if (el && typeof el.scrollIntoView === 'function') {
-            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-        }
-        return true;
-      }
-      if (typeof SidebarDock !== 'undefined' && typeof SidebarDock.open === 'function') {
-        SidebarDock.open(panel);
-        return true;
-      }
-      if (typeof document !== 'undefined') {
-        const node = document.getElementById('panel-' + panel);
-        if (node) {
-          node.classList.add('panel-active');
-          node.setAttribute('aria-hidden', 'false');
-          return true;
-        }
-      }
-      return false;
-    }
-  },
-
-  push_state: {
-    id: 'push_state',
-    name: 'Сохранить UI-состояние',
-    category: 'scene',
-    params: [{ name: 'state', type: 'json', label: 'Фрагмент state' }],
-    execute(engine, params) {
-      const fragment = params.state && typeof params.state === 'object' ? params.state : {};
-      if (!engine.state._uiStack) engine.state._uiStack = [];
-      engine.state._uiStack.push({ ...fragment, _ts: Date.now() });
-      Object.assign(engine.state, fragment);
-      return true;
-    }
-  },
-
-  pop_state: {
-    id: 'pop_state',
-    name: 'Восстановить UI-состояние',
-    category: 'scene',
-    params: [{ name: 'keys', type: 'json', label: 'Ключи для снятия' }],
-    execute(engine, params) {
-      const stack = engine.state._uiStack;
-      if (!Array.isArray(stack) || !stack.length) return true;
-      const keys = Array.isArray(params.keys) ? params.keys : [];
-      const top = stack.pop();
-      if (keys.length && top) {
-        keys.forEach((k) => {
-          if (top[k] !== undefined) delete engine.state[k];
-        });
-      }
-      if (top?.inCharacterCreation) delete engine.state.inCharacterCreation;
-      return true;
-    }
-  },
-
-  play_music: {
-    id: 'play_music',
-    name: 'Музыка сцены',
-    category: 'scene',
-    params: [
-      { name: 'track', type: 'text', label: 'ID трека' },
-      { name: 'fadeIn', type: 'number', default: 0, label: 'Fade in (мс)' }
-    ],
-    execute(engine, params) {
-      const track = params.track || params.music;
-      if (!track || typeof AudioEngine === 'undefined') return true;
-      AudioEngine.unlock?.();
-      const vol = params.volume != null ? Number(params.volume) : undefined;
-      AudioEngine.playAmbient(track, { loop: true, volume: vol });
-      engine._sceneAmbientId = track;
-      return true;
-    }
-  },
-
-  stop_music: {
-    id: 'stop_music',
-    name: 'Остановить музыку',
-    category: 'scene',
-    params: [{ name: 'fadeOut', type: 'number', default: 0, label: 'Fade out (мс)' }],
-    execute(engine, params) {
-      if (typeof AudioEngine !== 'undefined') {
-        AudioEngine.stopAmbient((params?.fadeOut || 0) > 0);
-      }
-      engine._sceneAmbientId = null;
-      return true;
-    }
-  },
-
-  run_script: {
-    id: 'run_script',
-    name: 'Выполнить скрипт',
-    category: 'utility',
-    params: [
-      { name: 'script', type: 'text', label: 'Имя функции' },
-      { name: 'args', type: 'json', label: 'Аргументы' }
-    ],
-    execute(engine, params, ctx) {
-      const name = params.script;
-      if (!name) return false;
-      const fn = engine.scripts?.[name]
-        || (typeof window !== 'undefined' ? window[name] : null);
-      if (typeof fn !== 'function') {
-        console.warn('[ActionRegistry] Скрипт не найден:', name);
-        return false;
-      }
-      const draft = ctx?.component?.output?.draft;
-      let character = ActionRunner.resolveContextPath(ctx, params.source || 'component.output.character');
-      if (!character && draft && typeof CharacterCreationBridge !== 'undefined') {
-        character = CharacterCreationBridge.buildOutputFromDraft(engine, draft);
-      }
-      if (name === 'syncCharacterToUI') {
-        fn(engine, character);
-        return true;
-      }
-      const args = params.args != null ? params.args : (character != null ? [engine, character] : [engine, ctx]);
-      const list = Array.isArray(args) ? args : [args];
-      fn(...list);
-      return true;
-    }
-  },
-
-  set_character: {
-    id: 'set_character',
-    name: 'Применить персонажа',
-    category: 'scene',
-    params: [
-      { name: 'source', type: 'text', label: 'Путь в контексте' },
-      { name: 'draft', type: 'json', label: 'Черновик (draft)' }
-    ],
-    execute(engine, params, ctx) {
-      const draft = params.draft
-        || ActionRunner.resolveContextPath(ctx, params.source || 'component.output.draft')
-        || ctx?.component?.output?.draft;
-      if (!draft?.classKey) return false;
-      if (typeof CharacterCreationBridge !== 'undefined') {
-        CharacterCreationBridge.applyDraft(engine, draft, {
-          skipNavigation: true,
-          nextScene: params.nextScene
-            || ctx?.nextScene
-            || ctx?.scene?.exitScene
-            || ctx?.scene?.templateParams?.nextScene
-        });
-        return true;
-      }
-      const orig = engine.showScene.bind(engine);
-      engine.showScene = function () {};
-      try {
-        engine.finalizeCharacter(draft);
-      } finally {
-        engine.showScene = orig;
-      }
-      return true;
-    }
-  },
-
-  transition: {
-    id: 'transition',
-    name: 'Переход на сцену',
-    category: 'scene',
-    params: [
-      { name: 'target', type: 'select', source: 'scenes', label: 'Сцена' },
-      { name: 'sceneId', type: 'select', source: 'scenes', label: 'Сцена (alias)' }
-    ],
-    execute(engine, params, ctx) {
-      const id = params.target || params.sceneId || ctx?.nextScene
-        || ctx?.scene?.templateParams?.nextScene
-        || ctx?.scene?.exitScene;
-      if (id && engine.data?.scenes?.[id]) {
-        CharacterCreationBridge?.ensureGameVisible?.(engine);
-        engine.showScene(id, { forceRevisit: true });
-      }
-      return true;
-    }
-  },
-
-  confirm: {
-    id: 'confirm',
-    name: 'Подтверждение',
-    category: 'utility',
-    params: [{ name: 'message', type: 'textarea', label: 'Текст' }],
-    async execute(engine, params, ctx) {
-      const msg = params.message || 'Продолжить?';
-      const ok = typeof GameDialogs !== 'undefined'
-        ? await GameDialogs.confirm('', msg)
-        : true;
-      if (ok && params.onConfirm != null) {
-        await ActionRunner.resolveBranch(engine, params.onConfirm, ctx);
-      } else if (!ok && params.onCancel != null) {
-        await ActionRunner.resolveBranch(engine, params.onCancel, ctx);
-      }
-      return ok;
-    }
-  },
-
-  return_to_campaign_picker: {
-    id: 'return_to_campaign_picker',
-    name: 'К выбору кампании',
-    category: 'scene',
-    params: [],
-    execute(engine) {
-      engine.returnToCampaignPicker?.();
-      return true;
-    }
-  },
-
-  resume_character_creation: {
-    id: 'resume_character_creation',
-    name: 'Продолжить создание персонажа',
-    category: 'scene',
-    params: [],
-    execute(engine) {
-      engine.refreshSceneComponents?.();
-      if (typeof SceneComponentHandlers !== 'undefined' && SceneComponentHandlers.resumeCharacterCreation) {
-        SceneComponentHandlers.resumeCharacterCreation();
-      }
-      return true;
-    }
-  },
-
-  save_game: {
-    id: 'save_game',
-    name: 'Сохранить игру',
-    category: 'utility',
-    params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    async execute(engine, params) {
-      const slotRaw = params?.slot;
-      if (slotRaw && slotRaw !== 'auto') {
-        const slot = parseInt(slotRaw, 10);
-        if (slot >= 1 && slot <= (engine.SAVE_SLOTS || 5)) {
-          return engine.saveToSlot(slot, { skipConfirm: false, quiet: false });
-        }
-      }
-      engine.saveGame?.({ force: true });
-      return true;
-    }
-  },
-
-  load_game: {
-    id: 'load_game',
-    name: 'Загрузить игру',
-    category: 'utility',
-    params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    execute(engine, params) {
-      const slotRaw = params?.slot;
-      if (slotRaw && slotRaw !== 'auto') {
-        const slot = parseInt(slotRaw, 10);
-        if (slot >= 1) return engine.loadGame(slot);
-      }
-      if (typeof engine.openSaveSlotsPanel === 'function') {
-        engine.openSaveSlotsPanel();
-        return true;
-      }
-      if (typeof engine.loadGame === 'function') {
-        engine.loadGame();
-        return true;
-      }
-      return false;
-    }
-  },
-
-  craft_item: {
-    id: 'craft_item',
-    name: 'Создать предмет',
-    category: 'inventory',
-    params: [
-      { name: 'recipeId', type: 'text', label: 'ID рецепта' },
-      { name: 'resultId', type: 'text', label: 'Результат (legacy)' },
-      { name: 'materials', type: 'object', label: 'Материалы (legacy)' }
-    ],
-    validate(ctx, params) {
-      const engine = ctx.engine;
-      const recipe = CraftRecipeHelpers.resolveRecipe(engine, params);
-      if (!recipe) return { ok: false, error: 'unknown_recipe' };
-      if (typeof engine.isRecipeKnown === 'function' && !engine.isRecipeKnown(recipe.id)) {
-        return { ok: false, error: 'recipe_unknown' };
-      }
-      const inv = ctx.state?.inventory || engine.state?.inventory || [];
-      for (const ing of recipe.ingredients || []) {
-        const id = ing.id || ing.itemId || ing.ingredientId;
-        const need = Math.max(1, parseInt(ing.quantity, 10) || 1);
-        if (CraftRecipeHelpers.countInInventory(inv, id) < need) {
-          return { ok: false, error: 'no_materials' };
-        }
-      }
-      return { ok: true };
-    },
-    execute(engine, params) {
-      const recipe = CraftRecipeHelpers.resolveRecipe(engine, params);
-      if (!recipe) return false;
-      for (const ing of recipe.ingredients || []) {
-        const id = ing.id || ing.itemId || ing.ingredientId;
-        const need = Math.max(1, parseInt(ing.quantity, 10) || 1);
-        for (let i = 0; i < need; i++) {
-          if (!CraftRecipeHelpers.removeOne(engine, id)) return false;
-        }
-      }
-      const result = recipe.result || {};
-      const itemId = result.itemId || result.id;
-      const qty = Math.max(1, parseInt(result.quantity, 10) || 1);
-      if (!itemId) return false;
-      for (let i = 0; i < qty; i++) engine.addItem(itemId);
-      if (typeof engine.discoverRecipe === 'function') engine.discoverRecipe(recipe.id);
-      if (typeof QuestEvents !== 'undefined') {
-        QuestEvents.emit('ItemCrafted', { itemId, recipeId: recipe.id, qty });
-      }
-      engine.saveGame?.();
-      const name = engine.data?.items?.[itemId]?.name || recipe.name || itemId;
-      return {
-        effects: [{ type: 'ui_update', panels: ['inventory', 'crafting'] }],
-        log: `🔨 Создано: ${name}${qty > 1 ? ` ×${qty}` : ''}`
-      };
-    }
-  }
-};
-
-/** Хелперы крафта (рецепты + legacy materials) */
-const CraftRecipeHelpers = {
-  countInInventory(inventory, itemId) {
-    if (!itemId) return 0;
-    return (inventory || []).filter((id) => id === itemId).length;
-  },
-
-  removeOne(engine, itemId) {
-    if (!itemId) return false;
-    if (typeof engine.removeItem === 'function') {
-      const before = (engine.state.inventory || []).length;
-      engine.removeItem(itemId);
-      return (engine.state.inventory || []).length < before;
-    }
-    const inv = engine.state.inventory || [];
-    const idx = inv.indexOf(itemId);
-    if (idx === -1) return false;
-    inv.splice(idx, 1);
-    engine.unequipItem?.(itemId, { silent: true });
-    return true;
-  },
-
-  resolveRecipe(engine, params) {
-    if (!params) return null;
-    if (params.recipeId) {
-      return engine.data?.recipes?.[params.recipeId]
-        || (typeof engine.getRecipeById === 'function' ? engine.getRecipeById(params.recipeId) : null);
-    }
-    if (params.resultId) {
-      const materials = params.materials || {};
-      return {
-        id: '_legacy',
-        name: 'Создание',
-        ingredients: Object.entries(materials).map(([id, quantity]) => ({
-          id,
-          quantity: Math.max(1, parseInt(quantity, 10) || 1)
-        })),
-        result: { itemId: params.resultId, quantity: 1 }
-      };
-    }
-    return null;
-  }
-};
-
-/** Список навыков для редактора */
-const ACTION_SKILL_IDS = [
-  'athletics', 'acrobatics', 'stealth', 'perception', 'insight', 'persuasion',
-  'deception', 'intimidation', 'investigation', 'survival', 'arcana', 'history'
-];
-
-if (typeof window !== 'undefined') {
-  window.ACTION_REGISTRY = ACTION_REGISTRY;
-  window.ACTION_CATEGORIES = ACTION_CATEGORIES;
-  window.CraftRecipeHelpers = CraftRecipeHelpers;
-}
-
-
-;/* —— js/actions/action-registry-v3.js —— */
-// Расширения ACTION_REGISTRY: validate + effects (слой 3), без ломки legacy execute
-(function augmentActionRegistryV3() {
-  if (typeof ACTION_REGISTRY === 'undefined') return;
-
-  const heal = ACTION_REGISTRY.heal;
-  if (heal && !heal.validate) {
-    heal.validate = (ctx, params) => {
-      const cost = params.cost || { gold: params.costGold || 0 };
-      const gold = typeof cost === 'number' ? cost : (cost.gold || 0);
-      if (gold > 0 && (ctx.state?.gold ?? 0) < gold) return { ok: false, error: 'cannot_afford' };
-      return { ok: true };
-    };
-    heal.effects = () => [{ type: 'ui_update', panels: ['inventory', 'abilities'] }];
-  }
-
-  if (!ACTION_REGISTRY.trade_buy) {
-    ACTION_REGISTRY.trade_buy = {
-      id: 'trade_buy',
-      name: 'Купить предмет',
-      category: 'inventory',
-      params: [
-        { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
-        { name: 'price', type: 'number', label: 'Цена' }
-      ],
-      validate(ctx, params) {
-        const price = parseInt(params.price, 10) || 0;
-        if ((ctx.state?.gold ?? 0) < price) return { ok: false, error: 'cannot_afford' };
-        return { ok: true };
-      },
-      execute(engine, params) {
-        const price = parseInt(params.price, 10) || 0;
-        if (engine.state.gold < price) return false;
-        engine.state.gold -= price;
-        engine.addItem(params.itemId);
-        engine.updateStats?.();
-        const name = engine.data?.items?.[params.itemId]?.name || params.itemId;
-        return {
-          effects: [{ type: 'ui_update', panels: ['inventory'] }],
-          log: `📦 Куплено: ${name} (−${price} зм)`
-        };
-      }
-    };
-  }
-
-  if (!ACTION_REGISTRY.trade_sell) {
-    ACTION_REGISTRY.trade_sell = {
-      id: 'trade_sell',
-      name: 'Продать предмет',
-      category: 'inventory',
-      params: [
-        { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
-        { name: 'price', type: 'number', label: 'Цена' }
-      ],
-      validate(ctx, params) {
-        const have = (ctx.state?.inventory || []).includes(params.itemId);
-        if (!have) return { ok: false, error: 'no_item' };
-        return { ok: true };
-      },
-      execute(engine, params) {
-        const idx = engine.state.inventory.indexOf(params.itemId);
-        if (idx === -1) return false;
-        const price = parseInt(params.price, 10) || 0;
-        engine.state.inventory.splice(idx, 1);
-        engine.state.gold += price;
-        engine.updateStats?.();
-        const name = engine.data?.items?.[params.itemId]?.name || params.itemId;
-        return {
-          effects: [{ type: 'ui_update', panels: ['inventory'] }],
-          log: `💰 Продано: ${name} (+${price} зм)`
-        };
-      }
-    };
-  }
-
-  if (!ACTION_REGISTRY.repair_item) {
-    ACTION_REGISTRY.repair_item = {
-      id: 'repair_item',
-      name: 'Починить предмет',
-      category: 'utility',
-      params: [
-        { name: 'itemId', type: 'text', label: 'ID предмета' },
-        { name: 'cost', type: 'number', label: 'Стоимость' }
-      ],
-      validate(ctx, params) {
-        const cost = parseInt(params.cost, 10) || 0;
-        if (cost > 0 && (ctx.state?.gold ?? 0) < cost) {
-          return { ok: false, error: 'cannot_afford' };
-        }
-        const lvl = ctx.engine?.getItemEnhancementLevel?.(params.itemId) ?? 0;
-        if (lvl <= 0) return { ok: false, error: 'no_wear' };
-        return { ok: true };
-      },
-      execute(engine, params) {
-        const cost = parseInt(params.cost, 10) || 0;
-        const lvl = engine.getItemEnhancementLevel?.(params.itemId) || 0;
-        if (lvl <= 0) return false;
-        if (cost > 0 && engine.state.gold < cost) return false;
-        if (cost > 0) engine.state.gold -= cost;
-        engine.setItemEnhancementLevel?.(params.itemId, 0);
-        engine.recalcDerivedStats?.();
-        engine.updateStats?.();
-        engine.saveGame?.();
-        return {
-          effects: [{ type: 'item_repaired' }, { type: 'ui_update' }],
-          log: `⚒️ Предмет отремонтирован (−${cost} зм)`
-        };
-      }
-    };
-  }
-
-  if (!ACTION_REGISTRY.enhance_item) {
-    ACTION_REGISTRY.enhance_item = {
-      id: 'enhance_item',
-      name: 'Заточить предмет',
-      category: 'utility',
-      params: [{ name: 'itemId', type: 'text', label: 'ID предмета' }],
-      validate(ctx, params) {
-        const engine = ctx.engine;
-        if (!engine?.getNextEnhancementCost) return { ok: true };
-        const cost = engine.getNextEnhancementCost(params.itemId);
-        if (cost == null) return { ok: false, error: 'max_level' };
-        if ((ctx.state?.gold ?? 0) < cost) return { ok: false, error: 'cannot_afford' };
-        return { ok: true };
-      },
-      execute(engine, params) {
-        const session = engine.state.blacksmithSession || {};
-        const equippedSlot = engine.ENHANCEMENT_SLOTS?.find(
-          (s) => engine.getEquippedItemId(s) === params.itemId
-        );
-        if (!equippedSlot) {
-          session.message = 'Предмет должен быть экипирован.';
-          return { effects: [{ type: 'ui_update' }], log: session.message };
-        }
-        const template = engine.itemsData?.[params.itemId];
-        const current = engine.getItemEnhancementLevel(params.itemId);
-        const max = session.maxEnhancement != null
-          ? Math.min(engine.getItemEnhancementMax(template), Number(session.maxEnhancement))
-          : engine.getItemEnhancementMax(template);
-        const cost = engine.getNextEnhancementCost(params.itemId);
-        if (!template || cost == null || current >= max) {
-          session.message = 'Достигнут максимум заточки.';
-          return { effects: [{ type: 'ui_update' }], log: session.message };
-        }
-        if (engine.state.gold < cost) {
-          session.message = `Недостаточно золота (нужно ${cost} зм).`;
-          return { effects: [{ type: 'ui_update' }], log: session.message };
-        }
-        engine.state.gold -= cost;
-        engine.setItemEnhancementLevel(params.itemId, current + 1);
-        engine.recalcDerivedStats();
-        engine.updateStats();
-        const newLevel = current + 1;
-        session.message = `Успех! ${template.name} теперь +${newLevel}. (−${cost} зм)`;
-        engine.saveGame();
-        return {
-          effects: [{ type: 'ui_update' }],
-          log: `⚒️ Заточка: ${template.name} +${newLevel} (−${cost} зм)`
-        };
-      }
-    };
-  }
-
-  if (!ACTION_REGISTRY.remove_curse) {
-    ACTION_REGISTRY.remove_curse = {
-      id: 'remove_curse',
-      name: 'Снять проклятие с экипировки',
-      category: 'utility',
-      params: [
-        { name: 'itemId', type: 'text', label: 'ID предмета' },
-        { name: 'cost', type: 'number', label: 'Стоимость' }
-      ],
-      validate(ctx, params) {
-        const cost = parseInt(params.cost, 10) || 0;
-        if (cost > 0 && (ctx.state?.gold ?? 0) < cost) {
-          return { ok: false, error: 'cannot_afford' };
-        }
-        return { ok: true };
-      },
-      execute(engine, params) {
-        if (typeof engine.templePriestRemoveCurse === 'function') {
-          engine.templePriestRemoveCurse(params.itemId);
-          return { effects: [{ type: 'ui_update' }], log: '✨ Проклятие снято с экипировки' };
-        }
-        return false;
-      }
-    };
-  }
-
-  if (!ACTION_REGISTRY.gamble_dice) {
-    ACTION_REGISTRY.gamble_dice = {
-      id: 'gamble_dice',
-      name: 'Игра в кости',
-      category: 'utility',
-      params: [
-        { name: 'bet', type: 'number', label: 'Ставка' },
-        { name: 'minBet', type: 'number', label: 'Мин.' },
-        { name: 'maxBet', type: 'number', label: 'Макс.' }
-      ],
-      validate(ctx, params) {
-        const bet = parseInt(params.bet, 10) || 0;
-        if (bet <= 0 || (ctx.state?.gold ?? 0) < bet) {
-          return { ok: false, error: 'cannot_afford' };
-        }
-        return { ok: true };
-      },
-      execute(engine, params) {
-        const min = Math.max(1, parseInt(params.minBet, 10) || 5);
-        const max = Math.max(min, parseInt(params.maxBet, 10) || 50);
-        let bet = parseInt(params.bet, 10) || min;
-        bet = Math.max(min, Math.min(max, bet));
-        if (engine.state.gold < bet) return false;
-        const roll = engine.d20();
-        let msg;
-        if (roll >= 15) {
-          const win = bet * 2;
-          engine.state.gold += win - bet;
-          msg = `Победа! Бросок ${roll}, вы получили ${win} зм.`;
-          engine.log(`🎲 Выигрыш! Бросок ${roll}: +${win} зм`, 'log-heal');
-        } else {
-          engine.state.gold -= bet;
-          msg = `Неудача. Бросок ${roll}, потеря ${bet} зм.`;
-          engine.log(`🎲 Проигрыш (${roll}). −${bet} зм`, 'log-damage');
-        }
-        engine._lastGambleMsg = msg;
-        engine.updateStats();
-        engine.saveGame();
-        return { effects: [{ type: 'ui_update' }], log: msg };
-      }
-    };
-  }
-
-  if (!ACTION_REGISTRY.craft_item) {
-    ACTION_REGISTRY.craft_item = {
-      id: 'craft_item',
-      name: 'Создать предмет',
-      category: 'inventory',
-      params: [
-        { name: 'resultId', type: 'text', label: 'Результат' },
-        { name: 'materials', type: 'object', label: 'Материалы' }
-      ],
-      validate(ctx, params) {
-        const mats = params.materials || {};
-        const inv = ctx.state?.inventory || [];
-        for (const [matId, need] of Object.entries(mats)) {
-          let have = 0;
-          for (const id of inv) {
-            if (id === matId) have++;
-          }
-          if (have < need) return { ok: false, error: 'no_materials' };
-        }
-        return { ok: true };
-      },
-      execute(engine, params) {
-        const mats = params.materials || {};
-        for (const [matId, need] of Object.entries(mats)) {
-          for (let i = 0; i < need; i++) {
-            if (engine.removeItem) engine.removeItem(matId);
-            else {
-              const idx = engine.state.inventory.indexOf(matId);
-              if (idx === -1) return false;
-              engine.state.inventory.splice(idx, 1);
-            }
-          }
-        }
-        engine.addItem(params.resultId);
-        if (typeof QuestEvents !== 'undefined') {
-          QuestEvents.emit('ItemCrafted', { itemId: params.resultId, recipeId: params.recipeId, qty: 1 });
-        }
-        const name = engine.data?.items?.[params.resultId]?.name || params.resultId;
-        engine.saveGame?.();
-        return {
-          effects: [{ type: 'ui_update', panels: ['inventory'] }],
-          log: `🔨 Создано: ${name}`
-        };
-      }
-    };
-  }
-})();
-
-
-
-;/* —— js/actions/action-context.js —— */
-// Единый контекст выполнения действий (слой 3)
-const ActionContext = (function () {
-  function build(engine, extra = {}) {
-    if (!engine) throw new Error('ActionContext.build: engine required');
-    const state = engine.state || {};
-    return {
-      engine,
-      state,
-      data: engine.data,
-      scene: extra.scene || null,
-      component: extra.component || null,
-      character: {
-        name: state.charName,
-        className: state.className,
-        level: state.level ?? 1,
-        hp: state.hp,
-        maxHp: state.maxHp,
-        gold: state.gold,
-        inventory: state.inventory || [],
-        equipment: state.equipped || {},
-        flags: state.flags || {},
-        stats: state.stats || {}
-      },
-      party: state.party || [],
-      conditions: typeof ConditionSystem !== 'undefined' ? ConditionSystem : null,
-      resources: {
-        canAfford: (cost) => ActionContext.canAfford(engine, cost),
-        spend: (cost) => ActionContext.spend(engine, cost)
-      },
-      log: (message, type) => engine.log?.(message, type || 'log-dice'),
-      snapshot: () => ActionContext.snapshot(engine),
-      restore: (snap) => ActionContext.restore(engine, snap),
-      ...extra
-    };
-  }
-
-  function snapshot(engine) {
-    const s = engine.state;
-    return {
-      gold: s.gold,
-      hp: s.hp,
-      maxHp: s.maxHp,
-      inventory: [...(s.inventory || [])],
-      flags: { ...(s.flags || {}) },
-      equipped: { ...(s.equipped || {}) },
-      questStages: { ...(s.questStages || {}) }
-    };
-  }
-
-  function restore(engine, snap) {
-    if (!snap) return;
-    Object.assign(engine.state, {
-      gold: snap.gold,
-      hp: snap.hp,
-      maxHp: snap.maxHp,
-      inventory: [...(snap.inventory || [])],
-      flags: { ...(snap.flags || {}) },
-      equipped: { ...(snap.equipped || {}) },
-      questStages: { ...(snap.questStages || {}) }
-    });
-    engine.updateStats?.();
-    engine.updateUI?.();
-  }
-
-  function parseCost(cost) {
-    if (!cost) return { gold: 0, items: {} };
-    if (typeof cost === 'number') return { gold: cost, items: {} };
-    if (typeof cost === 'string' && /^\d+$/.test(cost)) return { gold: parseInt(cost, 10), items: {} };
-    const gold = cost.gold ?? cost.amount ?? 0;
-    const items = { ...(cost.items || {}) };
-    if (cost.itemId) items[cost.itemId] = cost.count ?? cost.amount ?? 1;
-    if (cost.resource && cost.resource !== 'gold') {
-      items[cost.resource] = cost.amount ?? 1;
-    }
-    return { gold: Number(gold) || 0, items };
-  }
-
-  function canAfford(engine, cost) {
-    const parsed = parseCost(cost);
-    if ((engine.state.gold ?? 0) < parsed.gold) return false;
-    for (const [itemId, need] of Object.entries(parsed.items)) {
-      const have = (engine.state.inventory || []).filter((id) => id === itemId).length;
-      if (have < need) return false;
-    }
-    return true;
-  }
-
-  function spend(engine, cost) {
-    const parsed = parseCost(cost);
-    if (parsed.gold > 0) {
-      engine.state.gold -= parsed.gold;
-      engine.updateStats?.();
-    }
-    for (const [itemId, need] of Object.entries(parsed.items)) {
-      for (let i = 0; i < need; i++) {
-        const idx = (engine.state.inventory || []).indexOf(itemId);
-        if (idx === -1) break;
-        engine.state.inventory.splice(idx, 1);
-      }
-    }
-  }
-
-  return { build, snapshot, restore, canAfford, spend, parseCost };
-})();
-
-if (typeof window !== 'undefined') {
-  window.ActionContext = ActionContext;
-}
-
-
-;/* —— js/actions/action-effects.js —— */
-// Применение декларативных эффектов после execute()
-const ActionEffects = (function () {
-  async function applyOne(effect, ctx) {
-    if (!effect || !ctx?.engine) return;
-    const engine = ctx.engine;
-    const type = effect.type;
-
-    switch (type) {
-      case 'ui_update':
-        engine.updateStats?.();
-        engine.updateUI?.();
-        engine.refreshSceneComponents?.();
-        (effect.panels || []).forEach((p) => {
-          if (p === 'inventory') engine.renderInventory?.();
-          if (p === 'abilities') engine.renderAbilities?.();
-          if (p === 'equipment') engine.updateStats?.();
-          if (p === 'stats') engine.updateStats?.();
-          if (p === 'clock') engine.timeSystem?.updateUI?.();
-          if (p === 'climate') engine.updateClimateUI?.();
-          if (p === 'crafting' && typeof CraftingUI !== 'undefined') CraftingUI.render();
-        });
-        break;
-      case 'refresh_scene':
-        engine.refreshSceneForTime?.(true);
-        engine.refreshSceneForClimate?.(true);
-        engine.refreshSceneComponents?.();
-        break;
-      case 'modify_stat':
-        if (effect.stat === 'gold') engine.state.gold = (engine.state.gold || 0) + (effect.value || 0);
-        else if (effect.stat === 'hp') {
-          engine.state.hp = Math.min(engine.state.maxHp, (engine.state.hp || 0) + (effect.value || 0));
-        } else if (engine.state.stats && effect.stat in engine.state.stats) {
-          engine.state.stats[effect.stat] += effect.value || 0;
-        }
-        engine.updateStats?.();
-        break;
-      case 'set_flag':
-        if (!engine.state.flags) engine.state.flags = {};
-        engine.state.flags[effect.flag] = effect.value !== undefined ? effect.value : true;
-        break;
-      case 'log':
-        ctx.log(effect.message || '…', effect.logType || 'log-dice');
-        break;
-      case 'transition':
-      case 'change_scene':
-        if (effect.target || effect.sceneId) {
-          engine.showScene(effect.target || effect.sceneId);
-        }
-        break;
-      case 'play_sound':
-        if (typeof AudioEngine !== 'undefined' && effect.sound) {
-          AudioEngine.playSFX?.(effect.sound, { volume: effect.volume });
-        }
-        break;
-      case 'trigger_event':
-        if (effect.event && typeof engine[effect.event] === 'function') {
-          engine[effect.event](...(effect.args || []));
-        } else if (effect.handler && typeof GameEngine.runSceneHandler === 'function') {
-          GameEngine.runSceneHandler(effect.handler, effect.data || {});
-        }
-        break;
-      case 'item_repaired':
-      case 'refresh_components':
-        engine.refreshSceneComponents?.();
-        break;
-      default:
-        break;
-    }
-  }
-
-  async function applyAll(effects, ctx) {
-    if (!Array.isArray(effects)) return;
-    for (const eff of effects) {
-      await applyOne(eff, ctx);
-    }
-  }
-
-  return { applyOne, applyAll };
-})();
-
-if (typeof window !== 'undefined') {
-  window.ActionEffects = ActionEffects;
-}
-
-
-;/* —— js/actions/action-chain-library.js —— */
-// ============================================
-// Библиотека готовых цепочек действий (примеры)
-// ============================================
-
-const DEFAULT_ACTION_CHAINS = {
-  not_enough_gold: {
-    name: 'Недостаточно золота',
-    steps: [
-      { action: 'log', params: { message: '❌ Недостаточно золота.', type: 'danger' } }
-    ]
-  },
-
-  buy_potion: {
-    name: 'Купить зелье лечения',
-    steps: [
-      { action: 'check_gold', params: { amount: 20 }, onFail: 'not_enough_gold' },
-      { action: 'remove_gold', params: { amount: 20 } },
-      { action: 'add_item', params: { itemId: 'healing_potion', count: 1 } },
-      { action: 'log', params: { message: '✅ Куплено зелье лечения!', type: 'success' } },
-      { action: 'refresh_ui' }
-    ]
-  },
-
-  buy_item: {
-    name: 'Купить предмет (шаблон)',
-    steps: [
-      { action: 'check_gold', params: { amount: 50 }, onFail: 'not_enough_gold' },
-      { action: 'remove_gold', params: { amount: 50 } },
-      { action: 'add_item', params: { itemId: 'healing_potion', count: 1 } },
-      { action: 'log', params: { message: 'Покупка завершена.', type: 'success' } }
-    ]
-  },
-
-  sell_item: {
-    name: 'Продать предмет (шаблон)',
-    steps: [
-      { action: 'check_item', params: { itemId: 'rope', count: 1 }, onFail: 'no_item_to_sell' },
-      { action: 'remove_item', params: { itemId: 'rope', count: 1 } },
-      { action: 'add_gold', params: { amount: 5 } },
-      { action: 'log', params: { message: '💰 Предмет продан.', type: 'success' } }
-    ]
-  },
-
-  no_item_to_sell: {
-    name: 'Нет предмета для продажи',
-    steps: [
-      { action: 'log', params: { message: 'У вас нет такого предмета.', type: 'warning' } }
-    ]
-  },
-
-  heal_at_temple: {
-    name: 'Лечение в храме',
-    steps: [
-      { action: 'check_gold', params: { amount: 50 }, onFail: 'not_enough_gold' },
-      { action: 'remove_gold', params: { amount: 50 } },
-      { action: 'heal', params: { target: 'self', amount: '2d8+4', restoreResources: true } },
-      { action: 'log', params: { message: '✨ Священник исцелил ваши раны.', type: 'success' } },
-      { action: 'refresh_ui' }
-    ]
-  },
-
-  heal_party: {
-    name: 'Лечение группы',
-    steps: [
-      { action: 'heal', params: { target: 'party', amount: '2d6+2' } },
-      { action: 'log', params: { message: 'Группа отдыхает и восстанавливает силы.', type: 'heal' } }
-    ]
-  },
-
-  remove_curse: {
-    name: 'Снятие проклятия',
-    steps: [
-      { action: 'check_gold', params: { amount: 200 }, onFail: 'not_enough_gold' },
-      { action: 'remove_gold', params: { amount: 200 } },
-      { action: 'remove_effect', params: { target: 'self', effect: 'cursed' } },
-      { action: 'log', params: { message: '✨ Проклятие ослаблено священником.', type: 'success' } }
-    ]
-  },
-
-  start_quest: {
-    name: 'Начать квест',
-    steps: [
-      { action: 'say', params: { npcId: 'marta', text: 'Помоги найти моего сына! Возьми это фото.' } },
-      { action: 'set_flag', params: { flag: 'quest_find_son', value: true } },
-      { action: 'update_quest', params: { questId: 'find_albert', stage: '1' } },
-      { action: 'log', params: { message: '📜 Новое задание: найти сына Марты.', type: 'success' } }
-    ]
-  },
-
-  complete_quest: {
-    name: 'Завершить квест',
-    steps: [
-      { action: 'update_quest', params: { questId: 'find_albert', stage: 'complete' } },
-      { action: 'add_gold', params: { amount: 100 } },
-      { action: 'log', params: { message: '🎉 Квест выполнен! +100 зм', type: 'success' } }
-    ]
-  },
-
-  enhance_item: {
-    name: 'Заточка (упрощённо)',
-    steps: [
-      { action: 'check_gold', params: { amount: 100 }, onFail: 'not_enough_gold' },
-      { action: 'remove_gold', params: { amount: 100 } },
-      { action: 'log', params: { message: '⚒️ Кузнец закалил ваше снаряжение!', type: 'success' } }
-    ]
-  },
-
-  gamble_dice: {
-    name: 'Азартная игра (кости)',
-    steps: [
-      { action: 'check_gold', params: { amount: 10 }, onFail: 'not_enough_gold' },
-      { action: 'remove_gold', params: { amount: 10 } },
-      {
-        action: 'roll_check',
-        params: { dc: 15 },
-        onSuccess: [
-          { action: 'add_gold', params: { amount: 25 } },
-          { action: 'log', params: { message: '🎲 Удача! Вы выиграли 25 зм.', type: 'success' } }
-        ],
-        onFail: [
-          { action: 'log', params: { message: '🎲 Неудача. Ставка потеряна.', type: 'warning' } }
-        ]
-      }
-    ]
-  },
-
-  jack_greeting: {
-    name: 'Приветствие Джека',
-    steps: [
-      {
-        action: 'say',
-        params: {
-          npcId: 'jack',
-          text: 'Добро пожаловать! Видишь кнопки — покупай быстро, или торгуйся как обычно.'
-        }
-      }
-    ]
-  },
-
-  npc_dialogue: {
-    name: 'Диалог с ветвлением',
-    steps: [
-      {
-        action: 'check_gold',
-        params: { amount: 100 },
-        onSuccess: [
-          { action: 'say', params: { npcId: 'jack', text: 'У тебя достаточно золота!' } },
-          {
-            action: 'show_choices',
-            params: {
-              choices: [
-                { text: 'Купить зелье', chain: 'buy_potion' },
-                { text: 'Уйти', to: 'village_hub' }
-              ]
-            }
-          }
-        ],
-        onFail: [
-          { action: 'say', params: { npcId: 'jack', text: 'Приходи, когда разбогатеешь.' } },
-          { action: 'change_scene', params: { sceneId: 'village_hub' } }
-        ]
-      }
-    ]
-  },
-
-  trap_disarm: {
-    name: 'Обезвреживание ловушки',
-    steps: [
-      {
-        action: 'check_skill',
-        params: { skill: 'investigation', dc: 14 },
-        onSuccess: [
-          { action: 'log', params: { message: '✅ Ловушка обезврежена!', type: 'success' } },
-          { action: 'set_flag', params: { flag: 'trap_disarmed', value: true } }
-        ],
-        onFail: [
-          { action: 'damage', params: { target: 'self', amount: '1d6' } },
-          { action: 'log', params: { message: '💥 Ловушка сработала!', type: 'danger' } }
-        ]
-      }
-    ]
-  },
-
-  leave_shop: {
-    name: 'Уйти из лавки',
-    steps: [
-      { action: 'change_scene', params: { sceneId: 'village_hub' } }
-    ]
-  }
-};
-
-const ActionChainLibrary = {
-  ensureActionChains(data) {
-    if (!data) return;
-    if (!data.actionChains) data.actionChains = {};
-    Object.keys(DEFAULT_ACTION_CHAINS).forEach((id) => {
-      if (!data.actionChains[id]) {
-        data.actionChains[id] = JSON.parse(JSON.stringify(DEFAULT_ACTION_CHAINS[id]));
-      }
-    });
-  },
-
-  getDefaults() {
-    return DEFAULT_ACTION_CHAINS;
-  }
-};
-
-if (typeof window !== 'undefined') {
-  window.DEFAULT_ACTION_CHAINS = DEFAULT_ACTION_CHAINS;
-  window.ActionChainLibrary = ActionChainLibrary;
-}
-
-
-;/* —— js/components/component-base.js —— */
-// Общие хелперы и базовый класс компонентов (слой 2)
-const SceneComponentBase = {
-  escape(engine, s) {
-    return engine.escapeHtml ? engine.escapeHtml(s) : String(s ?? '');
-  },
-
-  attr(engine, s) {
-    return engine.escapeAttr ? engine.escapeAttr(s) : String(s ?? '');
-  },
-
-  isVisible(engine, compDef) {
-    if (compDef.enabled === false) return false;
-    const cond = compDef.conditions || compDef.condition;
-    if (!cond) return true;
-    const ctx = engine.getConditionContext?.() || {
-      flags: engine.state?.flags || {},
-      inventory: engine.state?.inventory || [],
-      gold: engine.state?.gold ?? 0
-    };
-    if (typeof ConditionSystem !== 'undefined') {
-      if (typeof ConditionSystem.resolveRef === 'function') {
-        return ConditionSystem.resolveRef(cond, ctx);
-      }
-      if (cond.showIf && !ConditionSystem.evaluate(cond.showIf, ctx)) return false;
-      if (cond.hideIf && ConditionSystem.evaluate(cond.hideIf, ctx)) return false;
-    }
-    return true;
-  },
-
-  wrap(type, title, inner) {
-    return `<div class="scene-component-block scene-component-block--${type}">
-      <div class="scene-component-head">${title}</div>
-      <div class="scene-component-body">${inner}</div>
-    </div>`;
-  },
-
-  previewNote(preview) {
-    return preview ? '<p class="hint scene-component-preview">Предпросмотр — кнопки неактивны</p>' : '';
-  },
-
-  resolveInventory(engine, key, npcId) {
-    if (typeof SceneTemplateEngine !== 'undefined') {
-      return SceneTemplateEngine.resolveInventory(engine.data, key, npcId);
-    }
-    const inv = engine.data?.shopInventories?.[key];
-    if (inv?.items) return inv.items;
-    if (Array.isArray(inv)) return inv;
-    return Array.isArray(key) ? key : [];
-  },
-
-  getNpcName(engine, id, fallback) {
-    return engine.data?.npcs?.[id]?.name || fallback || id || 'NPC';
-  },
-
-  /** Стоимость для UI: золото + предметы */
-  renderCost(engine, cost) {
-    if (!cost) return '';
-    const parsed = typeof ActionContext !== 'undefined'
-      ? ActionContext.parseCost(cost)
-      : { gold: Number(cost.gold || cost) || 0, items: {} };
-    const parts = [];
-    if (parsed.gold > 0) parts.push(`${parsed.gold} зм`);
-    Object.entries(parsed.items).forEach(([id, n]) => {
-      const name = engine.data?.items?.[id]?.name || id;
-      parts.push(`${name} ×${n}`);
-    });
-    return parts.join(' · ') || 'бесплатно';
-  },
-
-  checkCondition(engine, conditionRef, args) {
-    const ctx = engine.getConditionContext?.();
-    if (typeof ConditionSystem !== 'undefined' && ConditionSystem.resolveRef) {
-      return ConditionSystem.resolveRef(conditionRef, ctx, args);
-    }
-    return true;
-  },
-
-  async runAction(engine, actionRef, params, extraCtx) {
-    if (typeof ActionRunner !== 'undefined' && ActionRunner.runV2) {
-      return ActionRunner.runV2(engine, actionRef, params, extraCtx);
-    }
-    if (typeof engine.executeChain === 'function' && typeof actionRef === 'string') {
-      return engine.executeChain(actionRef);
-    }
-    return { success: false };
-  },
-
-  getConfig(compDef) {
-    return compDef.config || compDef.params || {};
-  },
-
-  resolveType(compDef) {
-    return compDef.component || compDef.type || 'unknown';
-  }
-};
-
-/**
- * Базовый класс UI-компонента сцены (слой 2 — без бизнес-логики).
- */
-class SceneComponent {
-  constructor(type, config, engine, ctx) {
-    this.type = type;
-    this.config = config || {};
-    this.engine = engine;
-    this.ctx = ctx || {};
-    this.element = null;
-    this.state = {};
-  }
-
-  mount(container) {
-    this.element = container;
-    this.render();
-  }
-
-  unmount() {
-    if (this.element) this.element.innerHTML = '';
-    this.element = null;
-    this.state = {};
-  }
-
-  update(data) {
-    Object.assign(this.config, data || {});
-    if (this.element) this.render();
-  }
-
-  emit(event, data) {
-    const sceneId = this.ctx.sceneId || this.engine.state?.scene;
-    if (event === 'run_action' && data?.action) {
-      return SceneComponentBase.runAction(this.engine, data.action, data.params || {}, {
-        scene: this.ctx.scene,
-        component: this.ctx.compDef
-      });
-    }
-    if (event === 'run_chain' && data?.chain) {
-      return this.engine.executeChain?.(data.chain);
-    }
-    if (event === 'refresh') {
-      this.engine.refreshSceneComponents?.();
-    }
-  }
-
-  render() {
-    /* override */
-  }
-
-  renderCost(cost) {
-    return SceneComponentBase.renderCost(this.engine, cost);
-  }
-
-  checkCondition(ref, args) {
-    return SceneComponentBase.checkCondition(this.engine, ref, args);
-  }
-
-  runAction(actionRef, params) {
-    return this.emit('run_action', { action: actionRef, params });
-  }
-}
-
-if (typeof window !== 'undefined') {
-  window.SceneComponent = SceneComponent;
-}
-
-
-;/* —— js/components/component-normalize.js —— */
-// Нормализация legacy-компонентов → v3 (обратная совместимость)
-const SceneComponentNormalize = (function () {
-  const LEGACY_PANEL = {
-    repair: 'repair_panel',
-    upgrade: 'upgrade_panel',
-    enhance: 'upgrade_panel',
-    heal: null,
-    curse_remove: 'curse_remove_panel',
-    gambling: 'gamble_panel',
-    crafting: 'craft_panel'
-  };
-
-  const LEGACY_HEADER = {
-    repair: '⚒️ Ремонт',
-    upgrade: '⬆️ Заточка',
-    enhance: '⬆️ Заточка',
-    heal: '🩹 Лечение',
-    curse_remove: '✨ Снятие проклятий',
-    gambling: '🎲 Азарт',
-    crafting: '🔨 Создание'
-  };
-
-  function normalize(comp) {
-    if (!comp || typeof comp !== 'object') return comp;
-    const type = comp.component || comp.type;
-    if (!type) return comp;
-
-    if (type === 'trade') {
-      return {
-        ...comp,
-        component: 'trade_interface',
-        params: { ...(comp.params || comp.config || {}), _legacyTrade: true }
-      };
-    }
-
-    if (type === 'interactive') {
-      return {
-        ...comp,
-        component: 'interactive_panel',
-        params: comp.params || comp.config || {}
-      };
-    }
-
-    if (type === 'dialogue') {
-      return {
-        ...comp,
-        component: 'dialogue_tree',
-        params: comp.params || comp.config || {}
-      };
-    }
-
-    const panelId = LEGACY_PANEL[type];
-    if (panelId && comp._wrapServiceMenu !== false) {
-      return {
-        ...comp,
-        component: 'service_menu',
-        _legacyWrapped: type,
-        params: {
-          header: LEGACY_HEADER[type] || 'Услуги',
-          services: [
-            {
-              id: `${type}_panel`,
-              type: 'panel',
-              panel: panelId,
-              panelParams: { ...(comp.params || comp.config || {}) }
-            }
-          ]
-        }
-      };
-    }
-
-    if (comp.config && !comp.params) {
-      return { ...comp, params: comp.config };
-    }
-
-    return comp;
-  }
-
-  function normalizeList(components) {
-    if (!Array.isArray(components)) return [];
-    return components.map(normalize);
-  }
-
-  return { normalize, normalizeList, LEGACY_PANEL };
-})();
-
-if (typeof window !== 'undefined') {
-  window.SceneComponentNormalize = SceneComponentNormalize;
-}
-
-
-;/* —— js/scene-components.js —— */
-// ============================================
-// Компонентная архитектура сцен
-// ============================================
-
-const SceneComponentRegistry = (function () {
-  const _types = {};
-
-  const COMPONENT_META = {
-    dialogue_tree: { label: 'Диалог', icon: '💬' },
-    trade_interface: { label: 'Торговля', icon: '💰' },
-    service_menu: { label: 'Меню услуг', icon: '📋' },
-    interactive_panel: { label: 'Кнопка (цепочка)', icon: '🔘' },
-    character_creator: { label: 'Создание персонажа', icon: '🧝' }
-  };
-
-  function register(type, renderer) {
-    _types[type] = renderer;
-  }
-
-  /** Регистрация при загрузке до scene-components.js (очередь) */
-  function flushPendingRegistrations() {
-    const pending = typeof window !== 'undefined' ? window.__sceneComponentPending : null;
-    if (!Array.isArray(pending) || !pending.length) return;
-    pending.forEach((entry) => {
-      if (entry?.type && entry.renderer) register(entry.type, entry.renderer);
-    });
-    if (typeof window !== 'undefined') window.__sceneComponentPending = [];
-  }
-
-  function get(type) {
-    return _types[type] || null;
-  }
-
-  function listTypes() {
-    return Object.keys(COMPONENT_META).filter((t) => t !== 'enhance');
-  }
-
-  function getMeta(type) {
-    return COMPONENT_META[type] || { label: type, icon: '📦' };
-  }
-
-  function defaultParams(type) {
-    const r = get(type);
-    return r?.defaultParams ? { ...r.defaultParams } : {};
-  }
-
-  function bindGameEngine() {
-    if (typeof GameEngine === 'undefined') return;
-
-    GameEngine.hasSceneComponents = function (scene) {
-      return Array.isArray(scene?.components) && scene.components.length > 0;
-    };
-
-    GameEngine.clearSceneComponentsArea = function () {
-      const area = document.getElementById('scene-components-area');
-      if (area) {
-        area.innerHTML = '';
-        area.classList.add('hidden');
-      }
-    };
-
-    GameEngine.renderSceneComponents = function (sceneId, scene, options = {}) {
-      const area = document.getElementById('scene-components-area');
-      if (!area) return;
-      area.innerHTML = '';
-      area.classList.remove('hidden');
-
-      let list = scene?.components || [];
-      if (typeof SceneComponentNormalize !== 'undefined') {
-        list = SceneComponentNormalize.normalizeList(list);
-      }
-      this.state.componentScene = {
-        sceneId,
-        preview: !!options.preview,
-        activeIndex: null
-      };
-
-      list.forEach((comp, index) => {
-        if (!SceneComponentBase.isVisible(this, comp)) return;
-        const type = comp.component || comp.type;
-        const renderer = get(type);
-        if (!renderer) {
-          const wrap = document.createElement('div');
-          wrap.className = 'scene-component-unknown';
-          wrap.innerHTML = `<p class="hint">Неизвестный компонент: ${SceneComponentBase.escape(this, type)}</p>`;
-          area.appendChild(wrap);
-          return;
-        }
-        const wrap = document.createElement('div');
-        wrap.className = `scene-component scene-component--${type}`;
-        wrap.dataset.componentIndex = String(index);
-        area.appendChild(wrap);
-        try {
-          renderer.render(this, wrap, comp, {
-            sceneId,
-            index,
-            preview: !!options.preview,
-            scene
-          });
-        } catch (e) {
-          console.error('[SceneComponent]', type, e);
-          wrap.innerHTML = `<p class="hint">Ошибка компонента ${type}</p>`;
-        }
-      });
-
-      if (!options.preview) {
-        this.renderComponentSceneExit(sceneId, scene);
-      }
-      this.saveGame?.();
-    };
-
-    GameEngine.renderComponentSceneExit = function (sceneId, scene) {
-      const raw = this.data?.scenes?.[sceneId];
-      const fallbackExit = typeof this.getFirstStorySceneId === 'function'
-        ? this.getFirstStorySceneId()
-        : 'village_hub';
-      const exit = scene?.exit || scene?.exitScene || raw?.exitScene || fallbackExit;
-      const choices = [];
-      if (exit) {
-        choices.push({ text: '🚪 Уйти', to: exit, icon: '🚪' });
-      }
-      const hubBtn = this.buildHubReturnChoice?.(raw);
-      if (hubBtn && (!exit || hubBtn.to !== exit)) choices.push(hubBtn);
-      this.setChoices(choices);
-    };
-
-    GameEngine.refreshSceneComponents = function () {
-      const sid = this.state.scene;
-      if (!sid) return;
-      const scene = this.getProcessedScene?.(sid) || this.data?.scenes?.[sid];
-      if (this.hasSceneComponents(scene)) {
-        this.renderSceneComponents(sid, scene, { preview: this.state.componentScene?.preview });
-      }
-    };
-  }
-
-  bindGameEngine();
-  if (typeof document !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', bindGameEngine);
-  }
-
-  return {
-    register,
-    get,
-    listTypes,
-    getMeta,
-    defaultParams,
-    COMPONENT_META,
-    flushPendingRegistrations
-  };
-})();
-
-if (typeof window !== 'undefined') {
-  window.SceneComponentRegistry = SceneComponentRegistry;
-  SceneComponentRegistry.flushPendingRegistrations?.();
-}
-
-/** Безопасная регистрация из файлов компонентов (если порядок скриптов нарушен) */
-function registerSceneComponent(type, renderer) {
-  if (typeof SceneComponentRegistry !== 'undefined' && SceneComponentRegistry.register) {
-    SceneComponentRegistry.register(type, renderer);
-    return;
-  }
-  if (typeof window !== 'undefined') {
-    window.__sceneComponentPending = window.__sceneComponentPending || [];
-    window.__sceneComponentPending.push({ type, renderer });
-  }
-}
-
-
-;/* —— js/components/component-panels.js —— */
-// Универсальные панели услуг: только UI, логика в ACTION_REGISTRY (runAction)
-(function () {
-  const PanelActions = {
-    async run(actionId, params, extraCtx) {
-      if (typeof SceneComponentBase === 'undefined') return;
-      await SceneComponentBase.runAction(GameEngine, actionId, params || {}, extraCtx || {});
-      GameEngine.refreshSceneComponents?.();
-      GameEngine.updateStats?.();
-    },
-    runGamble(inputId, min, max, resultId) {
-      const inp = document.getElementById(inputId);
-      let bet = parseInt(inp?.value, 10) || min;
-      bet = Math.max(min, Math.min(max, bet));
-      return PanelActions.run('gamble_dice', { bet, minBet: min, maxBet: max }).then(() => {
-        const el = document.getElementById(resultId);
-        if (el && GameEngine._lastGambleMsg) el.textContent = GameEngine._lastGambleMsg;
-      });
-    },
-    runCraft(btn) {
-      if (!btn?.dataset) return Promise.resolve();
-      let materials = {};
-      try {
-        materials = JSON.parse(btn.dataset.mats || '{}');
-      } catch (e) { /* ignore */ }
-      return PanelActions.run('craft_item', {
-        resultId: btn.dataset.resultId,
-        materials
-      });
-    }
-  };
-  if (typeof window !== 'undefined') window.PanelActions = PanelActions;
-
-  function attr(engine, s) {
-    return SceneComponentBase.attr(engine, s);
-  }
-
-  function esc(engine, s) {
-    return SceneComponentBase.escape(engine, s);
-  }
-
-  const RepairPanel = {
-    defaultParams: { npc: 'blacksmith_npc', flatCost: 15, costPerDurability: 1 },
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const preview = ctx.preview;
-      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Мастер');
-      const cost = Math.max(1, parseInt(p.flatCost ?? p.costPerDurability, 10) || 15);
-      const slots = engine.ENHANCEMENT_SLOTS || ['weapon_main', 'armor', 'shield'];
-      let rows = '';
-      slots.forEach((slot) => {
-        const id = engine.getEquippedItemId?.(slot);
-        const item = id ? engine.getEffectiveItemData?.(id) : null;
-        const label = slot === 'weapon_main' ? 'Оружие' : slot === 'armor' ? 'Броня' : 'Щит';
-        if (!item) {
-          rows += `<p class="hint">${label}: пусто</p>`;
-          return;
-        }
-        const lvl = engine.getItemEnhancementLevel?.(id) || 0;
-        const worn = lvl > 0;
-        const btn = worn && !preview
-          ? `<button type="button" class="choice" onclick="PanelActions.run('repair_item',{itemId:'${attr(engine, id)}',cost:${cost}})">Починить за ${cost} зм</button>`
-          : worn && preview ? '<button type="button" class="choice" disabled>Починить</button>' : '';
-        rows += `<div class="repair-row"><span>${esc(engine, item.name)} ${worn ? `(износ +${lvl})` : '(в порядке)'}</span> ${btn}</div>`;
-      });
-      container.innerHTML = SceneComponentBase.wrap(
-        'repair_panel',
-        `⚒️ Ремонт — ${esc(engine, npc)}`,
-        `${SceneComponentBase.previewNote(preview)}<p class="hint">Сбрасывает заточку (износ). Цена: ${cost} зм.</p>${rows}`
-      );
-    }
-  };
-
-  const UpgradePanel = {
-    defaultParams: { npc: 'blacksmith_npc', maxEnhancement: 3, costTable: [100, 300, 900] },
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const preview = ctx.preview;
-      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Мастер');
-      if (preview) {
-        container.innerHTML = SceneComponentBase.wrap(
-          'upgrade_panel',
-          `⬆️ ${esc(engine, npc)}`,
-          `${SceneComponentBase.previewNote(true)}<p class="hint">Заточка до +${p.maxEnhancement}</p>`
-        );
-        return;
-      }
-      engine.state.blacksmithSession = {
-        sceneId: ctx.sceneId,
-        message: '',
-        componentIndex: ctx.index,
-        componentContainer: container,
-        costTable: p.costTable,
-        maxEnhancement: p.maxEnhancement
-      };
-      const entries = engine.getBlacksmithEnhanceableEntries?.() || [];
-      let equipHtml = '<div class="blacksmith-equipped">';
-      (engine.ENHANCEMENT_SLOTS || []).forEach((slot) => {
-        const id = engine.getEquippedItemId(slot);
-        const item = id ? engine.getEffectiveItemData(id) : null;
-        const slotLabel = slot === 'weapon_main' ? 'Оружие' : slot === 'armor' ? 'Броня' : 'Щит';
-        equipHtml += item
-          ? `<div class="blacksmith-slot">${slotLabel}: <b>${esc(engine, item.name)}</b> (+${engine.getItemEnhancementLevel(id)})</div>`
-          : `<div class="blacksmith-slot">${slotLabel}: <span class="hint">— пусто —</span></div>`;
-      });
-      equipHtml += '</div>';
-      let actionsHtml = '';
-      if (entries.length) {
-        entries.forEach((e) => {
-          const afford = engine.state.gold >= e.cost;
-          actionsHtml += `<button type="button" class="choice" ${afford ? '' : 'disabled'}
-            ${afford ? `onclick="PanelActions.run('enhance_item',{itemId:'${attr(engine, e.itemId)}'})"` : ''}>
-            Заточить ${esc(engine, e.name)} до +${e.next} — ${e.cost} зм
-          </button>`;
-        });
-      } else {
-        actionsHtml = '<p class="hint">Нет доступных улучшений.</p>';
-      }
-      const session = engine.state.blacksmithSession;
-      const msg = session.message ? `<p class="shop-flash">${esc(engine, session.message)}</p>` : '';
-      container.innerHTML = SceneComponentBase.wrap(
-        'upgrade_panel',
-        `⬆️ Заточка — ${esc(engine, npc)}`,
-        `<p class="hint">💰 ${engine.state.gold} зм</p>${msg}${equipHtml}<div class="blacksmith-actions">${actionsHtml}</div>`
-      );
-    }
-  };
-
-  const CurseRemovePanel = {
-    defaultParams: { npc: 'priest', costBase: 50 },
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const preview = ctx.preview;
-      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Священник');
-      const entries = preview ? [] : (engine.getEquippedCursedEntries?.() || []);
-      let list = '';
-      if (!entries.length) {
-        list = '<p class="hint">Нет надетых проклятых предметов.</p>';
-      } else {
-        entries.forEach((e) => {
-          const afford = engine.state.gold >= e.cost;
-          list += `<div class="curse-row">
-            <span><b>${esc(engine, e.item.name)}</b> — ${e.cost} зм</span>
-            <button type="button" class="choice" ${!afford || preview ? 'disabled' : ''}
-              ${preview ? '' : `onclick="PanelActions.run('remove_curse',{itemId:'${attr(engine, e.itemId)}',cost:${e.cost}})"`}>
-              Снять проклятие
-            </button>
-          </div>`;
-        });
-      }
-      if (!preview) {
-        engine.state.templePriestSession = {
-          sceneId: ctx.sceneId,
-          message: '',
-          componentIndex: ctx.index
-        };
-      }
-      container.innerHTML = SceneComponentBase.wrap(
-        'curse_remove_panel',
-        `✨ ${esc(engine, npc)}`,
-        `${SceneComponentBase.previewNote(preview)}${list}`
-      );
-    }
-  };
-
-  const GamblePanel = {
-    defaultParams: { npc: 'jack', minBet: 5, maxBet: 50 },
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const preview = ctx.preview;
-      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Игрок');
-      const min = Math.max(1, parseInt(p.minBet, 10) || 5);
-      const max = Math.max(min, parseInt(p.maxBet, 10) || 50);
-      const hostId = `gamble-result-${ctx.index}`;
-      container.innerHTML = SceneComponentBase.wrap(
-        'gamble_panel',
-        `🎲 ${esc(engine, npc)}`,
-        `${SceneComponentBase.previewNote(preview)}
-         <p>Кости: ставка ${min}–${max} зм. Выигрыш ×2 при броске 15+.</p>
-         <label>Ставка: <input type="number" id="gamble-bet-${ctx.index}" min="${min}" max="${max}" value="${min}" style="width:60px;" ${preview ? 'disabled' : ''}></label>
-         <button type="button" class="choice" ${preview ? 'disabled' : ''}
-           ${preview ? '' : `onclick="PanelActions.runGamble('gamble-bet-${ctx.index}',${min},${max},'${hostId}')"`}>
-           🎲 Бросить кости
-         </button>
-         <div id="${hostId}" class="hint"></div>`
-      );
-    }
-  };
-
-  const CraftPanel = {
-    defaultParams: { npc: 'blacksmith_npc', recipes: [] },
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const preview = ctx.preview;
-      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Мастер');
-      const recipes = Array.isArray(p.recipes) ? p.recipes : [];
-      let rows = '';
-      recipes.forEach((r, i) => {
-        const rec = typeof r === 'string' ? { id: r, result: r } : r;
-        const resultId = rec.result || rec.itemId || rec.id;
-        const db = engine.data?.items?.[resultId];
-        const mats = rec.materials || rec.cost || {};
-        const matStr = Object.entries(mats).map(([k, v]) => `${k}×${v}`).join(', ') || '—';
-        rows += `<div class="craft-row">
-          <span>${esc(engine, db?.name || resultId)}</span>
-          <span class="hint">${esc(engine, matStr)}</span>
-          <button type="button" class="choice" ${preview ? 'disabled' : ''}
-            data-result-id="${attr(engine, resultId)}"
-            data-mats="${attr(engine, JSON.stringify(mats))}"
-            ${preview ? '' : 'onclick="PanelActions.runCraft(this)"'}>
-            Создать
-          </button>
-        </div>`;
-      });
-      if (!rows) rows = '<p class="hint">Нет рецептов в panelParams.recipes</p>';
-      container.innerHTML = SceneComponentBase.wrap(
-        'craft_panel',
-        `🔨 ${esc(engine, npc)}`,
-        `${SceneComponentBase.previewNote(preview)}${rows}`
-      );
-    }
-  };
-
-  const PANEL_MAP = {
-    repair_panel: RepairPanel,
-    upgrade_panel: UpgradePanel,
-    enhance_panel: UpgradePanel,
-    curse_remove_panel: CurseRemovePanel,
-    gamble_panel: GamblePanel,
-    craft_panel: CraftPanel
-  };
-
-  Object.keys(PANEL_MAP).forEach((id) => {
-    registerSceneComponent(id, PANEL_MAP[id]);
-  });
-
-  if (typeof window !== 'undefined') {
-    window.SceneComponentPanels = { PANEL_MAP, get: (id) => PANEL_MAP[id] || null };
-  }
-})();
-
-
-;/* —— js/components/service-menu.js —— */
-// Универсальный компонент: меню услуг (кузнец, храм, жрец, …)
-(function () {
-  const ServiceMenuComponent = {
-    defaultParams: {
-      header: 'Услуги',
-      services: []
-    },
-
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const preview = ctx.preview;
-      const services = p.services || [];
-
-      const hours = p.operatingHours;
-      if (hours && !preview && engine.isOpen) {
-        const climateHours = engine.getClimateOperatingHours
-          ? engine.getClimateOperatingHours({ operatingHours: hours, seasonalHours: hours.seasonal !== false })
-          : hours;
-        const open = climateHours.open ?? climateHours.openHour ?? 0;
-        const close = climateHours.close ?? climateHours.closeHour ?? 24;
-        const weatherDep = p.weatherDependent || hours.weatherDependent;
-        const closedByWeather = weatherDep && engine.weatherSystem?.isShelterRequired?.();
-        if (closedByWeather || !engine.isOpen(open, close)) {
-          const after = p.afterHours || {};
-          const head = SceneComponentBase.escape(engine, p.header || 'Услуги');
-          let body = after.text
-            ? `<p>${SceneComponentBase.escape(engine, after.text)}</p>`
-            : '<p class="hint">Заведение закрыто.</p>';
-          if (Array.isArray(after.choices) && after.choices.length) {
-            body += '<div class="service-after-hours-choices">';
-            after.choices.forEach((ch, ci) => {
-              if (!ConditionSystem?.isChoiceVisible?.(ch, engine.getConditionContext?.())) return;
-              body += `<button type="button" class="choice" data-after-choice="${ci}">${SceneComponentBase.escape(engine, ch.text || '…')}</button>`;
-            });
-            body += '</div>';
-          }
-          container.innerHTML = SceneComponentBase.wrap('service_menu', head + ' — закрыто', body);
-          if (!preview) {
-            container.querySelectorAll('[data-after-choice]').forEach((btn) => {
-              btn.onclick = () => {
-                const ch = after.choices[parseInt(btn.getAttribute('data-after-choice'), 10)];
-                if (ch?.to) engine.showScene(ch.to);
-                else if (ch?.action) engine.makeChoice?.(ch);
-              };
-            });
-          }
-          return;
-        }
-      }
-
-      const panelHosts = [];
-      let body = SceneComponentBase.previewNote(preview);
-
-      if (!services.length) {
-        body += '<p class="hint">Нет услуг в конфигурации.</p>';
-      }
-
-      services.forEach((svc, svcIndex) => {
-        if (!svc) return;
-        const cond = svc.condition || svc.conditions;
-        const condArgs = svc.conditionParams || svc.params || null;
-        if (cond && !SceneComponentBase.checkCondition(engine, cond, condArgs)) return;
-
-        const type = svc.type || 'action';
-        const label = svc.label || svc.id || 'Услуга';
-        const icon = svc.icon || '▸';
-        const desc = svc.description || svc.desc || '';
-
-        if (type === 'panel' && svc.panel) {
-          const hostId = `svc-panel-${ctx.index}-${svcIndex}`;
-          body += `<div class="service-menu-panel-host" id="${hostId}"></div>`;
-          panelHosts.push({
-            hostId,
-            panelType: svc.panel,
-            panelParams: svc.panelParams || svc.params || {}
-          });
-          return;
-        }
-
-        if (type === 'chain' && svc.chain) {
-          const costStr = svc.cost ? SceneComponentBase.renderCost(engine, svc.cost) : '';
-          body += `<div class="service-menu-row">
-            <button type="button" class="choice service-menu-btn" ${preview ? 'disabled' : ''}
-              data-svc="${svcIndex}" data-kind="chain">
-              ${SceneComponentBase.escape(engine, icon)} ${SceneComponentBase.escape(engine, label)}
-              ${costStr ? `<span class="service-cost">(${SceneComponentBase.escape(engine, costStr)})</span>` : ''}
-            </button>
-            ${desc ? `<p class="hint service-desc">${SceneComponentBase.escape(engine, desc)}</p>` : ''}
-          </div>`;
-          return;
-        }
-
-        const action = svc.action || svc.actionRef;
-        const costStr = svc.cost ? SceneComponentBase.renderCost(engine, svc.cost) : '';
-        const canRun = !preview && action && (!svc.cost || (typeof ActionContext !== 'undefined' && ActionContext.canAfford(engine, svc.cost)));
-
-        body += `<div class="service-menu-row">
-          <button type="button" class="choice service-menu-btn" ${!canRun ? 'disabled' : ''}
-            data-svc="${svcIndex}" data-kind="action">
-            ${SceneComponentBase.escape(engine, icon)} ${SceneComponentBase.escape(engine, label)}
-            ${costStr ? `<span class="service-cost">(${SceneComponentBase.escape(engine, costStr)})</span>` : ''}
-          </button>
-          ${desc ? `<p class="hint service-desc">${SceneComponentBase.escape(engine, desc)}</p>` : ''}
-        </div>`;
-      });
-
-      const head = SceneComponentBase.escape(engine, p.header || 'Услуги');
-      container.innerHTML = SceneComponentBase.wrap('service_menu', head, body);
-
-      panelHosts.forEach(({ hostId, panelType, panelParams }) => {
-        const host = container.querySelector(`#${hostId}`);
-        if (!host) return;
-        const renderer = SceneComponentRegistry.get(panelType)
-          || (typeof SceneComponentPanels !== 'undefined' ? SceneComponentPanels.get(panelType) : null);
-        if (!renderer) {
-          host.innerHTML = `<p class="hint">Неизвестная панель: ${panelType}</p>`;
-          return;
-        }
-        try {
-          renderer.render(engine, host, { component: panelType, params: panelParams, enabled: true }, ctx);
-        } catch (e) {
-          host.innerHTML = `<p class="hint">Ошибка панели: ${panelType}</p>`;
-        }
-      });
-
-      if (!preview) {
-        container.querySelectorAll('.service-menu-btn').forEach((btn) => {
-          btn.onclick = () => {
-            const idx = parseInt(btn.getAttribute('data-svc'), 10);
-            const kind = btn.getAttribute('data-kind');
-            const svc = services[idx];
-            if (!svc) return;
-            if (kind === 'chain' && svc.chain) {
-              engine.executeChain?.(svc.chain);
-              engine.refreshSceneComponents?.();
-              return;
-            }
-            const actionId = svc.action || svc.actionRef;
-            const params = { ...(svc.actionParams || svc.params || {}), cost: svc.cost };
-            Promise.resolve(SceneComponentBase.runAction(engine, actionId, params, {
-              scene: ctx.scene,
-              component: compDef
-            })).then(() => engine.refreshSceneComponents?.());
-          };
-        });
-      }
-    }
-  };
-
-  registerSceneComponent('service_menu', ServiceMenuComponent);
-})();
-
-
-;/* —— js/components/trade-interface.js —— */
-// Универсальный компонент торговли (v3)
-(function () {
-  const TradeInterfaceComponent = {
-    defaultParams: {
-      merchant: 'jack',
-      inventory: 'village_shop',
-      sellMultiplier: 1,
-      buyMultiplier: 0.5,
-      repFaction: 'rep_village'
-    },
-
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const merchant = SceneComponentBase.getNpcName(engine, p.merchant || p.npc, 'Торговец');
-      const itemIds = SceneComponentBase.resolveInventory(engine, p.inventory, p.merchant);
-      const preview = ctx.preview;
-
-      const rawScene = engine.data?.scenes?.[ctx.sceneId];
-      const isJackShop = !!(p.jackShop || p.merchant === 'jack' || rawScene?.shopConfig?.jackShop);
-      let cfg = {
-        inventory: itemIds,
-        sellMultiplier: Number(p.sellMultiplier) ?? 1,
-        buyMultiplier: Number(p.buyMultiplier) ?? 0.5,
-        repFlag: p.repFaction || p.repFlag || null,
-        exitScene: ctx.scene?.exit || ctx.scene?.exitScene || rawScene?.exitScene || 'village_hub',
-        jackShop: isJackShop
-      };
-      if (isJackShop && typeof engine.getJackShopConfig === 'function') {
-        const jackCfg = engine.getJackShopConfig(rawScene || ctx.scene);
-        cfg = { ...jackCfg, ...cfg, inventory: cfg.inventory?.length ? cfg.inventory : jackCfg.inventory };
-      }
-
-      if (preview) {
-        const rows = itemIds.slice(0, 6).map((id) => {
-          const db = engine.data?.items?.[id];
-          const price = engine.getShopBuyPrice?.(id, cfg) ?? db?.price ?? '?';
-          return `<div class="trade-item-row"><span>${SceneComponentBase.escape(engine, (db?.icon || '📦') + ' ' + (db?.name || id))}</span><span>${price} зм</span></div>`;
-        }).join('');
-        container.innerHTML = SceneComponentBase.wrap(
-          'trade_interface',
-          `💰 ${SceneComponentBase.escape(engine, merchant)}`,
-          `${SceneComponentBase.previewNote(true)}<div class="trade-inventory">${rows || '<p class="hint">Пустой ассортимент</p>'}</div>`
-        );
-        return;
-      }
-
-      engine.state.shopSession = {
-        sceneId: ctx.sceneId,
-        config: cfg,
-        selectedBuyId: null,
-        selectedSellId: null,
-        message: '',
-        componentIndex: ctx.index,
-        containerEl: container
-      };
-
-      if (cfg.repFlag) {
-        const rep = engine.getReputationValue?.(cfg.repFlag) ?? 0;
-        if (rep <= -20) {
-          container.innerHTML = SceneComponentBase.wrap(
-            'trade_interface',
-            `💰 ${SceneComponentBase.escape(engine, merchant)}`,
-            '<p>Торговец отворачивается — с вами не торгуют.</p>'
-          );
-          return;
-        }
-      }
-
-      engine.renderShopUIInto?.(container);
-    }
-  };
-
-  registerSceneComponent('trade_interface', TradeInterfaceComponent);
-  registerSceneComponent('trade', TradeInterfaceComponent);
-})();
-
-
-;/* —— js/components/dialogue-tree.js —— */
-// Диалог с NPC (v3)
-(function () {
-  const DialogueTreeComponent = {
-    defaultParams: {
-      npc: 'marta',
-      greeting: 'Приветствую, путник!',
-      topics: []
-    },
-
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const npc = engine.data?.npcs?.[p.npc];
-      const name = SceneComponentBase.getNpcName(engine, p.npc, 'Собеседник');
-      const topics = Array.isArray(p.topics) ? p.topics : [];
-      const preview = ctx.preview;
-
-      let topicsHtml = '';
-      topics.forEach((t, i) => {
-        if (typeof t === 'object' && t.showIf && typeof ConditionSystem !== 'undefined') {
-          const ctx = {
-            inventory: engine.state?.inventory || [],
-            gold: engine.state?.gold ?? 0,
-            flags: engine.state?.flags || {},
-            questStages: engine.state?.questStages || {},
-            level: engine.state?.level ?? 1,
-            className: engine.state?.className || ''
-          };
-          if (!ConditionSystem.evaluate(t.showIf, ctx)) return;
-        }
-        if (typeof t === 'object' && t.hideIf && typeof ConditionSystem !== 'undefined') {
-          const ctx = {
-            inventory: engine.state?.inventory || [],
-            gold: engine.state?.gold ?? 0,
-            flags: engine.state?.flags || {},
-            questStages: engine.state?.questStages || {},
-            level: engine.state?.level ?? 1,
-            className: engine.state?.className || ''
-          };
-          if (ConditionSystem.evaluate(t.hideIf, ctx)) return;
-        }
-        const label = typeof t === 'string' ? t : (t.label || t.text || `Тема ${i + 1}`);
-        if (preview) {
-          topicsHtml += `<button type="button" class="choice" disabled>${SceneComponentBase.escape(engine, label)}</button>`;
-        } else {
-          topicsHtml += `<button type="button" class="choice" onclick="SceneComponentHandlers.dialogueTopic(${ctx.index},${i})">${SceneComponentBase.escape(engine, label)}</button>`;
-        }
-      });
-
-      container.innerHTML = SceneComponentBase.wrap(
-        'dialogue_tree',
-        `💬 ${SceneComponentBase.escape(engine, name)}`,
-        `${SceneComponentBase.previewNote(preview)}
-         <p class="scene-component-greeting">${SceneComponentBase.escape(engine, p.greeting || npc?.dialogues?.default?.[0]?.text || '...')}</p>
-         <div class="scene-component-actions">${topicsHtml || '<p class="hint">Нет тем диалога</p>'}</div>
-         <div id="dialogue-component-reply-${ctx.index}" class="scene-component-reply"></div>`
-      );
-
-      if (!window.SceneComponentHandlers) window.SceneComponentHandlers = {};
-      if (!window.SceneComponentHandlers._dialogue) window.SceneComponentHandlers._dialogue = {};
-      window.SceneComponentHandlers._dialogue[ctx.index] = { topics, name, npcId: p.npc, npc: p.npc };
-    }
-  };
-
-  registerSceneComponent('dialogue_tree', DialogueTreeComponent);
-  registerSceneComponent('dialogue', DialogueTreeComponent);
-})();
-
-
-;/* —— js/components/interactive-panel.js —— */
-// Интерактивная кнопка → цепочка действий (v3)
-(function () {
-  const InteractivePanelComponent = {
-    defaultParams: {
-      label: 'Действие',
-      chain: '',
-      icon: '➡️'
-    },
-
-    render(engine, container, compDef, ctx) {
-      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
-      const preview = ctx.preview;
-      const label = p.label || 'Действие';
-      const icon = p.icon || '➡️';
-      const chain = p.chain || compDef.chain;
-
-      const objectId = p.objectId || compDef.id || chain || 'interactive';
-      const safeObj = SceneComponentBase.attr(engine, objectId);
-      const safeChain = chain ? SceneComponentBase.attr(engine, chain) : '';
-      container.innerHTML = SceneComponentBase.wrap(
-        'interactive_panel',
-        `${icon} ${SceneComponentBase.escape(engine, label)}`,
-        `${SceneComponentBase.previewNote(preview)}
-         <button type="button" class="choice scene-chain-btn" ${preview ? 'disabled' : ''}
-           ${preview ? '' : `onclick="GameEngine.interactSceneObject('${safeObj}','${safeChain}')"`}>
-           ${SceneComponentBase.escape(engine, label)}
-         </button>
-         ${!chain && !p.objectId ? '<p class="hint">Укажите objectId или chain</p>' : ''}`
-      );
-    }
-  };
-
-  registerSceneComponent('interactive_panel', InteractivePanelComponent);
-  registerSceneComponent('interactive', InteractivePanelComponent);
-})();
-
-
-;/* —— js/components/component-handlers.js —— */
-// Обработчики UI компонентов сцен (диалог, создание персонажа)
-const SceneComponentHandlers = {
-  dialogueTopic(compIndex, topicIndex) {
-    const store = this._dialogue?.[compIndex];
-    if (!store) return;
-    const t = store.topics[topicIndex];
-    const reply = typeof t === 'object' ? (t.reply || t.text || '') : `«${t}» — отвечает ${store.name}.`;
-    const el = document.getElementById(`dialogue-component-reply-${compIndex}`);
-    if (el) el.innerHTML = `<p class="scene-component-reply-text">${GameEngine.escapeHtml(reply)}</p>`;
-    if (typeof t === 'object' && t.flags) GameEngine.applyFlags(t.flags);
-    if (typeof t === 'object' && t.questSet) {
-      GameEngine.updateQuest(t.questSet.questId, t.questSet.stage);
-    }
-    // Quest events: dialogue finished with NPC
-    const npcId = store.npcId || store.npc || (typeof t === 'object' ? t.npc : null);
-    if (typeof QuestEvents !== 'undefined') {
-      QuestEvents.emit('NPCTalked', { npcId, npc: npcId, topicIndex });
-      QuestEvents.emit('NPCDialogueFinished', { npcId, npc: npcId, topicIndex });
-      if (typeof t === 'object' && t.choiceFlag) {
-        QuestEvents.emit('ChoiceSelected', { flag: t.choiceFlag, sceneId: GameEngine.state?.scene });
-      }
-    }
-    if (typeof t === 'object' && t.donate) {
-      const cost = parseInt(t.donate.cost, 10) || 10;
-      if (GameEngine.state.gold < cost) {
-        if (el) el.innerHTML = '<p class="hint">Недостаточно золота для подношения.</p>';
-        return;
-      }
-      GameEngine.state.gold -= cost;
-      if (typeof QuestEvents !== 'undefined') {
-        QuestEvents.emit('GoldSpent', { amount: cost, reason: 'donate' });
-      }
-      if (t.donate.flag) GameEngine.state.flags[t.donate.flag] = true;
-      GameEngine.updateStats();
-      GameEngine.log(`🙏 Пожертвование в храм (−${cost} зм).`, 'log-heal');
-    }
-    if (typeof t === 'object' && Array.isArray(t.actions)) {
-      t.actions.forEach((step) => {
-        if (!step?.action) return;
-        if (typeof ActionRunner !== 'undefined' && ActionRunner.runV2) {
-          ActionRunner.runV2(GameEngine, step.action, step.params || {}, { source: 'dialogue_topic' });
-        } else if (typeof GameEngine.runAction === 'function') {
-          GameEngine.runAction(step.action, step.params || {});
-        }
-      });
-    }
-    const nextScene = typeof t === 'object' ? (t.nextScene || t.to) : null;
-    if (nextScene && typeof GameEngine.showScene === 'function') {
-      GameEngine.showScene(String(nextScene));
-    }
-  },
-
-  resumeCharacterCreation() {
-    const sid = GameEngine.state.scene;
-    const scene = GameEngine.data?.scenes?.[sid];
-    if (GameEngine.hasSceneComponents?.(scene)) {
-      GameEngine.renderSceneComponents(sid, scene);
-    } else if (GameEngine.CharacterCreator?.open) {
-      GameEngine.CharacterCreator.open();
-    }
-  }
-};
-
-
-;/* —— js/components/combat/CombatTimeline.js —— */
-/**
- * CombatTimeline — горизонтальная полоса порядка ходов в бою.
- * Использует state.combat (battleState) и combat.battleParticipants.
- * @module CombatTimeline
- */
-(function (global) {
-  'use strict';
-
-  const DEFAULT_VISIBLE = 5;
-  const UPCOMING_AFTER_CURRENT = 3;
-
-  /** @typedef {object} BattleParticipant
-   * @property {string} id
-   * @property {'player'|'enemy'} type
-   * @property {number} [enemyIndex]
-   * @property {string} name
-   * @property {string} icon
-   * @property {number} initiative
-   * @property {number} [die]
-   * @property {number} [bonus]
-   * @property {string} tooltip
-   * @property {string[]} tooltipLines
-   * @property {boolean} isCurrent
-   * @property {boolean} isDelayed
-   * @property {boolean} isReady
-   * @property {boolean} isDead
-   * @property {number} orderIndex
-   */
-
-  function escapeHtml(s) {
-    return String(s ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  function getSceneInitiativeRules(engine) {
-    const sceneId = engine?.state?.scene;
-    const scene = sceneId && engine?.data?.scenes?.[sceneId];
-    const raw = scene?.combatInitiative || scene?.combatRules?.initiative || {};
-    return {
-      enemyBonus: Number(raw.enemyBonus ?? raw.enemyInitiativeBonus ?? 0) || 0,
-      playerBonus: Number(raw.playerBonus ?? raw.playerInitiativeBonus ?? 0) || 0,
-      ambush: !!(raw.ambush ?? raw.isAmbush),
-      surpriseRound: !!(raw.surpriseRound ?? raw.surprise),
-      enemiesActFirst: !!(raw.enemiesActFirst ?? raw.enemyFirst),
-      ambushLabel: raw.ambushLabel || null
-    };
-  }
-
-  function isOrderEntryAlive(engine, entry) {
-    if (!entry) return false;
-    if (entry.type === 'player') return (engine.state?.hp ?? 0) > 0;
-    const enemy = engine.state?.enemies?.[entry.index];
-    return enemy && enemy.hp > 0;
-  }
-
-  function getParticipantIcon(engine, entry) {
-    if (entry.type === 'player') {
-      const cls = engine.state?.classData || engine.data?.classes?.[engine.state?.className];
-      return cls?.icon || '⚔️';
-    }
-    const enemy = engine.state?.enemies?.[entry.index];
-    const tplId = engine.state?.combat?.enemies?.[entry.index] || engine.state?.combat?.enemyIds?.[entry.index];
-    const tpl = tplId && engine.data?.enemies?.[tplId];
-    return enemy?.icon || tpl?.icon || '💀';
-  }
-
-  function getParticipantName(engine, entry) {
-    if (entry.type === 'player') {
-      return engine.state?.charName || 'Герой';
-    }
-    const enemy = engine.state?.enemies?.[entry.index];
-    return engine.getEnemyDisplayName
-      ? engine.getEnemyDisplayName(enemy)
-      : (enemy?.name || 'Враг');
-  }
-
-  /**
-   * Формирует текст подсказки инициативы для участника.
-   */
-  function buildInitiativeTooltip(engine, entry, context) {
-    const lines = [];
-    const rules = context.rules;
-    const order = context.order;
-    const roll = entry.roll ?? 0;
-    const die = entry.die;
-    const bonus = entry.bonus;
-    const name = getParticipantName(engine, entry);
-
-    const sortedRolls = order.map((o) => o.roll ?? 0);
-    const maxRoll = sortedRolls.length ? Math.max(...sortedRolls) : roll;
-    const tied = sortedRolls.filter((r) => r === roll).length > 1;
-
-    if (entry.type === 'player') {
-      if (rules.surpriseRound || rules.enemiesActFirst) {
-        lines.push('Сюрпризный раунд — враги ходят первыми');
-      }
-      if (rules.playerBonus) {
-        lines.push(`Бонус сцены: +${rules.playerBonus} к инициативе`);
-      }
-      if (roll === maxRoll && !rules.enemiesActFirst) {
-        lines.push(`Высшая инициатива (${roll})`);
-      } else if (tied && roll === maxRoll) {
-        lines.push(`Инициатива равна (${roll}), первым идёт игрок`);
-      } else if (die != null && bonus != null) {
-        lines.push(`Бросок: ${die} + ${bonus} = ${roll}`);
-      } else {
-        lines.push(`Инициатива: ${roll}`);
-      }
-    } else {
-      if (rules.ambush || rules.enemyBonus) {
-        const bonusVal = rules.enemyBonus || (rules.ambush ? 5 : 0);
-        if (bonusVal) {
-          lines.push(
-            rules.ambushLabel ||
-              `Засада: +${bonusVal} к инициативе в этой сцене`
-          );
-        }
-      }
-      if (rules.surpriseRound || rules.enemiesActFirst) {
-        lines.push('Сюрпризный раунд — враги ходят первыми');
-      }
-      if (roll === maxRoll && !rules.enemiesActFirst) {
-        lines.push(`Высшая инициатива (${roll}) — ${name}`);
-      } else if (tied && entry === context.firstEnemyInOrder) {
-        lines.push(`Инициатива равна (${roll}), среди врагов ходит первым`);
-      } else if (die != null && bonus != null) {
-        lines.push(`${name}: ${die} + ${bonus} = ${roll}`);
-      } else {
-        lines.push(`Инициатива ${name}: ${roll}`);
-      }
-    }
-
-    if (entry.delayed) lines.push('Отложенный ход (Delay) — в конце очереди');
-    if (entry.ready) lines.push('Подготовленное действие (Ready)');
-
-    const tooltip = lines[0] || `Инициатива: ${roll}`;
-    return { tooltip, tooltipLines: lines };
-  }
-
-  /**
-   * Собирает battleParticipants из combat.order и состояния движка.
-   */
-  function buildBattleParticipants(engine, combat) {
-    if (!combat?.order?.length) return [];
-
-    const rules = getSceneInitiativeRules(engine);
-    const order = combat.order;
-    const turnIndex = Math.max(0, combat.turnIndex ?? 0);
-    const firstEnemy = order.find((o) => o.type === 'enemy');
-
-    return order.map((entry, orderIndex) => {
-      const alive = isOrderEntryAlive(engine, entry);
-      const tip = buildInitiativeTooltip(engine, entry, {
-        rules,
-        order,
-        firstEnemyInOrder: firstEnemy
-      });
-
-      const position =
-        entry.type === 'player'
-          ? (typeof CombatPosition !== 'undefined'
-              ? CombatPosition.getPlayerPosition(engine)
-              : 'close')
-          : (typeof CombatPosition !== 'undefined'
-              ? CombatPosition.getEnemyPosition(engine, entry.index)
-              : 'close');
-
-      return {
-        id: entry.type === 'player' ? 'player' : `enemy_${entry.index}`,
-        type: entry.type,
-        enemyIndex: entry.type === 'enemy' ? entry.index : undefined,
-        name: getParticipantName(engine, entry),
-        icon: getParticipantIcon(engine, entry),
-        position,
-        initiative: entry.roll ?? 0,
-        die: entry.die,
-        bonus: entry.bonus,
-        tooltip: tip.tooltip,
-        tooltipLines: tip.tooltipLines,
-        isCurrent: orderIndex === turnIndex && alive,
-        isDelayed: !!entry.delayed,
-        isReady: !!entry.ready,
-        isDead: !alive,
-        orderIndex
-      };
-    });
-  }
-
-  /**
-   * Очередь для отображения: текущий + следующие N живых участников.
-   */
-  function buildDisplayQueue(participants, turnIndex, maxVisible) {
-    const alive = participants.filter((p) => !p.isDead);
-    if (!alive.length) return [];
-
-    const byOrder = [...participants]
-      .filter((p) => !p.isDead)
-      .sort((a, b) => a.orderIndex - b.orderIndex);
-
-    const n = byOrder.length;
-    let startIdx = 0;
-    for (let i = 0; i < n; i++) {
-      if (byOrder[i].orderIndex === turnIndex || byOrder[i].isCurrent) {
-        startIdx = i;
-        break;
-      }
-    }
-    const currentId = participants.find((p) => p.isCurrent)?.id
-      || byOrder[startIdx]?.id;
-
-    const queue = [];
-    for (let k = 0; k < n && queue.length < maxVisible; k++) {
-      const p = byOrder[(startIdx + k) % n];
-      queue.push({
-        ...p,
-        isCurrent: p.id === currentId || (k === 0 && p.orderIndex === turnIndex),
-        queuePosition: k
-      });
-    }
-    return queue;
-  }
-
-  class CombatTimeline {
-    /**
-     * @param {object} options
-     * @param {string} [options.hostId]
-     * @param {HTMLElement} [options.host]
-     */
-    constructor(options = {}) {
-      this.host =
-        options.host ||
-        (options.hostId ? document.getElementById(options.hostId) : null);
-      this.root = null;
-      this.track = null;
-      this._lastSignature = '';
-      this._cardRects = new Map();
-      this.visibleCount = options.visibleCount ?? DEFAULT_VISIBLE;
-      this.upcomingCount = options.upcomingCount ?? UPCOMING_AFTER_CURRENT;
-    }
-
-    static buildParticipants(engine, combat) {
-      return buildBattleParticipants(engine, combat);
-    }
-
-    static syncBattleState(engine) {
-      if (!engine?.state?.combat) return [];
-      const participants = buildBattleParticipants(engine, engine.state.combat);
-      engine.state.combat.battleParticipants = participants;
-      return participants;
-    }
-
-    static getInstance() {
-      return CombatTimeline._instance || null;
-    }
-
-    static attach(engine, options = {}) {
-      let host = options.host || document.getElementById('combat-timeline-host');
-      if (!host) {
-        const gameContent = document.getElementById('game-content');
-        host = document.createElement('div');
-        host.id = 'combat-timeline-host';
-        host.className = 'combat-timeline-host hidden';
-        host.setAttribute('aria-label', 'Порядок ходов');
-        const combatArea = document.getElementById('combat-area');
-        if (gameContent && combatArea) {
-          gameContent.insertBefore(host, combatArea);
-        } else if (gameContent) {
-          gameContent.prepend(host);
-        } else {
-          document.body.prepend(host);
-        }
-      }
-      if (!CombatTimeline._instance) {
-        CombatTimeline._instance = new CombatTimeline({ host });
-      }
-      CombatTimeline._instance.engine = engine;
-      return CombatTimeline._instance;
-    }
-
-    ensureDom() {
-      if (!this.host) return false;
-      if (this.root) return true;
-
-      this.host.innerHTML = '';
-      this.root = document.createElement('div');
-      this.root.className = 'combat-timeline';
-      this.root.innerHTML = `
-        <div class="combat-timeline__header">
-          <span class="combat-timeline__title">Порядок ходов</span>
-          <span class="combat-timeline__round" data-round></span>
-        </div>
-        <div class="combat-timeline__scroll">
-          <div class="combat-timeline__track" role="list"></div>
-        </div>
-      `;
-      this.host.appendChild(this.root);
-      this.track = this.root.querySelector('.combat-timeline__track');
-      this.roundEl = this.root.querySelector('[data-round]');
-      return true;
-    }
-
-    hide() {
-      this.host?.classList.add('hidden');
-      this._lastSignature = '';
-      this._cardRects.clear();
-    }
-
-    show() {
-      this.host?.classList.remove('hidden');
-    }
-
-    /**
-     * @param {object} battleState — state.combat
-     * @param {object} engine — GameEngine
-     */
-    update(battleState, engine) {
-      if (!battleState || !engine) {
-        this.hide();
-        return;
-      }
-      if (!this.ensureDom()) return;
-
-      let participants =
-        battleState.battleParticipants ||
-        buildBattleParticipants(engine, battleState);
-      if (typeof CombatPosition !== 'undefined') {
-        participants = CombatPosition.syncParticipantPositions(engine, participants);
-      }
-      battleState.battleParticipants = participants;
-
-      const turnIndex = battleState.turnIndex ?? 0;
-      const maxShow = 1 + this.upcomingCount;
-      const queue = buildDisplayQueue(participants, turnIndex, maxShow);
-
-      if (!queue.length) {
-        this.hide();
-        return;
-      }
-
-      this.show();
-      if (this.roundEl) {
-        const round = battleState.round ?? 1;
-        this.roundEl.textContent = `Раунд ${round}`;
-      }
-
-      const signature = queue
-        .map((p) => `${p.id}:${p.isCurrent}:${p.isDelayed}:${p.isReady}:${p.initiative}`)
-        .join('|');
-
-      const animate = signature !== this._lastSignature && this._lastSignature !== '';
-      this._lastSignature = signature;
-
-      if (animate && this.track) {
-        this.track.querySelectorAll('.combat-timeline__card').forEach((el) => {
-          this._cardRects.set(el.dataset.participantId, el.getBoundingClientRect());
-        });
-      }
-
-      const cards = queue.map((p, i) => this.renderCard(p, i === 0, engine));
-      let html = cards[0] || '';
-      if (cards.length > 1) {
-        html += '<div class="combat-timeline__next-label">Далее</div>' + cards.slice(1).join('');
-      }
-      this.track.innerHTML = html;
-
-      this.track.querySelectorAll('.combat-timeline__info').forEach((btn) => {
-        const lines = (btn.dataset.tooltipLines || btn.dataset.tooltip || '')
-          .split('|')
-          .filter(Boolean);
-        const text = lines.join('\n');
-        btn.setAttribute('title', text);
-        btn.setAttribute('aria-label', text || 'Подсказка инициативы');
-      });
-
-      if (animate) {
-        requestAnimationFrame(() => this.runFlipAnimation());
-      }
-    }
-
-    renderCard(p, isHead, engine) {
-      const mod = [
-        'combat-timeline__card',
-        p.isCurrent || isHead ? 'combat-timeline__card--active' : '',
-        p.isDelayed ? 'combat-timeline__card--delayed' : '',
-        p.isReady ? 'combat-timeline__card--ready' : '',
-        p.type === 'player' ? 'combat-timeline__card--player' : 'combat-timeline__card--enemy',
-        p.queuePosition > 0 ? 'combat-timeline__card--upcoming' : ''
-      ]
-        .filter(Boolean)
-        .join(' ');
-
-      const showInfo =
-        (p.isCurrent || isHead) &&
-        (p.type === 'enemy' || p.queuePosition === 0);
-      const linesAttr = escapeHtml((p.tooltipLines || [p.tooltip]).join('|'));
-
-      return `
-        <div class="${mod}"
-             role="listitem"
-             data-participant-id="${escapeHtml(p.id)}"
-             data-order="${p.orderIndex}">
-          ${
-            showInfo
-              ? `<button type="button" class="combat-timeline__info"
-                    data-tooltip="${escapeHtml(p.tooltip)}"
-                    data-tooltip-lines="${linesAttr}">ⓘ</button>`
-              : ''
-          }
-          <div class="combat-timeline__portrait-wrap">
-            <div class="combat-timeline__portrait" aria-hidden="true">${escapeHtml(p.icon)}</div>
-            ${
-              typeof StatusManager !== 'undefined' && engine
-                ? StatusManager.renderTimelineBadges(engine, p)
-                : ''
-            }
-          </div>
-          <div class="combat-timeline__meta">
-            <span class="combat-timeline__name">${escapeHtml(p.name)}</span>
-            ${
-              p.position && typeof CombatPosition !== 'undefined'
-                ? CombatPosition.renderZoneBadge(p.position, 'combat-timeline__zone')
-                : ''
-            }
-            <span class="combat-timeline__init" title="Инициатива">${escapeHtml(String(p.initiative))}</span>
-          </div>
-          ${p.isDelayed ? '<span class="combat-timeline__badge">Delay</span>' : ''}
-          ${p.isReady ? '<span class="combat-timeline__badge combat-timeline__badge--ready">Ready</span>' : ''}
-        </div>
-      `;
-    }
-
-    runFlipAnimation() {
-      if (!this.track) return;
-      const cards = this.track.querySelectorAll('.combat-timeline__card');
-      cards.forEach((el) => {
-        const id = el.dataset.participantId;
-        const first = this._cardRects.get(id);
-        if (!first) {
-          el.classList.add('combat-timeline__card--enter');
-          return;
-        }
-        const last = el.getBoundingClientRect();
-        const dx = first.left - last.left;
-        if (Math.abs(dx) < 2) return;
-        el.style.transform = `translateX(${dx}px)`;
-        el.classList.add('combat-timeline__card--animating');
-        requestAnimationFrame(() => {
-          el.style.transform = '';
-          el.addEventListener(
-            'transitionend',
-            () => {
-              el.classList.remove('combat-timeline__card--animating');
-            },
-            { once: true }
-          );
-        });
-      });
-      this._cardRects.clear();
-    }
-
-    destroy() {
-      this.hide();
-      if (this.host) this.host.innerHTML = '';
-      this.root = null;
-      this.track = null;
-      if (CombatTimeline._instance === this) CombatTimeline._instance = null;
-    }
-  }
-
-  CombatTimeline._instance = null;
-  CombatTimeline.buildBattleParticipants = buildBattleParticipants;
-  CombatTimeline.getSceneInitiativeRules = getSceneInitiativeRules;
-
-  global.CombatTimeline = CombatTimeline;
-})(typeof window !== 'undefined' ? window : globalThis);
-
-
-;/* —— js/components/combat/CombatManager.js —— */
-/**
- * CombatManager — data-driven разбор и выполнение боевых действий (abilities / actions).
- * Обратная совместимость: effect (строка/объект), actionType, targeting.scope, cost.
- * @module CombatManager
- */
-(function (global) {
-  'use strict';
-
-  const TARGET_TYPES = {
-    self: 'self',
-    singleEnemy: 'singleEnemy',
-    allEnemies: 'allEnemies',
-    singleAlly: 'singleAlly',
-    allAllies: 'allAllies',
-    area: 'area'
-  };
-
-  const SCOPE_TO_TARGET = {
-    single: TARGET_TYPES.singleEnemy,
-    single_enemy: TARGET_TYPES.singleEnemy,
-    all_enemies: TARGET_TYPES.allEnemies,
-    area: TARGET_TYPES.area,
-    self: TARGET_TYPES.self
-  };
-
-  const TARGET_TO_SCOPE = {
-    [TARGET_TYPES.singleEnemy]: 'single',
-    [TARGET_TYPES.allEnemies]: 'all_enemies',
-    [TARGET_TYPES.area]: 'area',
-    [TARGET_TYPES.self]: 'self',
-    [TARGET_TYPES.singleAlly]: 'self',
-    [TARGET_TYPES.allAllies]: 'self'
-  };
-
-  const REQUIREMENT_HANDLERS = {
-    frontline(engine) {
-      return REQUIREMENT_HANDLERS.close_zone(engine);
-    },
-    close_zone(engine) {
-      if (!engine.state?.combat) return { ok: false, reason: 'Только в бою' };
-      if (typeof CombatPosition !== 'undefined' && CombatPosition.isEnabled(engine)) {
-        const z = CombatPosition.getPlayerPosition(engine);
-        if (z !== CombatPosition.ZONES.CLOSE) {
-          return {
-            ok: false,
-            reason: `Нужна ближняя зона (Close) — сейчас «${CombatPosition.getZoneLabel(z)}». Переместитесь на 1 зону.`
-          };
-        }
-        return { ok: true };
-      }
-      const alive = (engine.state.enemies || []).some((e) => e.hp > 0);
-      return alive
-        ? { ok: true }
-        : { ok: false, reason: 'Нет противников в ближнем бою' };
-    },
-    hasWeaponEquipped(engine) {
-      const slots = ['weapon_main', 'weapon_off', 'weapon'];
-      const has = slots.some((s) => {
-        const id = engine.getEquippedItemId?.(s);
-        if (!id) return false;
-        const db = engine.itemsData?.[id] || engine.data?.items?.[id];
-        return db && (db.type === 'weapon' || db.slot === 'weapon');
-      });
-      return has
-        ? { ok: true }
-        : { ok: false, reason: 'Нужно экипированное оружие' };
-    },
-    notSurprised(engine) {
-      const surprised =
-        engine.state?.combat?.playerSurprised ||
-        (typeof StatusManager !== 'undefined' &&
-          StatusManager.hasStatus(StatusManager.getPlayerHolder(engine), 'surprised'));
-      if (surprised) {
-        return { ok: false, reason: 'Вы застигнуты врасплох' };
-      }
-      return { ok: true };
-    }
-  };
-
-  function getRulesSystem(engine) {
-    if (engine?.isPf2e?.()) return 'pf2e';
-    return 'dnd5e';
-  }
-
-  /** Запись в CombatLog с fallback на engine.log */
-  function combatLog(engine, type, data = {}) {
-    const payload = {
-      ...data,
-      message: data.message ?? data.text ?? '',
-      engine
-    };
-    if (typeof CombatLog !== 'undefined') {
-      return CombatLog.log(engine, type, payload);
-    }
-    const legacy = {
-      damage: 'log-damage',
-      crit: 'log-damage',
-      heal: 'log-heal',
-      miss: 'log-dice',
-      fail: 'log-dice',
-      effect: 'log-combat',
-      status: 'log-combat',
-      buff: 'log-combat',
-      combat: 'log-combat',
-      ability: 'log-combat',
-      death: 'log-combat'
-    };
-    engine?.log?.(payload.message, legacy[type] || 'log-combat');
-    return null;
-  }
-
-  function clone(obj) {
-    return JSON.parse(JSON.stringify(obj ?? {}));
-  }
-
-  /**
-   * Нормализует actionCost под активную систему.
-   */
-  function resolveActionCost(raw, system) {
-    if (!raw || typeof raw !== 'object') return null;
-
-    if (raw[system]) return clone(raw[system]);
-
-    if (system === 'pf2e' && raw.actions != null) {
-      return { actions: Number(raw.actions) || 1 };
-    }
-    if (system === 'dnd5e') {
-      if (
-        raw.action != null ||
-        raw.bonusAction != null ||
-        raw.reaction != null
-      ) {
-        return {
-          action: Number(raw.action) || 0,
-          bonusAction: Number(raw.bonusAction) || 0,
-          reaction: Number(raw.reaction) || 0
-        };
-      }
-    }
-    if (raw.action != null || raw.bonusAction != null || raw.reaction != null) {
-      return {
-        action: Number(raw.action) || 0,
-        bonusAction: Number(raw.bonusAction) || 0,
-        reaction: Number(raw.reaction) || 0
-      };
-    }
-    if (raw.actions != null) return { actions: Number(raw.actions) || 1 };
-    return null;
-  }
-
-  function legacyActionTypeToCost(actionType) {
-    switch (actionType) {
-      case 'bonus_action':
-        return { action: 0, bonusAction: 1, reaction: 0 };
-      case 'reaction':
-        return { action: 0, bonusAction: 0, reaction: 1 };
-      case 'free':
-        return { action: 0, bonusAction: 0, reaction: 0 };
-      case 'passive':
-        return null;
-      default:
-        return { action: 1, bonusAction: 0, reaction: 0 };
-    }
-  }
-
-  function inferTargetType(action) {
-    if (action.targetType && TARGET_TYPES[action.targetType]) {
-      return action.targetType;
-    }
-    const scope =
-      action.targeting?.scope ||
-      action.effects?.find((e) => e?.targeting?.scope)?.targeting?.scope;
-    if (scope && SCOPE_TO_TARGET[scope]) return SCOPE_TO_TARGET[scope];
-    if (Array.isArray(action.effects)) {
-      for (const ef of action.effects) {
-        if (ef?.allTargets) return TARGET_TYPES.allEnemies;
-        if (ef?.type === 'heal' && !ef.targeting) return TARGET_TYPES.self;
-      }
-    }
-    if (typeof action.effect === 'string') {
-      if (action.effect.startsWith('heal:')) return TARGET_TYPES.self;
-      if (action.effect.startsWith('aoe_') || action.effect.includes('all')) {
-        return TARGET_TYPES.allEnemies;
-      }
-      if (action.effect.startsWith('damage:')) return TARGET_TYPES.singleEnemy;
-    }
-    if (action.effect?.type === 'heal') return TARGET_TYPES.self;
-    if (action.effect?.allTargets || action.effect?.targeting?.scope === 'all_enemies') {
-      return TARGET_TYPES.allEnemies;
-    }
-    if (action.effect?.type === 'damage' || action.effect?.type === 'apply_status') {
-      return TARGET_TYPES.singleEnemy;
-    }
-    return TARGET_TYPES.self;
-  }
-
-  function ensureTargeting(action) {
-    const targetType = action.targetType || inferTargetType(action);
-    const scope = TARGET_TO_SCOPE[targetType] || 'self';
-    if (!action.targeting) action.targeting = { scope };
-    else if (!action.targeting.scope) action.targeting.scope = scope;
-    action.targetType = targetType;
-    return action;
-  }
-
-  function normalizeEffects(action) {
-    if (Array.isArray(action.effects) && action.effects.length) {
-      return action.effects.map((ef) => {
-        if (typeof ef === 'string') return legacyStringToEffect(ef);
-        return clone(ef);
-      });
-    }
-    if (action.effect != null) {
-      if (typeof action.effect === 'string') {
-        return [legacyStringToEffect(action.effect)];
-      }
-      return [clone(action.effect)];
-    }
-    return [];
-  }
-
-  function legacyStringToEffect(str) {
-    const s = String(str);
-    if (s.startsWith('heal:')) {
-      return { type: 'heal', value: s.slice(5) };
-    }
-    if (s.startsWith('damage:')) {
-      return {
-        type: 'damage',
-        value: s.slice(7),
-        targeting: { scope: 'single' }
-      };
-    }
-    if (s.startsWith('ac_bonus:')) {
-      return {
-        type: 'grantBonus',
-        stat: 'ac',
-        value: parseInt(s.split(':')[1], 10) || 0,
-        duration: 'turn'
-      };
-    }
-    if (s.startsWith('aoe_fire:')) {
-      return {
-        type: 'damage',
-        value: s.slice(9),
-        damageType: 'fire',
-        targeting: { scope: 'all_enemies' },
-        allTargets: true
-      };
-    }
-    if (s.startsWith('smite:')) {
-      return { type: 'smite', value: s.slice(6) };
-    }
-    if (s === 'extra_attack') return { type: 'extra_attack' };
-    if (s === 'magic_missile') return { type: 'magic_missile' };
-    return { type: 'custom', message: s };
-  }
-
-  function inferActionTypeFromCost(cost, system) {
-    if (!cost) return 'passive';
-    if (system === 'pf2e') return 'action';
-    if (cost.reaction) return 'reaction';
-    if (cost.bonusAction && !cost.action) return 'bonus_action';
-    if (!cost.action && !cost.bonusAction && !cost.reaction) return 'free';
-    return 'action';
-  }
-
-  /**
-   * Парсинг действия в единую структуру (idempotent).
-   * @param {object} raw
-   * @param {object} [opts]
-   * @param {string} [opts.system]
-   * @returns {object}
-   */
-  function parseAction(raw, opts = {}) {
-    const action = clone(raw);
-    if (!action.id) action.id = 'action_' + Math.random().toString(36).slice(2, 9);
-
-    const system = opts.system || 'dnd5e';
-
-    let actionCost = resolveActionCost(action.actionCost, system);
-    if (!actionCost && action.actionType) {
-      actionCost = legacyActionTypeToCost(action.actionType);
-    }
-    if (!actionCost && action.type === 'passive') {
-      actionCost = null;
-    }
-    if (!actionCost && system === 'pf2e' && action.cost != null) {
-      actionCost = { actions: Number(action.cost) || 1 };
-    }
-    if (!actionCost && system === 'dnd5e' && !action.passive && action.type !== 'passive') {
-      const legacyType =
-        action.actionType ||
-        (action.type === 'passive' ? 'passive' : 'action');
-      actionCost = legacyActionTypeToCost(legacyType);
-    }
-
-    action._parsedSystem = system;
-    action.actionCost = actionCost;
-    action.actionType =
-      action.actionType || inferActionTypeFromCost(actionCost, system);
-
-    action.effects = normalizeEffects(action);
-    ensureTargeting(action);
-
-    if (action.range == null && action.targeting?.range != null) {
-      action.range = action.targeting.range;
-    }
-
-    action.requirements = Array.isArray(action.requirements)
-      ? [...action.requirements]
-      : [];
-
-    action.tags = Array.isArray(action.tags) ? [...action.tags] : [];
-
-    if (action.soundEffect && !action.soundCast) {
-      action.soundCast = action.soundEffect;
-    }
-
-    action._combatParsed = true;
-    return action;
-  }
-
-  function checkRequirements(engine, action) {
-    const reqs = action.requirements || [];
-    for (const key of reqs) {
-      const fn = REQUIREMENT_HANDLERS[key];
-      if (!fn) continue;
-      const res = fn(engine, action);
-      if (res && !res.ok) return res;
-    }
-    return { ok: true };
-  }
-
-  function canAffordDnd5eCost(engine, cost) {
-    const c = engine.state.combat;
-    if (!c) return true;
-    if (cost.action && c.actionSpent && !c.actionSurge) return false;
-    if (cost.bonusAction && c.bonusActionSpent) return false;
-    if (cost.reaction && !c.reactionAvailable) return false;
-    return true;
-  }
-
-  function spendDnd5eCost(engine, cost) {
-    if (!cost || !engine.state.combat) return;
-    if (cost.action && !engine.state.combat.actionSurge) {
-      engine.spendCombatActionType('action');
-    }
-    if (cost.bonusAction) engine.spendCombatActionType('bonus_action');
-    if (cost.reaction) engine.spendCombatActionType('reaction');
-  }
-
-  function canAffordPf2eCost(engine, cost) {
-    if (!engine.state.combat || !cost?.actions) return true;
-    return (
-      (engine.state.combat.actionsRemaining ?? 0) >= (cost.actions || 1)
-    );
-  }
-
-  function spendPf2eCost(engine, action, cost) {
-    const n = cost?.actions ?? action?.cost ?? 1;
-    engine.spendPf2eActions?.(n);
-  }
-
-  function getUnavailableFromEconomy(engine, action) {
-    const system = action._parsedSystem || getRulesSystem(engine);
-    const cost = action.actionCost;
-    if (!cost || action.actionType === 'passive') return null;
-
-    if (system === 'pf2e') {
-      if (!canAffordPf2eCost(engine, cost)) {
-        return `Нужно ${cost.actions || 1} действий`;
-      }
-      return null;
-    }
-
-    if (action.actionType === 'reaction') {
-      return 'Реакция срабатывает по триггеру';
-    }
-    if (!canAffordDnd5eCost(engine, cost)) {
-      if (cost.bonusAction && !cost.action) return 'Бонусное действие потрачено';
-      if (cost.reaction) return 'Реакция уже использована';
-      return 'Действие потрачено';
-    }
-    return null;
-  }
-
-  function needsTargetSelection(action) {
-    if (action.actionType === 'passive' || action.type === 'passive') {
-      return false;
-    }
-    const tt = action.targetType;
-    return tt === TARGET_TYPES.singleEnemy || tt === TARGET_TYPES.singleAlly;
-  }
-
-  function effectNeedsEnemyTarget(effect) {
-    if (!effect || typeof effect !== 'object') return false;
-    if (effect.type === 'damage' || effect.type === 'apply_status') {
-      const scope = effect.targeting?.scope;
-      return !scope || scope === 'single' || scope === 'single_enemy';
-    }
-    return false;
-  }
-
-  function actionNeedsEnemyTarget(action) {
-    if (!needsTargetSelection(action)) return false;
-    if (action.targetType === TARGET_TYPES.singleEnemy) {
-      return (action.effects || []).some(effectNeedsEnemyTarget) || !!action.effect;
-    }
-    return false;
-  }
-
-  function attachTargetingToEffects(action) {
-    const scope = TARGET_TO_SCOPE[action.targetType] || 'self';
-    (action.effects || []).forEach((ef) => {
-      if (ef && typeof ef === 'object' && !ef.targeting) {
-        ef.targeting = { scope };
-      }
-      if (
-        action.targetType === TARGET_TYPES.allEnemies ||
-        action.targetType === TARGET_TYPES.area
-      ) {
-        ef.allTargets = true;
-      }
-    });
-  }
-
-  function applyGrantBonus(engine, effect) {
-    const val = parseInt(effect.value, 10) || 0;
-    const stat = effect.stat || effect.buffType || 'atk';
-    if (!engine.state.combat) {
-      engine.log('Бонус действует только в бою.', 'log-dice');
-      return true;
-    }
-    if (stat === 'ac') {
-      engine.applyAcBonus?.(val);
-    } else if (stat === 'atk') {
-      engine.state.combat.tempAtkBonus =
-        (engine.state.combat.tempAtkBonus || 0) + val;
-      combatLog(engine, 'buff', {
-        message: `⚔️ ${val >= 0 ? '+' : ''}${val} к атаке (${effect.duration || 'ход'})`
-      });
-    } else if (stat === 'dmg') {
-      engine.state.combat.tempDmgBonus =
-        (engine.state.combat.tempDmgBonus || 0) + val;
-      combatLog(engine, 'buff', {
-        message: `💥 ${val >= 0 ? '+' : ''}${val} к урону (${effect.duration || 'ход'})`
-      });
-    } else {
-      combatLog(engine, 'buff', { message: `Бонус ${stat}: ${val}` });
-    }
-    engine.playCombatSound?.('buff');
-    return true;
-  }
-
-  function applyRemoveStatus(engine, effect, target) {
-    const statusId = effect.statusId || effect.status;
-    if (typeof StatusManager !== 'undefined') {
-      if (effect.target === 'self' || !target) {
-        const holder = StatusManager.getPlayerHolder(engine);
-        StatusManager.remove(engine, holder, statusId);
-        combatLog(engine, 'heal', { message: `✨ Снят эффект: ${statusId}` });
-        return true;
-      }
-      const holder = StatusManager.getEnemyHolder(engine, target);
-      if (holder) {
-        StatusManager.remove(engine, holder, statusId);
-        combatLog(engine, 'effect', {
-          message: `✨ С ${target.name} снят ${statusId}`,
-          target: target.name
-        });
-      }
-      return true;
-    }
-    return true;
-  }
-
-  function applyMoveEffect(engine, effect) {
-    const dist = effect.distance ?? effect.value ?? 0;
-    combatLog(engine, 'position', { message: `🏃 Перемещение на ${dist} фт.` });
-    return true;
-  }
-
-  function applyActionEffect(engine, effect, ctx) {
-    if (!effect) return true;
-    const target = ctx.target ?? null;
-
-    switch (effect.type) {
-      case 'grantBonus':
-        return applyGrantBonus(engine, effect);
-      case 'removeStatus':
-        return applyRemoveStatus(engine, effect, target);
-      case 'move':
-        return applyMoveEffect(engine, effect);
-      case 'apply_status':
-        if (typeof StatusManager !== 'undefined') {
-          return StatusManager.applyFromEffect(engine, effect, target);
-        }
-        return engine.applyAbilityAddEffect?.(effect, target) ?? true;
-      default:
-        if (typeof engine.applyEffect === 'function') {
-          return engine.applyEffect(effect, target);
-        }
-        engine.log(`Эффект ${effect.type} не реализован`, 'log-dice');
-        return true;
-    }
-  }
-
-  function applyActionEffects(engine, action, ctx) {
-    attachTargetingToEffects(action);
-    let endsTurn = true;
-
-    for (const effect of action.effects || []) {
-      const result = applyActionEffect(engine, effect, ctx);
-      if (result === false) endsTurn = false;
-    }
-
-    if (action.actionType === 'bonus_action' || action.actionType === 'free') {
-      if (endsTurn !== false) endsTurn = false;
-    } else if (action.actionType === 'action' && endsTurn !== false) {
-      endsTurn = true;
-    }
-
-    return endsTurn;
-  }
-
-  function spendActionEconomy(engine, action) {
-    const system = action._parsedSystem || getRulesSystem(engine);
-    const cost = action.actionCost;
-    if (!cost || !engine.state.combat) return;
-
-    if (system === 'pf2e') {
-      spendPf2eCost(engine, action, cost);
-      return;
-    }
-    spendDnd5eCost(engine, cost);
-  }
-
-  /**
-   * Выполнение действия (основная точка входа).
-   * @param {object} engine — GameEngine
-   * @param {object} rawAction — умение / действие из JSON
-   * @param {object} [context]
-   * @param {object} [context.target] — враг (объект)
-   * @param {boolean} [context.skipEconomy] — не тратить action/bonus (уже потрачено)
-   * @param {boolean} [context.skipResourceCost] — не тратить ячейки/ярость
-   * @returns {{ success: boolean, endsTurn?: boolean, needsTarget?: boolean, reason?: string }}
-   */
-  function performAction(engine, rawAction, context = {}) {
-    if (!engine || !rawAction) {
-      return { success: false, reason: 'Нет действия' };
-    }
-
-    const system = getRulesSystem(engine);
-    const action = rawAction._combatParsed
-      ? rawAction
-      : parseAction(rawAction, { system });
-
-    if (action.flavorText) {
-      combatLog(engine, 'ability', { message: action.flavorText });
-    }
-
-    const req = checkRequirements(engine, action);
-    if (!req.ok) {
-      combatLog(engine, 'fail', { message: `❌ ${req.reason}` });
-      return { success: false, reason: req.reason };
-    }
-
-    if (!context.skipValidation) {
-      const econ = getUnavailableFromEconomy(engine, action);
-      if (econ) {
-        combatLog(engine, 'fail', { message: `❌ ${econ}` });
-        return { success: false, reason: econ };
-      }
-      if (
-        engine.state.combat &&
-        actionNeedsEnemyTarget(action) &&
-        (!context.target ||
-          context.target.hp == null ||
-          context.target.hp <= 0)
-      ) {
-        return { success: true, needsTarget: true, endsTurn: false };
-      }
-    }
-
-    if (!context.skipResourceCost && engine.spendAbilityCost) {
-      if (!engine.canAffordAbility?.(action)) {
-        combatLog(engine, 'fail', { message: '❌ Недостаточно ресурса!' });
-        return { success: false, reason: 'resource' };
-      }
-      const spendPayload = { ...action };
-      if (system === 'pf2e' && spendPayload.actionCost?.actions != null) {
-        spendPayload._skipPf2eActionSpend = true;
-      }
-      engine.spendAbilityCost(spendPayload);
-    }
-
-    if (!context.skipEconomy) {
-      spendActionEconomy(engine, action);
-    }
-
-    const castLv = engine.getCastSlotLevel?.(action);
-    const minLv = engine.getAbilitySpellLevel?.(action);
-    let castNote = '';
-    if (engine.abilityUsesSpellSlots?.(action) && castLv >= 1) {
-      castNote =
-        castLv > minLv
-          ? ` — ячейка ${castLv} круга (усилено)`
-          : ` — круг ${castLv}`;
-    }
-    combatLog(engine, 'ability', {
-      message: `💫 ${action.name}${castNote}`,
-      actor: engine.state?.charName,
-      target: context.target?.name
-    });
-    engine.playAbilityCast?.(action);
-
-    engine._abilitySoundCtx = action;
-    const endsTurn = applyActionEffects(engine, action, context);
-    engine._abilitySoundCtx = null;
-
-    if (engine.state.combat && engine.isConcentrationAbility?.(action)) {
-      engine.beginConcentration?.(action);
-    }
-
-    if (engine.state.combat && action.oncePerCombat) {
-      if (!engine.state.combat.abilitiesUsed) {
-        engine.state.combat.abilitiesUsed = {};
-      }
-      engine.state.combat.abilitiesUsed[action.id] = true;
-    }
-
-    engine.updateStats?.();
-    engine.renderCombat?.();
-
-    return {
-      success: true,
-      endsTurn: endsTurn !== false,
-      needsTarget: false
-    };
-  }
-
-  function canPerformAction(engine, rawAction) {
-    const action = rawAction._combatParsed
-      ? rawAction
-      : parseAction(rawAction, { system: getRulesSystem(engine) });
-    const req = checkRequirements(engine, action);
-    if (!req.ok) return req.reason;
-    const econ = getUnavailableFromEconomy(engine, action);
-    if (econ) return econ;
-    if (engine.isSpellBlockedByCurse?.(action)) {
-      return 'Проклятие безмолвия';
-    }
-    if (engine.canAffordAbility && !engine.canAffordAbility(action)) {
-      return 'Недостаточно ресурса';
-    }
-    return null;
-  }
-
-  function normalizeAbilityForEngine(engine, ab, classKey, index) {
-    const base = engine.normalizeAbility
-      ? engine.normalizeAbility(ab, classKey, index)
-      : clone(ab);
-    return parseAction(base, { system: getRulesSystem(engine) });
-  }
-
-  function normalizeProgressionAbilities(data, engine) {
-    const pool = data?.progression?.abilities;
-    if (!pool) return;
-    const system =
-      data?.meta?.system === 'pf2e' ? 'pf2e' : 'dnd5e';
-    Object.keys(pool).forEach((id) => {
-      pool[id] = parseAction(pool[id], { system });
-    });
-  }
-
-  const CombatManager = {
-    TARGET_TYPES,
-    parseAction,
-    performAction,
-    combatLog,
-    canPerformAction,
-    checkRequirements,
-    needsTargetSelection,
-    actionNeedsEnemyTarget,
-    normalizeAbilityForEngine,
-    normalizeProgressionAbilities,
-    getRulesSystem,
-    resolveActionCost
-  };
-
-  global.CombatManager = CombatManager;
-})(typeof window !== 'undefined' ? window : globalThis);
-
-
-;/* —— js/components/combat/CombatPosition.js —— */
-/**
- * CombatPosition — зоны боя Far / Mid / Close и дальность действий (data-driven).
- * @module CombatPosition
- */
-(function (global) {
-  'use strict';
-
-  const ZONES = {
-    FAR: 'far',
-    MID: 'mid',
-    CLOSE: 'close'
-  };
-
-  const ZONE_ORDER = [ZONES.FAR, ZONES.MID, ZONES.CLOSE];
-
-  const RANGE_TYPES = {
-    MELEE: 'melee',
-    TOUCH: 'touch',
-    CONE: 'cone',
-    RANGED: 'ranged',
-    SPELL: 'spell'
-  };
-
-  const SAME_ZONE_RANGE_TYPES = new Set([
-    RANGE_TYPES.MELEE,
-    RANGE_TYPES.TOUCH,
-    RANGE_TYPES.CONE
-  ]);
-
-  /** @deprecated Совместимость с кодом, использующим ZONE_REACH */
-  const ZONE_REACH = {
-    SAME_ZONE: 'same_zone',
-    ANY_ZONE: 'any_zone'
-  };
-
-  const DEFAULT_CONFIG = {
-    enabled: true,
-    defaultPlayerPosition: ZONES.CLOSE,
-    defaultEnemyPosition: ZONES.CLOSE,
-    flankingAttackBonus: 2,
-    flankingUsesAdvantage: true,
-    shiftCostsAction: false,
-    /** Помеха / штраф при ranged или spell в одной зоне с живым врагом */
-    sameZonePenalty: {
-      ranged: { disadvantage: true, attackBonus: 0 },
-      spell: { disadvantage: true, attackBonus: 0 }
-    }
-  };
-
-  function getConfig(engine) {
-    const meta = engine?.data?.meta?.combatZones || {};
-    return { ...DEFAULT_CONFIG, ...meta };
-  }
-
-  function isEnabled(engine) {
-    return getConfig(engine).enabled !== false;
-  }
-
-  function migrateLegacyZone(z) {
-    const s = String(z || '').toLowerCase();
-    if (s === 'frontline') return ZONES.CLOSE;
-    if (s === 'backline') return ZONES.FAR;
-    if (ZONE_ORDER.includes(s)) return s;
-    return null;
-  }
-
-  function normalizeZone(z) {
-    const migrated = migrateLegacyZone(z);
-    if (migrated) return migrated;
-    return ZONES.MID;
-  }
-
-  function zoneIndex(zone) {
-    const z = normalizeZone(zone);
-    const i = ZONE_ORDER.indexOf(z);
-    return i >= 0 ? i : 1;
-  }
-
-  function getZoneDistance(a, b) {
-    return Math.abs(zoneIndex(a) - zoneIndex(b));
-  }
-
-  function isAdjacentZone(from, to) {
-    return getZoneDistance(from, to) === 1;
-  }
-
-  function getZoneLabel(zone) {
-    const z = normalizeZone(zone);
-    if (z === ZONES.FAR) return 'Дальняя';
-    if (z === ZONES.CLOSE) return 'Ближняя';
-    return 'Средняя';
-  }
-
-  function getZoneIcon(zone) {
-    const z = normalizeZone(zone);
-    if (z === ZONES.FAR) return '🏹';
-    if (z === ZONES.CLOSE) return '⚔️';
-    return '🛡️';
-  }
-
-  function inferDefaultPlayerZone(engine) {
-    const cfg = getConfig(engine);
-    if (cfg.defaultPlayerPosition) {
-      return normalizeZone(cfg.defaultPlayerPosition);
-    }
-    const cls = engine.state?.className || '';
-    if (['wizard', 'pf2e_wizard', 'pf2e_sorcerer', 'bard'].includes(cls)) {
-      return ZONES.FAR;
-    }
-    if (['ranger', 'rogue', 'pf2e_rogue'].includes(cls)) {
-      return ZONES.MID;
-    }
-    return ZONES.CLOSE;
-  }
-
-  function inferEnemyZone(enemy, index, template, engine) {
-    if (enemy?.position) return normalizeZone(enemy.position);
-    if (template?.position) return normalizeZone(template.position);
-    if (template?.combatPosition) return normalizeZone(template.combatPosition);
-    if (template?.ranged || template?.isRanged || enemy?.ranged || enemy?.isRanged) {
-      return ZONES.FAR;
-    }
-    const cfg = engine ? getConfig(engine) : DEFAULT_CONFIG;
-    if (cfg.defaultEnemyPosition) return normalizeZone(cfg.defaultEnemyPosition);
-    if (index % 3 === 1) return ZONES.MID;
-    if (index % 3 === 2) return ZONES.FAR;
-    return ZONES.CLOSE;
-  }
-
-  function initCombatPositions(engine) {
-    if (!engine?.state?.combat) return;
-    const combat = engine.state.combat;
-    combat.playerPosition = migrateLegacyZone(combat.playerPosition)
-      || inferDefaultPlayerZone(engine);
-    combat.flankingMarks = {};
-    combat.zoneConfig = getConfig(engine);
-    combat.zoneMovedThisTurn = false;
-
-    (engine.state.enemies || []).forEach((enemy, i) => {
-      const tplId = combat.enemies?.[i] || combat.enemyIds?.[i];
-      const tpl = tplId && engine.data?.enemies?.[tplId];
-      enemy.position = migrateLegacyZone(enemy.position)
-        || inferEnemyZone(enemy, i, tpl, engine);
-      enemy.zoneMovedThisTurn = false;
-    });
-  }
-
-  function resetTurnMovement(engine) {
-    if (engine.state?.combat) engine.state.combat.zoneMovedThisTurn = false;
-  }
-
-  function getPlayerPosition(engine) {
-    if (!isEnabled(engine)) return ZONES.CLOSE;
-    return normalizeZone(
-      engine.state?.combat?.playerPosition || inferDefaultPlayerZone(engine)
-    );
-  }
-
-  function getEnemyPosition(engine, enemyOrIndex) {
-    if (!isEnabled(engine)) return ZONES.CLOSE;
-    const enemy =
-      typeof enemyOrIndex === 'number'
-        ? engine.state?.enemies?.[enemyOrIndex]
-        : enemyOrIndex;
-    return normalizeZone(enemy?.position || ZONES.CLOSE);
-  }
-
-  function setPlayerPosition(engine, zone) {
-    if (!engine.state?.combat) return false;
-    engine.state.combat.playerPosition = normalizeZone(zone);
-    return true;
-  }
-
-  function setEnemyPosition(engine, index, zone) {
-    const enemy = engine.state?.enemies?.[index];
-    if (!enemy) return false;
-    enemy.position = normalizeZone(zone);
-    return true;
-  }
-
-  function normalizeRangeType(raw, opts = {}) {
-    const ability = opts.ability || null;
-    const tags = (opts.tags || ability?.tags || []).map((t) => String(t).toLowerCase());
-    const s = typeof raw === 'string' ? raw.toLowerCase().trim() : '';
-
-    const known = Object.values(RANGE_TYPES);
-    if (known.includes(s)) return s;
-
-    if (typeof raw === 'number') {
-      if (tags.includes('spell') || ability?.spellLevel != null) return RANGE_TYPES.SPELL;
-      return RANGE_TYPES.RANGED;
-    }
-
-    if (ability?.combatZoneReach != null && ability.combatZoneReach !== '') {
-      const reach = String(ability.combatZoneReach).toLowerCase();
-      if (reach === 'same_zone') {
-        if (tags.includes('cone')) return RANGE_TYPES.CONE;
-        if (tags.includes('touch')) return RANGE_TYPES.TOUCH;
-        return RANGE_TYPES.MELEE;
-      }
-      if (reach === 'any_zone') return RANGE_TYPES.SPELL;
-    }
-
-    if (tags.includes('cone')) return RANGE_TYPES.CONE;
-    if (tags.includes('touch')) return RANGE_TYPES.TOUCH;
-    if (tags.includes('spell')) return RANGE_TYPES.SPELL;
-    if (tags.includes('ranged')) return RANGE_TYPES.RANGED;
-    if (tags.includes('weapon') || tags.includes('martial')) return RANGE_TYPES.MELEE;
-
-    if (ability?.spellLevel != null) return RANGE_TYPES.SPELL;
-    return RANGE_TYPES.MELEE;
-  }
-
-  function rangeTypeRequiresSameZone(rangeType) {
-    return SAME_ZONE_RANGE_TYPES.has(rangeType);
-  }
-
-  function rangeTypeToZoneReach(rangeType) {
-    return rangeTypeRequiresSameZone(rangeType)
-      ? ZONE_REACH.SAME_ZONE
-      : ZONE_REACH.ANY_ZONE;
-  }
-
-  function getAbilityRangeType(ability) {
-    if (!ability) return RANGE_TYPES.SPELL;
-    const raw = ability.range != null ? ability.range : ability.targeting?.range;
-    return normalizeRangeType(raw, { ability, tags: ability.tags });
-  }
-
-  function getWeaponRangeType(engine, profile) {
-    if (!profile) return RANGE_TYPES.MELEE;
-    const weapon = profile.weaponId
-      ? engine?.itemsData?.[profile.weaponId] || engine?.data?.items?.[profile.weaponId]
-      : null;
-    if (!weapon) return RANGE_TYPES.MELEE;
-    if (weapon.range === 'ranged' || weapon.weaponRange === 'ranged') {
-      return RANGE_TYPES.RANGED;
-    }
-    const wr = normalizeRangeType(weapon.range, { tags: weapon.tags });
-    if (wr !== RANGE_TYPES.MELEE || weapon.combatZoneReach === 'any_zone') {
-      if (weapon.combatZoneReach === 'any_zone') return RANGE_TYPES.RANGED;
-      if (wr !== RANGE_TYPES.MELEE) return wr;
-    }
-    return RANGE_TYPES.MELEE;
-  }
-
-  function isWeaponRanged(weapon) {
-    if (!weapon) return false;
-    if (weapon.range === 'ranged' || weapon.weaponRange === 'ranged') return true;
-    if (weapon.combatZoneReach === 'any_zone') return true;
-    const wr = normalizeRangeType(weapon.range, { tags: weapon.tags });
-    return wr === RANGE_TYPES.RANGED;
-  }
-
-  function getAbilityZoneReach(ability) {
-    return rangeTypeToZoneReach(getAbilityRangeType(ability));
-  }
-
-  function getWeaponZoneReach(engine, profile) {
-    return rangeTypeToZoneReach(getWeaponRangeType(engine, profile));
-  }
-
-  function getAttackModeFromRangeType(rangeType) {
-    if (rangeType === RANGE_TYPES.RANGED) return 'ranged';
-    if (rangeType === RANGE_TYPES.SPELL) return 'spell';
-    if (rangeType === RANGE_TYPES.MELEE || rangeType === RANGE_TYPES.TOUCH) {
-      return 'melee';
-    }
-    if (rangeType === RANGE_TYPES.CONE) return 'cone';
-    return 'melee';
-  }
-
-  function getAttackModeFromProfile(engine, profile) {
-    return getAttackModeFromRangeType(getWeaponRangeType(engine, profile));
-  }
-
-  function getAttackModeFromAbility(ability) {
-    return getAttackModeFromRangeType(getAbilityRangeType(ability));
-  }
-
-  function hasLivingEnemyInZone(engine, zone) {
-    const z = normalizeZone(zone);
-    return (engine.state?.enemies || []).some(
-      (e, i) => e.hp > 0 && getEnemyPosition(engine, i) === z
-    );
-  }
-
-  function hasHostileInAttackerZone(engine, attackerZone, ctx) {
-    const zone = normalizeZone(attackerZone);
-    if (ctx?.attackerIsEnemy) {
-      return zone === getPlayerPosition(engine) && (engine.state?.hp > 0);
-    }
-    return hasLivingEnemyInZone(engine, zone);
-  }
-
-  function applySameZonePenalty(engine, rangeType, attackerZone, out, ctx) {
-    if (!SAME_ZONE_RANGE_TYPES.has(rangeType) && rangeType !== RANGE_TYPES.RANGED && rangeType !== RANGE_TYPES.SPELL) {
-      return;
-    }
-    if (rangeType !== RANGE_TYPES.RANGED && rangeType !== RANGE_TYPES.SPELL) return;
-    if (!hasHostileInAttackerZone(engine, attackerZone, ctx)) return;
-
-    const cfg = getConfig(engine);
-    const pen =
-      cfg.sameZonePenalty?.[rangeType] ||
-      cfg.sameZonePenalty?.default ||
-      null;
-    if (!pen) return;
-
-    if (pen.disadvantage) {
-      out.disadvantage = true;
-      out.notes.push(
-        rangeType === RANGE_TYPES.SPELL
-          ? 'Помеха: заклинание в одной зоне с врагом'
-          : 'Помеха: дальний бой в одной зоне с врагом'
-      );
-    }
-    const bonus = parseInt(pen.attackBonus, 10) || 0;
-    if (bonus) {
-      out.attackBonus += bonus;
-      out.notes.push(
-        `Штраф в своей зоне: ${bonus >= 0 ? '+' : ''}${bonus}`
-      );
-    }
-  }
-
-  function resetFlankingMarksIfNewRound(engine) {
-    const combat = engine.state?.combat;
-    if (!combat) return;
-    const round = combat.round || 1;
-    if (combat._flankingRound !== round) {
-      combat.flankingMarks = {};
-      combat._flankingRound = round;
-    }
-  }
-
-  function getFlankingMarks(engine, enemyIndex) {
-    resetFlankingMarksIfNewRound(engine);
-    const key = String(enemyIndex);
-    if (!engine.state.combat.flankingMarks[key]) {
-      engine.state.combat.flankingMarks[key] = { zones: {} };
-    }
-    if (!engine.state.combat.flankingMarks[key].zones) {
-      engine.state.combat.flankingMarks[key].zones = {};
-    }
-    return engine.state.combat.flankingMarks[key];
-  }
-
-  function recordAttackOnEnemy(engine, enemyIndex, attackerZone) {
-    if (!isEnabled(engine)) return;
-    const marks = getFlankingMarks(engine, enemyIndex);
-    marks.zones[normalizeZone(attackerZone)] = true;
-  }
-
-  function hasFlankingOnEnemy(engine, enemyIndex) {
-    if (!isEnabled(engine)) return false;
-    const marks = getFlankingMarks(engine, enemyIndex);
-    const hitZones = Object.keys(marks.zones || {}).filter((z) => marks.zones[z]);
-    return hitZones.length >= 2;
-  }
-
-  function getAttackModifiers(engine, ctx) {
-    const cfg = getConfig(engine);
-    const out = {
-      attackBonus: 0,
-      advantage: false,
-      disadvantage: false,
-      notes: []
-    };
-    if (!isEnabled(engine)) return out;
-
-    const attackerZone = ctx.attackerZone || getPlayerPosition(engine);
-    const targetZone = ctx.targetZone || ZONES.CLOSE;
-    const rangeType =
-      ctx.rangeType ||
-      (ctx.zoneReach === ZONE_REACH.SAME_ZONE
-        ? RANGE_TYPES.MELEE
-        : ctx.attackMode === 'ranged'
-          ? RANGE_TYPES.RANGED
-          : RANGE_TYPES.SPELL);
-
-    applySameZonePenalty(engine, rangeType, attackerZone, out, ctx);
-
-    if (ctx.enemyIndex != null && hasFlankingOnEnemy(engine, ctx.enemyIndex)) {
-      if (cfg.flankingUsesAdvantage && engine.isPf2e?.() !== true) {
-        out.advantage = true;
-        out.notes.push('Фланг: преимущество (Advantage)');
-      } else {
-        out.attackBonus += cfg.flankingAttackBonus || 2;
-        out.notes.push(`Фланг: +${cfg.flankingAttackBonus} к атаке`);
-      }
-    }
-
-    if (ctx.extraPenalty) out.attackBonus += ctx.extraPenalty;
-    return out;
-  }
-
-  function validateAttack(engine, ctx) {
-    const ok = { valid: true, reason: null, modifiers: null, suggestShift: false };
-
-    if (!isEnabled(engine)) return ok;
-
-    const attackerZone = ctx.attackerZone || getPlayerPosition(engine);
-    const targetZone =
-      ctx.targetZone != null
-        ? normalizeZone(ctx.targetZone)
-        : getEnemyPosition(engine, ctx.enemyIndex);
-
-    const rangeType =
-      ctx.rangeType ||
-      (ctx.zoneReach === ZONE_REACH.SAME_ZONE
-        ? RANGE_TYPES.MELEE
-        : ctx.attackMode === 'ranged'
-          ? RANGE_TYPES.RANGED
-          : RANGE_TYPES.SPELL);
-
-    if (rangeTypeRequiresSameZone(rangeType) && attackerZone !== targetZone) {
-      return {
-        valid: false,
-        reason: `Дистанция «${rangeType}»: нужна одна зона с целью (вы: ${getZoneLabel(attackerZone)}, цель: ${getZoneLabel(targetZone)}). Переместитесь на соседнюю зону.`,
-        suggestShift: true,
-        modifiers: null
-      };
-    }
-
-    ok.modifiers = getAttackModifiers(engine, {
-      ...ctx,
-      attackerZone,
-      targetZone,
-      rangeType
-    });
-    return ok;
-  }
-
-  function validateAbilityTarget(engine, ability, enemyIndex) {
-    if (!isEnabled(engine)) return { valid: true };
-
-    const rangeType = getAbilityRangeType(ability);
-    const targetType = ability.targetType || ability.targeting?.scope;
-
-    if (
-      enemyIndex == null &&
-      (targetType === 'area' || targetType === 'allEnemies' || targetType === 'all_enemies')
-    ) {
-      if (rangeTypeRequiresSameZone(rangeType)) {
-        const pz = getPlayerPosition(engine);
-        if (!hasLivingEnemyInZone(engine, pz)) {
-          return {
-            valid: false,
-            reason: `В зоне «${getZoneLabel(pz)}» нет врагов (${rangeType}).`,
-            suggestShift: false,
-            modifiers: null
-          };
-        }
-      }
-      return { valid: true, modifiers: null };
-    }
-
-    if (enemyIndex == null) return { valid: true };
-
-    return validateAttack(engine, {
-      enemyIndex,
-      rangeType,
-      targetZone: getEnemyPosition(engine, enemyIndex)
-    });
-  }
-
-  function getAbilityZoneUnavailableReason(engine, ability) {
-    if (!isEnabled(engine) || !ability || !engine.state?.combat) return null;
-    const rangeType = getAbilityRangeType(ability);
-    if (!rangeTypeRequiresSameZone(rangeType)) return null;
-    const pz = getPlayerPosition(engine);
-    const scope = ability.targetType || ability.targeting?.scope;
-    if (
-      scope === 'singleEnemy' ||
-      scope === 'single' ||
-      scope === 'single_enemy' ||
-      scope === 'area' ||
-      scope === 'allEnemies' ||
-      scope === 'all_enemies'
-    ) {
-      return hasLivingEnemyInZone(engine, pz)
-        ? null
-        : `Нет врагов в зоне «${getZoneLabel(pz)}» (${rangeType})`;
-    }
-    return null;
-  }
-
-  function rollD20(engine, modifiers) {
-    const m = modifiers || {};
-    if (m.advantage && !m.disadvantage) {
-      const a = engine.d20();
-      const b = engine.d20();
-      return {
-        roll: Math.max(a, b),
-        advantage: true,
-        detail: `max(${a}, ${b})`
-      };
-    }
-    if (m.disadvantage && !m.advantage) {
-      const a = engine.d20();
-      const b = engine.d20();
-      return {
-        roll: Math.min(a, b),
-        disadvantage: true,
-        detail: `min(${a}, ${b})`
-      };
-    }
-    return { roll: engine.d20() };
-  }
-
-  function getZoneStepToward(fromZone, toZone) {
-    const from = zoneIndex(fromZone);
-    const to = zoneIndex(toZone);
-    if (from === to) return null;
-    if (to > from) return ZONE_ORDER[from + 1];
-    return ZONE_ORDER[from - 1];
-  }
-
-  function getZoneStepAway(fromZone, toZone) {
-    const from = zoneIndex(fromZone);
-    const to = zoneIndex(toZone);
-    if (from === to) return null;
-    if (to > from) return ZONE_ORDER[from - 1];
-    return ZONE_ORDER[from + 1];
-  }
-
-  function canReachWithRangeType(attackerZone, targetZone, rangeType) {
-    const a = normalizeZone(attackerZone);
-    const t = normalizeZone(targetZone);
-    if (rangeTypeRequiresSameZone(rangeType)) return a === t;
-    return true;
-  }
-
-  /**
-   * Перемещение врага на соседнюю зону (макс. 1 за ход на экземпляр).
-   */
-  function notifyZoneLeave(engine, leaveEvent) {
-    if (!leaveEvent || leaveEvent.fromZone === leaveEvent.toZone) return;
-    if (typeof OpportunityAttack !== 'undefined') {
-      OpportunityAttack.onZoneLeave(engine, leaveEvent);
-    }
-  }
-
-  function moveEnemyOneZone(engine, enemyIndex, nextZone) {
-    const enemy = engine.state?.enemies?.[enemyIndex];
-    if (!enemy || enemy.hp <= 0) return false;
-    if (enemy.zoneMovedThisTurn) return false;
-    const cur = getEnemyPosition(engine, enemyIndex);
-    const next = normalizeZone(nextZone);
-    if (!isAdjacentZone(cur, next)) return false;
-    setEnemyPosition(engine, enemyIndex, next);
-    enemy.zoneMovedThisTurn = true;
-    engine.log?.(
-      `↔️ ${enemy.name}: ${getZoneLabel(cur)} → ${getZoneLabel(next)}`,
-      'log-combat'
-    );
-    notifyZoneLeave(engine, {
-      actorType: 'enemy',
-      enemyIndex,
-      fromZone: cur,
-      toZone: next,
-      actorName: enemy.name
-    });
-    engine.renderCombat?.();
-    engine.updateCombatTimeline?.();
-    return true;
-  }
-
-  function validateAttackAgainstPlayer(engine, enemyIndex, rangeType) {
-    return validateAttack(engine, {
-      attackerZone: getEnemyPosition(engine, enemyIndex),
-      targetZone: getPlayerPosition(engine),
-      rangeType,
-      attackerIsEnemy: true
-    });
-  }
-
-  function getShiftOptions(engine) {
-    const cur = getPlayerPosition(engine);
-    const idx = zoneIndex(cur);
-    return {
-      towardClose: idx < ZONE_ORDER.length - 1 ? ZONE_ORDER[idx + 1] : null,
-      towardFar: idx > 0 ? ZONE_ORDER[idx - 1] : null,
-      current: cur
-    };
-  }
-
-  /**
-   * @param {object} engine
-   * @param {'toward_close'|'toward_far'} direction
-   */
-  function shiftPlayerPosition(engine, direction) {
-    if (!engine.state?.combat) return false;
-    if (engine.getCombatPhase?.() !== 'player_turn') {
-      engine.log('Переместиться можно только в свой ход.', 'log-damage');
-      return false;
-    }
-
-    if (engine.state.combat.zoneMovedThisTurn) {
-      engine.log('В этом ходу уже перемещались (максимум 1 зона).', 'log-damage');
-      return false;
-    }
-
-    const cfg = getConfig(engine);
-    if (cfg.shiftCostsAction) {
-      if (engine.state.combat.actionSpent && !engine.state.combat.actionSurge) {
-        engine.log('Действие уже потрачено в этом ходу.', 'log-damage');
-        return false;
-      }
-      engine.spendCombatActionType?.('action');
-    }
-
-    const opts = getShiftOptions(engine);
-    const cur = opts.current;
-    let next = null;
-    if (direction === 'toward_close') next = opts.towardClose;
-    else if (direction === 'toward_far') next = opts.towardFar;
-    else next = normalizeZone(direction);
-
-    if (!next || !isAdjacentZone(cur, next)) {
-      engine.log('За один ход можно сменить только соседнюю зону.', 'log-damage');
-      return false;
-    }
-
-    setPlayerPosition(engine, next);
-    engine.state.combat.zoneMovedThisTurn = true;
-    engine.log(
-      `↔️ ${engine.state.charName || 'Герой'}: ${getZoneLabel(cur)} → ${getZoneLabel(next)}`,
-      'log-combat'
-    );
-    notifyZoneLeave(engine, {
-      actorType: 'player',
-      fromZone: cur,
-      toZone: next,
-      actorName: engine.state.charName || 'Герой'
-    });
-    engine.renderCombat?.();
-    engine.updateCombatTimeline?.();
-    engine.playerCombatTurn?.();
-    return true;
-  }
-
-  function shiftCostsAction(engine) {
-    return getConfig(engine).shiftCostsAction === true;
-  }
-
-  function renderZoneBadge(zone, extraClass) {
-    const z = normalizeZone(zone);
-    const cls = ['combat-zone-badge', `combat-zone-badge--${z}`, extraClass || '']
-      .filter(Boolean)
-      .join(' ');
-    return `<span class="${cls}" title="${getZoneLabel(z)}">${getZoneIcon(z)} ${getZoneLabel(z)}</span>`;
-  }
-
-  function renderZoneFieldHtml(engine, opts = {}) {
-    if (!isEnabled(engine)) return '';
-    const playerZone = getPlayerPosition(engine);
-    const enemies = engine.state?.enemies || [];
-    const byZone = { far: [], mid: [], close: [] };
-
-    enemies.forEach((e, idx) => {
-      if (e.hp <= 0 && !opts.showDead) return;
-      const card = renderCombatantCard(engine, e, idx, opts);
-      const z = getEnemyPosition(engine, e);
-      byZone[z].push(card);
-    });
-
-    const playerCard =
-      opts.hidePlayer && document.body.classList.contains('mobile')
-        ? ''
-        : renderPlayerCard(engine, playerZone, opts);
-
-    const column = (zoneKey, cssKey) => {
-      const units = byZone[zoneKey].join('') || '<div class="combat-zone-empty">—</div>';
-      const playerHere = playerZone === zoneKey ? playerCard : '';
-      return `
-        <div class="combat-zone-column combat-zone-column--${cssKey}">
-          <div class="combat-zone-column__head">${getZoneIcon(zoneKey)} ${getZoneLabel(zoneKey)}</div>
-          <div class="combat-zone-column__body">
-            ${playerHere}
-            ${units}
-          </div>
-        </div>`;
-    };
-
-    return `
-      <div class="combat-zone-field combat-zone-field--triple" aria-label="Позиции в бою">
-        ${column(ZONES.FAR, 'far')}
-        ${column(ZONES.MID, 'mid')}
-        ${column(ZONES.CLOSE, 'close')}
-      </div>`;
-  }
-
-  function renderPlayerCard(engine, zone, opts) {
-    const pPct = Math.max(0, (engine.state.hp / engine.state.maxHp) * 100);
-    const fx = engine.renderStatusEffectsHtml?.(engine.state.combat?.effects) || '';
-    const selecting = engine.getCombatPhase?.() === 'select_target';
-    return `
-      <div class="combat-zone-unit combat-zone-unit--player ${selecting ? 'combat-zone-unit--selecting' : ''}">
-        ${renderZoneBadge(zone, 'combat-zone-badge--on-card')}
-        <div class="combat-zone-unit__name">${engine.escapeHtml(engine.state.charName || 'Герой')}</div>
-        <div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${pPct}%"></div></div>
-        <span class="combat-hp-text">${engine.state.hp}/${engine.state.maxHp}</span>
-        ${fx ? `<div class="combat-effects-row">${fx}</div>` : ''}
-      </div>`;
-  }
-
-  function renderCombatantCard(engine, enemy, idx, opts) {
-    const alive = enemy.hp > 0;
-    const pct = Math.max(0, (enemy.hp / enemy.maxHp) * 100);
-    const zone = getEnemyPosition(engine, enemy);
-    const selecting = engine.getCombatPhase?.() === 'select_target';
-    let rowClass = 'combat-zone-unit combat-zone-unit--enemy';
-    if (!alive) rowClass += ' combat-zone-unit--dead';
-    if (selecting && alive) rowClass += ' combat-zone-unit--targetable';
-    const clickAttr =
-      selecting && alive
-        ? ` role="button" tabindex="0" onclick="GameEngine.onCombatEnemyClick(${idx})"`
-        : '';
-    const flank = hasFlankingOnEnemy(engine, idx);
-    const flankTag = flank
-      ? '<span class="combat-zone-flank" title="Фланг: атаки с разных зон">⊞</span>'
-      : '';
-
-    return `
-      <div class="${rowClass}" data-enemy-index="${idx}"${clickAttr}>
-        ${renderZoneBadge(zone, 'combat-zone-badge--on-card')}
-        ${flankTag}
-        <div class="combat-zone-unit__name">${engine.escapeHtml(engine.getEnemyDisplayName(enemy))}</div>
-        <div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${pct}%"></div></div>
-        <span class="combat-hp-text">${enemy.hp}/${enemy.maxHp}</span>
-      </div>`;
-  }
-
-  function syncParticipantPositions(engine, participants) {
-    if (!participants?.length) return participants;
-    return participants.map((p) => {
-      if (p.type === 'player') {
-        return { ...p, position: getPlayerPosition(engine) };
-      }
-      if (p.type === 'enemy' && p.enemyIndex != null) {
-        return {
-          ...p,
-          position: getEnemyPosition(engine, p.enemyIndex)
-        };
-      }
-      return p;
-    });
-  }
-
-  const CombatPosition = {
-    ZONES,
-    ZONE_ORDER,
-    RANGE_TYPES,
-    SAME_ZONE_RANGE_TYPES,
-    ZONE_REACH,
-    getConfig,
-    isEnabled,
-    migrateLegacyZone,
-    normalizeZone,
-    zoneIndex,
-    getZoneDistance,
-    isAdjacentZone,
-    isWeaponRanged,
-    initCombatPositions,
-    resetTurnMovement,
-    getPlayerPosition,
-    getEnemyPosition,
-    setPlayerPosition,
-    setEnemyPosition,
-    normalizeRangeType,
-    rangeTypeRequiresSameZone,
-    rangeTypeToZoneReach,
-    getAbilityRangeType,
-    getWeaponRangeType,
-    getAttackModeFromProfile,
-    getAttackModeFromAbility,
-    getAttackModeFromRangeType,
-    getAbilityZoneReach,
-    getWeaponZoneReach,
-    getAbilityZoneUnavailableReason,
-    validateAttack,
-    validateAbilityTarget,
-    getAttackModifiers,
-    recordAttackOnEnemy,
-    hasFlankingOnEnemy,
-    rollD20,
-    getZoneStepToward,
-    getZoneStepAway,
-    canReachWithRangeType,
-    moveEnemyOneZone,
-    notifyZoneLeave,
-    validateAttackAgainstPlayer,
-    hasHostileInAttackerZone,
-    getShiftOptions,
-    shiftPlayerPosition,
-    shiftCostsAction,
-    renderZoneBadge,
-    renderZoneFieldHtml,
-    syncParticipantPositions,
-    getZoneLabel,
-    getZoneIcon
-  };
-
-  global.CombatPosition = CombatPosition;
-})(typeof window !== 'undefined' ? window : globalThis);
-
-
-;/* —— js/components/combat/OpportunityAttack.js —— */
-/**
- * OpportunityAttack — атаки возможности при выходе из общей зоны (D&D / PF2e / Free Strike).
- * @module OpportunityAttack
- */
-(function (global) {
-  'use strict';
-
-  const REACTION_TYPES = {
-    OPPORTUNITY_ATTACK: 'opportunity_attack',
-    COUNTERATTACK: 'counterattack',
-    GUARD_ALLY: 'guard_ally',
-    INTERCEPT: 'intercept',
-    TALENT: 'talent'
-  };
-
-  /** Зарегистрированные типы реакций (расширяемо) */
-  const REACTION_REGISTRY = {
-    [REACTION_TYPES.OPPORTUNITY_ATTACK]: {
-      id: REACTION_TYPES.OPPORTUNITY_ATTACK,
-      label: 'Атака возможности',
-      canMake: null,
-      trigger: null
-    }
-  };
-
-  function getConfig(engine) {
-    const zones = engine?.data?.meta?.combatZones || {};
-    const oa = zones.opportunityAttack || zones.opportunityAttacks || {};
-    return {
-      enabled: zones.enabled !== false && oa.enabled !== false,
-      requireMelee: oa.requireMelee !== false,
-      useInitiativeOrder: oa.useInitiativeOrder !== false
-    };
-  }
-
-  function isEnabled(engine) {
-    if (!engine?.state?.combat) return false;
-    if (typeof CombatPosition === 'undefined' || !CombatPosition.isEnabled(engine)) {
-      return false;
-    }
-    return getConfig(engine).enabled;
-  }
-
-  function participantKey(participant) {
-    if (!participant || !participant.type) return '';
-    return participant.type === 'player'
-      ? 'player'
-      : `enemy:${participant.enemyIndex}`;
-  }
-
-  function initReactionState(engine) {
-    if (!engine.state?.combat) return;
-    const c = engine.state.combat;
-    if (!c.reactions || typeof c.reactions !== 'object') {
-      c.reactions = { usedThisRound: {} };
-    }
-    if (!c.reactions.usedThisRound) c.reactions.usedThisRound = {};
-    c.reactionAvailable = true;
-    clearOpportunityUsageForRound(engine);
-    (engine.state.enemies || []).forEach((e) => {
-      if (e) e.reactionAvailable = true;
-    });
-  }
-
-  /**
-   * Восстановление реакций в начале нового раунда.
-   */
-  function restoreReactionsForRound(engine) {
-    if (!engine?.state?.combat) return;
-    initReactionState(engine);
-  }
-
-  function hasUsedOpportunityThisRound(engine, participant) {
-    const key = participantKey(participant);
-    return !!engine.state.combat?.reactions?.usedThisRound?.[key];
-  }
-
-  function markOpportunityUsed(engine, participant) {
-    if (!engine.state.combat) return;
-    if (!engine.state.combat.reactions) engine.state.combat.reactions = { usedThisRound: {} };
-    if (!engine.state.combat.reactions.usedThisRound) {
-      engine.state.combat.reactions.usedThisRound = {};
-    }
-    engine.state.combat.reactions.usedThisRound[participantKey(participant)] = true;
-  }
-
-  function clearOpportunityUsageForRound(engine) {
-    if (engine.state?.combat?.reactions) {
-      engine.state.combat.reactions.usedThisRound = {};
-    }
-  }
-
-  function isParticipantAlive(engine, participant) {
-    if (participant.type === 'player') {
-      return (parseInt(engine.state?.hp, 10) || 0) > 0;
-    }
-    const enemy = engine.state?.enemies?.[participant.enemyIndex];
-    return !!(enemy && enemy.hp > 0);
-  }
-
-  function isParticipantAbleToAct(engine, participant) {
-    if (!isParticipantAlive(engine, participant)) return false;
-    if (typeof StatusManager === 'undefined') return true;
-    const holder =
-      participant.type === 'player'
-        ? StatusManager.getPlayerHolder(engine)
-        : StatusManager.getEnemyHolder(
-            engine,
-            engine.state.enemies[participant.enemyIndex]
-          );
-    if (!holder) return true;
-    if (StatusManager.hasStatus(holder, 'stunned')) return false;
-    if (StatusManager.hasStatus(holder, 'surprised')) return false;
-    return true;
-  }
-
-  function hasReactionResource(engine, participant) {
-    if (participant.type === 'player') {
-      return engine.state.combat?.reactionAvailable !== false;
-    }
-    const enemy = engine.state.enemies?.[participant.enemyIndex];
-    return enemy?.reactionAvailable !== false;
-  }
-
-  function spendReaction(engine, participant, reactionType) {
-    if (reactionType === REACTION_TYPES.OPPORTUNITY_ATTACK) {
-      markOpportunityUsed(engine, participant);
-    }
-    if (participant.type === 'player') {
-      engine.spendCombatActionType?.('reaction');
-      return;
-    }
-    const enemy = engine.state.enemies?.[participant.enemyIndex];
-    if (enemy) enemy.reactionAvailable = false;
-  }
-
-  function pickPlayerMeleeAttack(engine) {
-    if (typeof CombatPosition === 'undefined') return null;
-    const trySlot = (slot) => {
-      const profile = engine.getWeaponAttackProfile?.(slot);
-      if (!profile?.weaponId) return slot === 'weapon_main' ? profile : null;
-      const rt = CombatPosition.getWeaponRangeType(engine, profile);
-      if (CombatPosition.rangeTypeRequiresSameZone(rt)) return profile;
-      return null;
-    };
-    return trySlot('weapon_main') || trySlot('weapon_off') || engine.getWeaponAttackProfile?.('weapon_main');
-  }
-
-  function pickEnemyMeleeAttack(engine, enemy, enemyIndex) {
-    if (typeof EnemyTacticalAI === 'undefined') {
-      return {
-        id: 'default',
-        range: 'melee',
-        atkBonus: enemy.atkBonus,
-        dmgRoll: enemy.dmgRoll,
-        dmgBonus: enemy.dmgBonus,
-        label: 'Атака возможности'
-      };
-    }
-    const attacks = EnemyTacticalAI.getEnemyAttacks(engine, enemy);
-    const CP = CombatPosition;
-    const melee = attacks.filter((a) =>
-      CP.rangeTypeRequiresSameZone(CP.normalizeRangeType(a.range, { tags: a.tags }))
-    );
-    const list = melee.length ? melee : attacks;
-    return EnemyTacticalAI.pickBestAttack(engine, enemyIndex, list, {
-      preferRangeTypes: [CP.RANGE_TYPES.MELEE, 'melee', 'touch'],
-      enemyZone: CP.getEnemyPosition(engine, enemyIndex),
-      playerZone: CP.getPlayerPosition(engine)
-    });
-  }
-
-  function canPerformOpportunityStrike(engine, participant) {
-    const cfg = getConfig(engine);
-    if (!cfg.requireMelee) return true;
-    if (participant.type === 'player') {
-      return !!pickPlayerMeleeAttack(engine);
-    }
-    const enemy = engine.state.enemies?.[participant.enemyIndex];
-    if (!enemy) return false;
-    return !!pickEnemyMeleeAttack(engine, enemy, participant.enemyIndex);
-  }
-
-  /**
-   * @param {object} engine
-   * @param {{ type: 'player'|'enemy', enemyIndex?: number }} participant — кто бьёт
-   * @param {object} leaveEvent — событие выхода из зоны
-   */
-  function canMakeOpportunityAttack(engine, participant, leaveEvent) {
-    if (!isEnabled(engine) || !leaveEvent) return false;
-    if (!leaveEvent.fromZone || leaveEvent.fromZone === leaveEvent.toZone) return false;
-
-    if (!isParticipantAlive(engine, participant)) return false;
-    if (!isParticipantAbleToAct(engine, participant)) return false;
-    if (!hasReactionResource(engine, participant)) return false;
-    if (hasUsedOpportunityThisRound(engine, participant)) return false;
-    if (!canPerformOpportunityStrike(engine, participant)) return false;
-
-    const CP = CombatPosition;
-    const reactorZone =
-      participant.type === 'player'
-        ? CP.getPlayerPosition(engine)
-        : CP.getEnemyPosition(engine, participant.enemyIndex);
-
-    if (normalizeZone(reactorZone) !== normalizeZone(leaveEvent.fromZone)) {
-      return false;
-    }
-
-    if (leaveEvent.actorType === participant.type) {
-      if (
-        leaveEvent.actorType === 'enemy' &&
-        leaveEvent.enemyIndex === participant.enemyIndex
-      ) {
-        return false;
-      }
-      if (leaveEvent.actorType === 'player' && participant.type === 'player') {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  function normalizeZone(z) {
-    return typeof CombatPosition !== 'undefined'
-      ? CombatPosition.normalizeZone(z)
-      : z;
-  }
-
-  function listReactorsInZone(engine, fromZone, leavingActor) {
-    const zone = normalizeZone(fromZone);
-    const reactors = [];
-    const CP = CombatPosition;
-
-    if (
-      leavingActor.actorType !== 'player' &&
-      (parseInt(engine.state?.hp, 10) || 0) > 0 &&
-      CP.getPlayerPosition(engine) === zone
-    ) {
-      reactors.push({ type: 'player' });
-    }
-
-    (engine.state.enemies || []).forEach((e, i) => {
-      if (!e || e.hp <= 0) return;
-      if (leavingActor.actorType === 'enemy' && leavingActor.enemyIndex === i) {
-        return;
-      }
-      if (CP.getEnemyPosition(engine, i) === zone) {
-        reactors.push({ type: 'enemy', enemyIndex: i });
-      }
-    });
-
-    return reactors;
-  }
-
-  function sortReactorsByInitiative(engine, reactors) {
-    if (!getConfig(engine).useInitiativeOrder) return reactors;
-    const order = engine.state.combat?.order || [];
-    const indexOf = (p) => {
-      if (p.type === 'player') {
-        return order.findIndex((o) => o.type === 'player');
-      }
-      return order.findIndex(
-        (o) => o.type === 'enemy' && o.index === p.enemyIndex
-      );
-    };
-    return [...reactors].sort((a, b) => {
-      const ia = indexOf(a);
-      const ib = indexOf(b);
-      const ai = ia >= 0 ? ia : 999;
-      const bi = ib >= 0 ? ib : 999;
-      return ai - bi;
-    });
-  }
-
-  /**
-   * Выполнить атаку возможности.
-   */
-  function triggerOpportunityAttack(engine, participant, leaveEvent) {
-    if (!canMakeOpportunityAttack(engine, participant, leaveEvent)) return false;
-
-    const moverName =
-      leaveEvent.actorName ||
-      (leaveEvent.actorType === 'player'
-        ? engine.state?.charName || 'Герой'
-        : engine.state.enemies?.[leaveEvent.enemyIndex]?.name || 'Противник');
-
-    const reactorName =
-      participant.type === 'player'
-        ? engine.state?.charName || 'Герой'
-        : engine.state.enemies?.[participant.enemyIndex]?.name || 'Враг';
-
-    engine.log?.(
-      `⚡ Атака возможности: ${reactorName} → ${moverName} (покидает ${CombatPosition.getZoneLabel(leaveEvent.fromZone)})`,
-      'log-combat'
-    );
-
-    let ok = false;
-    if (participant.type === 'player') {
-      ok = !!engine.executePlayerOpportunityAttack?.(
-        leaveEvent.enemyIndex,
-        leaveEvent
-      );
-    } else {
-      ok = !!engine.executeEnemyOpportunityAttack?.(
-        participant.enemyIndex,
-        leaveEvent
-      );
-    }
-
-    if (ok) {
-      spendReaction(engine, participant, REACTION_TYPES.OPPORTUNITY_ATTACK);
-    }
-    return ok;
-  }
-
-  /**
-   * Точка входа: существо покинуло зону (вызывается из CombatPosition, не из логики сдвига).
-   * @param {object} engine
-   * @param {object} leaveEvent
-   */
-  function onZoneLeave(engine, leaveEvent) {
-    if (!isEnabled(engine) || !leaveEvent) return [];
-    const reactors = sortReactorsByInitiative(
-      engine,
-      listReactorsInZone(engine, leaveEvent.fromZone, leaveEvent)
-    );
-    const triggered = [];
-    reactors.forEach((reactor) => {
-      if (canMakeOpportunityAttack(engine, reactor, leaveEvent)) {
-        if (triggerOpportunityAttack(engine, reactor, leaveEvent)) {
-          triggered.push(reactor);
-        }
-      }
-    });
-    return triggered;
-  }
-
-  REACTION_REGISTRY[REACTION_TYPES.OPPORTUNITY_ATTACK].canMake = canMakeOpportunityAttack;
-  REACTION_REGISTRY[REACTION_TYPES.OPPORTUNITY_ATTACK].trigger = triggerOpportunityAttack;
-
-  const OpportunityAttack = {
-    REACTION_TYPES,
-    REACTION_REGISTRY,
-    getConfig,
-    isEnabled,
-    initReactionState,
-    restoreReactionsForRound,
-    canMakeOpportunityAttack,
-    triggerOpportunityAttack,
-    onZoneLeave,
-    spendReaction,
-    hasReactionResource,
-    pickPlayerMeleeAttack,
-    pickEnemyMeleeAttack,
-    participantKey
-  };
-
-  global.OpportunityAttack = OpportunityAttack;
-})(typeof window !== 'undefined' ? window : globalThis);
-
-
-;/* —— js/components/combat/EnemyTacticalAI.js —— */
-/**
- * EnemyTacticalAI — тактика врагов по combatRole, range и зонам (CombatPosition).
- * @module EnemyTacticalAI
- */
-(function (global) {
-  'use strict';
-
-  const COMBAT_ROLES = {
-    MELEE: 'melee',
-    RANGED: 'ranged',
-    CASTER: 'caster',
-    SUPPORT: 'support',
-    TANK: 'tank',
-    SUMMONER: 'summoner'
-  };
-
-  const IMPLEMENTED_ROLES = new Set([
-    COMBAT_ROLES.MELEE,
-    COMBAT_ROLES.RANGED,
-    COMBAT_ROLES.CASTER,
-    COMBAT_ROLES.TANK
-  ]);
-
-  function getCp() {
-    return typeof CombatPosition !== 'undefined' ? CombatPosition : null;
-  }
-
-  function getTemplate(engine, enemy) {
-    return engine?.data?.enemies?.[enemy?.id] || null;
-  }
-
-  function resolveCombatRole(engine, enemy) {
-    const tpl = getTemplate(engine, enemy);
-    const raw = String(enemy?.combatRole || tpl?.combatRole || '').toLowerCase();
-    if (raw && Object.values(COMBAT_ROLES).includes(raw)) return raw;
-    if (enemy?.ranged || tpl?.ranged) return COMBAT_ROLES.RANGED;
-    return COMBAT_ROLES.MELEE;
-  }
-
-  function normalizeAttackRange(attack) {
-    const CP = getCp();
-    if (!CP) return String(attack?.range || 'melee').toLowerCase();
-    return CP.normalizeRangeType(attack?.range, { tags: attack?.tags });
-  }
-
-  function isSameZoneRange(rangeType) {
-    const CP = getCp();
-    return CP ? CP.rangeTypeRequiresSameZone(rangeType) : rangeType === 'melee';
-  }
-
-  function getEnemyAttacks(engine, enemy) {
-    const tpl = getTemplate(engine, enemy);
-    const list = enemy?.attacks || tpl?.attacks;
-    if (Array.isArray(list) && list.length) {
-      return list.map((a, i) => ({
-        id: a.id || `attack_${i}`,
-        label: a.label || a.name || a.id || 'Атака',
-        range: a.range,
-        atkBonus: a.atkBonus != null ? a.atkBonus : enemy.atkBonus,
-        dmgRoll: a.dmgRoll || enemy.dmgRoll,
-        dmgBonus: a.dmgBonus != null ? a.dmgBonus : enemy.dmgBonus,
-        tags: a.tags || [],
-        weight: a.weight != null ? Number(a.weight) : 1
-      }));
-    }
-    const role = resolveCombatRole(engine, enemy);
-    const defaultRange = role === COMBAT_ROLES.RANGED ? 'ranged' : 'melee';
-    return [
-      {
-        id: 'default',
-        label: 'Атака',
-        range: defaultRange,
-        atkBonus: enemy.atkBonus,
-        dmgRoll: enemy.dmgRoll,
-        dmgBonus: enemy.dmgBonus,
-        tags: [defaultRange, 'weapon'],
-        weight: 1
-      }
-    ];
-  }
-
-  function getEnemyAbilities(engine, enemy) {
-    const tpl = getTemplate(engine, enemy);
-    const raw = enemy?.combatAbilities || enemy?.abilities || tpl?.combatAbilities || tpl?.abilities;
-    if (!Array.isArray(raw) || !raw.length) return [];
-    const out = [];
-    raw.forEach((entry, i) => {
-      if (!entry) return;
-      if (typeof entry === 'string') {
-        const fromGlobal = engine.data?.progression?.abilities?.[entry]
-          || engine.data?.abilities?.[entry];
-        if (fromGlobal) out.push({ ...fromGlobal, id: fromGlobal.id || entry });
-        return;
-      }
-      if (entry.id || entry.name) {
-        out.push(entry);
-      }
-    });
-    return out.map((ab, i) => {
-      const parsed =
-        typeof CombatManager !== 'undefined' && CombatManager.parseAction
-          ? CombatManager.parseAction(ab, {
-              system: engine.isPf2e?.() ? 'pf2e' : 'dnd5e'
-            })
-          : ab;
-      return parsed;
-    });
-  }
-
-  function canAttackHitPlayer(engine, enemyIndex, attack) {
-    const CP = getCp();
-    if (!CP || !CP.isEnabled(engine)) return true;
-    const rangeType = normalizeAttackRange(attack);
-    const check = CP.validateAttackAgainstPlayer(engine, enemyIndex, rangeType);
-    return check.valid;
-  }
-
-  function estimateAttackScore(attack) {
-    const dice = String(attack.dmgRoll || '1d6');
-    const m = dice.match(/(\d+)d(\d+)/);
-    let avg = 4;
-    if (m) avg = (parseInt(m[1], 10) || 1) * ((parseInt(m[2], 10) || 6) + 1) / 2;
-    return avg + (parseInt(attack.dmgBonus, 10) || 0) + (parseInt(attack.weight, 10) || 0) * 0.5;
-  }
-
-  function pickBestAttack(engine, enemyIndex, attacks, opts = {}) {
-    const { preferRangeTypes = null, enemyZone, playerZone } = opts;
-    const CP = getCp();
-    let candidates = attacks.filter((a) =>
-      canAttackHitPlayer(engine, enemyIndex, a)
-    );
-    if (!candidates.length) return null;
-
-    if (preferRangeTypes?.length) {
-      const preferred = candidates.filter((a) =>
-        preferRangeTypes.includes(normalizeAttackRange(a))
-      );
-      if (preferred.length) candidates = preferred;
-    }
-
-    if (CP && enemyZone != null && playerZone != null) {
-      const dist = CP.getZoneDistance(enemyZone, playerZone);
-      if (dist > 0) {
-        const ranged = candidates.filter((a) => !isSameZoneRange(normalizeAttackRange(a)));
-        if (ranged.length) candidates = ranged;
-      } else {
-        const melee = candidates.filter((a) => isSameZoneRange(normalizeAttackRange(a)));
-        if (melee.length) candidates = melee;
-      }
-    }
-
-    candidates.sort(
-      (a, b) => estimateAttackScore(b) - estimateAttackScore(a)
-    );
-    return candidates[0];
-  }
-
-  function planMoveTowardPlayer(engine, enemyIndex) {
-    const CP = getCp();
-    if (!CP || !CP.isEnabled(engine)) return null;
-    const enemy = engine.state.enemies[enemyIndex];
-    if (!enemy || enemy.zoneMovedThisTurn) return null;
-    const cur = CP.getEnemyPosition(engine, enemyIndex);
-    const pz = CP.getPlayerPosition(engine);
-    const next = CP.getZoneStepToward(cur, pz);
-    if (!next) return null;
-    return { kind: 'move', zone: next };
-  }
-
-  function planMoveAwayFromPlayer(engine, enemyIndex) {
-    const CP = getCp();
-    if (!CP || !CP.isEnabled(engine)) return null;
-    const enemy = engine.state.enemies[enemyIndex];
-    if (!enemy || enemy.zoneMovedThisTurn) return null;
-    const cur = CP.getEnemyPosition(engine, enemyIndex);
-    const pz = CP.getPlayerPosition(engine);
-    const next = CP.getZoneStepAway(cur, pz);
-    if (!next) return null;
-    return { kind: 'move', zone: next };
-  }
-
-  /**
-   * MELEE: атака в зоне досягаемости, иначе шаг к игроку.
-   */
-  function planMeleeTurn(engine, enemy, enemyIndex) {
-    const CP = getCp();
-    const attacks = getEnemyAttacks(engine, enemy);
-    const playerZone = CP ? CP.getPlayerPosition(engine) : null;
-    const enemyZone = CP ? CP.getEnemyPosition(engine, enemyIndex) : null;
-
-    const hit = pickBestAttack(engine, enemyIndex, attacks, {
-      preferRangeTypes: [CP?.RANGE_TYPES?.MELEE || 'melee', 'touch'],
-      enemyZone,
-      playerZone
-    });
-    if (hit) return { kind: 'attack', attack: hit };
-
-    const move = planMoveTowardPlayer(engine, enemyIndex);
-    if (move) return move;
-
-    return { kind: 'wait' };
-  }
-
-  /**
-   * RANGED: в одной зоне — мили, иначе отход + дальняя; издалека — дальняя.
-   */
-  function planRangedTurn(engine, enemy, enemyIndex) {
-    const CP = getCp();
-    const attacks = getEnemyAttacks(engine, enemy);
-    const playerZone = CP ? CP.getPlayerPosition(engine) : null;
-    const enemyZone = CP ? CP.getEnemyPosition(engine, enemyIndex) : null;
-    const sameZone = CP && playerZone === enemyZone;
-
-    if (sameZone) {
-      const meleeTypes = [
-        CP.RANGE_TYPES.MELEE,
-        CP.RANGE_TYPES.TOUCH,
-        'melee',
-        'touch'
-      ];
-      const meleeHit = pickBestAttack(engine, enemyIndex, attacks, {
-        preferRangeTypes: meleeTypes,
-        enemyZone,
-        playerZone
-      });
-      if (meleeHit) {
-        return { kind: 'attack', attack: meleeHit, note: 'melee_fallback' };
-      }
-
-      const move = planMoveAwayFromPlayer(engine, enemyIndex);
-      if (move) return move;
-
-      const rangedHit = pickBestAttack(engine, enemyIndex, attacks, {
-        preferRangeTypes: [CP.RANGE_TYPES.RANGED, CP.RANGE_TYPES.SPELL, 'ranged', 'spell'],
-        enemyZone,
-        playerZone
-      });
-      if (rangedHit) return { kind: 'attack', attack: rangedHit, note: 'ranged_in_melee' };
-      return { kind: 'wait' };
-    }
-
-    const rangedHit = pickBestAttack(engine, enemyIndex, attacks, {
-      preferRangeTypes: [CP.RANGE_TYPES.RANGED, CP.RANGE_TYPES.SPELL, 'ranged', 'spell'],
-      enemyZone,
-      playerZone
-    });
-    if (rangedHit) return { kind: 'attack', attack: rangedHit };
-
-    const move = planMoveTowardPlayer(engine, enemyIndex);
-    if (move) return move;
-
-    const any = pickBestAttack(engine, enemyIndex, attacks, { enemyZone, playerZone });
-    if (any) return { kind: 'attack', attack: any };
-
-    return { kind: 'wait' };
-  }
-
-  /**
-   * CASTER: приоритет действий с range spell, иначе как ranged.
-   */
-  function planCasterTurn(engine, enemy, enemyIndex) {
-    const CP = getCp();
-    const abilities = getEnemyAbilities(engine, enemy);
-    const playerZone = CP ? CP.getPlayerPosition(engine) : null;
-    const enemyZone = CP ? CP.getEnemyPosition(engine, enemyIndex) : null;
-
-    const spells = abilities.filter((ab) => {
-      const rt = CP ? CP.getAbilityRangeType(ab) : 'spell';
-      return rt === CP.RANGE_TYPES.SPELL || rt === 'spell';
-    });
-
-    for (const ab of spells) {
-      const rt = CP.getAbilityRangeType(ab);
-      const inRange =
-        !CP ||
-        !CP.isEnabled(engine) ||
-        CP.canReachWithRangeType(enemyZone, playerZone, rt);
-      if (!inRange) continue;
-      const scope = ab.targetType || ab.targeting?.scope;
-      if (
-        scope === 'singleEnemy' ||
-        scope === 'single' ||
-        scope === 'single_enemy'
-      ) {
-        return { kind: 'ability', ability: ab };
-      }
-      if (
-        scope === 'area' ||
-        scope === 'allEnemies' ||
-        scope === 'all_enemies'
-      ) {
-        return { kind: 'ability', ability: ab };
-      }
-    }
-
-    return planRangedTurn(engine, enemy, enemyIndex);
-  }
-
-  /** TANK: как melee, активнее сближается. */
-  function planTankTurn(engine, enemy, enemyIndex) {
-    const plan = planMeleeTurn(engine, enemy, enemyIndex);
-    if (plan.kind !== 'wait') return plan;
-    return planMoveTowardPlayer(engine, enemyIndex) || plan;
-  }
-
-  /** SUPPORT / SUMMONER — заглушки (базовая атака или ожидание). */
-  function planSupportTurn(engine, enemy, enemyIndex) {
-    const attacks = getEnemyAttacks(engine, enemy);
-    const hit = pickBestAttack(engine, enemyIndex, attacks);
-    if (hit) return { kind: 'attack', attack: hit };
-    return { kind: 'wait' };
-  }
-
-  function planSummonerTurn(engine, enemy, enemyIndex) {
-    return planSupportTurn(engine, enemy, enemyIndex);
-  }
-
-  const ROLE_PLANNERS = {
-    [COMBAT_ROLES.MELEE]: planMeleeTurn,
-    [COMBAT_ROLES.RANGED]: planRangedTurn,
-    [COMBAT_ROLES.CASTER]: planCasterTurn,
-    [COMBAT_ROLES.TANK]: planTankTurn,
-    [COMBAT_ROLES.SUPPORT]: planSupportTurn,
-    [COMBAT_ROLES.SUMMONER]: planSummonerTurn
-  };
-
-  function planTurn(engine, enemy, enemyIndex) {
-    const role = resolveCombatRole(engine, enemy);
-    const planner = ROLE_PLANNERS[role] || planMeleeTurn;
-    return planner(engine, enemy, enemyIndex);
-  }
-
-  function executeMove(engine, enemyIndex, zone) {
-    const CP = getCp();
-    if (!CP) return false;
-    return CP.moveEnemyOneZone(engine, enemyIndex, zone);
-  }
-
-  /**
-   * Выполнить ход врага (план + действия). Возвращает true, если что-то сделано.
-   */
-  function runTurn(engine, enemy, enemyIndex) {
-    if (!enemy || enemy.hp <= 0) return false;
-
-    enemy.zoneMovedThisTurn = false;
-
-    const CP = getCp();
-    if (!CP || !CP.isEnabled(engine)) {
-      if (typeof engine.executeEnemyBasicAttack === 'function') {
-        return engine.executeEnemyBasicAttack(enemy, enemyIndex, null);
-      }
-      return false;
-    }
-
-    const plan = planTurn(engine, enemy, enemyIndex);
-
-    if (plan.kind === 'move' && plan.zone) {
-      executeMove(engine, enemyIndex, plan.zone);
-      const role = resolveCombatRole(engine, enemy);
-      const allowFollowUp =
-        role === COMBAT_ROLES.RANGED || role === COMBAT_ROLES.CASTER;
-      if (allowFollowUp) {
-        const attacks = getEnemyAttacks(engine, enemy);
-        const followUp = pickBestAttack(engine, enemyIndex, attacks, {
-          enemyZone: CP.getEnemyPosition(engine, enemyIndex),
-          playerZone: CP.getPlayerPosition(engine)
-        });
-        if (followUp && typeof engine.executeEnemyAttack === 'function') {
-          return engine.executeEnemyAttack(enemy, enemyIndex, followUp, plan.note);
-        }
-      }
-      return true;
-    }
-
-    if (plan.kind === 'attack' && plan.attack) {
-      if (typeof engine.executeEnemyAttack === 'function') {
-        return engine.executeEnemyAttack(enemy, enemyIndex, plan.attack, plan.note);
-      }
-    }
-
-    if (plan.kind === 'ability' && plan.ability) {
-      engine.log?.(
-        `💫 ${enemy.name}: ${plan.ability.name} (AI, способности врага — в разработке)`,
-        'log-combat'
-      );
-      const fallback = pickBestAttack(engine, enemyIndex, getEnemyAttacks(engine, enemy));
-      if (fallback && typeof engine.executeEnemyAttack === 'function') {
-        return engine.executeEnemyAttack(enemy, enemyIndex, fallback);
-      }
-      return true;
-    }
-
-    if (plan.kind === 'wait') {
-      engine.log?.(`⏳ ${enemy.name} не находит удачной позиции для атаки.`, 'log-dice');
-      return true;
-    }
-
-    if (typeof engine.executeEnemyBasicAttack === 'function') {
-      return engine.executeEnemyBasicAttack(enemy, enemyIndex, null);
-    }
-    return false;
-  }
-
-  const EnemyTacticalAI = {
-    COMBAT_ROLES,
-    IMPLEMENTED_ROLES,
-    resolveCombatRole,
-    getEnemyAttacks,
-    getEnemyAbilities,
-    planTurn,
-    runTurn,
-    pickBestAttack,
-    planMeleeTurn,
-    planRangedTurn
-  };
-
-  global.EnemyTacticalAI = EnemyTacticalAI;
-})(typeof window !== 'undefined' ? window : globalThis);
-
-
-;/* —— js/components/combat/CombatLog.js —— */
-/**
- * CombatLog — журнал боя с раундами, иконками и цветовой дифференциацией.
- * API: CombatLog.add(type, data)
- * @module CombatLog
- */
-(function (global) {
-  'use strict';
-
-  const TYPES = {
-    damage: {
-      icon: '💥',
-      label: 'Урон',
-      className: 'combat-log-entry--damage'
-    },
-    crit: {
-      icon: '⚡',
-      label: 'Крит',
-      className: 'combat-log-entry--crit'
-    },
-    heal: {
-      icon: '✨',
-      label: 'Лечение',
-      className: 'combat-log-entry--heal'
-    },
-    miss: {
-      icon: '💨',
-      label: 'Промах',
-      className: 'combat-log-entry--miss'
-    },
-    fail: {
-      icon: '✖',
-      label: 'Провал',
-      className: 'combat-log-entry--fail'
-    },
-    effect: {
-      icon: '🔮',
-      label: 'Эффект',
-      className: 'combat-log-entry--effect'
-    },
-    status: {
-      icon: '🛡️',
-      label: 'Статус',
-      className: 'combat-log-entry--effect'
-    },
-    buff: {
-      icon: '📈',
-      label: 'Бафф',
-      className: 'combat-log-entry--buff'
-    },
-    debuff: {
-      icon: '📉',
-      label: 'Дебафф',
-      className: 'combat-log-entry--effect'
-    },
-    combat: {
-      icon: '⚔️',
-      label: 'Бой',
-      className: 'combat-log-entry--combat'
-    },
-    ability: {
-      icon: '💫',
-      label: 'Умение',
-      className: 'combat-log-entry--ability'
-    },
-    attack: {
-      icon: '⚔️',
-      label: 'Атака',
-      className: 'combat-log-entry--combat'
-    },
-    death: {
-      icon: '☠️',
-      label: 'Смерть',
-      className: 'combat-log-entry--death'
-    },
-    info: {
-      icon: 'ℹ️',
-      label: 'Инфо',
-      className: 'combat-log-entry--info'
-    },
-    round: {
-      icon: '🔄',
-      label: 'Раунд',
-      className: 'combat-log-entry--round'
-    },
-    position: {
-      icon: '↔️',
-      label: 'Позиция',
-      className: 'combat-log-entry--combat'
-    }
-  };
-
-  const LEGACY_CLASS_MAP = {
-    'log-damage': 'damage',
-    'log-heal': 'heal',
-    'log-combat': 'combat',
-    'log-dice': 'info',
-    'log-info': 'info'
-  };
-
-  const COMBAT_LOG_CLASSES = new Set(Object.keys(LEGACY_CLASS_MAP));
-
-  let instance = null;
-
-  function escapeHtml(s) {
-    return String(s ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  function inferTypeFromMessage(text, fallback = 'info') {
-    const t = String(text || '');
-    const low = t.toLowerCase();
-    if (/☠|повержен|убит|погиб|уничтожен|все враги|не дышит/.test(low)) {
-      return 'death';
-    }
-    if (/крит|critical_success|критический успех/i.test(t)) return 'crit';
-    if (/промах|autопровал|— промах|miss/i.test(low)) return 'miss';
-    if (/провал|провален|failure|critical_failure/i.test(low)) return 'fail';
-    if (/восстановлено|\+.*оз|лечение|heal|исцел/i.test(t)) return 'heal';
-    if (/урон|💥|получает \d|damage/i.test(t)) return 'damage';
-    if (/оглуш|яд|кровотеч|статус|status|эффект|концентрац/i.test(low)) {
-      return 'effect';
-    }
-    if (/позици|frontline|backline|фронт|тыл|far|mid|close|дальн|средн|ближн/i.test(low)) return 'position';
-    if (/умение|💫|заклинан|кара|ярость|огненный шар|magic_missile/i.test(low)) {
-      return 'ability';
-    }
-    if (/атак|🎲|vs кд|попадание/i.test(low)) return 'attack';
-    if (/❌|недостаточно|нельзя/i.test(low)) return 'fail';
-    return fallback;
-  }
-
-  function isImportant(type, data, text) {
-    if (data.important || data.highlight) return true;
-    if (type === 'death' || type === 'crit') return true;
-    const low = String(text).toLowerCase();
-    if (/божественн|огненный шар|8d6|крит|☠|повержен/i.test(low)) return true;
-    return false;
-  }
-
-  class CombatLog {
-    constructor(options = {}) {
-      this.hostId = options.hostId || 'combat-log-host';
-      this.host = null;
-      this.scrollEl = null;
-      this.rounds = new Map();
-      this.currentRound = 1;
-      this.maxEntries = options.maxEntries ?? 400;
-      this.autoCollapseOldRounds = options.autoCollapseOldRounds !== false;
-      this.engine = null;
-      this.active = false;
-      this.reviewMode = false;
-      this._entryCount = 0;
-      this._hideTimer = null;
-    }
-
-    static getInstance() {
-      return instance;
-    }
-
-    static attach(engine, options = {}) {
-      if (!instance) {
-        instance = new CombatLog(options);
-      }
-      instance.engine = engine;
-      instance.ensureDom();
-      return instance;
-    }
-
-    static isCombatLogClass(cls) {
-      return COMBAT_LOG_CLASSES.has(cls);
-    }
-
-    static add(type, data = {}) {
-      const log = CombatLog.attach(
-        data.engine || (typeof GameEngine !== 'undefined' ? GameEngine : null)
-      );
-      return log.add(type, data);
-    }
-
-    static addFromLegacy(msg, cls, engine) {
-      const log = CombatLog.attach(engine);
-      let type = LEGACY_CLASS_MAP[cls] || 'info';
-      const text = String(msg || '');
-      if (type === 'damage' && /крит/i.test(text)) type = 'crit';
-      if (type === 'info') type = inferTypeFromMessage(text, type);
-      if (/промах/i.test(text)) type = 'miss';
-      if (/провал/i.test(text) && type !== 'damage') type = 'fail';
-      return log.add(type, {
-        message: text,
-        engine,
-        round: engine?.state?.combat?.round
-      });
-    }
-
-    /** Удобная обёртка для CombatManager */
-    static log(engine, type, data = {}) {
-      return CombatLog.add(type, { ...data, engine });
-    }
-
-    ensureDom() {
-      let host = document.getElementById(this.hostId);
-      if (!host) {
-        const journal = document.getElementById('journal-wrap');
-        const logEl = document.getElementById('log');
-        host = document.createElement('div');
-        host.id = this.hostId;
-        host.className = 'combat-log-host hidden';
-        host.setAttribute('aria-label', 'Журнал боя');
-        if (journal && logEl) {
-          journal.insertBefore(host, logEl);
-        } else if (logEl?.parentNode) {
-          logEl.parentNode.insertBefore(host, logEl);
-        } else {
-          document.body.appendChild(host);
-        }
-      }
-      this.ensurePlacement();
-      this.host = host;
-
-      if (!host.querySelector('.combat-log')) {
-        host.innerHTML = `
-          <div class="combat-log">
-            <div class="combat-log__toolbar">
-              <span class="combat-log__title">📜 Журнал боя</span>
-              <div class="combat-log__actions">
-                <button type="button" class="combat-log__btn" data-action="collapse-old" title="Свернуть старые раунды">Свернуть старые</button>
-                <button type="button" class="combat-log__btn" data-action="expand-all" title="Развернуть все">Развернуть</button>
-                <button type="button" class="combat-log__btn combat-log__btn--dismiss hidden" data-action="dismiss" title="Скрыть журнал">Скрыть</button>
-              </div>
-            </div>
-            <div class="combat-log__scroll" tabindex="0"></div>
-          </div>`;
-        this.scrollEl = host.querySelector('.combat-log__scroll');
-        host.querySelector('[data-action="collapse-old"]')?.addEventListener(
-          'click',
-          () => this.collapseOldRounds()
-        );
-        host.querySelector('[data-action="expand-all"]')?.addEventListener(
-          'click',
-          () => this.expandAllRounds()
-        );
-        host.querySelector('[data-action="dismiss"]')?.addEventListener('click', () =>
-          this.dismiss()
-        );
-      } else {
-        this.scrollEl = host.querySelector('.combat-log__scroll');
-      }
-    }
-
-    _cancelHideTimer() {
-      if (this._hideTimer) {
-        clearTimeout(this._hideTimer);
-        this._hideTimer = null;
-      }
-    }
-
-    hasEntries() {
-      return this._entryCount > 0;
-    }
-
-    /** Журнал боя всегда внутри нижнего блока журнала (перед событиями). */
-    ensurePlacement() {
-      document.getElementById('combat-log-reopen-btn')?.remove();
-      const journal = document.getElementById('journal-wrap');
-      const logEl = document.getElementById('log');
-      if (!journal || !logEl || !this.host) return;
-      if (this.host.parentNode !== journal) {
-        journal.insertBefore(this.host, logEl);
-      } else if (this.host.nextElementSibling !== logEl) {
-        journal.insertBefore(this.host, logEl);
-      }
-    }
-
-    show() {
-      this.ensureDom();
-      this.ensurePlacement();
-      this._cancelHideTimer();
-      this.host?.classList.remove('hidden');
-      this.active = true;
-    }
-
-    hide() {
-      this._cancelHideTimer();
-      this.host?.classList.add('hidden');
-      this.active = false;
-      this._updateDismissButton();
-    }
-
-    dismiss() {
-      if (this.reviewMode) {
-        this.hide();
-        return;
-      }
-      this.hide();
-    }
-
-    enterArchiveMode() {
-      if (!this.hasEntries()) {
-        this.hide();
-        return;
-      }
-      if (this.reviewMode) {
-        this.ensureDom();
-        this.ensurePlacement();
-        this.host?.classList.remove('hidden', 'combat-log-host--live');
-        this.host?.classList.add('combat-log-host--archive');
-        return;
-      }
-      this.ensureDom();
-      this.ensurePlacement();
-      this._cancelHideTimer();
-      this.active = false;
-      this.reviewMode = true;
-      this.host?.classList.remove('hidden', 'combat-log-host--live');
-      this.host?.classList.add('combat-log-host--archive');
-      this._updateTitle();
-      this._updateDismissButton();
-      this.collapseOldRounds(this.currentRound);
-      this.scrollJournalIntoView();
-    }
-
-    /** @deprecated alias */
-    enterReviewMode() {
-      this.enterArchiveMode();
-    }
-
-    _updateTitle() {
-      const title = this.host?.querySelector('.combat-log__title');
-      if (!title) return;
-      if (this.reviewMode) {
-        title.textContent = '⚔️ Последний бой';
-      } else if (this.active) {
-        title.textContent = '⚔️ Бой';
-      } else {
-        title.textContent = '⚔️ Бой';
-      }
-    }
-
-    _updateDismissButton() {
-      const btn = this.host?.querySelector('[data-action="dismiss"]');
-      if (!btn) return;
-      btn.classList.toggle('hidden', !this.reviewMode);
-      btn.title = this.reviewMode ? 'Свернуть блок боя' : 'Скрыть журнал';
-    }
-
-    scrollJournalIntoView() {
-      const wrap = document.getElementById('journal-wrap');
-      if (!wrap) return;
-      requestAnimationFrame(() => {
-        wrap.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      });
-    }
-
-    clear() {
-      this.rounds.clear();
-      this._entryCount = 0;
-      if (this.scrollEl) this.scrollEl.innerHTML = '';
-    }
-
-    startCombat(engine, round = 1) {
-      this.engine = engine;
-      this.ensureDom();
-      this.ensurePlacement();
-      this._cancelHideTimer();
-      this.reviewMode = false;
-      this.host?.classList.remove('combat-log-host--archive', 'combat-log-host--review');
-      this.host?.classList.add('combat-log-host--live');
-      this.clear();
-      this.currentRound = round || 1;
-      this.show();
-      this._updateTitle();
-      this._updateDismissButton();
-      this.setRound(this.currentRound, { announce: true });
-      this.add('combat', {
-        message: '⚔️ Бой начался',
-        important: true,
-        round: this.currentRound
-      });
-    }
-
-    endCombat() {
-      this.add('combat', {
-        message: '🏁 Бой завершён',
-        important: true,
-        round: this.currentRound
-      });
-    }
-
-    /**
-     * Завершение боя: запись «Бой завершён», блок остаётся внизу в общем журнале.
-     * @param {{ keepReviewVisible?: boolean }} [opts]
-     */
-    finishCombatSession(opts = {}) {
-      this._cancelHideTimer();
-      this.endCombat();
-      this.host?.classList.remove('combat-log-host--live', 'combat-log-host--review');
-      if (opts.keepReviewVisible !== false) {
-        this.enterArchiveMode();
-        return;
-      }
-      this.reviewMode = false;
-      this.hide();
-    }
-
-    setRound(round, opts = {}) {
-      const r = Math.max(1, parseInt(round, 10) || 1);
-      const prev = this.currentRound;
-      this.currentRound = r;
-      if (opts.announce && r > 1 && r !== prev) {
-        this.add('round', {
-          message: `Раунд ${r}`,
-          round: r,
-          important: false
-        });
-      }
-      this.ensureRoundGroup(r);
-      if (this.autoCollapseOldRounds) {
-        this.collapseOldRounds(r);
-      }
-    }
-
-    ensureRoundGroup(round) {
-      const r = Math.max(1, parseInt(round, 10) || 1);
-      if (this.rounds.has(r)) return this.rounds.get(r);
-
-      const section = document.createElement('section');
-      section.className = 'combat-log-round';
-      section.dataset.round = String(r);
-      const isCurrent = r === this.currentRound;
-      section.classList.toggle('combat-log-round--current', isCurrent);
-      if (!isCurrent && this.autoCollapseOldRounds) {
-        section.classList.add('combat-log-round--collapsed');
-      }
-
-      section.innerHTML = `
-        <button type="button" class="combat-log-round__head" aria-expanded="${isCurrent ? 'true' : 'false'}">
-          <span class="combat-log-round__chevron" aria-hidden="true">▼</span>
-          <span class="combat-log-round__label">Раунд ${r}</span>
-          <span class="combat-log-round__count">0</span>
-        </button>
-        <div class="combat-log-round__body"></div>`;
-
-      const head = section.querySelector('.combat-log-round__head');
-      head.addEventListener('click', () => this.toggleRound(r));
-
-      if (this.scrollEl) {
-        this.scrollEl.appendChild(section);
-      }
-
-      const group = {
-        round: r,
-        el: section,
-        body: section.querySelector('.combat-log-round__body'),
-        countEl: section.querySelector('.combat-log-round__count'),
-        count: 0
-      };
-      this.rounds.set(r, group);
-      return group;
-    }
-
-    toggleRound(round) {
-      const g = this.rounds.get(round);
-      if (!g) return;
-      const collapsed = g.el.classList.toggle('combat-log-round--collapsed');
-      const head = g.el.querySelector('.combat-log-round__head');
-      if (head) head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    }
-
-    collapseOldRounds(keepRound) {
-      const keep = keepRound ?? this.currentRound;
-      this.rounds.forEach((g, r) => {
-        if (r < keep) {
-          g.el.classList.add('combat-log-round--collapsed');
-          g.el.querySelector('.combat-log-round__head')?.setAttribute(
-            'aria-expanded',
-            'false'
-          );
-        }
-      });
-    }
-
-    expandAllRounds() {
-      this.rounds.forEach((g) => {
-        g.el.classList.remove('combat-log-round--collapsed');
-        g.el.querySelector('.combat-log-round__head')?.setAttribute(
-          'aria-expanded',
-          'true'
-        );
-      });
-    }
-
-    /**
-     * @param {string} type — ключ из TYPES
-     * @param {object} data
-     * @param {string} [data.message] — текст записи
-     * @param {string} [data.text] — alias message
-     * @param {number} [data.round] — раунд (иначе текущий)
-     * @param {boolean} [data.important]
-     * @param {string} [data.actor]
-     * @param {string} [data.target]
-     * @param {number|string} [data.amount]
-     */
-    add(type, data = {}) {
-      this.ensureDom();
-      if (!this.active && this.engine?.state?.combat) {
-        this.show();
-        this.active = true;
-      }
-
-      const def = TYPES[type] || TYPES.info;
-      const round =
-        data.round ??
-        data.engine?.state?.combat?.round ??
-        this.engine?.state?.combat?.round ??
-        this.currentRound;
-      const r = Math.max(1, parseInt(round, 10) || 1);
-      if (r !== this.currentRound) {
-        this.setRound(r, { announce: r > this.currentRound });
-      }
-
-      const text = data.message ?? data.text ?? '';
-      const important = isImportant(type, data, text);
-      const group = this.ensureRoundGroup(r);
-
-      const entry = document.createElement('div');
-      entry.className = [
-        'combat-log-entry',
-        def.className,
-        important ? 'combat-log-entry--important' : ''
-      ]
-        .filter(Boolean)
-        .join(' ');
-
-      const metaParts = [];
-      if (data.actor) metaParts.push(escapeHtml(data.actor));
-      if (data.target) metaParts.push('→ ' + escapeHtml(data.target));
-      if (data.amount != null && data.amount !== '') {
-        metaParts.push(`[${escapeHtml(String(data.amount))}]`);
-      }
-
-      entry.innerHTML = `
-        <span class="combat-log-entry__icon" aria-hidden="true">${def.icon}</span>
-        <div class="combat-log-entry__content">
-          <span class="combat-log-entry__text">${escapeHtml(text)}</span>
-          ${metaParts.length ? `<span class="combat-log-entry__meta">${metaParts.join(' ')}</span>` : ''}
-        </div>`;
-
-      group.body.appendChild(entry);
-      group.count += 1;
-      if (group.countEl) group.countEl.textContent = String(group.count);
-      this._entryCount += 1;
-
-      if (this._entryCount > this.maxEntries) {
-        const firstKey = Math.min(...this.rounds.keys());
-        const first = this.rounds.get(firstKey);
-        if (first?.body?.firstChild) {
-          first.body.removeChild(first.body.firstChild);
-          first.count = Math.max(0, first.count - 1);
-          if (first.countEl) first.countEl.textContent = String(first.count);
-          this._entryCount -= 1;
-        }
-      }
-
-      this.scrollToBottom();
-      return entry;
-    }
-
-    scrollToBottom() {
-      if (!this.scrollEl) return;
-      requestAnimationFrame(() => {
-        this.scrollEl.scrollTop = this.scrollEl.scrollHeight;
-      });
-    }
-  }
-
-  global.CombatLog = CombatLog;
-  global.CombatLog.TYPES = TYPES;
-})(typeof window !== 'undefined' ? window : globalThis);
-
-
-;/* —— js/campaign-covers.js —— */
-// Обложки кампаний: кэш, градиенты, извлечение из game_data
-
-const CampaignCovers = {
-  MEMORY_CACHE: new Map(),
-  LS_PREFIX: 'rpg_cover_cache_v1_',
-  MAX_UPLOAD_BYTES: 500 * 1024,
-  ACCEPT_TYPES: new Set(['image/png', 'image/jpeg', 'image/jpg']),
-  ACCEPT_EXT: /\.(png|jpe?g)$/i,
-
-  hashString(str) {
-    let h = 0;
-    const s = String(str || '');
-    for (let i = 0; i < s.length; i += 1) {
-      h = ((h << 5) - h) + s.charCodeAt(i);
-      h |= 0;
-    }
-    return Math.abs(h);
-  },
-
-  gradientFromTitle(title) {
-    const h = this.hashString(title);
-    const hue1 = h % 360;
-    const hue2 = (hue1 + 40 + (h % 80)) % 360;
-    const sat = 48 + (h % 22);
-    const light = 32 + (h % 14);
-    return `linear-gradient(135deg, hsl(${hue1}, ${sat}%, ${light}%) 0%, hsl(${hue2}, ${sat + 8}%, ${light - 8}%) 100%)`;
-  },
-
-  getSceneImageCandidates(scene) {
-    if (!scene || typeof scene !== 'object') return [];
-    const found = [];
-    const fields = ['cover', 'image', 'illustration', 'background', 'bg', 'bgImage', 'sceneImage'];
-    fields.forEach((key) => {
-      const v = scene[key];
-      if (typeof v === 'string' && v.trim()) found.push(v.trim());
-    });
-    const text = String(scene.text || '');
-    const patterns = [
-      /!\[[^\]]*]\(([^)]+\.(?:png|jpe?g|webp)(?:\?[^)]*)?)\)/gi,
-      /<img[^>]+src=["']([^"']+\.(?:png|jpe?g|webp)(?:\?[^"']*)?)["']/gi,
-      /(https?:\/\/[^\s"'<>]+\.(?:png|jpe?g|webp)(?:\?[^\s"'<>]*)?)/gi,
-      /(?:^|[\s("'"])([a-zA-Z0-9_./-]+\.(?:png|jpe?g|webp))/gi
-    ];
-    patterns.forEach((re) => {
-      let m;
-      const rx = new RegExp(re.source, re.flags);
-      while ((m = rx.exec(text)) !== null) {
-        const src = (m[1] || m[0] || '').trim().replace(/^["'(]+|["')]+$/g, '');
-        if (src && !found.includes(src)) found.push(src);
-      }
-    });
-    return found;
-  },
-
-  normalizeImageSrc(src) {
-    if (!src || typeof src !== 'string') return null;
-    const s = src.trim();
-    if (/^data:image\//i.test(s)) return s;
-    if (/^https?:\/\//i.test(s)) return s;
-    if (s.startsWith('/')) return s;
-    return s;
-  },
-
-  getFirstSceneId(data) {
-    if (!data?.scenes) return null;
-    if (data.scenes.village_hub) return 'village_hub';
-    if (data.scenes.start) return 'start';
-    const keys = Object.keys(data.scenes);
-    return keys[0] || null;
-  },
-
-  findFirstSceneImage(data) {
-    if (!data?.scenes) return null;
-    const order = [];
-    const first = this.getFirstSceneId(data);
-    if (first) order.push(first);
-    Object.keys(data.scenes).forEach((id) => {
-      if (!order.includes(id)) order.push(id);
-    });
-    for (let i = 0; i < order.length; i += 1) {
-      const scene = data.scenes[order[i]];
-      const candidates = this.getSceneImageCandidates(scene);
-      for (let j = 0; j < candidates.length; j += 1) {
-        const norm = this.normalizeImageSrc(candidates[j]);
-        if (norm) return norm;
-      }
-    }
-    return null;
-  },
-
-  getCoverFromData(data) {
-    const metaCover = data?.meta?.cover;
-    if (typeof metaCover === 'string' && metaCover.trim()) {
-      return metaCover.trim();
-    }
-    return this.findFirstSceneImage(data);
-  },
-
-  getCacheStorageKey(campaign) {
-    return campaign?.cacheKey || campaign?.id || 'default';
-  },
-
-  readCachedGameData(cacheKey) {
-    if (!cacheKey) return null;
-    try {
-      const raw = localStorage.getItem(cacheKey);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch (_) {
-      return null;
-    }
-  },
-
-  getLsCover(cacheKey) {
-    try {
-      return localStorage.getItem(this.LS_PREFIX + cacheKey);
-    } catch (_) {
-      return null;
-    }
-  },
-
-  setLsCover(cacheKey, src) {
-    if (!cacheKey || !src) return;
-    try {
-      localStorage.setItem(this.LS_PREFIX + cacheKey, src);
-    } catch (_) { /* quota */ }
-  },
-
-  clearCoverCache(cacheKey) {
-    if (cacheKey) this.MEMORY_CACHE.delete(cacheKey);
-    try {
-      if (cacheKey) localStorage.removeItem(this.LS_PREFIX + cacheKey);
-    } catch (_) { /* ignore */ }
-  },
-
-  clearAllCoverCaches() {
-    this.MEMORY_CACHE.clear();
-    try {
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith(this.LS_PREFIX)) localStorage.removeItem(key);
-      });
-    } catch (_) { /* ignore */ }
-  },
-
-  resolveCoverPayload(campaign, data) {
-    const src = this.getCoverFromData(data);
-    if (src) {
-      return { type: 'image', src };
-    }
-    return {
-      type: 'gradient',
-      gradient: this.gradientFromTitle(campaign?.title || campaign?.id || 'Game'),
-      icon: '🎮'
-    };
-  },
-
-  async getCoverForCampaign(campaign, fetchDataFn) {
-    const cacheKey = this.getCacheStorageKey(campaign);
-    if (this.MEMORY_CACHE.has(cacheKey)) {
-      return this.MEMORY_CACHE.get(cacheKey);
-    }
-
-    const lsCover = this.getLsCover(cacheKey);
-    if (lsCover) {
-      const payload = { type: 'image', src: lsCover };
-      this.MEMORY_CACHE.set(cacheKey, payload);
-      return payload;
-    }
-
-    let data = this.readCachedGameData(cacheKey);
-    if (!data && typeof fetchDataFn === 'function') {
-      try {
-        data = await fetchDataFn(campaign);
-      } catch (_) {
-        data = null;
-      }
-    }
-
-    const payload = this.resolveCoverPayload(campaign, data);
-    if (payload.type === 'image' && payload.src) {
-      this.setLsCover(cacheKey, payload.src);
-    }
-    this.MEMORY_CACHE.set(cacheKey, payload);
-    return payload;
-  },
-
-  applyToCardElement(coverEl, payload) {
-    if (!coverEl || !payload) return;
-    const img = coverEl.querySelector('.campaign-card-cover-img');
-    const fallback = coverEl.querySelector('.campaign-card-cover-fallback');
-    if (!img || !fallback) return;
-
-    if (payload.type === 'image' && payload.src) {
-      img.onload = () => {
-        img.classList.add('is-loaded');
-        fallback.classList.add('is-hidden');
-      };
-      img.onerror = () => {
-        img.classList.remove('is-loaded');
-        img.hidden = true;
-        fallback.classList.remove('is-hidden');
-        fallback.style.background = payload.fallbackGradient
-          || this.gradientFromTitle(coverEl.dataset.coverTitle || '');
-      };
-      img.src = payload.src;
-      img.hidden = false;
-      img.alt = '';
-      return;
-    }
-
-    img.hidden = true;
-    img.classList.remove('is-loaded');
-    fallback.classList.remove('is-hidden');
-    fallback.style.background = payload.gradient || this.gradientFromTitle(coverEl.dataset.coverTitle || '');
-    const icon = fallback.querySelector('.campaign-card-cover-icon');
-    if (icon) icon.textContent = payload.icon || '🎮';
-  },
-
-  readFileAsDataUrl(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
-      reader.readAsDataURL(file);
-    });
-  },
-
-  dataUrlByteSize(dataUrl) {
-    if (typeof dataUrl !== 'string') return 0;
-    const base64 = dataUrl.split(',')[1] || '';
-    return Math.ceil(base64.length * 0.75);
-  },
-
-  loadImageFromDataUrl(dataUrl) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Некорректное изображение'));
-      img.src = dataUrl;
-    });
-  },
-
-  canvasToBlob(canvas, type, quality) {
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), type, quality);
-    });
-  },
-
-  async compressToLimit(dataUrl, maxBytes, mimeType) {
-    const img = await this.loadImageFromDataUrl(dataUrl);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const isJpeg = /jpe?g/i.test(mimeType);
-    const outType = isJpeg ? 'image/jpeg' : 'image/png';
-    let scale = 1;
-    let quality = isJpeg ? 0.88 : undefined;
-    const maxW = 1280;
-
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      const w = Math.max(1, Math.round(img.width * scale));
-      const h = Math.max(1, Math.round(img.height * scale));
-      if (w > maxW) {
-        const ratio = maxW / w;
-        canvas.width = maxW;
-        canvas.height = Math.round(h * ratio);
-      } else {
-        canvas.width = w;
-        canvas.height = h;
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const blob = await this.canvasToBlob(canvas, outType, quality);
-      if (!blob) break;
-      if (blob.size <= maxBytes) {
-        return this.readFileAsDataUrl(blob);
-      }
-      if (isJpeg && quality > 0.5) {
-        quality -= 0.1;
-      } else {
-        scale *= 0.82;
-      }
-    }
-    throw new Error('Не удалось сжать изображение до 500 КБ');
-  },
-
-  async fileToCoverDataUrl(file) {
-    if (!file) throw new Error('Файл не выбран');
-    const type = (file.type || '').toLowerCase();
-    if (!this.ACCEPT_TYPES.has(type) && !this.ACCEPT_EXT.test(file.name || '')) {
-      throw new Error('Поддерживаются только PNG и JPG');
-    }
-    let dataUrl = await this.readFileAsDataUrl(file);
-    const mime = type || ( /\.jpe?g$/i.test(file.name) ? 'image/jpeg' : 'image/png');
-    if (this.dataUrlByteSize(dataUrl) > this.MAX_UPLOAD_BYTES) {
-      dataUrl = await this.compressToLimit(dataUrl, this.MAX_UPLOAD_BYTES, mime);
-    }
-    if (this.dataUrlByteSize(dataUrl) > this.MAX_UPLOAD_BYTES) {
-      throw new Error('Изображение больше 500 КБ даже после сжатия');
-    }
-    return dataUrl;
-  }
-};
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { CampaignCovers };
-}
-
-
 ;/* —— dist/engine.bundle.js —— */
-/* engine bundle generated 2026-09-02T10:41:18.423Z */
+/* engine bundle generated 2026-09-02T10:47:22.781Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -36035,6 +23331,7 @@ Object.assign(GameEngine, {
       this.state.supplies = 0;
       this.state.inventory = [...(cls.startingItems || [])];
       this.state.flags = {};
+      this.state.variables = {};
       this.applyStartingFlags();
       this.state.questStages = {};
       this.state.sceneVisits = {};
@@ -36830,6 +24127,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return {
         flags: { ...(this.state.flags || {}) },
+        variables: { ...(this.state.variables || {}) },
+        projectVariables: this.data?.variables || {},
         inventory: [...(this.state.inventory || [])],
         gold: this.state.gold ?? 0,
         className: this.state.className || '',
@@ -38333,6 +25632,9 @@ document.addEventListener('DOMContentLoaded', () => {
       Object.assign(start, this.data?.reputation?.starting || {});
       for (const [key, value] of Object.entries(start)) {
         if (this.state.flags[key] === undefined) this.state.flags[key] = value;
+      }
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.initFromCatalog) {
+        RuntimeVariables.initFromCatalog(this);
       }
     },
 
@@ -45032,6 +32334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gold: this.state.gold,
         inventory: this.state.inventory,
         flags: this.state.flags,
+        variables: this.state.variables || {},
         scene: this.state.scene,
         supplies: this.state.supplies,
         resources: this.state.resources,
@@ -45118,6 +32421,11 @@ document.addEventListener('DOMContentLoaded', () => {
       this.state.inventory = data.inventory || [];
       this.state.flags = data.flags || {};
       this.applyStartingFlags();
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.applyFromSave) {
+        RuntimeVariables.applyFromSave(this, data.variables);
+      } else {
+        this.state.variables = data.variables && typeof data.variables === 'object' ? { ...data.variables } : {};
+      }
       this.state.scene = data.scene || 'village';
       this.state.supplies = parseInt(data.supplies) || 0;
       this.state.questStages = data.questStages || {};
@@ -46188,6 +33496,12748 @@ if (typeof window !== 'undefined') {
   window.SceneElements = SceneElements;
   window.SCENE_ELEMENT_TYPES = SCENE_ELEMENT_TYPES;
   window.SCENE_ELEMENT_META = SCENE_ELEMENT_META;
+}
+
+
+;/* —— js/conditions.js —— */
+// ============================================
+// Условия показа выборов (флаги, инвентарь, золото, класс)
+// Используется в engine.js и editor.html
+// ============================================
+
+const ConditionSystem = {
+  /** Модификатор характеристики D&D 5e (делегирует GameEngine при наличии) */
+  getModifier(score) {
+    if (typeof GameEngine !== 'undefined' && typeof GameEngine.getModifier === 'function') {
+      return GameEngine.getModifier(score);
+    }
+    return Math.floor((Number(score) - 10) / 2);
+  },
+  /** Плоский requires → { all: [...] } */
+  normalize(conditions) {
+    if (!conditions || typeof conditions !== 'object') return null;
+    if (Array.isArray(conditions.all) || Array.isArray(conditions.any)) return conditions;
+
+    const rules = [];
+    const c = conditions;
+    if (c.flag != null && c.flag !== '') {
+      const rule = { flag: c.flag };
+      if (c.min != null) rule.min = c.min;
+      if (c.max != null) rule.max = c.max;
+      if (rule.min == null && rule.max == null) {
+        rule.equals = c.equals !== undefined ? c.equals : (c.value !== undefined ? c.value : true);
+      }
+      rules.push(rule);
+    }
+    if (c.notFlag) rules.push({ flag: c.notFlag, equals: false });
+    if (c.hasItem) rules.push({ hasItem: c.hasItem });
+    if (c.notHasItem) rules.push({ notHasItem: c.notHasItem });
+    if (c.goldMin != null) rules.push({ goldMin: c.goldMin });
+    if (c.goldMax != null) rules.push({ goldMax: c.goldMax });
+    if (c.class) rules.push({ class: c.class });
+    if (c.choiceUsed) rules.push({ choiceUsed: c.choiceUsed });
+    if (c.choiceNotUsed) rules.push({ choiceNotUsed: c.choiceNotUsed });
+    if (c.questStage && typeof c.questStage === 'object') rules.push({ questStage: c.questStage });
+    if (c.questMinStage != null) rules.push({ questMinStage: c.questMinStage });
+    if (c.reputation && typeof c.reputation === 'object') rules.push({ reputation: c.reputation });
+
+    if (!rules.length) return null;
+    return { all: rules };
+  },
+
+  parseEquals(raw) {
+    if (raw === 'true') return true;
+    if (raw === 'false') return false;
+    if (raw === '' || raw == null) return true;
+    const n = Number(raw);
+    if (!Number.isNaN(n) && String(n) === String(raw).trim()) return n;
+    return raw;
+  },
+
+  /** Правило-лист или вложенный блок { all } / { any } */
+  evaluateConditionNode(rule, ctx) {
+    if (!rule || typeof rule !== 'object') return true;
+    if (Array.isArray(rule.all) || Array.isArray(rule.any)) {
+      return this.evaluate(rule, ctx);
+    }
+    return this.evaluateRule(rule, ctx);
+  },
+
+  /** Объяснение провала одного узла (без повторного normalize листа) */
+  explainConditionNode(rule, ctx) {
+    if (!rule || typeof rule !== 'object') {
+      return 'неизвестное правило';
+    }
+    if (Array.isArray(rule.all) || Array.isArray(rule.any)) {
+      return this.explainConditionsFailure(rule, ctx);
+    }
+    return this.explainRuleFailure(rule, ctx);
+  },
+
+  /** Значение флага или переменной проекта (флаг имеет приоритет). */
+  resolveFlagOrVariable(name, ctx) {
+    if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.resolveValue) {
+      return RuntimeVariables.resolveValue(name, ctx);
+    }
+    return (ctx?.flags || {})[name];
+  },
+
+  evaluateRule(rule, ctx) {
+    if (!rule || typeof rule !== 'object') return true;
+    const flags = ctx.flags || {};
+    const inventory = ctx.inventory || [];
+
+    if (rule.flag != null && rule.flag !== '') {
+      const val = this.resolveFlagOrVariable(rule.flag, ctx);
+      if (rule.min != null || rule.max != null) {
+        const n = Number(val);
+        if (Number.isNaN(n)) return false;
+        if (rule.min != null && n < Number(rule.min)) return false;
+        if (rule.max != null && n > Number(rule.max)) return false;
+        return true;
+      }
+      const eq = rule.equals !== undefined ? rule.equals : true;
+      if (typeof eq === 'boolean') return !!val === eq;
+      return val == eq;
+    }
+    if (rule.notFlag) return !this.resolveFlagOrVariable(rule.notFlag, ctx);
+    if (rule.hasItem) return inventory.includes(rule.hasItem);
+    if (rule.notHasItem) return !inventory.includes(rule.notHasItem);
+    if (rule.goldMin != null) return (ctx.gold ?? 0) >= rule.goldMin;
+    if (rule.goldMax != null) return (ctx.gold ?? 0) <= rule.goldMax;
+    if (rule.class) return (ctx.className || '') === rule.class;
+    if (rule.choiceUsed) return !!flags[rule.choiceUsed];
+    if (rule.choiceNotUsed) return !flags[rule.choiceNotUsed];
+    if (rule.questStage) {
+      const qs = rule.questStage;
+      const questId = qs.questId || qs.quest;
+      const want = qs.stage != null ? String(qs.stage) : '';
+      const current = this.getQuestStageFromCtx(ctx, questId);
+      if (current == null) return false;
+      return String(current) === want;
+    }
+    if (rule.questMinStage) {
+      const qm = rule.questMinStage;
+      const questId = qm.questId || qm.quest;
+      const min = Number(qm.stage);
+      const current = this.getQuestStageFromCtx(ctx, questId);
+      if (current == null) return false;
+      return Number(current) >= min;
+    }
+    if (rule.reputation && typeof ReputationSystem !== 'undefined') {
+      return ReputationSystem.evaluateReputationRule(rule, flags);
+    }
+    if (rule.reputation?.faction) {
+      const cur = Number(flags[rule.reputation.faction]) || 0;
+      const val = Number(rule.reputation.value);
+      const op = rule.reputation.op || 'gte';
+      if (op === 'gte' || op === '>=') return cur >= val;
+      if (op === 'lte' || op === '<=') return cur <= val;
+      if (op === 'eq') return cur === val;
+      return cur >= val;
+    }
+    return true;
+  },
+
+  /**
+   * Текущая стадия квеста. Source of truth: QuestRuntime.questProgress.
+   * questStages / flags.quest_* — только fallback до hydrate.
+   */
+  getQuestStageFromCtx(ctx, questId) {
+    if (!questId) return null;
+    if (typeof QuestRuntime !== 'undefined') {
+      if (ctx.engine) QuestRuntime.bind(ctx.engine);
+      const key = QuestRuntime.getStageKey(questId);
+      if (key != null && key !== '') return String(key);
+    }
+    // Legacy fallback (pre-hydrate saves / contexts without engine)
+    const progress = ctx.questProgress?.[questId];
+    if (progress) {
+      if (progress.status === 'completed') return '__finished__';
+      if (progress.status === 'failed') return '__failed__';
+      if (progress.stageIndex != null) return String(progress.stageIndex);
+    }
+    const stages = ctx.questStages || {};
+    if (stages[questId] != null && stages[questId] !== '') return String(stages[questId]);
+    const legacy = ctx.flags?.['quest_' + questId];
+    if (legacy == null || legacy === '') return null;
+    if (typeof QuestRuntime !== 'undefined' && ctx.quests?.[questId]) {
+      return QuestRuntime.resolveStageRef(ctx.quests[questId], legacy);
+    }
+    return String(legacy);
+  },
+
+  isQuestActiveFromCtx(ctx, questId) {
+    if (!questId) return false;
+    if (typeof QuestRuntime !== 'undefined') {
+      if (ctx.engine) QuestRuntime.bind(ctx.engine);
+      if (QuestRuntime.isActive(questId)) return true;
+      if (QuestRuntime.isCompleted(questId) || QuestRuntime.isFailed(questId)) return false;
+    }
+    const p = ctx.questProgress?.[questId];
+    if (p) return p.status === 'active';
+    const s = this.getQuestStageFromCtx(ctx, questId);
+    return s != null && s !== '__finished__' && s !== '__failed__' && s !== 'complete' && s !== 'failed';
+  },
+
+  isQuestFinishedFromCtx(ctx, questId) {
+    if (!questId) return false;
+    if (typeof QuestRuntime !== 'undefined') {
+      if (ctx.engine) QuestRuntime.bind(ctx.engine);
+      if (QuestRuntime.isCompleted(questId)) return true;
+    }
+    const p = ctx.questProgress?.[questId];
+    if (p?.status === 'completed') return true;
+    const s = this.getQuestStageFromCtx(ctx, questId);
+    return s === '__finished__' || s === 'complete';
+  },
+
+  evaluate(conditions, ctx) {
+    if (!conditions) return true;
+    const norm = this.normalize(conditions);
+    if (!norm) return true;
+    if (Array.isArray(norm.all)) {
+      return norm.all.length === 0 || norm.all.every((r) => this.evaluateConditionNode(r, ctx));
+    }
+    if (Array.isArray(norm.any)) {
+      return norm.any.length === 0 || norm.any.some((r) => this.evaluateConditionNode(r, ctx));
+    }
+    return true;
+  },
+
+  /** Условие элемента states[] (приоритет: condition → if → when → showIf → requires) */
+  getSceneStateCondition(stateEntry) {
+    if (!stateEntry || typeof stateEntry !== 'object') return null;
+    return (
+      stateEntry.condition
+      ?? stateEntry.if
+      ?? stateEntry.when
+      ?? stateEntry.showIf
+      ?? stateEntry.requires
+      ?? null
+    );
+  },
+
+  /** Проверка условия против контекста игры: ConditionSystem.check(ctx, condition) */
+  check(ctx, condition) {
+    if (!condition) return true;
+    if (!ctx || typeof ctx !== 'object') return true;
+    return this.evaluate(condition, ctx);
+  },
+
+  /** Истинно ли состояние локации для текущего контекста */
+  matchesSceneState(stateEntry, ctx) {
+    const cond = this.getSceneStateCondition(stateEntry);
+    if (!cond) return true;
+    return this.check(ctx, cond);
+  },
+
+  /** Человекочитаемая причина, почему одно правило не выполнилось */
+  explainRuleFailure(rule, ctx) {
+    if (!rule || typeof rule !== 'object') return 'неизвестное правило';
+    const flags = ctx.flags || {};
+    const inventory = ctx.inventory || [];
+
+    if (rule.flag != null && rule.flag !== '') {
+      const val = this.resolveFlagOrVariable(rule.flag, ctx);
+      if (rule.min != null || rule.max != null) {
+        const n = Number(val);
+        if (Number.isNaN(n)) {
+          return `флаг «${rule.flag}» не задан или не число (нужно от ${rule.min ?? '—'} до ${rule.max ?? '—'})`;
+        }
+        if (rule.min != null && n < Number(rule.min)) {
+          return `флаг «${rule.flag}» = ${n} (нужно ≥ ${rule.min})`;
+        }
+        if (rule.max != null && n > Number(rule.max)) {
+          return `флаг «${rule.flag}» = ${n} (нужно ≤ ${rule.max})`;
+        }
+      }
+      const eq = rule.equals !== undefined ? rule.equals : true;
+      if (typeof eq === 'boolean') {
+        return `флаг «${rule.flag}» равен ${!!val} (ожидалось ${eq})`;
+      }
+      return `флаг «${rule.flag}» = ${val} (ожидалось ${eq})`;
+    }
+    if (rule.notFlag) {
+      return `флаг «${rule.notFlag}» установлен (ожидалось, что он выключен)`;
+    }
+    if (rule.hasItem) {
+      return `нет предмета «${rule.hasItem}»`;
+    }
+    if (rule.notHasItem) {
+      return `есть предмет «${rule.notHasItem}» (ожидалось отсутствие)`;
+    }
+    if (rule.goldMin != null) {
+      return `золото ${ctx.gold ?? 0} (нужно ≥ ${rule.goldMin})`;
+    }
+    if (rule.goldMax != null) {
+      return `золото ${ctx.gold ?? 0} (нужно ≤ ${rule.goldMax})`;
+    }
+    if (rule.class) {
+      return `класс «${ctx.className || '—'}» (нужен «${rule.class}»)`;
+    }
+    if (rule.choiceUsed) {
+      return `выбор «${rule.choiceUsed}» ещё не использован`;
+    }
+    if (rule.choiceNotUsed) {
+      return `выбор «${rule.choiceNotUsed}» уже использован`;
+    }
+    if (rule.questStage) {
+      const qs = rule.questStage;
+      const questId = qs.questId || qs.quest;
+      const want = qs.stage != null ? String(qs.stage) : '';
+      const current = this.getQuestStageFromCtx(ctx, questId);
+      return `квест «${questId}»: стадия «${current ?? 'нет'}» (нужна «${want}»)`;
+    }
+    if (rule.questMinStage) {
+      const qm = rule.questMinStage;
+      const questId = qm.questId || qm.quest;
+      const min = Number(qm.stage);
+      const current = this.getQuestStageFromCtx(ctx, questId);
+      return `квест «${questId}»: стадия «${current ?? 'нет'}» (нужна ≥ ${min})`;
+    }
+    if (rule.reputation?.faction) {
+      const cur = Number(flags[rule.reputation.faction]) || 0;
+      const val = Number(rule.reputation.value);
+      const op = rule.reputation.op || 'gte';
+      return `репутация «${rule.reputation.faction}» = ${cur} (нужно ${op} ${val})`;
+    }
+    if (rule.reputation) {
+      return 'условие репутации не выполнено';
+    }
+    return 'условие не выполнено';
+  },
+
+  /**
+   * Первая причина, почему блок условий не выполнен (для showIf — нужно true, для hideIf — объяснение при true).
+   * @returns {string|null} текст причины или null, если блок «провалился» ожидаемо для режима
+   */
+  explainConditionsFailure(conditions, ctx, options) {
+    if (!conditions) return null;
+    const norm = this.normalize(conditions);
+    if (!norm) return null;
+    const opts = options || {};
+
+    if (Array.isArray(norm.all)) {
+      if (norm.all.length === 0) return null;
+      for (let i = 0; i < norm.all.length; i++) {
+        const rule = norm.all[i];
+        if (!this.evaluateConditionNode(rule, ctx)) {
+          const detail = this.explainConditionNode(rule, ctx);
+          const mode = norm.all.length > 1 ? ` (правило ${i + 1} из ${norm.all.length}, all)` : '';
+          return `${detail}${mode}`;
+        }
+      }
+      return opts.whenTrue ? 'все условия (all) выполнены' : null;
+    }
+
+    if (Array.isArray(norm.any)) {
+      if (norm.any.length === 0) return null;
+      if (norm.any.some((r) => this.evaluateConditionNode(r, ctx))) {
+        return opts.whenTrue ? 'хотя бы одно условие (any) выполнено' : null;
+      }
+      const parts = norm.any
+        .map((r) => this.explainConditionNode(r, ctx))
+        .filter(Boolean);
+      const sample = parts[0] || 'ни одно условие не подошло';
+      return `ни одно из условий (any) не выполнено: ${sample}`;
+    }
+
+    return null;
+  },
+
+  explainConditionRefFailure(conditionRef, ctx, args) {
+    if (conditionRef == null || conditionRef === '') return 'ссылка на условие пуста';
+    if (typeof conditionRef === 'string') {
+      const def = this.CONDITION_REGISTRY[conditionRef];
+      if (def) return `условие «${conditionRef}» не выполнено`;
+      return `неизвестное условие «${conditionRef}»`;
+    }
+    if (typeof conditionRef === 'object') {
+      const detail = this.explainConditionsFailure(conditionRef, ctx);
+      return detail ? `условие не выполнено: ${detail}` : 'условие не выполнено';
+    }
+    return 'условие не выполнено';
+  },
+
+  /**
+   * Объяснение видимости выбора для редактора (God Mode / превью).
+   * @returns {{ visible: boolean, reason: string }}
+   */
+  explainChoiceVisibility(choice, ctx) {
+    if (!choice) {
+      return { visible: false, reason: 'Скрыто: пустой выбор' };
+    }
+
+    if (choice.condition != null && choice.condition !== '') {
+      const args = choice.conditionParams || choice.params || null;
+      if (!this.resolveRef(choice.condition, ctx, args)) {
+        const detail = this.explainConditionRefFailure(choice.condition, ctx, args);
+        return { visible: false, reason: `Скрыто: ${detail}` };
+      }
+    }
+
+    const show = choice.showIf || choice.requires;
+    if (show) {
+      const fail = this.explainConditionsFailure(show, ctx);
+      if (fail) {
+        return { visible: false, reason: `Скрыто: ${fail}` };
+      }
+    }
+
+    if (choice.hideIf && this.evaluate(choice.hideIf, ctx)) {
+      const detail = this.explainConditionsFailure(choice.hideIf, ctx, { whenTrue: true });
+      return {
+        visible: false,
+        reason: detail
+          ? `Скрыто: условие hideIf выполнено (${detail})`
+          : 'Скрыто: условие hideIf выполнено'
+      };
+    }
+
+    return { visible: true, reason: '' };
+  },
+
+  /** Имя предмета / квеста / фракции без показа internal-only полей */
+  humanItemName(ctx, itemId) {
+    const it = ctx?.engine?.data?.items?.[itemId] || ctx?.items?.[itemId];
+    return (it && (it.name || it.title)) || itemId || '—';
+  },
+  humanQuestName(ctx, questId) {
+    const q = ctx?.quests?.[questId] || ctx?.engine?.data?.quests?.[questId];
+    return (q && (q.title || q.name)) || questId || '—';
+  },
+  humanStageLabel(ctx, questId, stageKey) {
+    const key = stageKey == null ? '' : String(stageKey);
+    if (key === 'complete' || key === 'done' || key === '__finished__') return 'Завершён';
+    if (key === '__failed__' || key === 'failed') return 'Провален';
+    if (key === '0' || key === 'start' || key === '') return 'Не начат';
+    const q = ctx?.quests?.[questId] || ctx?.engine?.data?.quests?.[questId];
+    const stages = q?.stages;
+    if (Array.isArray(stages)) {
+      const idx = parseInt(key, 10);
+      if (!Number.isNaN(idx) && stages[idx]) {
+        return stages[idx].title || stages[idx].name || ('Этап ' + (idx + 1));
+      }
+      const byId = stages.find((s) => s && (s.id === key || String(s.index) === key));
+      if (byId) return byId.title || byId.name || key;
+    }
+    return 'Этап «' + key + '»';
+  },
+  humanFactionName(ctx, factionId) {
+    const r = ctx?.engine?.data?.reputation?.[factionId] || ctx?.reputation?.[factionId];
+    return (r && r.name) || factionId || '—';
+  },
+  humanClassName(ctx, classId) {
+    const c = ctx?.engine?.data?.classes?.[classId];
+    return (c && (c.name || c.title)) || classId || '—';
+  },
+
+  /**
+   * Статус одного правила: { ok, title, required, current, detail }
+   * Без questProgress / flags / AST в тексте.
+   */
+  explainRuleStatus(rule, ctx) {
+    if (!rule || typeof rule !== 'object') {
+      return { ok: true, title: 'Условие', detail: '' };
+    }
+    if (Array.isArray(rule.all) || Array.isArray(rule.any)) {
+      const nested = this.explainConditionsDetail(rule, ctx);
+      return {
+        ok: nested.ok,
+        title: nested.modeLabel,
+        required: '',
+        current: '',
+        detail: nested.ok ? 'Выполнено' : 'Не выполнено',
+        children: nested.lines
+      };
+    }
+    const ok = this.evaluateRule(rule, ctx);
+    const flags = ctx.flags || {};
+    const inventory = ctx.inventory || [];
+
+    if (rule.hasItem) {
+      const name = this.humanItemName(ctx, rule.hasItem);
+      return {
+        ok,
+        title: 'Предмет «' + name + '»',
+        required: 'есть у игрока',
+        current: inventory.includes(rule.hasItem) ? 'есть' : 'нет',
+        detail: ok ? '✓ Есть' : '❌ Нет в инвентаре'
+      };
+    }
+    if (rule.notHasItem) {
+      const name = this.humanItemName(ctx, rule.notHasItem);
+      return {
+        ok,
+        title: 'Предмет «' + name + '»',
+        required: 'отсутствует',
+        current: inventory.includes(rule.notHasItem) ? 'есть' : 'нет',
+        detail: ok ? '✓ Нет в инвентаре' : '❌ Всё ещё в инвентаре'
+      };
+    }
+    if (rule.goldMin != null) {
+      const g = ctx.gold ?? 0;
+      return {
+        ok,
+        title: 'Золото',
+        required: '≥ ' + rule.goldMin,
+        current: String(g),
+        detail: ok ? '✓ ' + g : '❌ Сейчас: ' + g + ', нужно ≥ ' + rule.goldMin
+      };
+    }
+    if (rule.goldMax != null) {
+      const g = ctx.gold ?? 0;
+      return {
+        ok,
+        title: 'Золото',
+        required: '≤ ' + rule.goldMax,
+        current: String(g),
+        detail: ok ? '✓ ' + g : '❌ Сейчас: ' + g + ', нужно ≤ ' + rule.goldMax
+      };
+    }
+    if (rule.class) {
+      const need = this.humanClassName(ctx, rule.class);
+      const cur = this.humanClassName(ctx, ctx.className) || ctx.className || '—';
+      return {
+        ok,
+        title: 'Класс',
+        required: need,
+        current: cur,
+        detail: ok ? '✓ ' + cur : '❌ Сейчас: ' + cur + ', нужен: ' + need
+      };
+    }
+    if (rule.questStage) {
+      const qs = rule.questStage;
+      const questId = qs.questId || qs.quest;
+      const want = qs.stage != null ? String(qs.stage) : '';
+      const current = this.getQuestStageFromCtx(ctx, questId);
+      const qName = this.humanQuestName(ctx, questId);
+      const wantL = this.humanStageLabel(ctx, questId, want);
+      const curL = this.humanStageLabel(ctx, questId, current);
+      return {
+        ok,
+        title: 'Квест «' + qName + '»',
+        required: wantL,
+        current: curL,
+        detail: ok ? '✓ ' + curL : '❌ Требуется: ' + wantL + '. Сейчас: ' + curL
+      };
+    }
+    if (rule.reputation?.faction) {
+      const fac = rule.reputation.faction;
+      const name = this.humanFactionName(ctx, fac);
+      const cur = Number(flags[fac]) || 0;
+      const val = Number(rule.reputation.value);
+      const op = rule.reputation.op || 'gte';
+      const opL = op === 'lte' || op === '<=' ? '≤' : op === 'eq' ? '=' : '≥';
+      return {
+        ok,
+        title: 'Репутация: ' + name,
+        required: opL + ' ' + val,
+        current: String(cur),
+        detail: ok ? '✓ ' + cur : '❌ Сейчас: ' + cur + ', нужно ' + opL + ' ' + val
+      };
+    }
+    if (rule.flag != null && rule.flag !== '') {
+      // Не светим сырой id; смягчённая формулировка
+      const label = String(rule.flag).replace(/^rep_/, 'репутация ').replace(/_/g, ' ');
+      const cur = this.resolveFlagOrVariable(rule.flag, ctx);
+      return {
+        ok,
+        title: 'Состояние: ' + label,
+        required: rule.min != null ? '≥ ' + rule.min : (rule.equals !== undefined ? String(rule.equals) : 'да'),
+        current: String(cur),
+        detail: ok ? '✓ Выполнено' : '❌ Не выполнено'
+      };
+    }
+    if (rule.notFlag) {
+      const label = String(rule.notFlag).replace(/_/g, ' ');
+      const cur = this.resolveFlagOrVariable(rule.notFlag, ctx);
+      return { ok, title: 'Состояние: ' + label, required: 'выключено', current: cur ? 'включено' : 'выключено', detail: ok ? '✓' : '❌' };
+    }
+    if (rule.choiceUsed) {
+      return { ok, title: 'Выбор уже сделан', required: 'да', current: ok ? 'да' : 'нет', detail: ok ? '✓' : '❌ Ещё не сделан' };
+    }
+    if (rule.choiceNotUsed) {
+      return { ok, title: 'Выбор ещё не сделан', required: 'не сделан', current: ok ? 'не сделан' : 'уже сделан', detail: ok ? '✓' : '❌ Уже использован' };
+    }
+    // fallback to string explainer
+    const fail = this.explainRuleFailure(rule, ctx);
+    return { ok, title: 'Условие', required: '', current: '', detail: ok ? '✓ Выполнено' : '❌ ' + fail };
+  },
+
+  /**
+   * Детальный разбор all/any: { ok, mode, modeLabel, lines: explainRuleStatus[] }
+   */
+  explainConditionsDetail(conditions, ctx, options) {
+    const opts = options || {};
+    const norm = this.normalize(conditions);
+    if (!norm) return { ok: true, mode: 'all', modeLabel: '', lines: [] };
+
+    if (Array.isArray(norm.all)) {
+      const lines = norm.all.map((r) => this.explainRuleStatus(r, ctx));
+      const ok = lines.every((l) => l.ok);
+      return {
+        ok: opts.whenTrue ? !ok : ok,
+        mode: 'all',
+        modeLabel: 'Все условия должны выполняться',
+        lines
+      };
+    }
+    if (Array.isArray(norm.any)) {
+      const lines = norm.any.map((r) => this.explainRuleStatus(r, ctx));
+      const ok = lines.some((l) => l.ok);
+      return {
+        ok: opts.whenTrue ? !ok : ok,
+        mode: 'any',
+        modeLabel: 'Достаточно любого условия',
+        lines
+      };
+    }
+    return { ok: true, mode: 'all', modeLabel: '', lines: [] };
+  },
+
+  /**
+   * Полное объяснение недоступности выбора (для UI «Почему?»).
+   * @returns {{ visible: boolean, title: string, summary: string, sections: Array }}
+   */
+  explainChoiceDetail(choice, ctx) {
+    const base = this.explainChoiceVisibility(choice, ctx);
+    if (base.visible) {
+      return { visible: true, title: '', summary: '', sections: [] };
+    }
+    const choiceLabel = String(choice?.text || 'Выбор').replace(/<[^>]+>/g, '').trim() || 'Выбор';
+    const sections = [];
+
+    const show = choice.showIf || choice.requires;
+    if (show) {
+      const det = this.explainConditionsDetail(show, ctx);
+      sections.push({
+        heading: det.modeLabel || 'Условия доступности',
+        lines: det.lines
+      });
+    }
+    if (choice.hideIf && this.evaluate(choice.hideIf, ctx)) {
+      const det = this.explainConditionsDetail(choice.hideIf, ctx, { whenTrue: true });
+      sections.push({
+        heading: 'Скрыто, потому что',
+        lines: det.lines
+      });
+    }
+    if (choice.condition != null && choice.condition !== '') {
+      sections.push({
+        heading: 'Особое условие',
+        lines: [{ ok: false, title: 'Дополнительная проверка', detail: this.explainConditionRefFailure(choice.condition, ctx) }]
+      });
+    }
+
+    if (!sections.length) {
+      sections.push({
+        heading: 'Причина',
+        lines: [{ ok: false, title: 'Недоступно', detail: base.reason || 'Условие не выполнено' }]
+      });
+    }
+
+    return {
+      visible: false,
+      title: 'Выбор «' + choiceLabel + '» недоступен',
+      summary: 'Недоступно',
+      sections
+    };
+  },
+
+  /** showIf / requires — показать; hideIf — скрыть если условие истинно */
+  isChoiceVisible(choice, ctx) {
+    return this.explainChoiceVisibility(choice, ctx).visible;
+  },
+
+  filterChoices(choices, ctx) {
+    if (!Array.isArray(choices)) return [];
+    return choices.filter(c => this.isChoiceVisible(c, ctx));
+  },
+
+  /** Именованные условия (ссылки в service_menu и JSON) */
+  CONDITION_REGISTRY: {
+    always: { check: () => true },
+    has_jack_bag: {
+      check: (ctx) => (ctx.inventory || []).includes('jack_bag')
+    },
+    jack_quest_active: {
+      check: (ctx) => !!(ctx.flags?.jackQuest) && !ctx.flags?.jackRewarded
+    },
+    has_damaged_equipment: {
+      check: (ctx) => {
+        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
+        if (!engine?.getEquippedItemId) return false;
+        const slots = engine.ENHANCEMENT_SLOTS || ['weapon_main', 'armor', 'shield'];
+        return slots.some((slot) => {
+          const id = engine.getEquippedItemId(slot);
+          return id && (engine.getItemEnhancementLevel?.(id) || 0) > 0;
+        });
+      }
+    },
+    has_cursed_equipped: {
+      check: (ctx) => {
+        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
+        return !!(engine?.getEquippedCursedEntries?.()?.length);
+      }
+    },
+    time_period: {
+      check: (ctx, params) => {
+        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
+        if (!engine?.isTimeSystemEnabled?.()) return true;
+        const period = engine.getTimePeriod();
+        const periods = params?.periods || params?.period;
+        if (Array.isArray(periods)) return periods.includes(period);
+        if (typeof periods === 'string') return periods === period;
+        return true;
+      }
+    },
+    time_between: {
+      check: (ctx, params) => {
+        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
+        const h = engine?.timeSystem?.state?.hour;
+        if (h == null) return true;
+        const from = parseInt(params?.from, 10);
+        const to = parseInt(params?.to, 10);
+        if (Number.isNaN(from) || Number.isNaN(to)) return true;
+        if (from <= to) return h >= from && h < to;
+        return h >= from || h < to;
+      }
+    },
+    is_open: {
+      check: (ctx, params) => {
+        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
+        if (!engine?.isTimeSystemEnabled?.()) return true;
+        const open = params?.openHour ?? params?.open ?? params?.from;
+        const close = params?.closeHour ?? params?.close ?? params?.to;
+        return engine.isOpen(open, close);
+      }
+    },
+    day_of_week: {
+      check: (ctx, params) => {
+        const engine = typeof GameEngine !== 'undefined' ? GameEngine : null;
+        const day = engine?.timeSystem?.state?.day;
+        if (day == null) return true;
+        const dow = ((day - 1) % 7);
+        const days = params?.days;
+        if (!Array.isArray(days)) return true;
+        return days.includes(dow);
+      }
+    },
+    season_is: {
+      check: (ctx, params) => {
+        const cur = GameEngine?.seasonSystem?.state?.season;
+        if (!cur) return true;
+        const list = params?.seasons || params?.season;
+        if (Array.isArray(list)) return list.includes(cur);
+        return list === cur;
+      }
+    },
+    weather_is: {
+      check: (ctx, params) => {
+        const cur = GameEngine?.weatherSystem?.state?.current;
+        if (!cur) return true;
+        const list = params?.types || params?.weather;
+        if (Array.isArray(list)) return list.includes(cur);
+        return list === cur;
+      }
+    },
+    temp_below: {
+      check: (ctx, params) => {
+        const t = GameEngine?.seasonSystem?.state?.temperature;
+        if (t == null) return true;
+        return t < (parseInt(params?.value, 10) || 0);
+      }
+    },
+    temp_above: {
+      check: (ctx, params) => {
+        const t = GameEngine?.seasonSystem?.state?.temperature;
+        if (t == null) return true;
+        return t > (parseInt(params?.value, 10) || 0);
+      }
+    }
+  },
+
+  /**
+   * conditionRef: строка (имя из CONDITION_REGISTRY), объект ConditionSystem, или { all/any }.
+   */
+  resolveRef(conditionRef, ctx, args) {
+    if (conditionRef == null || conditionRef === '') return true;
+    if (typeof conditionRef === 'string') {
+      const def = this.CONDITION_REGISTRY[conditionRef];
+      if (def && typeof def.check === 'function') {
+        return !!def.check(ctx, args);
+      }
+      return true;
+    }
+    if (typeof conditionRef === 'object') {
+      return this.evaluate(conditionRef, ctx);
+    }
+    return true;
+  },
+
+  /** Сбор имён флагов по всему проекту (для редактора) */
+  collectFlagNames(data) {
+    const set = new Set();
+    const add = (name) => { if (name) set.add(name); };
+
+    Object.entries(data?.scenes || {}).forEach(([sceneId, scene]) => {
+      Object.keys(scene.flags || {}).forEach(add);
+      (scene.states || []).forEach(st => {
+        this.walkConditionFlags(st.condition, add);
+        this.walkConditionFlags(st.if, add);
+        this.walkConditionFlags(st.when, add);
+        this.walkConditionFlags(st.showIf, add);
+        this.walkConditionFlags(st.requires, add);
+      });
+      (scene.choices || []).forEach((c, i) => {
+        add(c.doneFlag);
+        add(c.skillCheck?.doneFlag);
+        add(`sc_${sceneId}_${i}`);
+        add(`ch_${sceneId}_${i}`);
+        this.walkConditionFlags(c.showIf, add);
+        this.walkConditionFlags(c.hideIf, add);
+        this.walkConditionFlags(c.requires, add);
+        Object.keys(c.skillCheck?.successFlags || {}).forEach(add);
+      });
+    });
+    Object.values(data?.quests || {}).forEach(q => {
+      if (!q.rewards?.reputation) return;
+      const rep = q.rewards.reputation;
+      if (typeof rep === 'object' && !Array.isArray(rep)) {
+        Object.keys(rep).forEach(add);
+      } else if (typeof rep === 'string') {
+        add(typeof QuestRuntime !== 'undefined' ? QuestRuntime.resolveReputationFlag(rep) : rep);
+      }
+    });
+    Object.keys(data?.startingFlags || {}).forEach(add);
+    Object.keys(data?.reputation || {}).forEach(k => {
+      if (k !== 'starting') add(k);
+    });
+    Object.keys(data?.quests || {}).forEach(qid => add('quest_' + qid));
+    return [...set].sort();
+  },
+
+  walkConditionFlags(conditions, add) {
+    const norm = this.normalize(conditions);
+    if (!norm) return;
+    const list = norm.all || norm.any || [];
+    list.forEach(r => {
+      if (r.flag) add(r.flag);
+      if (r.notFlag) add(r.notFlag);
+      if (r.choiceUsed) add(r.choiceUsed);
+      if (r.choiceNotUsed) add(r.choiceNotUsed);
+      if (r.questStage?.questId) add('quest_' + r.questStage.questId);
+      if (r.questMinStage?.questId) add('quest_' + r.questMinStage.questId);
+    });
+  },
+
+  validateChoiceConditions(choice, ctxMeta, errors, prefix) {
+    const { sceneId, flagCatalog, itemIds, sceneIds } = ctxMeta;
+    const checkGroup = (label, cond) => {
+      const norm = this.normalize(cond);
+      if (!norm) return;
+      const list = norm.all || norm.any || [];
+      list.forEach((r, ri) => {
+        if (r.hasItem && itemIds && !itemIds.has(r.hasItem)) {
+          errors.push(`${prefix} ${label}, правило ${ri + 1}: неизвестный предмет "${r.hasItem}"`);
+        }
+        if (r.notHasItem && itemIds && !itemIds.has(r.notHasItem)) {
+          errors.push(`${prefix} ${label}, правило ${ri + 1}: неизвестный предмет "${r.notHasItem}"`);
+        }
+        if (r.flag && flagCatalog && !flagCatalog.has(r.flag)) {
+          errors.push(`${prefix} ${label}, правило ${ri + 1}: флаг "${r.flag}" нигде не задаётся (подсказка)`);
+        }
+      });
+    };
+    checkGroup('showIf', choice.showIf || choice.requires);
+    checkGroup('hideIf', choice.hideIf);
+    if (choice.skillCheck) {
+      const sc = choice.skillCheck;
+      if (!sc.skill) errors.push(`${prefix}: skillCheck без навыка`);
+      if (sc.dc == null) errors.push(`${prefix}: skillCheck без DC`);
+      if (sc.successNext && sceneIds && !sceneIds.includes(sc.successNext)) {
+        errors.push(`${prefix}: successNext "${sc.successNext}" не найдена`);
+      }
+      if (sc.failNext && sceneIds && !sceneIds.includes(sc.failNext)) {
+        errors.push(`${prefix}: failNext "${sc.failNext}" не найдена`);
+      }
+      Object.keys(sc.successFlags || {}).forEach(fid => {
+        if (flagCatalog && !flagCatalog.has(fid)) {
+          errors.push(`${prefix}: successFlags."${fid}" — новый флаг (ок, если задумано)`);
+        }
+      });
+      (sc.successItems || []).forEach(iid => {
+        if (itemIds && !itemIds.has(iid)) {
+          errors.push(`${prefix}: successItems "${iid}" — предмет не в каталоге`);
+        }
+      });
+    }
+  }
+};
+
+
+;/* —— js/quests/task-base.js —— */
+// ============================================================
+// Quest tasks — base class and registry
+// ============================================================
+
+/**
+ * Thrown when task type is not registered. Never silently map to ManualAdvance.
+ */
+class UnknownQuestTaskTypeError extends Error {
+  constructor(typeId, ctx, taskData) {
+    ctx = ctx || {};
+    const questId = ctx.questId != null ? String(ctx.questId) : '?';
+    const stage = ctx.stageIndex != null ? String(ctx.stageIndex) : (ctx.stageId != null ? String(ctx.stageId) : '?');
+    super(
+      'Unknown quest task type «' + typeId + '» (quest=' + questId + ', stage=' + stage + ')'
+    );
+    this.name = 'UnknownQuestTaskTypeError';
+    this.typeId = typeId;
+    this.questId = ctx.questId != null ? ctx.questId : null;
+    this.stageIndex = ctx.stageIndex != null ? ctx.stageIndex : null;
+    this.stageId = ctx.stageId != null ? ctx.stageId : null;
+    this.taskData = taskData || null;
+  }
+}
+
+const QuestTaskRegistry = {
+  _types: {},
+
+  register(typeId, ClassRef) {
+    if (!typeId || !ClassRef) return;
+    this._types[typeId] = ClassRef;
+    ClassRef.typeId = typeId;
+  },
+
+  get(typeId) {
+    return this._types[typeId] || null;
+  },
+
+  list() {
+    return Object.keys(this._types).map((id) => {
+      const C = this._types[id];
+      return {
+        id,
+        label: C.label || id,
+        description: C.description || '',
+        fields: typeof C.getEditorFields === 'function' ? C.getEditorFields() : []
+      };
+    });
+  },
+
+
+  /**
+   * Validate task definition against getEditorFields schema.
+   * @returns {{ ok: boolean, errors: string[] }}
+   */
+  validateDef(def, projectData) {
+    const errors = [];
+    if (!def || typeof def !== 'object') {
+      return { ok: false, errors: ['Нет данных задачи'] };
+    }
+    const typeCheck = this.validateTaskType(def.type);
+    if (!typeCheck.ok) {
+      return { ok: false, errors: [typeCheck.error || ('Неизвестный тип задачи: ' + def.type)] };
+    }
+    const ClassRef = this.get(def.type);
+    const fields = typeof ClassRef.getEditorFields === 'function' ? ClassRef.getEditorFields() : [];
+    for (const f of fields) {
+      if (!f.required) continue;
+      const v = def[f.key];
+      if (v == null || String(v).trim() === '') {
+        errors.push('Укажите: ' + (f.label || f.key));
+        continue;
+      }
+      // Entity existence
+      if (projectData) {
+        if (f.input === 'npc' && projectData.npcs && !projectData.npcs[v]) {
+          errors.push('Персонаж не найден: «' + v + '»');
+        }
+        if (f.input === 'item' && projectData.items && !projectData.items[v]) {
+          errors.push('Предмет не найден: «' + v + '»');
+        }
+        if (f.input === 'enemy' && projectData.enemies && !projectData.enemies[v]) {
+          errors.push('Враг не найден: «' + v + '»');
+        }
+        if (f.input === 'scene' && projectData.scenes && !projectData.scenes[v]) {
+          errors.push('Место не найдено: «' + v + '»');
+        }
+        if (f.input === 'location') {
+          const inScenes = projectData.scenes && projectData.scenes[v];
+          const inMap = projectData.worldMap && projectData.worldMap[v];
+          if (projectData.scenes && projectData.worldMap && !inScenes && !inMap) {
+            errors.push('Локация не найдена: «' + v + '»');
+          }
+        }
+      }
+      if (f.input === 'number') {
+        const n = Number(v);
+        const min = f.min != null ? f.min : 1;
+        if (!Number.isFinite(n) || n < min) {
+          errors.push((f.label || f.key) + ' должно быть числом ≥ ' + min);
+        }
+      }
+    }
+    return { ok: errors.length === 0, errors };
+  },
+
+  listSupported() {
+    return this.list().filter((t) => {
+      if (!t.id || t.id === 'base' || t.id === '__unknown__' || t.id === 'MigrationRequired') return false;
+      const C = this.get(t.id);
+      return C && !C.unsupported && !C.migrationPlaceholder;
+    });
+  },
+  /**
+   * Create a task instance. Unknown types throw UnknownQuestTaskTypeError
+   * (no silent ManualAdvance). Use opts.placeholder to get UnknownTaskType instead.
+   * @param {object} def
+   * @param {{ questId?: string, stageIndex?: number }} [ctx]
+   * @param {{ placeholder?: boolean }} [opts]
+   */
+  create(def, ctx, opts) {
+    opts = opts || {};
+    ctx = ctx || {};
+    if (!def || typeof def !== 'object') {
+      throw new UnknownQuestTaskTypeError('(missing def)', ctx, def);
+    }
+    const typeId = def.type;
+    if (typeId == null || String(typeId).trim() === '') {
+      throw new UnknownQuestTaskTypeError('(empty type)', ctx, def);
+    }
+    const ClassRef = this.get(String(typeId));
+    if (!ClassRef) {
+      if (opts.placeholder) {
+        const Placeholder = (typeof UnknownTaskType !== 'undefined')
+          ? UnknownTaskType
+          : (typeof window !== 'undefined' ? window.UnknownTaskType : null);
+        if (Placeholder) {
+          return new Placeholder({ ...def, type: String(typeId), _unknownType: String(typeId) }, ctx);
+        }
+      }
+      throw new UnknownQuestTaskTypeError(String(typeId), ctx, def);
+    }
+    return new ClassRef(def, ctx);
+  },
+
+  /**
+   * @returns {{ ok: boolean, typeId: string, registered: boolean, unsupported: boolean, label?: string, error?: string }}
+   */
+  validateTaskType(typeId) {
+    const id = typeId == null ? '' : String(typeId).trim();
+    if (!id) {
+      return { ok: false, typeId: id, registered: false, unsupported: false, error: 'Тип задачи не указан' };
+    }
+    const ClassRef = this.get(id);
+    if (!ClassRef) {
+      return { ok: false, typeId: id, registered: false, unsupported: false, error: 'Неизвестный тип задачи: ' + id };
+    }
+    if (ClassRef.unsupported) {
+      return {
+        ok: false, typeId: id, registered: true, unsupported: true,
+        label: ClassRef.label || id,
+        error: 'Тип «' + (ClassRef.label || id) + '» пока не поддерживается движком'
+      };
+    }
+    return { ok: true, typeId: id, registered: true, unsupported: false, label: ClassRef.label || id };
+  }
+};
+
+class QuestTaskBase {
+  static typeId = 'base';
+  static label = 'Задача';
+  static description = '';
+
+  /** Поля редактора: [{ key, label, input, options? }] */
+  static getEditorFields() {
+    return [];
+  }
+
+  constructor(def, ctx) {
+    this.def = def && typeof def === 'object' ? { ...def } : {};
+    this.type = this.def.type || this.constructor.typeId;
+    this.id = this.def.id || this.type + '_' + Math.random().toString(36).slice(2, 8);
+    this.optional = !!this.def.optional;
+    this._completed = !!this.def._completed;
+    this._progress = Number(this.def._progress) || 0;
+    this._ctx = ctx || {};
+  }
+
+  get target() {
+    return Math.max(1, Number(this.def.count) || Number(this.def.amount) || 1);
+  }
+
+  getProgress() {
+    if (this._completed) return this.target;
+    return Math.min(this.target, Math.max(0, this._progress));
+  }
+
+  isCompleted() {
+    return !!this._completed || this.getProgress() >= this.target;
+  }
+
+  reset() {
+    this._completed = false;
+    this._progress = 0;
+  }
+
+  markComplete() {
+    this._completed = true;
+    this._progress = this.target;
+  }
+
+  /**
+   * Called when task becomes active on a stage.
+   * Check current world state (not synthetic events).
+   * @param {object} world — snapshot from engine.state
+   */
+  onActivate(world) {
+    if (this.isCompleted()) return;
+    this.applyWorldState(world || {});
+  }
+
+  /**
+   * Shared state check used by onActivate (and optionally by onEvent wrappers).
+   * Override in task types that care about current state.
+   */
+  applyWorldState(/* world */) {
+    // default: no initial sync
+  }
+
+  /** @param {{ type: string, payload?: object }} event */
+  onEvent(/* event */) {
+    // override
+  }
+
+  getDescription() {
+    if (this.def.description) return String(this.def.description);
+    return this.constructor.label || this.type;
+  }
+
+  serialize() {
+    return {
+      id: this.id,
+      type: this.type,
+      optional: this.optional,
+      _completed: this.isCompleted(),
+      _progress: this.getProgress(),
+      // params preserved from def (without runtime keys)
+      ...this._serializeParams()
+    };
+  }
+
+  _serializeParams() {
+    const skip = new Set(['id', 'type', 'optional', '_completed', '_progress', 'description']);
+    const out = {};
+    for (const [k, v] of Object.entries(this.def)) {
+      if (skip.has(k)) continue;
+      out[k] = v;
+    }
+    if (this.def.description) out.description = this.def.description;
+    return out;
+  }
+
+  static deserialize(data, ctx) {
+    return QuestTaskRegistry.create(data, ctx);
+  }
+}
+
+class UnknownTaskType extends QuestTaskBase {
+  static typeId = '__unknown__';
+  static label = 'Неизвестный тип';
+  static unsupported = true;
+  static getEditorFields() {
+    return [
+      { key: '_unknownType', label: 'Исходный тип (только чтение)', input: 'text' },
+      { key: 'description', label: 'Описание', input: 'text' }
+    ];
+  }
+  constructor(def, ctx) {
+    super(def, ctx);
+    this._unknownType = (def && (def._unknownType || def.type)) || '__unknown__';
+    this.type = this._unknownType;
+  }
+  onEvent() {}
+  isCompleted() { return false; }
+  getProgress() { return 0; }
+  getDescription() {
+    return '⚠ Неизвестный тип задачи: ' + (this._unknownType || '?');
+  }
+  serialize() {
+    const base = super.serialize();
+    base.type = this._unknownType || this.def.type || '__unknown__';
+    base._unknownType = this._unknownType;
+    base._isUnknown = true;
+    return base;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.QuestTaskRegistry = QuestTaskRegistry;
+  window.QuestTaskBase = QuestTaskBase;
+  window.UnknownQuestTaskTypeError = UnknownQuestTaskTypeError;
+  window.UnknownTaskType = UnknownTaskType;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { QuestTaskRegistry, QuestTaskBase, UnknownQuestTaskTypeError, UnknownTaskType };
+}
+
+
+;/* —— js/quests/task-types.js —— */
+// ============================================================
+// Concrete quest task types
+// ============================================================
+
+(function registerQuestTaskTypes() {
+  if (typeof QuestTaskBase === 'undefined' || typeof QuestTaskRegistry === 'undefined') {
+    console.error('task-types.js: QuestTaskBase/Registry missing');
+    return;
+  }
+
+  function matchId(a, b) {
+    if (a == null || b == null) return false;
+    return String(a) === String(b);
+  }
+
+  function inc(task, n) {
+    task._progress = Math.min(task.target, (task._progress || 0) + (n || 1));
+    if (task._progress >= task.target) task._completed = true;
+  }
+
+  // ----- ManualAdvance: completes when stage is set by content/migration -----
+  class ManualAdvanceTask extends QuestTaskBase {
+    static typeId = 'ManualAdvance';
+    static label = 'Продолжение';
+    static description = 'Игрок продолжает по кнопке «Продолжить»';
+    static getEditorFields() {
+      return [
+        { key: 'description', label: 'Описание для журнала', input: 'text' },
+        { key: 'stageKey', label: 'Служебный ключ этапа', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      // StageActivated / StageSet = «этап стал активным», НЕ «задача выполнена»
+      if (event.type === 'TaskManualComplete') {
+        const p = event.payload || {};
+        if (p.taskId && matchId(p.taskId, this.id)) {
+          this.markComplete();
+          return;
+        }
+        if (p.questId && p.stageIndex != null &&
+            matchId(p.questId, this._ctx.questId) &&
+            Number(p.stageIndex) === Number(this._ctx.stageIndex) &&
+            !p.taskId) {
+          this.markComplete();
+        }
+      }
+    }
+    getDescription() {
+      if (this.def.description) return String(this.def.description);
+      return 'После нажатия «Продолжить»';
+    }
+  }
+
+  class TalkToNPCTask extends QuestTaskBase {
+    static typeId = 'TalkToNPC';
+    static label = 'Поговорить';
+    static description = 'Завершается после разговора с персонажем';
+    static getEditorFields() {
+      return [
+        { key: 'npcId', label: 'Персонаж', input: 'npc', required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (!this.def.npcId) return; // invalid config — editor must set npcId
+      if (event.type === 'NPCDialogueFinished' || event.type === 'NPCTalked') {
+        const npcId = event.payload?.npcId || event.payload?.npc;
+        if (matchId(npcId, this.def.npcId)) this.markComplete();
+      }
+    }
+    getDescription() {
+      if (this.def.description) return this.def.description;
+      const name = this.def.npcId || 'NPC';
+      return 'Поговорить с: ' + name;
+    }
+  }
+
+  class CollectItemTask extends QuestTaskBase {
+    static typeId = 'CollectItem';
+    static label = 'Собрать предмет';
+    static description = 'Собрать N экземпляров предмета';
+    static getEditorFields() {
+      return [
+        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
+        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    applyWorldState(world) {
+      if (!this.def.itemId || !world) return;
+      const inv = world.inventory || [];
+      const n = inv.filter((id) => matchId(id, this.def.itemId)).length;
+      this._progress = Math.min(this.target, n);
+      if (this._progress >= this.target) this._completed = true;
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'ItemCollected' || event.type === 'ItemAdded') {
+        const p = event.payload || {};
+        if (this.def.itemId && !matchId(p.itemId || p.item, this.def.itemId)) return;
+        inc(this, Number(p.qty) || Number(p.count) || 1);
+      }
+      if (event.type === 'InventorySync' && this.def.itemId) {
+        this.applyWorldState({ inventory: event.payload?.inventory || [] });
+      }
+    }
+    getDescription() {
+      if (this.def.description) return this.def.description;
+      const c = this.target;
+      const id = this.def.itemId || 'предмет';
+      return c > 1 ? `Собрать: ${id} (${this.getProgress()}/${c})` : `Найти: ${id}`;
+    }
+  }
+
+  class KillEnemyTask extends QuestTaskBase {
+    static typeId = 'KillEnemy';
+    static label = 'Победить врага';
+    static description = 'Убить N врагов указанного типа';
+    static getEditorFields() {
+      return [
+        { key: 'enemyId', label: 'Враг', input: 'enemy', required: true },
+        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'EnemyKilled') {
+        const p = event.payload || {};
+        const id = p.enemyId || p.id || p.templateId;
+        if (this.def.enemyId && !matchId(id, this.def.enemyId)) return;
+        inc(this, Number(p.count) || 1);
+      }
+    }
+    getDescription() {
+      if (this.def.description) return this.def.description;
+      const c = this.target;
+      const id = this.def.enemyId || 'враг';
+      return c > 1 ? `Победить: ${id} (${this.getProgress()}/${c})` : `Победить: ${id}`;
+    }
+  }
+
+  class VisitLocationTask extends QuestTaskBase {
+    static typeId = 'VisitLocation';
+    static label = 'Посетить локацию';
+    static description = 'Войти в указанную сцену/локацию';
+    static getEditorFields() {
+      return [
+        { key: 'sceneId', label: 'Место', input: 'scene', required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    applyWorldState(world) {
+      if (!this.def.sceneId || !world?.scene) return;
+      if (matchId(world.scene, this.def.sceneId)) this.markComplete();
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (!this.def.sceneId) return;
+      if (event.type === 'LocationVisited' || event.type === 'SceneEntered') {
+        const p = event.payload || {};
+        if (matchId(p.sceneId || p.scene, this.def.sceneId)) {
+          this.markComplete();
+        }
+      }
+    }
+    getDescription() {
+      if (this.def.description) return this.def.description;
+      return 'Посетить: ' + (this.def.location || this.def.sceneId || 'локацию');
+    }
+  }
+
+  class DeliverItemTask extends QuestTaskBase {
+    static typeId = 'DeliverItem';
+    static label = 'Доставить предмет';
+    static description = 'Отдать предмет NPC';
+    static getEditorFields() {
+      return [
+        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
+        { key: 'npcId', label: 'Персонаж', input: 'npc', required: true },
+        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      // Только ItemDelivered — ItemRemoved не означает доставку (иначе double-count)
+      if (event.type === 'ItemDelivered') {
+        const p = event.payload || {};
+        if (this.def.itemId && !matchId(p.itemId || p.item, this.def.itemId)) return;
+        if (this.def.npcId && p.npcId && !matchId(p.npcId, this.def.npcId)) return;
+        inc(this, Number(p.qty) || Number(p.count) || 1);
+      }
+    }
+    getDescription() {
+      if (this.def.description) return this.def.description;
+      return 'Доставить: ' + (this.def.itemId || 'предмет') +
+        (this.def.npcId ? ' → ' + this.def.npcId : '');
+    }
+  }
+
+  class UseItemTask extends QuestTaskBase {
+    static typeId = 'UseItem';
+    static label = 'Использовать предмет';
+    static getEditorFields() {
+      return [
+        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
+        { key: 'count', label: 'Раз', input: 'number', min: 1 },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'ItemUsed') {
+        const p = event.payload || {};
+        if (this.def.itemId && !matchId(p.itemId || p.item, this.def.itemId)) return;
+        inc(this, 1);
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Использовать: ' + (this.def.itemId || 'предмет'));
+    }
+  }
+
+  class CraftItemTask extends QuestTaskBase {
+    static typeId = 'CraftItem';
+    static label = 'Создать предмет';
+    static getEditorFields() {
+      return [
+        { key: 'itemId', label: 'Предмет или рецепт', input: 'item' },
+        { key: 'count', label: 'Количество', input: 'number', min: 1, required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'ItemCrafted') {
+        const p = event.payload || {};
+        if (this.def.itemId && !matchId(p.itemId || p.recipeId, this.def.itemId)) return;
+        inc(this, Number(p.qty) || 1);
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Создать: ' + (this.def.itemId || 'предмет'));
+    }
+  }
+
+  class ChooseDialogueOptionTask extends QuestTaskBase {
+    static typeId = 'ChooseDialogueOption';
+    static label = 'Выбрать реплику';
+    static description = 'Завершается при выборе реплики (по id или тексту)';
+    static getEditorFields() {
+      return [
+        { key: 'choiceId', label: 'Выбор в диалоге', input: 'text', required: true },
+        { key: 'sceneId', label: 'Место (необязательно)', input: 'scene' },
+        { key: 'textContains', label: 'Текст содержит (если нет id)', input: 'text' },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      // ChoiceSelected / DialogueChoiceSelected — semantic events (not quest flags)
+      if (event.type !== 'ChoiceSelected' && event.type !== 'DialogueChoiceSelected') return;
+      const p = event.payload || {};
+      if (this.def.sceneId && p.sceneId && !matchId(p.sceneId, this.def.sceneId)) return;
+
+      const wantId = this.def.choiceId || this.def.choiceFlag; // choiceFlag = legacy alias only
+      if (wantId) {
+        const got = p.choiceId || p.id || p.flag;
+        if (got && matchId(got, wantId)) {
+          this.markComplete();
+          return;
+        }
+      }
+      const needle = this.def.textContains || this.def.textMatch;
+      if (needle && p.text && String(p.text).toLowerCase().includes(String(needle).toLowerCase())) {
+        this.markComplete();
+      }
+    }
+    getDescription() {
+      if (this.def.description) return this.def.description;
+      const id = this.def.choiceId || this.def.choiceFlag;
+      return id ? ('Выбор: ' + id) : 'Сделать выбор в диалоге';
+    }
+  }
+
+  class AcquireGoldTask extends QuestTaskBase {
+    static typeId = 'AcquireGold';
+    static label = 'Получить золото';
+    static getEditorFields() {
+      return [
+        { key: 'amount', label: 'Сумма', input: 'number', min: 1 },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    get target() {
+      return Math.max(1, Number(this.def.amount) || 1);
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'GoldGained') {
+        inc(this, Number(event.payload?.amount) || 0);
+      }
+    }
+    getDescription() {
+      return this.def.description || `Накопить ${this.target} зм (${this.getProgress()}/${this.target})`;
+    }
+  }
+
+  class SpendGoldTask extends QuestTaskBase {
+    static typeId = 'SpendGold';
+    static label = 'Потратить золото';
+    static getEditorFields() {
+      return [
+        { key: 'amount', label: 'Сумма', input: 'number', min: 1 },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    get target() {
+      return Math.max(1, Number(this.def.amount) || 1);
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'GoldSpent') {
+        inc(this, Number(event.payload?.amount) || 0);
+      }
+    }
+    getDescription() {
+      return this.def.description || `Потратить ${this.target} зм`;
+    }
+  }
+
+  class ReachLevelTask extends QuestTaskBase {
+    static typeId = 'ReachLevel';
+    static label = 'Достичь уровня';
+    static getEditorFields() {
+      return [
+        { key: 'level', label: 'Уровень', input: 'number', min: 1 },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    get target() {
+      return Math.max(1, Number(this.def.level) || 1);
+    }
+    applyWorldState(world) {
+      const lvl = Number(world?.level) || 0;
+      if (lvl >= this.target) {
+        this._progress = this.target;
+        this._completed = true;
+      }
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'PlayerLevelChanged' || event.type === 'LevelChanged' || event.type === 'LevelUp') {
+        this.applyWorldState({ level: Number(event.payload?.level) || 0 });
+      }
+    }
+    getDescription() {
+      return this.def.description || `Достичь ${this.target} уровня`;
+    }
+  }
+
+  class EquipItemTask extends QuestTaskBase {
+    static typeId = 'EquipItem';
+    static label = 'Экипировать предмет';
+    static getEditorFields() {
+      return [
+        { key: 'itemId', label: 'Предмет', input: 'item', required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    applyWorldState(world) {
+      if (!this.def.itemId || !world?.equipped) return;
+      const ids = Object.values(world.equipped).filter(Boolean).map(String);
+      if (ids.some((id) => matchId(id, this.def.itemId))) this.markComplete();
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'ItemEquipped') {
+        const p = event.payload || {};
+        if (!this.def.itemId || matchId(p.itemId || p.item, this.def.itemId)) {
+          this.markComplete();
+        }
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Надеть: ' + (this.def.itemId || 'предмет'));
+    }
+  }
+
+  class InteractObjectTask extends QuestTaskBase {
+    static typeId = 'InteractObject';
+    static label = 'Взаимодействовать с объектом';
+    static description = 'Завершается событием ObjectInteracted (не флагами)';
+    static getEditorFields() {
+      return [
+        { key: 'objectId', label: 'Объект', input: 'text', required: true },
+        { key: 'sceneId', label: 'Место (необязательно)', input: 'scene' },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      // Only ObjectInteracted — FlagSet is not interaction semantics
+      if (event.type !== 'ObjectInteracted') return;
+      const p = event.payload || {};
+      if (this.def.sceneId && p.sceneId && !matchId(p.sceneId, this.def.sceneId)) return;
+      if (!this.def.objectId) return;
+      if (matchId(p.objectId || p.id, this.def.objectId)) {
+        this.markComplete();
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Взаимодействовать: ' + (this.def.objectId || 'объект'));
+    }
+  }
+
+  class DiscoverLocationTask extends QuestTaskBase {
+    static typeId = 'DiscoverLocation';
+    static label = 'Открыть локацию на карте';
+    static getEditorFields() {
+      return [
+        { key: 'locationId', label: 'Локация', input: 'location', required: true },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    applyWorldState(world) {
+      if (!this.def.locationId || !world?.visitedLocations) return;
+      if (world.visitedLocations[this.def.locationId]) this.markComplete();
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'LocationDiscovered') {
+        const p = event.payload || {};
+        if (!this.def.locationId || matchId(p.locationId, this.def.locationId)) {
+          this.markComplete();
+        }
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Открыть: ' + (this.def.locationId || 'локацию'));
+    }
+  }
+
+  class WaitTimeTask extends QuestTaskBase {
+    static typeId = 'WaitTime';
+    static label = 'Подождать время';
+    static getEditorFields() {
+      return [
+        { key: 'hours', label: 'Часов', input: 'number', min: 0 },
+        { key: 'minutes', label: 'Минут', input: 'number', min: 0 },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    /** Цель в минутах */
+    get target() {
+      const h = Number(this.def.hours) || 0;
+      const m = Number(this.def.minutes) || 0;
+      const total = h * 60 + m;
+      return Math.max(1, total || 60);
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'TimePassed') {
+        const mins = Number(event.payload?.minutes) || (Number(event.payload?.hours) || 0) * 60;
+        if (mins > 0) inc(this, mins);
+      }
+    }
+    getDescription() {
+      if (this.def.description) return this.def.description;
+      const h = Math.floor(this.target / 60);
+      const m = this.target % 60;
+      if (h && m) return `Подождать ${h} ч. ${m} мин. (${this.getProgress()}/${this.target} мин.)`;
+      if (h) return `Подождать ${h} ч. (${this.getProgress()}/${this.target} мин.)`;
+      return `Подождать ${this.target} мин. (${this.getProgress()}/${this.target})`;
+    }
+  }
+
+  class LearnSkillTask extends QuestTaskBase {
+    static typeId = 'LearnSkill';
+    static label = 'Изучить навык';
+    static getEditorFields() {
+      return [
+        { key: 'skillId', label: 'Навык', input: 'text' },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    applyWorldState(world) {
+      if (!this.def.skillId || !world) return;
+      const skills = world.skills || {};
+      if (skills[this.def.skillId] != null && skills[this.def.skillId] !== false) {
+        this.markComplete();
+        return;
+      }
+      const inc = world.skillIncreases || [];
+      if (inc.some((s) => {
+        if (typeof s === 'string') return matchId(s, this.def.skillId);
+        return matchId(s?.id || s?.skillId, this.def.skillId);
+      })) this.markComplete();
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'SkillLearned' || event.type === 'SkillUnlocked') {
+        const p = event.payload || {};
+        if (!this.def.skillId || matchId(p.skillId, this.def.skillId)) this.markComplete();
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Изучить: ' + (this.def.skillId || 'навык'));
+    }
+  }
+
+  class EscortNPCTask extends QuestTaskBase {
+    static unsupported = true;
+    static unsupportedReason = 'NPCEscorted event not emitted by engine yet';
+    static typeId = 'EscortNPC';
+    static label = 'Сопроводить NPC';
+    static getEditorFields() {
+      return [
+        { key: 'npcId', label: 'Персонаж', input: 'npc' },
+        { key: 'sceneId', label: 'Куда идти', input: 'scene' },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'NPCEscorted') {
+        const p = event.payload || {};
+        if (this.def.npcId && p.npcId && !matchId(p.npcId, this.def.npcId)) return;
+        if (this.def.sceneId && p.sceneId && !matchId(p.sceneId, this.def.sceneId)) return;
+        this.markComplete();
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Сопроводить: ' + (this.def.npcId || 'NPC'));
+    }
+  }
+
+  class ProtectNPCTask extends QuestTaskBase {
+    static unsupported = true;
+    static unsupportedReason = 'NPCProtected event not emitted by engine yet';
+    static typeId = 'ProtectNPC';
+    static label = 'Защитить NPC';
+    static getEditorFields() {
+      return [
+        { key: 'npcId', label: 'Персонаж', input: 'npc' },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'NPCProtected') {
+        const p = event.payload || {};
+        if (!this.def.npcId || matchId(p.npcId, this.def.npcId)) this.markComplete();
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Защитить: ' + (this.def.npcId || 'NPC'));
+    }
+  }
+
+  class ActivateObjectTask extends QuestTaskBase {
+    static unsupported = true;
+    static unsupportedReason = 'ObjectActivated event not emitted by engine yet';
+    static typeId = 'ActivateObject';
+    static label = 'Активировать объект';
+    static getEditorFields() {
+      return [
+        { key: 'objectId', label: 'Объект', input: 'text' },
+        { key: 'description', label: 'Описание', input: 'text' }
+      ];
+    }
+    onEvent(event) {
+      if (this.isCompleted()) return;
+      if (event.type === 'ObjectActivated') {
+        const p = event.payload || {};
+        if (!this.def.objectId || matchId(p.objectId, this.def.objectId)) this.markComplete();
+      }
+    }
+    getDescription() {
+      return this.def.description || ('Активировать: ' + (this.def.objectId || 'объект'));
+    }
+  }
+
+  const ALL = [
+    ManualAdvanceTask, TalkToNPCTask, CollectItemTask, KillEnemyTask, VisitLocationTask,
+    DeliverItemTask, UseItemTask, CraftItemTask, ChooseDialogueOptionTask,
+    AcquireGoldTask, SpendGoldTask, ReachLevelTask, EquipItemTask,
+    InteractObjectTask, DiscoverLocationTask, WaitTimeTask, LearnSkillTask,
+    EscortNPCTask, ProtectNPCTask, ActivateObjectTask
+  ];
+  ALL.forEach((C) => QuestTaskRegistry.register(C.typeId, C));
+  class MigrationRequiredTask extends QuestTaskBase {
+    static typeId = 'MigrationRequired';
+    static label = 'Требует проверки (миграция)';
+    static description = 'Автоматически создано при миграции — задайте тип задачи вручную';
+    static unsupported = false; // visible so author can fix; does not auto-complete
+    static migrationPlaceholder = true;
+    static getEditorFields() {
+      return [
+        { key: 'description', label: 'Описание (из старого этапа)', input: 'text' },
+        { key: 'legacyHint', label: 'Старая подсказка', input: 'text' }
+      ];
+    }
+    onEvent() { /* never auto-complete — author must replace type */ }
+    isCompleted() { return false; }
+    getProgress() { return 0; }
+    getDescription() {
+      return this.def.description ||
+        ('⚠ Нужна ручная настройка задачи (миграция): ' + (this.def.legacyHint || this.def.legacyId || ''));
+    }
+    serialize() {
+      const base = super.serialize();
+      base.type = 'MigrationRequired';
+      base.legacyData = this.def.legacyData || null;
+      base.legacyHint = this.def.legacyHint || '';
+      base.legacyId = this.def.legacyId || '';
+      base._migrationRequired = true;
+      return base;
+    }
+  }
+
+
+  QuestTaskRegistry.register('MigrationRequired', MigrationRequiredTask);
+})();
+
+
+;/* —— js/quests/quest-events.js —— */
+// ============================================================
+// Quest event bus — engine systems emit, tasks consume
+// ============================================================
+
+const QuestEvents = {
+  _listeners: [],
+
+  on(fn) {
+    if (typeof fn === 'function') this._listeners.push(fn);
+    return () => {
+      this._listeners = this._listeners.filter((f) => f !== fn);
+    };
+  },
+
+  off(fn) {
+    this._listeners = this._listeners.filter((f) => f !== fn);
+  },
+
+  /**
+   * @param {string} type
+   * @param {object} [payload]
+   */
+  emit(type, payload) {
+    if (!type) return;
+    const event = { type: String(type), payload: payload || {}, ts: Date.now() };
+    // Prefer QuestRuntime if bound
+    if (typeof QuestRuntime !== 'undefined' && QuestRuntime.handleEvent) {
+      try {
+        QuestRuntime.handleEvent(event);
+      } catch (e) {
+        console.warn('QuestRuntime.handleEvent', e);
+      }
+    }
+    for (const fn of this._listeners.slice()) {
+      try {
+        fn(event);
+      } catch (e) {
+        console.warn('QuestEvents listener', e);
+      }
+    }
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.QuestEvents = QuestEvents;
+}
+
+
+;/* —— js/quests/quest-runtime.js —— */
+// ============================================================
+// QuestRuntime — stages/tasks progress, completion, journal API
+// ============================================================
+
+const QuestRuntime = {
+  /** @type {object|null} engine ref */
+  engine: null,
+
+  /**
+   * state.questProgress shape:
+   * {
+   *   [questId]: {
+   *     status: 'inactive'|'active'|'completed'|'failed',
+   *     stageIndex: number,
+   *     stages: { [index]: { tasks: [serialized tasks] } }
+   *   }
+   * }
+   */
+
+  bind(engine) {
+    this.engine = engine;
+    if (engine && engine.state && !engine.state.questProgress) {
+      engine.state.questProgress = {};
+    }
+  },
+
+  get data() {
+    return this.engine?.data || null;
+  },
+
+  get state() {
+    return this.engine?.state || null;
+  },
+
+  ensureProgressStore() {
+    if (!this.state) return null;
+    if (!this.state.questProgress || typeof this.state.questProgress !== 'object') {
+      this.state.questProgress = {};
+    }
+    return this.state.questProgress;
+  },
+
+  getQuestDef(questId) {
+    return this.data?.quests?.[questId] || null;
+  },
+
+  /** Build live task instances for a stage */
+  buildStageTasks(questId, stageIndex, savedStage) {
+    const quest = this.getQuestDef(questId);
+    if (!quest) return [];
+    const stageDef = (quest.stages || [])[stageIndex];
+    if (!stageDef) return [];
+    const defs = Array.isArray(stageDef.tasks) ? stageDef.tasks : [];
+    const savedTasks = savedStage?.tasks || [];
+    return defs.map((def, i) => {
+      const saved = savedTasks.find((t) => t && t.id === def.id) || savedTasks[i] || null;
+      const merged = saved ? { ...def, ...saved, type: def.type || saved.type } : { ...def };
+      const ctx = { questId, stageIndex };
+      try {
+        return QuestTaskRegistry.create(merged, ctx);
+      } catch (err) {
+        if (err && err.name === 'UnknownQuestTaskTypeError') {
+          console.warn('[QuestRuntime]', err.message, err.taskData || merged);
+          // Preserve data — do NOT convert to ManualAdvance
+          return QuestTaskRegistry.create(merged, ctx, { placeholder: true });
+        }
+        throw err;
+      }
+    }).filter(Boolean);
+  },
+
+  getProgress(questId) {
+    const store = this.ensureProgressStore();
+    return store?.[questId] || null;
+  },
+
+  isActive(questId) {
+    const p = this.getProgress(questId);
+    return p && p.status === 'active';
+  },
+
+  isCompleted(questId) {
+    const p = this.getProgress(questId);
+    // questProgress is source of truth when entry exists
+    if (p) return p.status === 'completed';
+    // legacy mirror only if no progress entry yet
+    if (this.state?.questStages?.[questId] === '__finished__') return true;
+    if (this.state?.flags?.['quest_' + questId] === 'complete') return true;
+    return false;
+  },
+
+  isFailed(questId) {
+    const p = this.getProgress(questId);
+    if (p) return p.status === 'failed';
+    if (this.state?.questStages?.[questId] === '__failed__') return true;
+    if (this.state?.flags?.['quest_' + questId] === 'failed') return true;
+    return false;
+  },
+
+  /**
+   * Start or ensure quest is active at stage 0 (or given index).
+   */
+  startQuest(questId, opts = {}) {
+    const quest = this.getQuestDef(questId);
+    if (!quest) return false;
+    const store = this.ensureProgressStore();
+    if ((this.isCompleted(questId) || this.isFailed(questId)) && !opts.force) return false;
+
+    const existing = store[questId];
+    if (existing && existing.status === 'active' && !opts.force) return true;
+
+    const stageIndex = Number(opts.stageIndex) || 0;
+    store[questId] = {
+      status: 'active',
+      stageIndex,
+      stages: opts.force ? {} : (existing?.stages || {})
+    };
+    if (opts.force) store[questId].stages = {};
+    this._ensureStageRuntime(questId, stageIndex);
+    this._syncLegacyStage(questId);
+    this._logStageEnter(questId, stageIndex, opts);
+    this._notifyUI();
+    return true;
+  },
+
+  /** Snapshot of engine state for Task.onActivate (no synthetic events). */
+  _worldSnapshot() {
+    const s = this.state || {};
+    return {
+      level: Number(s.level) || 1,
+      inventory: Array.isArray(s.inventory) ? s.inventory.slice() : [],
+      gold: Number(s.gold) || 0,
+      equipped: s.equipped && typeof s.equipped === 'object' ? { ...s.equipped } : {},
+      skills: s.skills && typeof s.skills === 'object' ? { ...s.skills } : {},
+      skillIncreases: Array.isArray(s.skillIncreases) ? s.skillIncreases.slice() : [],
+      visitedLocations: s.visitedLocations && typeof s.visitedLocations === 'object' ? { ...s.visitedLocations } : {},
+      flags: s.flags && typeof s.flags === 'object' ? { ...s.flags } : {},
+      scene: s.scene || null,
+      className: s.className || null
+    };
+  },
+
+  _ensureStageRuntime(questId, stageIndex) {
+    const store = this.ensureProgressStore();
+    const qp = store[questId];
+    if (!qp) return [];
+    if (!qp.stages) qp.stages = {};
+    const key = String(stageIndex);
+    let tasks;
+    const firstBuild = !qp.stages[key];
+    if (firstBuild) {
+      tasks = this.buildStageTasks(questId, stageIndex, null);
+    } else {
+      tasks = this.buildStageTasks(questId, stageIndex, qp.stages[key]);
+    }
+    // Initial state sync once when stage tasks are first built (not on every ensure)
+    let activatedComplete = false;
+    if (firstBuild && !this._activatingTasks && !this._checkingStage) {
+      this._activatingTasks = true;
+      try {
+        const world = this._worldSnapshot();
+        for (const task of tasks) {
+          if (task && !task.isCompleted() && typeof task.onActivate === 'function') {
+            task.onActivate(world);
+          }
+          if (task && task.isCompleted()) activatedComplete = true;
+        }
+      } finally {
+        this._activatingTasks = false;
+      }
+    }
+    qp.stages[key] = { tasks: tasks.map((t) => t.serialize()) };
+    if (firstBuild && activatedComplete && !this._checkingStage) {
+      this._checkingStage = true;
+      try {
+        this._checkStageCompletion(questId);
+      } finally {
+        this._checkingStage = false;
+      }
+    }
+    return tasks;
+  },
+
+  getLiveTasks(questId) {
+    const p = this.getProgress(questId);
+    if (!p || p.status !== 'active') return [];
+    return this._ensureStageRuntime(questId, p.stageIndex);
+  },
+
+  /**
+   * Process game event against all active quest tasks.
+   */
+  handleEvent(event) {
+    if (!this.state || !event) return;
+    const store = this.ensureProgressStore();
+    let any = false;
+    for (const [questId, prog] of Object.entries(store)) {
+      if (!prog || prog.status !== 'active') continue;
+      const tasks = this._ensureStageRuntime(questId, prog.stageIndex);
+      let stageChanged = false;
+      for (const task of tasks) {
+        if (task.isCompleted()) continue;
+        const wasCompleted = task.isCompleted();
+        const before = task.getProgress();
+        task.onEvent(event);
+        const after = task.getProgress();
+        const nowCompleted = task.isCompleted();
+        if (nowCompleted && !wasCompleted) {
+          any = true;
+          stageChanged = true;
+        } else if (after !== before) {
+          // прогресс изменился, задача ещё не завершена — обновить журнал/сейв
+          any = true;
+        }
+      }
+      // persist task state
+      prog.stages[String(prog.stageIndex)] = {
+        tasks: tasks.map((t) => t.serialize())
+      };
+      if (stageChanged || any) {
+        this._checkStageCompletion(questId);
+      }
+    }
+    if (any) {
+      this._notifyUI();
+      if (this.engine?.saveGame) this.engine.saveGame();
+    }
+  },
+
+  _checkStageCompletion(questId) {
+    const p = this.getProgress(questId);
+    if (!p || p.status !== 'active') return;
+    const tasks = this._ensureStageRuntime(questId, p.stageIndex);
+    const quest = this.getQuestDef(questId);
+    const stageDef = (quest?.stages || [])[p.stageIndex] || {};
+    // Advanced: completionRule 'all' (default) | 'any'
+    // Optional tasks excluded from 'all' requirement unless all tasks optional
+    const rule = stageDef.completionRule || stageDef.logic || 'all';
+    const required = tasks.filter((t) => !t.optional);
+    const list = required.length ? required : tasks;
+    if (!list.length) return;
+    const done = rule === 'any'
+      ? list.some((t) => t.isCompleted())
+      : list.every((t) => t.isCompleted());
+    if (!done) return;
+
+    const stages = quest?.stages || [];
+
+    if (stageDef?.failed) {
+      this.failQuest(questId);
+      return;
+    }
+
+    // log stage complete
+    if (this.engine?.log && stageDef?.log) {
+      this.engine.log('📜 ' + stageDef.log, 'log-heal');
+    }
+
+    if (stageDef?.finish || p.stageIndex >= stages.length - 1) {
+      this.completeQuest(questId);
+      return;
+    }
+
+    // advance
+    const next = p.stageIndex + 1;
+    p.stageIndex = next;
+    this._ensureStageRuntime(questId, next);
+    if (typeof QuestEvents !== 'undefined') {
+      QuestEvents.emit('StageActivated', {
+        questId,
+        stageIndex: next,
+        stageKey: String(next)
+      });
+    }
+    this._syncLegacyStage(questId);
+    this._logStageEnter(questId, next, {});
+    if (typeof this.engine?.applyQuestMapUnlocks === 'function') {
+      this.engine.applyQuestMapUnlocks(questId, String(next));
+    }
+    if (typeof this.engine?.checkAchievements === 'function') {
+      this.engine.checkAchievements({ type: 'quest_update', questId, stage: String(next) });
+    }
+  },
+
+  _logStageEnter(questId, stageIndex, opts) {
+    if (opts?.silentLog) return;
+    const quest = this.getQuestDef(questId);
+    const stage = quest?.stages?.[stageIndex];
+    if (!stage) return;
+    if (this.engine?.log) {
+      if (stage.log) this.engine.log('📜 ' + stage.log, 'log-heal');
+      else if (stage.hint || stage.title) {
+        this.engine.log('💡 ' + (stage.hint || stage.title), 'log-dice');
+      }
+    }
+  },
+
+  completeQuest(questId, opts = {}) {
+    const store = this.ensureProgressStore();
+    const quest = this.getQuestDef(questId);
+    if (!quest) return false;
+    const prev = store[questId];
+    if (prev?.status === 'completed') return false;
+
+    store[questId] = {
+      ...(prev || {}),
+      status: 'completed',
+      stageIndex: (quest.stages || []).length - 1
+    };
+    if (this.state.questStages) this.state.questStages[questId] = '__finished__';
+    this._syncLegacyFlag(questId, 'complete');
+
+    if (!opts.silentLog && this.engine?.log) {
+      this.engine.log('✅ Квест завершён: «' + (quest.title || questId) + '»', 'log-heal');
+    }
+    if (typeof this.engine?.awardQuestExp === 'function') {
+      this.engine.awardQuestExp(questId);
+    }
+    if (typeof this.engine?.applyQuestNpcReputation === 'function') {
+      this.engine.applyQuestNpcReputation(questId);
+    }
+    // Награды из quest.rewards (gold/items/reputation) — если метод есть
+    if (typeof this.engine?.applyQuestRewards === 'function') {
+      this.engine.applyQuestRewards(questId);
+    }
+    if (typeof this.engine?.checkAchievements === 'function') {
+      this.engine.checkAchievements({ type: 'quest_update', questId, stage: '__finished__' });
+    }
+    this._notifyUI();
+    if (this.engine?.saveGame) this.engine.saveGame();
+    return true;
+  },
+
+  failQuest(questId, opts = {}) {
+    const store = this.ensureProgressStore();
+    const quest = this.getQuestDef(questId);
+    const prev = store[questId];
+    if (prev?.status === 'failed') return false;
+
+    store[questId] = {
+      ...(prev || {}),
+      status: 'failed'
+    };
+    if (this.state.questStages) this.state.questStages[questId] = '__failed__';
+    this._syncLegacyFlag(questId, 'failed');
+
+    if (!opts.silentLog && this.engine?.log) {
+      const stages = quest?.stages || [];
+      const failStage = stages.find((s) => s.failed);
+      if (failStage?.log) this.engine.log('❌ ' + failStage.log, 'log-damage');
+      else this.engine.log('❌ Квест провален: «' + (quest?.title || questId) + '»', 'log-damage');
+    }
+    if (typeof this.engine?.checkAchievements === 'function') {
+      this.engine.checkAchievements({ type: 'quest_update', questId, stage: '__failed__' });
+    }
+    this._notifyUI();
+    if (this.engine?.saveGame) this.engine.saveGame();
+    return true;
+  },
+
+  /**
+   * Compatibility: set stage by index or legacy key (from old questSet in scenes).
+   * Completes tasks of intermediate stages and activates target stage.
+   */
+  setStage(questId, stageRef, opts = {}) {
+    const quest = this.getQuestDef(questId);
+    if (!quest) return;
+    if ((this.isCompleted(questId) || this.isFailed(questId)) && !opts.force) return;
+
+    const stages = quest.stages || [];
+    let index = this.resolveStageIndex(quest, stageRef);
+
+    if (stageRef === 'failed' || stageRef === '__failed__' ||
+        (index != null && stages[index]?.failed)) {
+      this.startQuest(questId, { silentLog: true, force: !!opts.force });
+      this.failQuest(questId, opts);
+      return;
+    }
+    if (!opts.force && (stageRef === 'complete' || stageRef === '__finished__' ||
+        (index != null && stages[index]?.finish && index === stages.length - 1))) {
+      this.startQuest(questId, { silentLog: true });
+      if (index != null) {
+        this._forceCompleteStageTasks(questId, index);
+        const store = this.ensureProgressStore();
+        if (store[questId]) store[questId].stageIndex = index;
+      }
+      this.completeQuest(questId, opts);
+      return;
+    }
+
+    if (index == null) index = 0;
+    this.startQuest(questId, { stageIndex: 0, silentLog: true, force: !!opts.force });
+
+    const store = this.ensureProgressStore();
+    const p = store[questId];
+    if (!p) return;
+
+    // Auto-complete previous stages' tasks
+    for (let i = 0; i < index; i++) {
+      this._forceCompleteStageTasks(questId, i);
+    }
+
+    p.status = 'active';
+    p.stageIndex = index;
+    this._ensureStageRuntime(questId, index);
+
+    // Land on stage only. ManualAdvance does NOT auto-complete on StageActivated —
+    // use completeTask / completeCurrentStage / TaskManualComplete.
+
+    // Special: if stage has finish flag and is last, complete
+    if (stages[index]?.finish && index >= stages.length - 1) {
+      this._forceCompleteStageTasks(questId, index);
+      this.completeQuest(questId, opts);
+      return;
+    }
+    if (stages[index]?.failed) {
+      this.failQuest(questId, opts);
+      return;
+    }
+
+    this._syncLegacyStage(questId);
+    if (!opts.silentLog) this._logStageEnter(questId, index, opts);
+    if (typeof this.engine?.applyQuestMapUnlocks === 'function') {
+      this.engine.applyQuestMapUnlocks(questId, String(index));
+    }
+    if (typeof this.engine?.checkAchievements === 'function') {
+      this.engine.checkAchievements({ type: 'quest_update', questId, stage: String(index) });
+    }
+    this._notifyUI();
+    if (this.engine?.saveGame) this.engine.saveGame();
+  },
+
+  _forceCompleteStageTasks(questId, stageIndex) {
+    const store = this.ensureProgressStore();
+    const p = store[questId];
+    if (!p) return;
+    const tasks = this._ensureStageRuntime(questId, stageIndex);
+    tasks.forEach((t) => t.markComplete());
+    if (!p.stages) p.stages = {};
+    p.stages[String(stageIndex)] = { tasks: tasks.map((t) => t.serialize()) };
+  },
+
+  /**
+   * Mark current stage tasks complete (or specific) — used when scene signals objective done.
+   */
+  /**
+   * Explicitly complete a task (or all ManualAdvance on current stage).
+   * Emits TaskManualComplete so ManualAdvance / other listeners can react.
+   */
+  completeTask(questId, taskId, opts = {}) {
+    const p = this.getProgress(questId);
+    if (!p || p.status !== 'active') {
+      this.startQuest(questId, { silentLog: true });
+    }
+    const prog = this.getProgress(questId);
+    if (!prog) return false;
+    const stageIndex = prog.stageIndex;
+    const tasks = this._ensureStageRuntime(questId, stageIndex);
+    if (taskId) {
+      const task = tasks.find((t) => t && t.id === taskId);
+      if (task && !task.isCompleted()) task.markComplete();
+    }
+    if (typeof QuestEvents !== 'undefined') {
+      QuestEvents.emit('TaskManualComplete', {
+        questId,
+        stageIndex,
+        taskId: taskId || null
+      });
+    }
+    // Persist + re-check after event (ManualAdvance may complete via event)
+    const live = this._ensureStageRuntime(questId, stageIndex);
+    if (!prog.stages) prog.stages = {};
+    prog.stages[String(stageIndex)] = { tasks: live.map((t) => t.serialize()) };
+    this._checkStageCompletion(questId);
+    this._notifyUI();
+    if (!opts.silent && this.engine?.saveGame) this.engine.saveGame();
+    return true;
+  },
+
+  completeCurrentStage(questId, opts = {}) {
+    const p = this.getProgress(questId);
+    if (!p || p.status !== 'active') {
+      this.startQuest(questId, { silentLog: true });
+    }
+    const prog = this.getProgress(questId);
+    if (!prog) return;
+    this._forceCompleteStageTasks(questId, prog.stageIndex);
+    this._checkStageCompletion(questId);
+    this._notifyUI();
+  },
+
+  resolveStageIndex(quest, stageRef) {
+    if (!quest || stageRef == null || stageRef === '') return null;
+    const stages = quest.stages || [];
+    const s = String(stageRef);
+    if (s === '__finished__' || s === 'complete') {
+      const fi = stages.findIndex((st) => st.finish && !st.failed);
+      return fi >= 0 ? fi : stages.length - 1;
+    }
+    if (s === '__failed__' || s === 'failed') {
+      const fi = stages.findIndex((st) => st.failed);
+      return fi >= 0 ? fi : null;
+    }
+    const asNum = Number(s);
+    if (!Number.isNaN(asNum) && asNum >= 0 && asNum < stages.length) return asNum;
+    // match by id / legacyKey
+    for (let i = 0; i < stages.length; i++) {
+      const st = stages[i];
+      if (st.id && String(st.id) === s) return i;
+      if (st.legacyId && String(st.legacyId) === s) return i;
+      if (st.stageKey && String(st.stageKey) === s) return i;
+    }
+    if (quest.legacyStageMap && quest.legacyStageMap[s] != null) {
+      return this.resolveStageIndex(quest, quest.legacyStageMap[s]);
+    }
+    return null;
+  },
+
+  /** For conditions / old API: current stage key as string index */
+  getStageKey(questId) {
+    if (this.isCompleted(questId)) return '__finished__';
+    if (this.isFailed(questId)) return '__failed__';
+    const p = this.getProgress(questId);
+    if (p && p.status === 'active') return String(p.stageIndex);
+    // fall back to legacy questStages
+    const legacy = this.state?.questStages?.[questId];
+    if (legacy != null && legacy !== '') return String(legacy);
+    const flag = this.state?.flags?.['quest_' + questId];
+    if (flag != null && flag !== '') {
+      const quest = this.getQuestDef(questId);
+      const idx = this.resolveStageIndex(quest, flag);
+      return idx != null ? String(idx) : String(flag);
+    }
+    return null;
+  },
+
+  _syncLegacyStage(questId) {
+    if (!this.state) return;
+    if (!this.state.questStages) this.state.questStages = {};
+    const key = this.getStageKey(questId);
+    if (key != null) this.state.questStages[questId] = key;
+    this._syncLegacyFlag(questId, key);
+  },
+
+  _syncLegacyFlag(questId, stageKey) {
+    if (!this.state?.flags) return;
+    const quest = this.getQuestDef(questId);
+    let legacyVal = stageKey;
+    if (quest?.legacyStageMap && stageKey != null) {
+      const entry = Object.entries(quest.legacyStageMap).find(([, v]) => String(v) === String(stageKey));
+      if (entry) legacyVal = entry[0];
+    }
+    if (stageKey === '__finished__') legacyVal = 'complete';
+    if (stageKey === '__failed__') legacyVal = 'failed';
+    this.state.flags['quest_' + questId] = legacyVal;
+  },
+
+  /**
+   * Journal entries for UI.
+   * @returns {Array<{ questId, title, status, stageTitle, tasks: Array<{ text, done, progress, target }> }>}
+   */
+
+  // ----- Editor / conditions helpers (ex-QuestSystem) -----
+
+  getStageKeys(quest) {
+    if (!quest?.stages) return [];
+    if (Array.isArray(quest.stages)) {
+      return quest.stages.map((_, i) => String(i));
+    }
+    return Object.keys(quest.stages).sort((a, b) => Number(a) - Number(b));
+  },
+
+  /** Resolve stage ref → string key (index) for legacy conditions */
+  resolveStageRef(quest, stageRef) {
+    const idx = this.resolveStageIndex(quest, stageRef);
+    if (idx != null) return String(idx);
+    if (stageRef == null || stageRef === '') return null;
+    const keys = this.getStageKeys(quest);
+    return keys[0] || '0';
+  },
+
+  getStageData(quest, stageKey) {
+    if (!quest?.stages || stageKey == null) return null;
+    if (Array.isArray(quest.stages)) {
+      const n = Number(stageKey);
+      const st = quest.stages[n];
+      if (!st) return null;
+      return {
+        log: st.log || '',
+        hint: st.hint || st.title || '',
+        finish: !!st.finish,
+        failed: !!st.failed,
+        title: st.title,
+        tasks: st.tasks
+      };
+    }
+    return quest.stages[String(stageKey)] || null;
+  },
+
+  isStageFinished(quest, stageKey) {
+    const st = this.getStageData(quest, stageKey);
+    return !!st?.finish && !st?.failed;
+  },
+
+  isStageFailed(quest, stageKey) {
+    const st = this.getStageData(quest, stageKey);
+    return !!st?.failed;
+  },
+
+  resolveReputationFlag(flag) {
+    const alias = { village_hero: 'rep_village', jack_friend: 'rep_village' };
+    return alias[flag] || flag;
+  },
+
+  getReputationEntries(rewards) {
+    const rep = rewards?.reputation;
+    if (rep == null || rep === '') return [];
+    const legacyDefault = { village_hero: 10, jack_friend: 8, rep_village: 10 };
+    if (typeof rep === 'object' && !Array.isArray(rep)) {
+      return Object.entries(rep)
+        .map(([flag, amount]) => ({
+          flag: this.resolveReputationFlag(flag),
+          amount: Number(amount) || 0
+        }))
+        .filter((e) => e.flag && e.amount !== 0);
+    }
+    if (typeof rep === 'string') {
+      const flag = this.resolveReputationFlag(rep);
+      const fromField = Number(rewards.reputationAmount);
+      const amount = Number.isFinite(fromField) ? fromField : (legacyDefault[rep] ?? 10);
+      return amount !== 0 ? [{ flag, amount }] : [];
+    }
+    return [];
+  },
+
+  getPrimaryReputationReward(rewards) {
+    const entries = this.getReputationEntries(rewards || {});
+    if (entries.length) return entries[0];
+    return { flag: '', amount: 0 };
+  },
+
+  getJournalEntries() {
+    // Source of truth: questProgress only (legacy questStages handled in hydrateFromSave)
+    const store = this.ensureProgressStore() || {};
+    const out = [];
+    for (const [questId, prog] of Object.entries(store)) {
+      if (!prog || prog.status !== 'active') continue;
+      const quest = this.getQuestDef(questId);
+      if (!quest) continue;
+      const stage = (quest.stages || [])[prog.stageIndex] || {};
+      const tasks = this._ensureStageRuntime(questId, prog.stageIndex);
+      out.push({
+        questId,
+        title: quest.title || questId,
+        status: prog.status,
+        stageIndex: prog.stageIndex,
+        stageTitle: stage.title || stage.hint || '',
+        hint: stage.hint || stage.title || '',
+        tasks: tasks.map((t) => ({
+          id: t.id,
+          text: t.getDescription(),
+          done: t.isCompleted(),
+          progress: t.getProgress(),
+          target: t.target
+        }))
+      });
+    }
+    return out;
+  },
+
+  /**
+   * Load path:
+   * - Save V2 (questProgress present) → use as source of truth
+   * - Save V1 (only questStages / flags.quest_*) → migrate into questProgress
+   * After hydrate, Runtime reads only questProgress. questStages is rewritten as mirror.
+   */
+  hydrateFromSave(engine) {
+    this.bind(engine);
+    const store = this.ensureProgressStore();
+    const hasProgress = store && Object.keys(store).length > 0;
+
+    if (!hasProgress) {
+      // V1 migration: questStages + flags → questProgress
+      const qs = { ...(engine.state.questStages || {}) };
+      const flags = engine.state.flags || {};
+      for (const [k, v] of Object.entries(flags)) {
+        if (!k.startsWith('quest_')) continue;
+        const questId = k.slice(6);
+        if (qs[questId] == null || qs[questId] === '') qs[questId] = v;
+      }
+
+      for (const [questId, stageKey] of Object.entries(qs)) {
+        if (stageKey == null || stageKey === '') continue;
+        const finished = stageKey === '__finished__' || stageKey === 'complete';
+        const failed = stageKey === '__failed__' || stageKey === 'failed';
+        const quest = this.getQuestDef(questId);
+        const stages = quest?.stages || [];
+
+        if (finished) {
+          const last = Math.max(0, stages.length - 1);
+          store[questId] = { status: 'completed', stageIndex: last, stages: {} };
+          for (let i = 0; i <= last; i++) this._forceCompleteStageTasks(questId, i);
+          continue;
+        }
+        if (failed) {
+          store[questId] = { status: 'failed', stageIndex: 0, stages: {} };
+          continue;
+        }
+
+        const idx = this.resolveStageIndex(quest, stageKey) ??
+          (Number.isFinite(Number(stageKey)) ? Number(stageKey) : 0);
+        store[questId] = { status: 'active', stageIndex: idx, stages: {} };
+        for (let i = 0; i < idx; i++) this._forceCompleteStageTasks(questId, i);
+        this._ensureStageRuntime(questId, idx);
+      }
+    }
+
+    // Always rebuild questStages mirror from questProgress (compat for old condition readers)
+    this._mirrorProgressToLegacyStages();
+  },
+
+  /** questProgress → questStages + flags.quest_* (mirror only, not source of truth) */
+  _mirrorProgressToLegacyStages() {
+    if (!this.state) return;
+    if (!this.state.questStages) this.state.questStages = {};
+    const store = this.ensureProgressStore() || {};
+    for (const [questId, prog] of Object.entries(store)) {
+      if (!prog) continue;
+      if (prog.status === 'completed') this.state.questStages[questId] = '__finished__';
+      else if (prog.status === 'failed') this.state.questStages[questId] = '__failed__';
+      else this.state.questStages[questId] = String(prog.stageIndex);
+      this._syncLegacyFlag(questId, this.state.questStages[questId]);
+    }
+  },
+
+  _notifyUI() {
+    if (typeof this.engine?.renderActiveQuests === 'function') {
+      this.engine.renderActiveQuests();
+    }
+    if (typeof this.engine?.updateUI === 'function') {
+      // avoid deep recursion — only quests panel when possible
+    }
+  },
+
+  /** Serialize for save */
+  serializeAll() {
+    return this.ensureProgressStore() || {};
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.QuestRuntime = QuestRuntime;
+}
+
+
+;/* —— js/quests/quest-stage-actions-bridge.js —— */
+/**
+ * Phase 1.14 — Optional stage entry/reward actions (NOT QuestRuntime).
+ * Listens QuestEvents.StageActivated + quest completion transitions.
+ */
+(function attachQuestStageActionsBridge() {
+  'use strict';
+
+  if (typeof QuestEvents === 'undefined') return;
+
+  const prevStatus = Object.create(null);
+
+  function getEngine() {
+    return typeof GameEngine !== 'undefined' ? GameEngine : null;
+  }
+
+  function runSteps(engine, steps) {
+    if (!engine || !Array.isArray(steps)) return;
+    steps.forEach((step) => {
+      if (!step?.action) return;
+      if (typeof ActionRunner !== 'undefined' && ActionRunner.runV2) {
+        ActionRunner.runV2(engine, step.action, step.params || {}, { source: 'quest_stage' });
+      } else if (typeof engine.runAction === 'function') {
+        engine.runAction(step.action, step.params || {});
+      } else if (step.action === 'update_quest' && typeof engine.updateQuest === 'function') {
+        engine.updateQuest(step.params?.questId, step.params?.stage);
+      }
+    });
+  }
+
+  function runStageActions(quest, stageIndex, field) {
+    const engine = getEngine();
+    if (!engine || !quest) return;
+    const st = quest.stages?.[stageIndex];
+    if (!st) return;
+    runSteps(engine, st[field]);
+  }
+
+  function onStageActivated(payload) {
+    const questId = payload?.questId;
+    const stageIndex = Number(payload?.stageIndex);
+    if (!questId || !Number.isFinite(stageIndex)) return;
+    const engine = getEngine();
+    const quest = engine?.data?.quests?.[questId];
+    if (!quest) return;
+    if (stageIndex > 0) runStageActions(quest, stageIndex - 1, 'rewardActions');
+    runStageActions(quest, stageIndex, 'entryActions');
+  }
+
+  function onAnyQuestEvent() {
+    const engine = getEngine();
+    if (!engine?.state?.questProgress) return;
+    Object.entries(engine.state.questProgress).forEach(([questId, prog]) => {
+      const was = prevStatus[questId];
+      const now = prog?.status;
+      if (was !== 'completed' && now === 'completed') {
+        const quest = engine.data?.quests?.[questId];
+        const lastIdx = (quest?.stages?.length || 1) - 1;
+        if (lastIdx >= 0) runStageActions(quest, lastIdx, 'rewardActions');
+      }
+      prevStatus[questId] = now;
+    });
+  }
+
+  QuestEvents.on((event) => {
+    if (event?.type === 'StageActivated') onStageActivated(event.payload);
+    onAnyQuestEvent();
+  });
+})();
+
+
+;/* —— js/quests/quest-migrate.js —— */
+// ============================================================
+// Migrate v1 stage-marker quests → v2 stages with tasks
+// ============================================================
+
+const QuestMigrate = {
+  /**
+   * Normalize + migrate all quests in data to v2 task format.
+   * Idempotent: already-v2 quests only lightly normalized.
+   */
+  _report: null,
+
+  beginReport() {
+    this._report = {
+      migratedAutomatically: [],
+      requiresManualReview: [],
+      unsupported: [],
+      skippedV2: []
+    };
+  },
+
+  getLastReport() {
+    return this._report || {
+      migratedAutomatically: [],
+      requiresManualReview: [],
+      unsupported: [],
+      skippedV2: []
+    };
+  },
+
+  formatReport(report) {
+    report = report || this.getLastReport();
+    const lines = [];
+    lines.push('Migrated automatically: ' + (report.migratedAutomatically?.length || 0));
+    (report.migratedAutomatically || []).forEach((x) => lines.push('  ✓ ' + x));
+    lines.push('Requires manual review: ' + (report.requiresManualReview?.length || 0));
+    (report.requiresManualReview || []).forEach((x) => lines.push('  ⚠ ' + x));
+    lines.push('Unsupported: ' + (report.unsupported?.length || 0));
+    (report.unsupported || []).forEach((x) => lines.push('  ✗ ' + x));
+    if (report.skippedV2?.length) {
+      lines.push('Already v2 (unchanged): ' + report.skippedV2.length);
+    }
+    return lines.join('\n');
+  },
+
+  migrateAll(data) {
+    if (!data) return data;
+    if (!data.quests || typeof data.quests !== 'object') data.quests = {};
+    this.beginReport();
+    for (const [id, quest] of Object.entries(data.quests)) {
+      const wasV2 = this.isV2(quest) && Array.isArray(quest.stages) &&
+        quest.stages.every((s) => s && Array.isArray(s.tasks));
+      data.quests[id] = this.migrateQuest(id, quest);
+      if (wasV2 && quest.questFormat === 2) {
+        this._report.skippedV2.push(id);
+      }
+    }
+    data.questsVersion = 2;
+    data.questMigrationReport = this.getLastReport();
+    return data;
+  },
+
+  isV2(quest) {
+    if (!quest || typeof quest !== 'object') return false;
+    if (!Array.isArray(quest.stages)) return false;
+    if (!quest.stages.length) return true;
+    // v2: stages are array of { tasks: [] }
+    return quest.stages.every((s) => s && (Array.isArray(s.tasks) || s.tasks == null));
+  },
+
+  migrateQuest(questId, quest) {
+    if (!quest || typeof quest !== 'object') {
+      return {
+        id: questId,
+        title: questId,
+        stages: [{
+          id: 'stage_0',
+          title: 'Начало',
+          hint: 'Начало',
+          tasks: [{
+            type: 'MigrationRequired',
+            id: 't0',
+            description: 'Пустой квест — настройте задачи',
+            legacyData: { questId, reason: 'empty_quest_def' }
+          }]
+        }],
+        rewards: {},
+        hidden: false
+      };
+    }
+
+    // Already array of stages with tasks
+    if (Array.isArray(quest.stages) && quest.stages.length &&
+        quest.stages.every((s) => s && Array.isArray(s.tasks))) {
+      return this.normalizeV2(questId, quest);
+    }
+
+    // Object stages map "0","1" from old normalize
+    if (quest.stages && !Array.isArray(quest.stages) && typeof quest.stages === 'object') {
+      return this.fromStageMap(questId, quest);
+    }
+
+    // Array stages without tasks (old data/quests.json style)
+    if (Array.isArray(quest.stages)) {
+      return this.fromStageArray(questId, quest);
+    }
+
+    return this.normalizeV2(questId, {
+      ...quest,
+      stages: [{
+        id: 'stage_0',
+        title: 'Начало',
+        hint: quest.description || 'Начало',
+        log: quest.description || '',
+        tasks: [{
+          type: 'MigrationRequired',
+          id: questId + '_t0',
+          description: quest.description || 'Требуется ручная настройка',
+          legacyData: { questId, description: quest.description, reason: 'no_stages_structure' }
+        }]
+      }]
+    });
+  },
+
+  fromStageMap(questId, quest) {
+    const keys = Object.keys(quest.stages).sort((a, b) => Number(a) - Number(b));
+    const legacyStageMap = { ...(quest.legacyStageMap || {}) };
+    const stages = keys.map((k, i) => {
+      const st = quest.stages[k] || {};
+      const legacyId = Object.keys(legacyStageMap).find((lid) => String(legacyStageMap[lid]) === String(k));
+      return this.stageFromOld(questId, i, {
+        id: legacyId || st.id || ('stage_' + k),
+        name: st.hint || st.name || st.title,
+        description: st.log || st.description,
+        hint: st.hint,
+        log: st.log,
+        finish: !!st.finish,
+        failed: !!st.failed
+      }, quest);
+    });
+    return this.normalizeV2(questId, {
+      ...quest,
+      stages,
+      legacyStageMap: this.buildLegacyMap(stages, legacyStageMap)
+    });
+  },
+
+  fromStageArray(questId, quest) {
+    const arr = quest.stages || [];
+    const stages = arr.map((st, i) => this.stageFromOld(questId, i, st, quest));
+    return this.normalizeV2(questId, {
+      ...quest,
+      stages,
+      legacyStageMap: this.buildLegacyMap(stages, quest.legacyStageMap || {})
+    });
+  },
+
+  stageFromOld(questId, index, st, quest) {
+    const legacyId = st.id || st.legacyId || ('stage_' + index);
+    const finish = legacyId === 'complete' || !!st.finish;
+    const failed = legacyId === 'failed' || !!st.failed;
+    const title = st.name || st.hint || st.title || ('Этап ' + (index + 1));
+    const hint = st.hint || st.name || title;
+    const log = st.description || st.log || '';
+    const tasks = this.inferTasks(questId, index, {
+      legacyId, title, hint, log, finish, failed, giver: quest.giver
+    });
+    return {
+      id: legacyId,
+      legacyId,
+      title,
+      hint,
+      log,
+      finish,
+      failed,
+      tasks
+    };
+  },
+
+  /**
+   * Heuristic: turn old stage text into a concrete task when possible.
+   * Ambiguous stages → MigrationRequired (not ManualAdvance).
+   * Explicit finish/failed markers → ManualAdvance (scene-driven legacy).
+   */
+  inferTasks(questId, index, info) {
+    const text = ((info.hint || '') + ' ' + (info.log || '') + ' ' + (info.title || '')).toLowerCase();
+    const tasks = [];
+    const tid = (suffix) => questId + '_s' + index + '_' + suffix;
+    const path = questId + ' / stage ' + index + ' («' + (info.title || info.legacyId || index) + '»)';
+    const report = this._report;
+
+    const pushMigrationRequired = (reason) => {
+      tasks.push({
+        type: 'MigrationRequired',
+        id: tid('mig'),
+        description: info.hint || info.log || info.title || 'Требуется ручная настройка задачи',
+        legacyHint: info.hint || info.title || '',
+        legacyId: info.legacyId || '',
+        legacyData: {
+          questId,
+          stageIndex: index,
+          legacyId: info.legacyId,
+          title: info.title,
+          hint: info.hint,
+          log: info.log,
+          finish: !!info.finish,
+          failed: !!info.failed,
+          giver: info.giver,
+          reason: reason || 'unrecognized_stage_text'
+        }
+      });
+      if (report) report.requiresManualReview.push(path + ' — ' + (reason || 'неоднозначный текст этапа'));
+    };
+
+    // Failed stage: explicit fail marker in old data — ManualAdvance is OK (scene-driven)
+    if (info.failed) {
+      tasks.push({
+        type: 'ManualAdvance',
+        id: tid('fail'),
+        description: info.hint || 'Квест провален',
+        stageKey: info.legacyId || 'failed'
+      });
+      if (report) report.migratedAutomatically.push(path + ' → ManualAdvance (failed)');
+      return tasks;
+    }
+
+    // Finish stage with no other cue — ManualAdvance (old questSet complete)
+    if (info.finish && !/поговори|найд|убей|побед|верн|достав|отправ|посетите/.test(text)) {
+      tasks.push({
+        type: 'ManualAdvance',
+        id: tid('fin'),
+        description: info.hint || info.log || 'Завершите задание',
+        stageKey: info.legacyId || 'complete'
+      });
+      if (report) report.migratedAutomatically.push(path + ' → ManualAdvance (finish)');
+      return tasks;
+    }
+
+    // Unambiguous heuristics only
+    if (/поговори|поговорите|узнайте|расспроси/.test(text)) {
+      const npc = info.giver && info.giver !== 'auto' ? info.giver : undefined;
+      if (npc) {
+        tasks.push({
+          type: 'TalkToNPC',
+          id: tid('talk'),
+          npcId: npc,
+          description: info.hint || info.log || 'Поговорить с NPC'
+        });
+        if (report) report.migratedAutomatically.push(path + ' → TalkToNPC(' + npc + ')');
+      } else {
+        pushMigrationRequired('TalkToNPC без npcId (giver не задан)');
+      }
+    } else if (/верн|достав|отнес|отда/.test(text) && /сумк|письм|предмет|медаль|кольц/.test(text)) {
+      let itemId;
+      if (/сумк/.test(text)) itemId = 'jack_bag';
+      if (/медаль/.test(text)) itemId = itemId || 'elsa_locket';
+      if (/кольц/.test(text)) itemId = itemId || 'lukorn_signet_ring';
+      if (itemId) {
+        tasks.push({
+          type: 'DeliverItem',
+          id: tid('deliver'),
+          itemId,
+          count: 1,
+          description: info.hint || info.log || 'Доставить предмет'
+        });
+        if (report) report.migratedAutomatically.push(path + ' → DeliverItem(' + itemId + ')');
+      } else {
+        pushMigrationRequired('DeliverItem без однозначного itemId');
+      }
+    } else if (/найд|собери|собрать|подбер/.test(text)) {
+      let itemId;
+      if (/сумк/.test(text)) itemId = 'jack_bag';
+      if (/медаль/.test(text)) itemId = itemId || 'elsa_locket';
+      if (/трава|лунолист|herb/.test(text)) itemId = itemId || undefined;
+      if (itemId) {
+        tasks.push({
+          type: 'CollectItem',
+          id: tid('collect'),
+          itemId,
+          count: 1,
+          description: info.hint || info.log || 'Найти предмет'
+        });
+        if (report) report.migratedAutomatically.push(path + ' → CollectItem(' + itemId + ')');
+      } else {
+        pushMigrationRequired('CollectItem без однозначного itemId');
+      }
+    } else if (/убей|побед|сраз|убейте|главарь|босс|бандит/.test(text)) {
+      // Kill without specific enemy id → manual review (cannot invent enemyId)
+      pushMigrationRequired('KillEnemy без однозначного enemyId');
+    } else if (/отправ|достигн|посетите|иди\b|идите|осмотрите/.test(text) &&
+               /мельниц|деревн|склад|погреб|локац|таверн|площад/.test(text)) {
+      let sceneId;
+      if (/мельниц/.test(text)) sceneId = 'mill_arrival';
+      if (/погреб/.test(text)) sceneId = sceneId || 'cellar';
+      if (/таверн/.test(text)) sceneId = sceneId || 'tavern';
+      if (sceneId) {
+        tasks.push({
+          type: 'VisitLocation',
+          id: tid('visit'),
+          sceneId,
+          description: info.hint || info.log || 'Посетить локацию'
+        });
+        if (report) report.migratedAutomatically.push(path + ' → VisitLocation(' + sceneId + ')');
+      } else {
+        pushMigrationRequired('VisitLocation без однозначного sceneId');
+      }
+    } else {
+      pushMigrationRequired('текст этапа не распознан однозначно');
+    }
+
+    if (!tasks.length) {
+      pushMigrationRequired('пустой результат эвристики');
+    }
+    return tasks;
+  },
+
+  buildLegacyMap(stages, existing) {
+    const map = { ...(existing || {}) };
+    stages.forEach((st, i) => {
+      if (st.legacyId) map[st.legacyId] = String(i);
+      if (st.id) map[st.id] = String(i);
+      map[String(i)] = String(i);
+    });
+    if (stages.some((s) => s.finish)) {
+      const fi = stages.findIndex((s) => s.finish);
+      map.complete = String(fi);
+    }
+    if (stages.some((s) => s.failed)) {
+      const fi = stages.findIndex((s) => s.failed);
+      map.failed = String(fi);
+    }
+    return map;
+  },
+
+  normalizeV2(questId, quest) {
+    const stages = (quest.stages || []).map((st, i) => {
+      const tasks = Array.isArray(st.tasks) ? st.tasks.map((t, j) => {
+        if (!t || typeof t !== 'object') {
+          return {
+            type: 'MigrationRequired',
+            id: questId + '_s' + i + '_t' + j,
+            description: String(t || 'Требуется ручная настройка'),
+            legacyData: { raw: t, reason: 'string_task_entry' }
+          };
+        }
+        if (!t.type) {
+          return {
+            ...t,
+            type: 'MigrationRequired',
+            id: t.id || (questId + '_s' + i + '_t' + j),
+            description: t.description || 'Требуется ручная настройка',
+            legacyData: { ...(t.legacyData || {}), reason: 'task_missing_type' }
+          };
+        }
+        return {
+          ...t,
+          type: t.type,
+          id: t.id || (questId + '_s' + i + '_t' + j)
+        };
+      }) : [{
+        type: 'MigrationRequired',
+        id: questId + '_s' + i + '_t0',
+        description: st.hint || st.title || 'Требуется ручная настройка',
+        legacyData: { hint: st.hint, title: st.title, reason: 'v2_stage_without_tasks' }
+      }];
+      return {
+        id: st.id || st.legacyId || ('stage_' + i),
+        legacyId: st.legacyId || st.id || ('stage_' + i),
+        title: st.title || st.hint || st.name || ('Этап ' + (i + 1)),
+        hint: st.hint || st.title || '',
+        log: st.log || st.description || '',
+        finish: !!st.finish,
+        failed: !!st.failed,
+        completionRule: st.completionRule === 'any' ? 'any' : 'all',
+        // Advanced (not shown in basic editor): optional future AND/OR trees
+        advanced: st.advanced || null,
+        description: st.description || st.log || '',
+        entryActions: Array.isArray(st.entryActions) ? st.entryActions.slice() : undefined,
+        rewardActions: Array.isArray(st.rewardActions) ? st.rewardActions.slice() : undefined,
+        startConditions: st.startConditions && typeof st.startConditions === 'object' ? st.startConditions : undefined,
+        tasks
+      };
+    });
+    if (!stages.length) {
+      stages.push({
+        id: 'stage_0',
+        title: 'Начало',
+        hint: 'Начало',
+        log: '',
+        finish: false,
+        failed: false,
+        tasks: [{
+          type: 'MigrationRequired',
+          id: questId + '_t0',
+          description: 'Требуется ручная настройка',
+          legacyData: { reason: 'empty_stages' }
+        }]
+      });
+    }
+    return {
+      id: quest.id || questId,
+      title: quest.title || questId,
+      description: quest.description,
+      giver: quest.giver,
+      hidden: !!quest.hidden,
+      rewards: quest.rewards || {},
+      stages,
+      legacyStageMap: this.buildLegacyMap(stages, quest.legacyStageMap || {}),
+      questFormat: 2,
+      // Preserve legacy metadata when present
+      legacyFlags: quest.legacyFlags || quest.flags || undefined,
+      legacyConditions: quest.legacyConditions || quest.conditions || undefined,
+      legacyData: quest.legacyData || undefined
+    };
+  },
+
+  /** Migrate scene questSet stage refs remain valid via legacyStageMap */
+  migrateSaveQuestProgress(state, data) {
+    if (!state) return;
+    if (!state.questProgress) state.questProgress = {};
+  },
+
+  /**
+   * Old saves: find_albert completed without reward — reopen at stage 3 (compat only).
+   */
+  migrateAlbertSaveState(engine) {
+    if (!engine?.state) return;
+    const f = engine.state.flags || {};
+    if (!f.albertSaved) return;
+    if (f.find_albert_rewardClaimed) {
+      if (!f.albertAtVillage) f.albertAtVillage = true;
+      return;
+    }
+    const stage = typeof engine.getQuestStage === 'function' ? engine.getQuestStage('find_albert') : null;
+    const finished =
+      (typeof engine.isQuestFinished === 'function' && engine.isQuestFinished('find_albert')) ||
+      stage === '4' || stage === '__finished__' || f.quest_find_albert === 'complete';
+    if (!finished) return;
+    f.albertAtVillage = true;
+    if (typeof QuestRuntime !== 'undefined') {
+      QuestRuntime.bind(engine);
+      QuestRuntime.setStage('find_albert', 3, { force: true, silentLog: true });
+    } else if (typeof engine.updateQuest === 'function') {
+      engine.updateQuest('find_albert', 3, { force: true, silentLog: true });
+    }
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.QuestMigrate = QuestMigrate;
+}
+
+
+
+
+;/* —— js/enemy-scaling.js —— */
+// ============================================
+// Масштабирование врагов по таблице уровней
+// ============================================
+
+const EnemyScaling = {
+  /** Таблица по умолчанию (D&D 5e, уровни 1–10) */
+  DEFAULT_SCALING: {
+    1: { hpRate: 1.0, atkBonus: 0, acBonus: 0 },
+    2: { hpRate: 1.2, atkBonus: 1, acBonus: 0 },
+    3: { hpRate: 1.4, atkBonus: 2, acBonus: 1 },
+    4: { hpRate: 1.6, atkBonus: 3, acBonus: 1 },
+    5: { hpRate: 2.0, atkBonus: 4, acBonus: 2 },
+    6: { hpRate: 2.2, atkBonus: 4, acBonus: 2 },
+    7: { hpRate: 2.5, atkBonus: 5, acBonus: 2 },
+    8: { hpRate: 2.8, atkBonus: 5, acBonus: 3 },
+    9: { hpRate: 3.0, atkBonus: 6, acBonus: 3 },
+    10: { hpRate: 3.5, atkBonus: 6, acBonus: 3 }
+  },
+
+  DEFAULT_BOSS_HP_RATE: 1.5,
+  DEFAULT_BASE_LEVEL: 1,
+
+  REPORT_LEVELS: [1, 3, 5, 10],
+
+  /** Нормализация конфига из game_data.enemyScaling */
+  ensureConfig(raw) {
+    const cfg = raw && typeof raw === 'object' ? { ...raw } : {};
+    if (cfg.enabled == null) cfg.enabled = true;
+    if (cfg.baseLevel == null) cfg.baseLevel = this.DEFAULT_BASE_LEVEL;
+    if (cfg.bossHpRate == null) cfg.bossHpRate = this.DEFAULT_BOSS_HP_RATE;
+
+    if (!cfg.scaling || typeof cfg.scaling !== 'object' || !Object.keys(cfg.scaling).length) {
+      cfg.scaling = JSON.parse(JSON.stringify(this.DEFAULT_SCALING));
+    } else {
+      cfg.scaling = this.normalizeScalingTable(cfg.scaling);
+    }
+
+    return cfg;
+  },
+
+  normalizeScalingTable(table) {
+    const out = {};
+    Object.keys(table).forEach((k) => {
+      const lvl = parseInt(k, 10);
+      if (!lvl || lvl < 1) return;
+      const row = table[k] || {};
+      out[lvl] = {
+        hpRate: Math.max(1, Number(row.hpRate) || 1),
+        atkBonus: Math.max(0, parseInt(row.atkBonus, 10) || 0),
+        acBonus: Math.max(0, parseInt(row.acBonus, 10) || 0)
+      };
+    });
+    if (!Object.keys(out).length) {
+      return JSON.parse(JSON.stringify(this.DEFAULT_SCALING));
+    }
+    return out;
+  },
+
+  getScalingLevels(cfg) {
+    const table = cfg?.scaling || this.DEFAULT_SCALING;
+    return Object.keys(table)
+      .map((k) => parseInt(k, 10))
+      .filter((n) => n > 0)
+      .sort((a, b) => a - b);
+  },
+
+  getRowForLevel(cfg, playerLevel) {
+    const table = cfg?.scaling || this.DEFAULT_SCALING;
+    const levels = this.getScalingLevels(cfg);
+    const lvl = Math.max(1, parseInt(playerLevel, 10) || 1);
+    let pick = levels[0];
+    levels.forEach((n) => {
+      if (n <= lvl) pick = n;
+    });
+    const row = table[pick] || table[levels[0]] || { hpRate: 1, atkBonus: 0, acBonus: 0 };
+    return { level: pick, ...row };
+  },
+
+  /** Среднее значение кости (для отчёта) */
+  averageRoll(formula) {
+    const m = String(formula || '').match(/(\d+)d(\d+)/i);
+    if (!m) return parseInt(formula, 10) || 0;
+    const count = parseInt(m[1], 10);
+    const sides = parseInt(m[2], 10);
+    return count * (sides + 1) / 2;
+  },
+
+  /** Масштабирование врага; scaleWithPlayerLevel === false → базовые статы */
+  scaleEnemy(enemy, playerLevel, config) {
+    if (!enemy) return enemy;
+    const cfg = this.ensureConfig(config);
+    const level = Math.max(1, parseInt(playerLevel, 10) || 1);
+    const scaled = { ...enemy };
+    scaled.scaledLevel = level;
+
+    const useScaling = enemy.scaleWithPlayerLevel !== false;
+    const baseLevel = Math.max(1, parseInt(cfg.baseLevel, 10) || 1);
+
+    if (!cfg.enabled || !useScaling || level < baseLevel) {
+      const baseHp = parseInt(enemy.hp ?? enemy.maxHp, 10) || 1;
+      scaled.hp = baseHp;
+      scaled.maxHp = baseHp;
+      scaled.atkBonus = parseInt(enemy.atkBonus, 10) || 0;
+      scaled.ac = parseInt(enemy.ac, 10) || 10;
+      scaled.dmgRoll = enemy.dmgRoll || '1d6';
+      scaled._baseDmgBonus = parseInt(enemy.dmgBonus, 10) || 0;
+      scaled.dmgBonus = scaled._baseDmgBonus;
+      return scaled;
+    }
+
+    const row = this.getRowForLevel(cfg, level);
+    const baseHp = parseInt(enemy.hp ?? enemy.maxHp, 10) || 1;
+    let hpMult = Math.max(1, Number(row.hpRate) || 1);
+    if (enemy.boss === true) {
+      hpMult *= Math.max(1, Number(cfg.bossHpRate) || this.DEFAULT_BOSS_HP_RATE);
+    }
+    const hp = Math.max(1, Math.floor(baseHp * hpMult));
+
+    scaled.hp = hp;
+    scaled.maxHp = hp;
+    scaled.atkBonus = (parseInt(enemy.atkBonus, 10) || 0) + (row.atkBonus || 0);
+    scaled.ac = (parseInt(enemy.ac, 10) || 10) + (row.acBonus || 0);
+    scaled.dmgRoll = enemy.dmgRoll || '1d6';
+    scaled._baseDmgBonus = parseInt(enemy.dmgBonus, 10) || 0;
+    scaled.dmgBonus = scaled._baseDmgBonus;
+
+    return scaled;
+  },
+
+  /** Упрощённый билд воина для отчёта баланса */
+  buildReportPlayer(level) {
+    const lvl = Math.max(1, parseInt(level, 10) || 1);
+    const prof = lvl <= 4 ? 2 : lvl <= 8 ? 3 : 4;
+    const strMod = 3;
+    const conMod = 2;
+    const dexMod = 1;
+    const hp = 10 + conMod + Math.max(0, lvl - 1) * (5 + conMod);
+    return {
+      level: lvl,
+      hp,
+      maxHp: hp,
+      ac: 16 + dexMod,
+      atkBonus: prof + strMod,
+      dmgRoll: '1d8',
+      dmgBonus: strMod,
+      hitChance: 0.65
+    };
+  },
+
+  estimateEnemyDamagePerTurn(enemy) {
+    const avg = this.averageRoll(enemy.dmgRoll) + (parseInt(enemy.dmgBonus, 10) || 0);
+    return Math.max(1, Math.round(avg));
+  },
+
+  estimatePlayerDamagePerTurn(player) {
+    const avg = this.averageRoll(player.dmgRoll) + (player.dmgBonus || 0);
+    return Math.max(1, Math.round(avg * (player.hitChance || 0.65)));
+  },
+
+  rateDifficulty(playerTurnsToDie) {
+    const t = playerTurnsToDie;
+    if (t == null || t <= 0) return { id: 'unknown', label: '—', icon: '⚪' };
+    if (t >= 7) return { id: 'easy', label: 'ЛЕГКО', icon: '⚪' };
+    if (t >= 3 && t <= 6) return { id: 'normal', label: 'НОРМАЛЬНО', icon: '✅' };
+    if (t >= 2 && t < 3) return { id: 'hard', label: 'СЛОЖНО', icon: '🟡' };
+    return { id: 'deadly', label: 'СЛИШКОМ СЛОЖНО', icon: '🔴' };
+  },
+
+  analyzeEncounter(enemyTemplate, count, playerLevel, config) {
+    const cfg = this.ensureConfig(config);
+    const scaled = this.scaleEnemy(enemyTemplate, playerLevel, cfg);
+    const player = this.buildReportPlayer(playerLevel);
+    const enemyDpt = this.estimateEnemyDamagePerTurn(scaled);
+    const playerDpt = this.estimatePlayerDamagePerTurn(player);
+    const totalEnemyHp = scaled.hp * Math.max(1, count);
+    const playerTurnsToDie = Math.ceil(player.hp / Math.max(1, enemyDpt * count));
+    const enemyTurnsToDie = Math.ceil(totalEnemyHp / Math.max(1, playerDpt));
+    const rating = this.rateDifficulty(playerTurnsToDie);
+
+    return {
+      playerLevel,
+      scaled,
+      player,
+      enemyDpt,
+      playerDpt,
+      count,
+      playerTurnsToDie,
+      enemyTurnsToDie,
+      rating,
+      scales: enemyTemplate.scaleWithPlayerLevel !== false
+    };
+  },
+
+  /** Отчёт по всем боевым сценам проекта */
+  generateBalanceReport(data) {
+    const cfg = this.ensureConfig(data?.enemyScaling);
+    const scenes = data?.scenes || {};
+    const enemies = data?.enemies || {};
+    const reportLevels = this.REPORT_LEVELS;
+    const encounters = [];
+    const recommendations = [];
+
+    Object.entries(scenes).forEach(([sceneId, scene]) => {
+      const combat = scene?.combat;
+      if (!Array.isArray(combat) || !combat.length) return;
+
+      const counts = {};
+      combat.forEach((eid) => {
+        counts[eid] = (counts[eid] || 0) + 1;
+      });
+
+      const enemyBlocks = [];
+      Object.entries(counts).forEach(([eid, count]) => {
+        const template = enemies[eid];
+        if (!template) {
+          recommendations.push(`Сцена «${scene.location || sceneId}»: враг «${eid}» не найден в данных.`);
+          return;
+        }
+
+        const levelResults = reportLevels.map((lvl) => ({
+          level: lvl,
+          ...this.analyzeEncounter(template, count, lvl, cfg)
+        }));
+
+        const worst = levelResults.reduce((a, b) => {
+          const order = { deadly: 0, hard: 1, normal: 2, easy: 3, unknown: 4 };
+          return (order[a.rating.id] ?? 4) < (order[b.rating.id] ?? 4) ? a : b;
+        }, levelResults[0]);
+
+        if (worst.rating.id === 'deadly' && worst.playerLevel <= 3) {
+          recommendations.push(
+            `Сцена «${scene.location || sceneId}»: «${template.name || eid}» (×${count}) слишком опасен на ${worst.playerLevel} ур. — уменьшите число врагов или ослабьте таблицу.`
+          );
+        }
+        if (template.scaleWithPlayerLevel === false) {
+          recommendations.push(
+            `Враг «${template.name || eid}» не масштабируется — на высоких уровнях может стать слишком лёгким.`
+          );
+        }
+
+        enemyBlocks.push({
+          enemyId: eid,
+          name: template.name || eid,
+          count,
+          template,
+          levelResults
+        });
+      });
+
+      encounters.push({
+        sceneId,
+        location: scene.location || sceneId,
+        enemies: enemyBlocks
+      });
+    });
+
+    if (!encounters.length) {
+      recommendations.push('В проекте нет сцен с полем combat — добавьте врагов в сцены для проверки баланса.');
+    }
+
+    return {
+      generatedAt: new Date().toISOString(),
+      config: cfg,
+      encounters,
+      recommendations: [...new Set(recommendations)]
+    };
+  }
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { EnemyScaling };
+}
+
+
+;/* —— js/scene-templates.js —— */
+// ============================================
+// Шаблоны сцен — генерация из типа + параметров
+// ============================================
+
+const SceneTemplateEngine = (function () {
+  /** 9 базовых шаблонов (неизменяемые определения) */
+  const BASE_TEMPLATES = {
+    village_hub: {
+      id: 'village_hub',
+      icon: '🏘️',
+      label: 'Деревня (хаб)',
+      special: null,
+      fields: ['id', 'name', 'bg', 'locations', 'exit']
+    },
+    shop: {
+      id: 'shop',
+      icon: '🏪',
+      label: 'Магазин',
+      special: 'shop',
+      fields: ['id', 'name', 'bg', 'merchant', 'inventory', 'exit']
+    },
+    tavern: {
+      id: 'tavern',
+      icon: '🏚️',
+      label: 'Таверна',
+      special: null,
+      fields: ['id', 'name', 'bg', 'innkeeper', 'menu', 'roomPrice', 'exit']
+    },
+    blacksmith: {
+      id: 'blacksmith',
+      icon: '⚒️',
+      label: 'Кузница',
+      special: 'blacksmith',
+      fields: ['id', 'name', 'bg', 'blacksmith', 'services', 'exit']
+    },
+    temple: {
+      id: 'temple',
+      icon: '⛪',
+      label: 'Храм',
+      special: null,
+      fields: ['id', 'name', 'bg', 'priest', 'services', 'exit']
+    },
+    dungeon: {
+      id: 'dungeon',
+      icon: '🕳️',
+      label: 'Подземелье',
+      special: null,
+      fields: ['id', 'name', 'bg', 'difficulty', 'enemies', 'loot', 'exit']
+    },
+    dialogue: {
+      id: 'dialogue',
+      icon: '💬',
+      label: 'Диалог',
+      special: null,
+      fields: ['id', 'name', 'bg', 'npc', 'topics', 'exit']
+    },
+    combat: {
+      id: 'combat',
+      icon: '⚔️',
+      label: 'Бой',
+      special: null,
+      fields: ['id', 'name', 'bg', 'enemies', 'loot', 'winScene', 'loseScene', 'exit']
+    },
+    loot_search: {
+      id: 'loot_search',
+      icon: '🔍',
+      label: 'Поиск добычи',
+      special: null,
+      fields: ['id', 'name', 'bg', 'items', 'dc', 'skill', 'exit']
+    },
+    character_creation: {
+      id: 'character_creation',
+      icon: '🧝',
+      label: 'Создание персонажа',
+      special: 'character_creation',
+      fields: ['id', 'name', 'bg', 'introText', 'nextScene', 'exit']
+    }
+  };
+
+  /** Тексты по умолчанию (можно переопределить в data.sceneTemplateDefs.custom) */
+  const DEFAULT_STRINGS = {
+    village_hub: {
+      intro: 'Вы на площади {locationName}. Отсюда расходятся дороги посёлка.\n\nКуда направитесь?',
+      rest: '🛏️ Отдохнуть (короткий отдых)',
+      exit: '🚪 Покинуть площадь'
+    },
+    shop: {
+      greeting: '{merchantName} приветствует вас.\n\n«{greetingLine}»\n\nНа прилавке: {itemList}.',
+      greetingLine: 'У меня есть всё нужное для путника.',
+      buyBtn: '💰 Купить {itemName} ({price} зм)',
+      sellBtn: '💰 Продать предмет',
+      talkBtn: '🗣️ Поговорить',
+      leaveBtn: '🚪 Уйти'
+    },
+    tavern: {
+      intro: 'Вы входите в {locationName}. Пахнет едой и дымом очага.\n\n{innkeeperName} кивает вам с порога.',
+      menuBtn: '🍺 Заказать из меню',
+      roomBtn: '🛏️ Снять комнату ({roomPrice} зм)',
+      rumorsBtn: '📰 Спросить о слухах',
+      restBtn: '🛏️ Отдохнуть',
+      leaveBtn: '🚪 Выйти'
+    },
+    blacksmith: {
+      intro: 'Жар кузницы обжигает лицо. {blacksmithName} откладывает молот:\n\n«Нужна заточка или ремонт — говори.»',
+      enhanceBtn: '⚒️ Заточить снаряжение',
+      leaveBtn: '🚪 Уйти'
+    },
+    temple: {
+      intro: 'В {locationName} тихо и прохладно. {priestName} поднимает глаза от молитвы.',
+      healBtn: '✨ Лечение ({healPrice} зм)',
+      curseBtn: '☦️ Снять проклятие',
+      blessBtn: '🙏 Благословение',
+      leaveBtn: '🚪 Выйти'
+    },
+    dungeon: {
+      intro: 'Перед вами {locationName}. Во мраке слышны капли воды. Сложность: {difficultyLabel}.',
+      enterBtn: '⚔️ Войти и сразиться',
+      trapBtn: '🪤 Осторожно искать ловушки',
+      leaveBtn: '🚪 Отступить'
+    },
+    dialogue: {
+      greeting: '{npcName} смотрит на вас.\n\n«{greetingLine}»',
+      greetingLine: 'Чем могу помочь?',
+      leaveBtn: '🚪 Закончить разговор'
+    },
+    combat: {
+      intro: '{locationName}. Враги преграждают путь!\n\n{enemyList}',
+      fightBtn: '⚔️ Вступить в бой',
+      fleeBtn: '🏃 Отступить'
+    },
+    loot_search: {
+      intro: 'Вы осматриваете {locationName}, ища что-нибудь ценное.',
+      searchBtn: '🔍 Обыскать (проверка {skillLabel}, КС {dc})',
+      leaveBtn: '🚪 Уйти'
+    }
+  };
+
+  function getStrings(data, templateId) {
+    const custom = data?.sceneTemplateDefs?.custom?.[templateId]?.strings || {};
+    const base = DEFAULT_STRINGS[templateId] || {};
+    return Object.assign({}, base, custom);
+  }
+
+  function getTemplateMeta(templateId) {
+    return BASE_TEMPLATES[templateId] || null;
+  }
+
+  function getTemplateIcon(templateId) {
+    return BASE_TEMPLATES[templateId]?.icon || '📄';
+  }
+
+  function listBaseTemplates() {
+    return Object.values(BASE_TEMPLATES);
+  }
+
+  function escapeRe(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /** Подстановка {key} в строках шаблона */
+  function substitute(str, ctx) {
+    if (str == null) return '';
+    let out = String(str);
+    Object.entries(ctx || {}).forEach(([k, v]) => {
+      out = out.replace(new RegExp('\\{' + escapeRe(k) + '\\}', 'g'), v == null ? '' : String(v));
+    });
+    return out;
+  }
+
+  function getNpc(data, npcId) {
+    return data?.npcs?.[npcId] || null;
+  }
+
+  function getNpcName(data, npcId, fallback) {
+    const n = getNpc(data, npcId);
+    return n?.name || fallback || npcId || 'Незнакомец';
+  }
+
+  function getSceneLabel(data, sceneId) {
+    const s = data?.scenes?.[sceneId];
+    return s?.location || sceneId || '—';
+  }
+
+  /** Разрешить список ID предметов: массив, shopInventories, shopItems NPC */
+  function resolveInventory(data, inventoryParam, merchantId) {
+    if (Array.isArray(inventoryParam)) return inventoryParam.filter(Boolean);
+    const key = String(inventoryParam || '').trim();
+    if (!key) {
+      const npc = getNpc(data, merchantId);
+      if (npc?.shopItems?.length) return [...npc.shopItems];
+      return [];
+    }
+    const inv = data?.shopInventories?.[key];
+    if (inv) {
+      if (Array.isArray(inv)) return inv;
+      if (Array.isArray(inv.items)) return inv.items;
+    }
+    if (data?.items?.[key]) return [key];
+    const npc = getNpc(data, merchantId);
+    if (npc?.shopItems?.length) return [...npc.shopItems];
+    return [];
+  }
+
+  function getItemDisplayName(data, itemId) {
+    return data?.items?.[itemId]?.name || itemId;
+  }
+
+  function buildItemList(data, itemIds) {
+    return itemIds.map((id) => getItemDisplayName(data, id)).join(', ') || '—';
+  }
+
+  function hubReturnChoice(exitId) {
+    return {
+      text: '← Вернуться на площадь',
+      to: exitId,
+      icon: '🏘️',
+      _hubReturn: true
+    };
+  }
+
+  function applyAudioBg(scene, params) {
+    if (params?.bg) {
+      scene.bg = params.bg;
+      if (!scene.audio) scene.audio = {};
+      if (typeof scene.audio === 'string') scene.audio = { ambient: scene.audio };
+      scene.audio.bg = params.bg;
+    }
+  }
+
+  function applyCommonMeta(scene, spec) {
+    const id = spec.id || spec.params?.id || 'scene';
+    scene.id = id;
+    scene.location = spec.name || spec.params?.name || scene.location || id;
+    scene.dialogue = scene.dialogue || [];
+    scene.flags = scene.flags || {};
+    scene.items = scene.items || [];
+    scene.gold = scene.gold || 0;
+    scene.combat = scene.combat || null;
+    scene.sceneTemplate = spec.template;
+    scene.templateParams = { ...(spec.params || {}) };
+    scene.overrides = spec.overrides || {};
+    scene.templateDetached = false;
+    return scene;
+  }
+
+  function applyOverrides(scene, overrides, data) {
+    if (!overrides || typeof overrides !== 'object') return scene;
+    const o = overrides;
+    if (o.text != null) scene.text = o.text;
+    if (o.location != null) scene.location = o.location;
+    if (o.greetingText != null) scene.text = o.greetingText;
+    if (Array.isArray(o.choices)) scene.choices = o.choices;
+    if (o.shopConfig && scene.shopConfig) {
+      scene.shopConfig = { ...scene.shopConfig, ...o.shopConfig };
+    }
+    if (o.customPrices && scene.shopConfig) {
+      scene.shopConfig.customPrices = { ...(scene.shopConfig.customPrices || {}), ...o.customPrices };
+    }
+    if (o.flags) scene.flags = { ...scene.flags, ...o.flags };
+    return scene;
+  }
+
+  // ——— Генераторы по типам ———
+
+  function generateVillageHub(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'village_hub');
+    const locationName = spec.name || p.name || 'Деревня';
+    const exit = p.exit || p.exitScene || 'world_map';
+    const locations = Array.isArray(p.locations) ? p.locations : [];
+
+    const choices = locations.map((loc) => {
+      if (typeof loc === 'string') {
+        const sid = loc;
+        const label = getSceneLabel(data, sid);
+        return { text: label, to: sid, icon: '📍' };
+      }
+      return {
+        text: loc.label || getSceneLabel(data, loc.id || loc.to),
+        to: loc.to || loc.id,
+        icon: loc.icon || '📍'
+      };
+    });
+
+    choices.push({
+      text: str.rest,
+      action: 'rest_short',
+      icon: '🛏️'
+    });
+    if (exit) {
+      choices.push({ text: str.exit, to: exit, icon: '🚪' });
+    }
+
+    const scene = applyCommonMeta({
+      text: substitute(str.intro, { locationName }),
+      choices,
+      mapLocation: p.mapLocation || spec.id
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return scene;
+  }
+
+  function generateShop(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'shop');
+    const merchantId = p.merchant || p.merchantId || 'merchant';
+    const merchant = getNpc(data, merchantId);
+    const merchantName = getNpcName(data, merchantId, 'Торговец');
+    const itemIds = resolveInventory(data, p.inventory, merchantId);
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const greetingLine = spec.overrides?.greetingLine || merchant?.dialogues?.default?.[0]?.text?.slice(0, 80) || str.greetingLine;
+
+    const scene = applyCommonMeta({
+      text: substitute(str.greeting, {
+        merchantName,
+        greetingLine,
+        itemList: buildItemList(data, itemIds)
+      }),
+      choices: [
+        { text: str.talkBtn, to: p.dialogueScene || `${spec.id}_dialogue`, icon: '💬' },
+        { text: str.leaveBtn, to: exit, icon: '🚪' }
+      ],
+      special: 'shop',
+      shopConfig: {
+        merchant: merchantId,
+        inventory: itemIds,
+        sellMultiplier: Number(p.sellMultiplier) || 1,
+        buyMultiplier: p.buyMultiplier != null ? Number(p.buyMultiplier) : 0.5,
+        repFlag: p.repFlag || null,
+        exitScene: exit,
+        customPrices: { ...(p.customPrices || {}) }
+      },
+      npcId: merchantId
+    }, spec);
+
+    if (p.returnsToHub !== false && exit) {
+      scene.returnsToHub = true;
+      scene.hubScene = p.hubScene || exit;
+    }
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  function generateTavern(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'tavern');
+    const innkeeperId = p.innkeeper || p.innkeeperId || 'marta';
+    const innkeeperName = getNpcName(data, innkeeperId, 'Хозяин таверны');
+    const locationName = spec.name || p.name || 'Таверна';
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const roomPrice = Math.max(0, parseInt(p.roomPrice, 10) || 5);
+    const menuIds = resolveInventory(data, p.menu || p.menuInventory, innkeeperId);
+
+    const choices = [];
+    if (menuIds.length) {
+      choices.push({ text: str.menuBtn, to: `${spec.id}_menu`, icon: '🍺' });
+    }
+    choices.push({
+      text: substitute(str.roomBtn, { roomPrice }),
+      action: 'tavern_rent_room',
+      icon: '🛏️',
+      once: true,
+      flags: { [`${spec.id}_room_rented`]: true },
+      showIf: { goldMin: roomPrice }
+    });
+    choices.push({ text: str.rumorsBtn, to: `${spec.id}_rumors`, icon: '📰' });
+    choices.push({ text: str.restBtn, action: 'rest_short', icon: '🛏️' });
+    choices.push({ text: str.leaveBtn, to: exit, icon: '🚪', _hubReturn: true });
+
+    const scene = applyCommonMeta({
+      text: substitute(str.intro, { locationName, innkeeperName }),
+      choices,
+      npcId: innkeeperId,
+      returnsToHub: true,
+      hubScene: p.hubScene || exit,
+      tavernConfig: {
+        innkeeper: innkeeperId,
+        menu: menuIds,
+        roomPrice,
+        exitScene: exit
+      }
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  /** Дочерние сцены таверны (меню, слухи) */
+  function generateTavernChildScenes(data, spec, parentScene) {
+    const p = spec.params || {};
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const menuIds = resolveInventory(data, p.menu || p.menuInventory, p.innkeeper);
+    const scenes = {};
+    const sid = spec.id;
+
+    if (menuIds.length) {
+      scenes[`${sid}_menu`] = applyCommonMeta({
+        location: (spec.name || 'Таверна') + ' — меню',
+        text: 'На доске меню:\n\n' + buildItemList(data, menuIds) + '\n\nЧто закажете?',
+        choices: menuIds.map((itemId) => {
+          const price = parentScene?.tavernConfig?.menuPrices?.[itemId]
+            || data?.items?.[itemId]?.price
+            || 5;
+          return {
+            text: `🍽 ${getItemDisplayName(data, itemId)} (${price} зм)`,
+            to: sid,
+            icon: '🍽',
+            showIf: { goldMin: price },
+            goldCost: price,
+            grantItems: [itemId]
+          };
+        }).concat([{ text: '← Назад', to: sid, icon: '↩️' }]),
+        returnsToHub: true,
+        hubScene: p.hubScene || exit
+      }, { ...spec, id: `${sid}_menu` });
+    }
+
+    scenes[`${sid}_rumors`] = applyCommonMeta({
+      location: (spec.name || 'Таверна') + ' — слухи',
+      text: getNpcName(data, p.innkeeper, 'Хозяин') + ' наклоняется ближе:\n\n«Слыхал, что на мельнице не всё чисто. Дорога в лес опасна — береги кинжал.»',
+      choices: [{ text: '← Назад', to: sid, icon: '↩️' }],
+      returnsToHub: true,
+      hubScene: p.hubScene || exit
+    }, { ...spec, id: `${sid}_rumors` });
+
+    return scenes;
+  }
+
+  function generateBlacksmith(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'blacksmith');
+    const npcId = p.blacksmith || p.blacksmithId || 'blacksmith_npc';
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const services = p.services || { enhance: true, repair: true };
+
+    const scene = applyCommonMeta({
+      text: substitute(str.intro, {
+        blacksmithName: getNpcName(data, npcId, 'Кузнец')
+      }),
+      choices: [],
+      special: 'blacksmith',
+      exitScene: exit,
+      returnsToHub: true,
+      hubScene: p.hubScene || exit,
+      blacksmithConfig: services,
+      npcId: npcId
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  function generateTemple(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'temple');
+    const priestId = p.priest || p.priestId || 'priest';
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const services = p.services || { heal: true, curse: true, bless: true };
+    const healPrice = Math.max(1, parseInt(p.healPrice, 10) || 25);
+
+    const choices = [];
+    if (services.heal !== false) {
+      choices.push({
+        text: substitute(str.healBtn, { healPrice }),
+        action: 'temple_heal',
+        icon: '✨',
+        showIf: { goldMin: healPrice }
+      });
+    }
+    if (services.curse !== false) {
+      choices.push({
+        text: str.curseBtn,
+        to: p.curseScene || 'temple_priest',
+        icon: '☦️'
+      });
+    }
+    if (services.bless !== false) {
+      choices.push({
+        text: str.blessBtn,
+        action: 'temple_bless',
+        icon: '🙏',
+        once: true
+      });
+    }
+    choices.push({ text: str.leaveBtn, to: exit, icon: '🚪', _hubReturn: true });
+
+    const scene = applyCommonMeta({
+      text: substitute(str.intro, {
+        locationName: spec.name || p.name || 'Храм',
+        priestName: getNpcName(data, priestId, 'Священник')
+      }),
+      choices,
+      returnsToHub: true,
+      hubScene: p.hubScene || exit,
+      templeConfig: { priest: priestId, healPrice, services },
+      npcId: priestId
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  function generateDungeon(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'dungeon');
+    const enemies = Array.isArray(p.enemies) ? p.enemies : [];
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const diff = p.difficulty || p.difficultyLevel || 1;
+    const diffLabels = { 1: 'лёгкая', 2: 'средняя', 3: 'опасная', 4: 'смертельная' };
+
+    const scene = applyCommonMeta({
+      text: substitute(str.intro, {
+        locationName: spec.name || p.name || 'Подземелье',
+        difficultyLabel: diffLabels[diff] || `уровень ${diff}`
+      }),
+      choices: [
+        { text: str.enterBtn, to: `${spec.id}_combat`, icon: '⚔️' },
+        {
+          text: str.trapBtn,
+          skillCheck: {
+            skill: p.trapSkill || 'perception',
+            dc: Math.max(8, parseInt(p.trapDc, 10) || 12 + Number(diff)),
+            successText: 'Вы замечаете ловушку и обходите её.',
+            failText: 'Ловушка срабатывает! Вы получаете урон.',
+            successNext: `${spec.id}_combat`,
+            failNext: exit,
+            successFlags: { [`${spec.id}_traps_disarmed`]: true }
+          },
+          icon: '🪤'
+        },
+        { text: str.leaveBtn, to: exit, icon: '🚪' }
+      ],
+      dungeonConfig: { enemies, loot: p.loot || [], difficulty: diff }
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  function generateDungeonCombatScene(data, spec) {
+    const p = spec.params || {};
+    const enemies = Array.isArray(p.enemies) ? p.enemies : [];
+    const win = p.winScene || p.victoryScene || p.exit || 'village_hub';
+    const sid = `${spec.id}_combat`;
+
+    return applyCommonMeta({
+      location: (spec.name || 'Подземелье') + ' — бой',
+      text: 'Из темноты появляются враги!',
+      combat: enemies.length ? [...enemies] : null,
+      nextScene: win,
+      choices: enemies.length ? [] : [{ text: '← Назад', to: spec.id, icon: '↩️' }],
+      flags: { [`${spec.id}_entered`]: true }
+    }, { ...spec, id: sid });
+  }
+
+  function generateDialogue(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'dialogue');
+    const npcId = p.npc || p.npcId || 'npc';
+    const npcName = getNpcName(data, npcId, 'Собеседник');
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const topics = Array.isArray(p.topics) ? p.topics : [];
+
+    const choices = topics.map((t, i) => {
+      if (typeof t === 'string') {
+        return { text: t, to: `${spec.id}_topic_${i}`, icon: '💬' };
+      }
+      return {
+        text: t.label || t.text || `Тема ${i + 1}`,
+        to: t.scene || `${spec.id}_topic_${t.id || i}`,
+        icon: t.icon || '💬'
+      };
+    });
+    choices.push({ text: str.leaveBtn, to: exit, icon: '🚪' });
+
+    const scene = applyCommonMeta({
+      text: substitute(str.greeting, {
+        npcName,
+        greetingLine: p.greetingLine || str.greetingLine
+      }),
+      choices,
+      npcId: npcId
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  function generateDialogueTopicScenes(data, spec) {
+    const p = spec.params || {};
+    const topics = Array.isArray(p.topics) ? p.topics : [];
+    const exit = spec.id;
+    const scenes = {};
+
+    topics.forEach((t, i) => {
+      const tid = typeof t === 'object' ? (t.id || i) : i;
+      const sceneId = typeof t === 'object' && t.scene ? t.scene : `${spec.id}_topic_${tid}`;
+      const label = typeof t === 'object' ? (t.label || t.text) : t;
+      const body = typeof t === 'object' ? (t.reply || t.text || `Ответ по теме «${label}».`) : `Вы говорите о «${t}».`;
+
+      scenes[sceneId] = applyCommonMeta({
+        location: (spec.name || 'Разговор') + ' — ' + (label || 'тема'),
+        text: body,
+        choices: [{ text: '← Вернуться к разговору', to: exit, icon: '↩️' }],
+        npcId: p.npc || p.npcId
+      }, { ...spec, id: sceneId });
+    });
+
+    return scenes;
+  }
+
+  function generateCombat(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'combat');
+    const enemies = Array.isArray(p.enemies) ? p.enemies : [];
+    const enemyList = enemies.map((eid) => data?.enemies?.[eid]?.name || eid).join(', ') || 'противники';
+    const win = p.winScene || p.victoryScene || p.exit || 'village_hub';
+    const exit = p.exit || p.fleeScene || win;
+
+    const scene = applyCommonMeta({
+      text: substitute(str.intro, {
+        locationName: spec.name || p.name || 'Поле боя',
+        enemyList
+      }),
+      choices: [
+        { text: str.fightBtn, action: 'template_start_combat', icon: '⚔️' },
+        { text: str.fleeBtn, to: exit, icon: '🏃' }
+      ],
+      combat: null,
+      nextScene: win,
+      templateCombat: {
+        enemies: [...enemies],
+        loot: p.loot || [],
+        winScene: win,
+        loseScene: p.loseScene || p.defeatScene || 'game_over'
+      }
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  function generateLootSearch(data, spec) {
+    const p = spec.params || {};
+    const str = getStrings(data, 'loot_search');
+    const exit = p.exit || p.exitScene || 'village_hub';
+    const items = Array.isArray(p.items) ? p.items : [];
+    const dc = Math.max(5, parseInt(p.dc, 10) || 12);
+    const skill = p.skill || 'investigation';
+    const skillLabels = {
+      perception: 'Восприятие',
+      investigation: 'Расследование',
+      survival: 'Выживание'
+    };
+
+    const scene = applyCommonMeta({
+      text: substitute(str.intro, { locationName: spec.name || p.name || 'Место обыска' }),
+      choices: [
+        {
+          text: substitute(str.searchBtn, {
+            skillLabel: skillLabels[skill] || skill,
+            dc
+          }),
+          skillCheck: {
+            skill,
+            dc,
+            successText: items.length
+              ? 'Вы находите: ' + buildItemList(data, items) + '.'
+              : 'Вы ничего ценного не находите.',
+            failText: 'Поиск не увенчался успехом.',
+            successItems: items,
+            successNext: exit,
+            failNext: exit,
+            successFlags: { [`${spec.id}_searched`]: true }
+          },
+          icon: '🔍'
+        },
+        { text: str.leaveBtn, to: exit, icon: '🚪' }
+      ],
+      lootSearchConfig: { items, dc, skill }
+    }, spec);
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  function generateCharacterCreation(data, spec) {
+    const p = spec.params || {};
+    const sceneId = spec.id || p.id || 'char_creation';
+    const exit = p.nextScene || p.exitScene || p.exit || 'start';
+    const intro =
+      p.introText ||
+      'Перед вами чистый лист судьбы. Выберите происхождение, класс и навыки — ' +
+      'от этого зависит, как сложится ваше приключение.';
+
+    const scene = {
+      id: sceneId,
+      location: spec.name || p.name || 'Создание персонажа',
+      title: 'Создание персонажа',
+      text: intro,
+      special: 'character_creation',
+      sceneTemplate: 'character_creation',
+      templateParams: { ...p, id: sceneId, nextScene: exit },
+      templateDetached: false,
+      skipStandardExit: true,
+      exitScene: exit,
+      components: [
+        {
+          component: 'character_creator',
+          params: {
+            displayMode: p.displayMode || 'embedded',
+            preset: p.preset || null,
+            startingLevel: p.startingLevel || 1,
+            pointBuy: p.pointBuy !== false,
+            rolledStats: !!p.rolledStats,
+            onComplete: p.onComplete || 'char_creation_complete',
+            onCancel: p.onCancel || 'char_creation_cancel',
+            showCancel: p.showCancel !== false
+          }
+        }
+      ],
+      onEnter: [
+        { action: 'apply_scene_visibility', visibility: { sidebar: false, combat: false, dock: false, log: false } },
+        { action: 'hide_sidebar' },
+        { action: 'hide_combat_ui' },
+        { action: 'hide_dock' },
+        { action: 'push_state', state: { inCharacterCreation: true } }
+      ],
+      onExit: [
+        { action: 'show_sidebar' },
+        { action: 'show_dock' },
+        { action: 'pop_state', keys: ['inCharacterCreation'] },
+        { action: 'apply_scene_visibility', visibility: { sidebar: true, dock: true, log: true } }
+      ],
+      handlers: {
+        char_creation_complete: [
+          { action: 'set_character', source: 'component.output.draft' },
+          { action: 'run_script', script: 'syncCharacterToUI' },
+          { action: 'save_game', slot: 'auto' },
+          { action: 'transition', target: exit }
+        ],
+        char_creation_cancel: [
+          {
+            action: 'confirm',
+            message: 'Прогресс будет потерян. Вернуться к выбору кампании?',
+            onConfirm: [{ action: 'return_to_campaign_picker' }],
+            onCancel: [{ action: 'resume_character_creation' }]
+          }
+        ]
+      },
+      visibility: { sidebar: false, combat: false, dock: false, log: false },
+      choices: []
+    };
+
+    applyAudioBg(scene, p);
+    return applyOverrides(scene, spec.overrides, data);
+  }
+
+  /** Публичная генерация (учитывает патчи, напр. character_creation). */
+  function runGenerateSceneFromTemplate(data, spec) {
+    if (typeof window !== 'undefined' && window.SceneTemplateEngine?.generateSceneFromTemplate) {
+      const pub = window.SceneTemplateEngine.generateSceneFromTemplate;
+      if (pub !== generateSceneFromTemplate) return pub(data, spec);
+    }
+    return generateSceneFromTemplate(data, spec);
+  }
+
+  /**
+   * Главная функция: сгенерировать объект сцены из шаблона.
+   * @param {object} data — game_data
+   * @param {object} spec — { template, id, name, params, overrides }
+   */
+  function generateSceneFromTemplate(data, spec) {
+    const templateId = spec?.template || spec?.sceneTemplate;
+    if (!templateId || !BASE_TEMPLATES[templateId]) {
+      throw new Error('Неизвестный шаблон: ' + templateId);
+    }
+    spec = {
+      template: templateId,
+      id: spec.id || spec.params?.id,
+      name: spec.name || spec.params?.name,
+      params: { ...(spec.params || {}) },
+      overrides: spec.overrides || {}
+    };
+    spec.params.id = spec.id;
+
+    switch (templateId) {
+      case 'village_hub':
+        return generateVillageHub(data, spec);
+      case 'shop':
+        return generateShop(data, spec);
+      case 'tavern':
+        return generateTavern(data, spec);
+      case 'blacksmith':
+        return generateBlacksmith(data, spec);
+      case 'temple':
+        return generateTemple(data, spec);
+      case 'dungeon':
+        return generateDungeon(data, spec);
+      case 'dialogue':
+        return generateDialogue(data, spec);
+      case 'combat':
+        return generateCombat(data, spec);
+      case 'loot_search':
+        return generateLootSearch(data, spec);
+      case 'character_creation':
+        return generateCharacterCreation(data, spec);
+      default:
+        throw new Error('Шаблон не реализован: ' + templateId);
+    }
+  }
+
+  /** Дополнительные сцены, создаваемые вместе с основной */
+  function generateCompanionScenes(data, spec) {
+    const templateId = spec?.template || spec?.sceneTemplate;
+    const main = runGenerateSceneFromTemplate(data, spec);
+    const extra = {};
+
+    if (templateId === 'tavern') {
+      Object.assign(extra, generateTavernChildScenes(data, spec, main));
+    }
+    if (templateId === 'dungeon') {
+      extra[`${spec.id}_combat`] = generateDungeonCombatScene(data, spec);
+    }
+    if (templateId === 'dialogue') {
+      Object.assign(extra, generateDialogueTopicScenes(data, spec));
+    }
+
+    return { main, extra };
+  }
+
+  /** Развернуть сохранённую сцену с привязкой к шаблону */
+  function materializeScene(data, stored) {
+    if (!stored?.sceneTemplate || stored.templateDetached) {
+      return stored;
+    }
+    const spec = {
+      template: stored.sceneTemplate,
+      id: stored.id,
+      name: stored.location || stored.templateParams?.name,
+      params: { ...(stored.templateParams || {}), id: stored.id },
+      overrides: stored.overrides || {}
+    };
+    let scene;
+    try {
+      scene = runGenerateSceneFromTemplate(data, spec);
+    } catch (e) {
+      console.warn('[SceneTemplateEngine]', e);
+      return stored;
+    }
+    scene.sceneTemplate = stored.sceneTemplate;
+    scene.templateParams = stored.templateParams;
+    scene.templateDetached = false;
+    scene.overrides = stored.overrides || {};
+    if (stored.mapLocation) scene.mapLocation = stored.mapLocation;
+    return applyOverrides(scene, stored.overrides, data);
+  }
+
+  function ensureTemplateData(data) {
+    if (!data) return;
+    if (!data.sceneTemplateDefs) {
+      data.sceneTemplateDefs = { custom: {} };
+    }
+    if (!data.shopInventories) {
+      data.shopInventories = {
+        village_shop: {
+          name: 'Деревенская лавка',
+          items: ['healing_potion', 'rope', 'supplies', 'fireball_scroll', 'focus_potion']
+        },
+        tavern_menu: {
+          name: 'Меню таверны',
+          items: ['healing_potion', 'water_flask', 'supplies']
+        }
+      };
+    }
+  }
+
+  function bindGameEngine() {
+    if (typeof GameEngine === 'undefined') return;
+    GameEngine.generateSceneFromTemplate = function (spec) {
+      return runGenerateSceneFromTemplate(this.data, spec);
+    };
+  }
+  bindGameEngine();
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', bindGameEngine);
+  }
+
+  return {
+    BASE_TEMPLATES,
+    DEFAULT_STRINGS,
+    listBaseTemplates,
+    getTemplateMeta,
+    getTemplateIcon,
+    getStrings,
+    substitute,
+    resolveInventory,
+    generateSceneFromTemplate,
+    generateCompanionScenes,
+    materializeScene,
+    applyOverrides,
+    ensureTemplateData
+  };
+})();
+
+if (typeof window !== 'undefined') {
+  window.SceneTemplateEngine = SceneTemplateEngine;
+}
+
+
+;/* —— js/world-hierarchy.js —— */
+// ============================================
+// Иерархия мира: Мир → Регион → Хаб → Сцена
+// Наследование inherited / ownState
+// ============================================
+
+const WorldHierarchy = (function () {
+  const TIME_LABELS = {
+    morning: 'Утро',
+    day: 'День',
+    evening: 'Вечер',
+    night: 'Ночь'
+  };
+  const WEATHER_LABELS = {
+    clear: 'Ясно',
+    cloudy: 'Облачно',
+    rain: 'Дождь',
+    snow: 'Снег',
+    fog: 'Туман'
+  };
+
+  const HUB_TYPE_ICONS = {
+    village: '🏘️',
+    city: '🏰',
+    dungeon: '🕳️',
+    wilderness: '🌲',
+    default: '📍'
+  };
+
+  /** Глубокое слияние объектов (массивы заменяются) */
+  function deepMerge(...layers) {
+    const out = {};
+    layers.forEach((layer) => {
+      if (!layer || typeof layer !== 'object') return;
+      Object.keys(layer).forEach((key) => {
+        const val = layer[key];
+        if (val && typeof val === 'object' && !Array.isArray(val) && typeof out[key] === 'object' && !Array.isArray(out[key])) {
+          out[key] = deepMerge(out[key], val);
+        } else {
+          out[key] = val;
+        }
+      });
+    });
+    return out;
+  }
+
+  function ensureWorldHierarchy(data) {
+    if (!data) return;
+    if (!data.worlds || typeof data.worlds !== 'object') data.worlds = {};
+    if (!data.regions || typeof data.regions !== 'object') data.regions = {};
+    if (!data.hubs || typeof data.hubs !== 'object') data.hubs = {};
+
+    // Миграция: деревня Тихая река (один раз, если хаба ещё нет)
+    if (!data.hubs.village_tihaya && data.scenes?.village_hub) {
+      migrateVillageHub(data);
+    }
+  }
+
+  /** Привязка существующих сцен деревни к хабу village_tihaya */
+  function migrateVillageHub(data) {
+    if (!data.worlds.world_main) {
+      data.worlds.world_main = {
+        name: 'Основной мир',
+        regions: ['region_tihaya_river']
+      };
+    }
+    if (!data.regions.region_tihaya_river) {
+      data.regions.region_tihaya_river = {
+        name: 'Долина Тихой реки',
+        parent: 'world_main',
+        hubs: ['village_tihaya'],
+        inherited: {
+          climate: 'temperate',
+          factionBase: 'rep_village'
+        }
+      };
+    }
+
+    const childScenes = [
+      'village_hub',
+      'tavern',
+      'jack_shop',
+      'blacksmith',
+      'temple',
+      'forest_path'
+    ].filter((id) => data.scenes[id]);
+
+    data.hubs.village_tihaya = {
+      name: 'Деревня Тихая река',
+      parent: 'region_tihaya_river',
+      type: 'village',
+      hubScene: 'village_hub',
+      scenes: childScenes,
+      inherited: {
+        music: 'buff',
+        timeOfDay: 'morning',
+        weather: 'clear',
+        reputation: { rep_village: 0 },
+        ambient: 'buff',
+        npcsAvailable: ['marta', 'jack']
+      }
+    };
+
+    const sceneOwnState = {
+      tavern: { innkeeper: 'marta', menu: 'tavern_menu', roomPrice: 5 },
+      jack_shop: { merchant: 'jack', inventory: 'village_shop' },
+      blacksmith: { blacksmith: 'blacksmith_npc' },
+      temple: { priest: 'priest', healPrice: 25 }
+    };
+
+    childScenes.forEach((sid) => {
+      const sc = data.scenes[sid];
+      if (!sc) return;
+      sc.parent = 'village_tihaya';
+      if (sc.inherits == null) sc.inherits = true;
+      if (sceneOwnState[sid] && !sc.ownState) sc.ownState = sceneOwnState[sid];
+      if (!sc.hubScene) sc.hubScene = 'village_hub';
+      if (sid !== 'village_hub' && sc.returnsToHub == null) {
+        sc.returnsToHub = true;
+      }
+    });
+  }
+
+  function getHubIdForScene(data, sceneId) {
+    const scene = data?.scenes?.[sceneId];
+    if (scene?.parent && data?.hubs?.[scene.parent]) return scene.parent;
+    for (const [hubId, hub] of Object.entries(data?.hubs || {})) {
+      if (hub.scenes?.includes(sceneId)) return hubId;
+      if (hub.hubScene === sceneId) return hubId;
+    }
+    return null;
+  }
+
+  /** Цепочка узлов снизу вверх: [hub, region, world] */
+  function getParentChain(data, sceneId) {
+    const chain = [];
+    const scene = data?.scenes?.[sceneId];
+    if (!scene) return chain;
+
+    let hubId = scene.parent && data.hubs?.[scene.parent] ? scene.parent : getHubIdForScene(data, sceneId);
+    if (hubId && data.hubs[hubId]) {
+      chain.push({ type: 'hub', id: hubId, node: data.hubs[hubId] });
+      const regionId = data.hubs[hubId].parent;
+      if (regionId && data.regions[regionId]) {
+        chain.push({ type: 'region', id: regionId, node: data.regions[regionId] });
+        const worldId = data.regions[regionId].parent;
+        if (worldId && data.worlds[worldId]) {
+          chain.push({ type: 'world', id: worldId, node: data.worlds[worldId] });
+        }
+      }
+    }
+    return chain;
+  }
+
+  function getRuntimeInherited(gameState, type, id) {
+    const bucket = gameState?.worldState?.[`${type}s`]?.[id]?.inherited;
+    return bucket && typeof bucket === 'object' ? bucket : {};
+  }
+
+  function getStaticInherited(data, type, id) {
+    if (type === 'hub') return data?.hubs?.[id]?.inherited || {};
+    if (type === 'region') return data?.regions?.[id]?.inherited || {};
+    if (type === 'world') return data?.worlds?.[id]?.inherited || {};
+    return {};
+  }
+
+  function getNodeMergedInherited(data, gameState, type, id) {
+    return deepMerge(
+      getStaticInherited(data, type, id),
+      getRuntimeInherited(gameState, type, id)
+    );
+  }
+
+  /**
+   * Итоговое состояние сцены (регион → хаб → ownState).
+   * @param {object} data — game_data
+   * @param {object} [gameState] — сохранение игрока (worldState)
+   * @param {string} sceneId
+   */
+  function getSceneState(data, gameState, sceneId) {
+    const scene = data?.scenes?.[sceneId];
+    if (!scene) return {};
+
+    const chain = getParentChain(data, sceneId);
+    const layers = [];
+
+    // Сверху вниз: world → region → hub (в chain порядок hub, region, world — развернём)
+    const ordered = [...chain].reverse();
+    ordered.forEach((link) => {
+      layers.push(getNodeMergedInherited(data, gameState, link.type, link.id));
+    });
+
+    if (scene.inherits !== false) {
+      if (scene.ownState && typeof scene.ownState === 'object') {
+        layers.push(scene.ownState);
+      }
+    } else if (scene.ownState) {
+      return { ...scene.ownState };
+    }
+
+    return deepMerge(...layers);
+  }
+
+  function ensureWorldState(gameState) {
+    if (!gameState.worldState) {
+      gameState.worldState = { worlds: {}, regions: {}, hubs: {} };
+    }
+    if (!gameState.worldState.hubs) gameState.worldState.hubs = {};
+    if (!gameState.worldState.regions) gameState.worldState.regions = {};
+    if (!gameState.worldState.worlds) gameState.worldState.worlds = {};
+  }
+
+  /**
+   * Изменить наследуемое состояние хаба (сохраняется в прохождении).
+   */
+  function setHubState(data, gameState, hubId, key, value) {
+    if (!data?.hubs?.[hubId]) return false;
+    ensureWorldState(gameState);
+    if (!gameState.worldState.hubs[hubId]) {
+      gameState.worldState.hubs[hubId] = { inherited: {} };
+    }
+    if (!gameState.worldState.hubs[hubId].inherited) {
+      gameState.worldState.hubs[hubId].inherited = {};
+    }
+    if (key === 'reputation' && value && typeof value === 'object') {
+      gameState.worldState.hubs[hubId].inherited.reputation = deepMerge(
+        gameState.worldState.hubs[hubId].inherited.reputation || {},
+        value
+      );
+      Object.entries(value).forEach(([flag, val]) => {
+        if (!gameState.flags) gameState.flags = {};
+        gameState.flags[flag] = val;
+      });
+    } else {
+      gameState.worldState.hubs[hubId].inherited[key] = value;
+    }
+    return true;
+  }
+
+  function setRegionState(data, gameState, regionId, key, value) {
+    if (!data?.regions?.[regionId]) return false;
+    ensureWorldState(gameState);
+    if (!gameState.worldState.regions[regionId]) {
+      gameState.worldState.regions[regionId] = { inherited: {} };
+    }
+    gameState.worldState.regions[regionId].inherited[key] = value;
+    return true;
+  }
+
+  /** Аудио из inherited: music / ambient → id для AudioEngine */
+  function resolveInheritedAudio(state) {
+    if (!state) return null;
+    const id = state.music || state.ambient;
+    if (!id) return null;
+    return String(id).replace(/\.mp3$/i, '');
+  }
+
+  function formatAtmosphereLine(state) {
+    if (!state) return '';
+    const parts = [];
+    if (state.timeOfDay && TIME_LABELS[state.timeOfDay]) {
+      parts.push(TIME_LABELS[state.timeOfDay]);
+    }
+    if (state.weather && WEATHER_LABELS[state.weather]) {
+      parts.push(WEATHER_LABELS[state.weather]);
+    }
+    if (state.climate) parts.push(state.climate);
+    return parts.length ? `🌤 ${parts.join(' · ')}` : '';
+  }
+
+  function applyReputationFromState(gameState, state) {
+    if (!state?.reputation || typeof state.reputation !== 'object') return;
+    if (!gameState.flags) gameState.flags = {};
+    Object.entries(state.reputation).forEach(([flag, val]) => {
+      if (gameState.flags[flag] == null) gameState.flags[flag] = val;
+    });
+  }
+
+  /** После отдыха в дочерней сцене — сдвиг времени суток в хабе */
+  function onRestInScene(data, gameState, sceneId, restType) {
+    const hubId = getHubIdForScene(data, sceneId);
+    if (!hubId) return;
+    const nextTime = restType === 'short' ? 'day' : 'evening';
+    setHubState(data, gameState, hubId, 'timeOfDay', nextTime);
+    const hubStatic = data.hubs[hubId]?.inherited || {};
+    if (nextTime === 'evening' && hubStatic.musicEvening) {
+      setHubState(data, gameState, hubId, 'music', hubStatic.musicEvening);
+    } else if (nextTime === 'evening') {
+      setHubState(data, gameState, hubId, 'music', 'buff');
+    }
+  }
+
+  function getHubIcon(hub) {
+    return HUB_TYPE_ICONS[hub?.type] || HUB_TYPE_ICONS.default;
+  }
+
+  function buildTree(data) {
+    ensureWorldHierarchy(data);
+    const roots = Object.keys(data.worlds || {});
+    return roots.map((worldId) => {
+      const world = data.worlds[worldId];
+      const regions = (world.regions || [])
+        .filter((rid) => data.regions[rid])
+        .map((regionId) => {
+          const region = data.regions[regionId];
+          const hubs = (region.hubs || [])
+            .filter((hid) => data.hubs[hid])
+            .map((hubId) => {
+              const hub = data.hubs[hubId];
+              const scenes = (hub.scenes || [])
+                .filter((sid) => data.scenes[sid])
+                .map((sid) => ({
+                  id: sid,
+                  name: data.scenes[sid].name || data.scenes[sid].location || sid,
+                  type: data.scenes[sid].type || data.scenes[sid].sceneTemplate || ''
+                }));
+              return {
+                id: hubId,
+                name: hub.name || hubId,
+                type: 'hub',
+                icon: getHubIcon(hub),
+                hubScene: hub.hubScene,
+                scenes
+              };
+            });
+          return {
+            id: regionId,
+            name: region.name || regionId,
+            type: 'region',
+            icon: '❄️',
+            hubs
+          };
+        });
+      return {
+        id: worldId,
+        name: world.name || worldId,
+        type: 'world',
+        icon: '🌍',
+        regions
+      };
+    });
+  }
+
+  function bindGameEngine() {
+    if (typeof GameEngine === 'undefined') return;
+    GameEngine.getSceneState = function (sceneId) {
+      return getSceneState(this.data, this.state, sceneId || this.state?.scene);
+    };
+    GameEngine.setHubState = function (hubId, key, value) {
+      const ok = setHubState(this.data, this.state, hubId, key, value);
+      if (ok && getHubIdForScene(this.data, this.state?.scene) === hubId) {
+        this.applyInheritedSceneAmbience?.(this.state.scene);
+      }
+      if (ok) this.saveGame?.();
+      return ok;
+    };
+    GameEngine.getHubIdForScene = function (sceneId) {
+      return getHubIdForScene(this.data, sceneId || this.state?.scene);
+    };
+    GameEngine.applyInheritedSceneAmbience = function (sceneId) {
+      const st = getSceneState(this.data, this.state, sceneId);
+      applyReputationFromState(this.state, st);
+      const atmo = formatAtmosphereLine(st);
+      if (atmo) {
+        const loc = document.getElementById('location');
+        if (loc && !loc.dataset.atmoAppended) {
+          const base = loc.textContent.replace(/\s*🌤.*$/, '');
+          loc.textContent = base + (base ? ' ' : '') + atmo;
+          loc.dataset.atmoAppended = '1';
+        }
+      }
+      this._lastInheritedState = st;
+    };
+  }
+
+  bindGameEngine();
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', bindGameEngine);
+  }
+
+  return {
+    TIME_LABELS,
+    WEATHER_LABELS,
+    ensureWorldHierarchy,
+    migrateVillageHub,
+    getHubIdForScene,
+    getParentChain,
+    getSceneState,
+    setHubState,
+    setRegionState,
+    resolveInheritedAudio,
+    formatAtmosphereLine,
+    applyReputationFromState,
+    onRestInScene,
+    getHubIcon,
+    buildTree,
+    deepMerge
+  };
+})();
+
+if (typeof window !== 'undefined') {
+  window.WorldHierarchy = WorldHierarchy;
+}
+
+
+;/* —— js/audio.js —— */
+// ============================================
+// ЗВУКОВОЙ ДВИЖОК — SFX + фоновая музыка (эмбиент)
+// ============================================
+
+const AudioEngine = {
+  enabled: true,
+  /** @deprecated используйте sfxVolume / musicVolume */
+  volume: 0.75,
+  musicVolume: 0.6,
+  sfxVolume: 0.85,
+  catalog: {},
+  defaults: {},
+  cache: new Map(),
+  ctx: null,
+  _unlockBound: false,
+  _unlocked: false,
+
+  _ambientEl: null,
+  _ambientId: null,
+  _ambientPath: null,
+  _ambientSceneVolume: null,
+  _ambientFadeGen: 0,
+  _pendingAmbient: null,
+
+  FADE_MS: 900,
+
+  init(audioConfig) {
+    const cfg = audioConfig || {};
+    this.catalog = cfg.catalog || {};
+    this.defaults = cfg.defaults || {};
+    this.cache.clear();
+    this.loadSettings();
+    this.bindUnlock();
+  },
+
+  loadSettings() {
+    try {
+      const stored = localStorage.getItem('melnitsa_audio_enabled');
+      if (stored !== null) this.enabled = stored === '1';
+      const mv = localStorage.getItem('melnitsa_music_volume');
+      const sv = localStorage.getItem('melnitsa_sfx_volume');
+      if (mv != null) this.musicVolume = this.clamp01(parseFloat(mv));
+      if (sv != null) this.sfxVolume = this.clamp01(parseFloat(sv));
+    } catch (_) { /* ignore */ }
+    this.volume = this.sfxVolume;
+  },
+
+  saveSettings() {
+    try {
+      localStorage.setItem('melnitsa_audio_enabled', this.enabled ? '1' : '0');
+      localStorage.setItem('melnitsa_music_volume', String(this.musicVolume));
+      localStorage.setItem('melnitsa_sfx_volume', String(this.sfxVolume));
+    } catch (_) { /* ignore */ }
+  },
+
+  clamp01(n) {
+    if (Number.isNaN(n)) return 0;
+    return Math.max(0, Math.min(1, n));
+  },
+
+  setMusicVolume(value) {
+    this.musicVolume = this.clamp01(value);
+    this.saveSettings();
+    this.applyAmbientVolume();
+  },
+
+  setSfxVolume(value) {
+    this.sfxVolume = this.clamp01(value);
+    this.volume = this.sfxVolume;
+    this.saveSettings();
+  },
+
+  getMusicVolume() {
+    return this.enabled ? this.musicVolume : 0;
+  },
+
+  getSfxVolume() {
+    return this.enabled ? this.sfxVolume : 0;
+  },
+
+  bindUnlock() {
+    if (this._unlockBound) return;
+    this._unlockBound = true;
+    const unlock = () => {
+      this.unlock();
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('click', unlock);
+    };
+    window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+    window.addEventListener('keydown', unlock, { once: true, passive: true });
+    window.addEventListener('click', unlock, { once: true, passive: true });
+  },
+
+  setEnabled(on) {
+    this.enabled = !!on;
+    this.saveSettings();
+    if (!on) this.stopAmbient(true);
+    else this.applyAmbientVolume();
+  },
+
+  unlock() {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const done = () => {
+      this._unlocked = true;
+      this.flushPendingAmbient();
+    };
+    if (ctx.state === 'suspended') {
+      const p = ctx.resume();
+      if (p && typeof p.then === 'function') p.then(done).catch(done);
+      else done();
+      return;
+    }
+    done();
+  },
+
+  flushPendingAmbient() {
+    if (!this._pendingAmbient) return;
+    const { id, opts } = this._pendingAmbient;
+    this._pendingAmbient = null;
+    this.playAmbient(id, opts);
+  },
+
+  ensureContext() {
+    if (!this.ctx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) this.ctx = new Ctx();
+    }
+    return this.ctx;
+  },
+
+  resolveEntry(soundId) {
+    if (!soundId) return null;
+    const entry = this.catalog[soundId];
+    if (!entry) return { id: soundId, procedural: true };
+    if (typeof entry === 'string') return { id: soundId, file: entry };
+    return {
+      id: soundId,
+      file: entry.file || entry.path || null,
+      volume: entry.volume,
+      procedural: entry.procedural,
+      loop: entry.loop
+    };
+  },
+
+  /** Короткие эффекты (бой, UI) — громкость sfxVolume */
+  playSFX(soundId, opts = {}) {
+    if (!this.enabled || !soundId) return;
+    this.unlock();
+    const entry = this.resolveEntry(soundId);
+    if (!entry) return;
+    const base = opts.volume ?? entry.volume ?? 1;
+    const vol = base * this.getSfxVolume();
+    if (entry.file && !entry.procedural) {
+      this.playFile(entry.file, vol, soundId);
+    } else {
+      this.playProcedural(soundId, vol);
+    }
+  },
+
+  /** Алиас для совместимости */
+  play(soundId, opts = {}) {
+    return this.playSFX(soundId, opts);
+  },
+
+  applyAmbientVolume() {
+    if (!this._ambientEl || !this._ambientId) return;
+    const entry = this.resolveEntry(this._ambientId);
+    const base = this._ambientSceneVolume ?? entry?.volume ?? 1;
+    this._ambientEl.volume = this.clamp01(base * this.getMusicVolume());
+  },
+
+  _bumpFadeGen() {
+    this._ambientFadeGen += 1;
+    return this._ambientFadeGen;
+  },
+
+  _fadeVolume(el, from, to, durationMs, gen) {
+    return new Promise(resolve => {
+      if (!el || gen !== this._ambientFadeGen) {
+        resolve();
+        return;
+      }
+      const steps = Math.max(8, Math.floor(durationMs / 40));
+      const stepMs = durationMs / steps;
+      let i = 0;
+      const tick = () => {
+        if (gen !== this._ambientFadeGen || !el) {
+          resolve();
+          return;
+        }
+        i += 1;
+        const t = i / steps;
+        el.volume = this.clamp01(from + (to - from) * t);
+        if (i >= steps) resolve();
+        else setTimeout(tick, stepMs);
+      };
+      tick();
+    });
+  },
+
+  /** Плавная остановка текущего эмбиента */
+  stopAmbient(immediate = false) {
+    const el = this._ambientEl;
+    if (!el) {
+      this._ambientId = null;
+      this._ambientPath = null;
+      return Promise.resolve();
+    }
+    const gen = this._bumpFadeGen();
+    if (immediate || !this.enabled) {
+      try {
+        el.pause();
+        el.currentTime = 0;
+      } catch (_) { /* ignore */ }
+      this._ambientEl = null;
+      this._ambientId = null;
+      this._ambientPath = null;
+      return Promise.resolve();
+    }
+    const startVol = el.volume;
+    return this._fadeVolume(el, startVol, 0, this.FADE_MS, gen).then(() => {
+      if (gen !== this._ambientFadeGen) return;
+      try {
+        el.pause();
+        el.currentTime = 0;
+      } catch (_) { /* ignore */ }
+      if (this._ambientEl === el) {
+        this._ambientEl = null;
+        this._ambientId = null;
+        this._ambientPath = null;
+      }
+    });
+  },
+
+  /**
+   * Фоновая музыка из catalog: loop + crossfade при смене трека.
+   */
+  playAmbient(soundId, opts = {}) {
+    if (!this.enabled || !soundId) {
+      return this.stopAmbient();
+    }
+
+    this.unlock();
+
+    const entry = this.resolveEntry(soundId);
+    if (!entry) return Promise.resolve();
+
+    if (this._ambientId === soundId && this._ambientEl && !this._ambientEl.paused) {
+      this.applyAmbientVolume();
+      return Promise.resolve();
+    }
+
+    const path = entry.file || null;
+    if (!path || entry.procedural) {
+      this._ambientId = soundId;
+      return Promise.resolve();
+    }
+
+    if (!this._unlocked) {
+      this._pendingAmbient = { id: soundId, opts };
+      return Promise.resolve();
+    }
+
+    const gen = this._bumpFadeGen();
+    const baseVol = opts.volume ?? entry.volume ?? 1;
+    this._ambientSceneVolume = opts.volume != null ? opts.volume : null;
+    const targetVol = this.clamp01(baseVol * this.getMusicVolume());
+
+    const startNew = () => {
+      if (gen !== this._ambientFadeGen) return Promise.resolve();
+
+      let base = this.cache.get('ambient:' + path);
+      if (!base) {
+        base = new Audio(path);
+        base.preload = 'auto';
+        this.cache.set('ambient:' + path, base);
+      }
+      const audio = base.cloneNode();
+      audio.loop = opts.loop !== false;
+      audio.volume = 0;
+      this._ambientEl = audio;
+      this._ambientId = soundId;
+      this._ambientPath = path;
+
+      const p = audio.play();
+      const afterPlay = () => this._fadeVolume(audio, 0, targetVol, this.FADE_MS, gen);
+
+      if (p && typeof p.then === 'function') {
+        return p.then(afterPlay).catch(() => {
+          this._ambientEl = null;
+          this._ambientId = null;
+          this._ambientPath = null;
+        });
+      }
+      return afterPlay();
+    };
+
+    if (this._ambientEl) {
+      const old = this._ambientEl;
+      const oldVol = old.volume;
+      return this._fadeVolume(old, oldVol, 0, this.FADE_MS, gen).then(() => {
+        try {
+          old.pause();
+          old.currentTime = 0;
+        } catch (_) { /* ignore */ }
+        if (this._ambientEl === old) {
+          this._ambientEl = null;
+          this._ambientId = null;
+          this._ambientPath = null;
+        }
+        return startNew();
+      });
+    }
+
+    return startNew();
+  },
+
+  playFile(path, volume, fallbackId) {
+    let base = this.cache.get(path);
+    if (!base) {
+      base = new Audio(path);
+      base.preload = 'auto';
+      this.cache.set(path, base);
+    }
+    const audio = base.cloneNode();
+    audio.volume = this.clamp01(volume);
+    const p = audio.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => this.playProcedural(fallbackId, volume));
+    }
+  },
+
+  playProcedural(soundId, volume = 0.75) {
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const vol = Math.max(0.05, Math.min(1, volume));
+    const master = ctx.createGain();
+    master.gain.value = vol;
+    master.connect(ctx.destination);
+
+    const tone = (freq, type, start, dur, peak = 0.2) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, start);
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(peak, start + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(start);
+      osc.stop(start + dur + 0.05);
+    };
+
+    const noise = (start, dur, peak = 0.15, filterFreq = 800) => {
+      const bufferSize = Math.floor(ctx.sampleRate * dur);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = filterFreq;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(peak, start);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(master);
+      src.start(start);
+      src.stop(start + dur + 0.05);
+    };
+
+    const id = String(soundId).toLowerCase();
+
+    if (id.includes('fire') || id === 'aoe_fire') {
+      noise(t0, 0.12, 0.22, 1200);
+      tone(180, 'sawtooth', t0, 0.25, 0.12);
+      tone(90, 'sine', t0 + 0.05, 0.35, 0.18);
+      return;
+    }
+    if (id.includes('cold') || id.includes('frost')) {
+      tone(880, 'sine', t0, 0.2, 0.1);
+      tone(660, 'triangle', t0 + 0.08, 0.35, 0.08);
+      noise(t0, 0.15, 0.06, 4000);
+      return;
+    }
+    if (id.includes('lightning') || id.includes('arcane') || id.includes('magic')) {
+      tone(520, 'square', t0, 0.08, 0.06);
+      tone(1040, 'sine', t0 + 0.04, 0.15, 0.1);
+      tone(780, 'sine', t0 + 0.1, 0.2, 0.07);
+      return;
+    }
+    if (id.includes('heal')) {
+      tone(392, 'sine', t0, 0.25, 0.12);
+      tone(523, 'sine', t0 + 0.12, 0.35, 0.1);
+      tone(659, 'sine', t0 + 0.22, 0.4, 0.08);
+      return;
+    }
+    if (id.includes('staff') || id.includes('blunt')) {
+      noise(t0, 0.06, 0.2, 400);
+      tone(120, 'sine', t0, 0.15, 0.25);
+      return;
+    }
+    if (id.includes('slash') || id.includes('sword') || id.includes('cleave') || id.includes('physical')) {
+      noise(t0, 0.05, 0.28, 2500);
+      tone(2400, 'triangle', t0, 0.07, 0.04);
+      tone(800, 'sine', t0 + 0.02, 0.1, 0.06);
+      return;
+    }
+    if (id.includes('miss') || id.includes('whoosh')) {
+      noise(t0, 0.08, 0.08, 600);
+      return;
+    }
+    if (id.includes('buff') || id.includes('shield')) {
+      tone(330, 'sine', t0, 0.2, 0.1);
+      tone(440, 'sine', t0 + 0.1, 0.3, 0.08);
+      return;
+    }
+    if (id.includes('crit')) {
+      noise(t0, 0.08, 0.25, 1800);
+      tone(660, 'sawtooth', t0, 0.15, 0.12);
+      tone(990, 'sine', t0 + 0.06, 0.2, 0.1);
+      return;
+    }
+    if (id.includes('radiant') || id.includes('smite')) {
+      tone(440, 'sine', t0, 0.2, 0.14);
+      tone(880, 'triangle', t0 + 0.08, 0.35, 0.1);
+      return;
+    }
+    if (id.includes('necrotic')) {
+      tone(110, 'sawtooth', t0, 0.4, 0.1);
+      noise(t0, 0.25, 0.08, 300);
+      return;
+    }
+
+    tone(440, 'sine', t0, 0.12, 0.08);
+  }
+};
+
+
+;/* —— js/special-scenes.js —— */
+// Реестр обработчиков special-сцен (Plugin API).
+// Встроенные — registerMany; JSON — plugins.specialScenes; свои — register() из внешнего JS.
+
+const SpecialSceneRegistry = {
+  _entries: {},
+
+  /**
+   * Регистрация кастомного обработчика.
+   * @param {string} id — уникальный ID (совпадает с полем scene.special)
+   * @param {string} label — человекочитаемое название для редактора
+   * @param {function|string} handler — функция(engine, sceneId, scene) ИЛИ строка-имя метода GameEngine
+   */
+  register(id, label, handler) {
+    if (!id || !handler) return;
+    this._entries[id] = { label: label || id, handler };
+  },
+
+  /** Массовая регистрация из массива [id, label, handler] */
+  registerMany(list) {
+    if (!Array.isArray(list)) return;
+    list.forEach(([id, label, handler]) => this.register(id, label, handler));
+  },
+
+  has(id) {
+    return !!this._entries[id];
+  },
+
+  list() {
+    return Object.entries(this._entries).map(([id, e]) => ({ id, label: e.label }));
+  },
+
+  allIds() {
+    return Object.keys(this._entries);
+  },
+
+  /**
+   * Выполнение обработчика.
+   * Поддерживает: функцию, строку-метод GameEngine, JSON-конфиг из plugins.specialScenes.
+   * @returns {boolean} true если обработчик найден и выполнен
+   */
+  run(engine, sceneId, scene) {
+    const entry = this._entries[scene?.special];
+    if (!entry) return false;
+
+    if (typeof entry.handler === 'function') {
+      try {
+        entry.handler(engine, sceneId, scene);
+      } catch (e) {
+        console.error(`[PluginAPI] Error in special "${scene.special}":`, e);
+      }
+      return true;
+    }
+
+    if (typeof entry.handler === 'string') {
+      const method = engine[entry.handler];
+      if (typeof method === 'function') {
+        method.call(engine, sceneId, scene);
+        return true;
+      }
+      console.warn(`[PluginAPI] Method "${entry.handler}" not found on GameEngine`);
+      return false;
+    }
+
+    return false;
+  }
+};
+
+/**
+ * Создаёт функцию-обработчик из JSON-конфига.
+ * Поддерживает: choices, flags, items, gold, text, dialogue.
+ */
+function createJsonSpecialHandler(config) {
+  return function jsonSpecialHandler(engine, sceneId, scene) {
+    if (config.flags && typeof config.flags === 'object') {
+      engine.applyFlags(config.flags);
+    }
+
+    if (Array.isArray(config.items)) {
+      config.items.forEach((itemId) => engine.addItem(itemId));
+    }
+
+    if (typeof config.gold === 'number' && config.gold > 0) {
+      engine.state.gold += config.gold;
+      engine.updateStats();
+      engine.log(`💰 +${config.gold} зм`, 'log-heal');
+    }
+
+    engine.setLocation(scene?.location || config.location || '—');
+
+    if (config.text) engine.setText(config.text);
+    else if (scene?.text) engine.setText(scene.text);
+
+    if (Array.isArray(config.dialogue)) engine.setDialogue(config.dialogue);
+    else engine.clearDialogue();
+
+    if (Array.isArray(config.choices)) {
+      engine.setChoices(config.choices);
+    } else {
+      engine.setChoices([]);
+    }
+
+  };
+}
+
+/** Регистрация встроенных обработчиков и plugins.specialScenes — после загрузки game_data */
+SpecialSceneRegistry._registerBuiltins = function (engine) {
+  const eng = engine || { data: {} };
+
+  SpecialSceneRegistry.registerMany([
+    ['haggle', 'Торг (Марта)', 'handleHaggle'],
+    ['shop_jack', 'Лавка Джека', 'handleShopJack'],
+    ['shop', 'Универсальная лавка (JSON)', 'handleShop'],
+    ['blacksmith', 'Кузница (заточка)', 'handleBlacksmith'],
+    ['temple_priest', 'Храм — снятие проклятия', 'handleTemplePriest'],
+    ['forest_loot_check', 'Обыск в лесу', 'handleForestLoot'],
+    ['barn_chest', 'Сундук в сарае', 'handleBarnChest'],
+    ['attic', 'Чердак мельницы', 'handleAttic'],
+    ['jack_buy_potion', 'Покупка зелья', 'handleJackBuyPotion'],
+    ['jack_buy_rope', 'Покупка верёвки', 'handleJackBuyRope'],
+    ['jack_buy_supplies', 'Покупка припасов', 'handleJackBuySupplies'],
+    ['jack_buy_fireball_scroll', 'Покупка свитка Огненного шара', 'handleJackBuyFireballScroll'],
+    ['jack_buy_focus_potion', 'Покупка зелья фокусировки', 'handleJackBuyFocusPotion'],
+    ['gear_top', 'Шестерня (верх)', 'handleGearTop'],
+    ['gear_mid', 'Шестерня (середина)', 'handleGearMid'],
+    ['gear_bot', 'Шестерня (низ)', 'handleGearBot'],
+    ['boss_talk', 'Разговор с боссом', 'handleBossTalk'],
+    ['boss_albert', 'Альберт (босс)', 'handleBossAlbert'],
+    ['boss_mercy', 'Пощада боссу', 'handleBossMercy'],
+    ['cellar_first', 'Погреб (первый раз)', 'handleCellarFirst'],
+    ['cellar_intimidate', 'Погреб (запугивание)', 'handleCellarIntimidate'],
+    ['cellar_after', 'Погреб (после)', 'handleCellarAfter'],
+    ['cellar_search', 'Погреб (обыск)', 'handleCellarSearch'],
+    ['marta_find_albert_reward', 'Награда за спасение Альберта', 'handleMartaFindAlbertReward'],
+    ['reset', 'Сброс игры', 'handleResetFromSpecial']
+  ]);
+
+  const plugins = eng.data?.plugins?.specialScenes;
+  if (plugins && typeof plugins === 'object') {
+    for (const [id, config] of Object.entries(plugins)) {
+      if (!config || typeof config !== 'object') continue;
+      if (SpecialSceneRegistry.has(id)) {
+        console.warn(`[PluginAPI] special "${id}" already registered, skipping JSON override`);
+        continue;
+      }
+      const handler = createJsonSpecialHandler(config);
+      SpecialSceneRegistry.register(id, config.label || id, handler);
+    }
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.SpecialSceneRegistry = SpecialSceneRegistry;
+  window.createJsonSpecialHandler = createJsonSpecialHandler;
+}
+
+// Встроенные ID в datalist редактора до загрузки game_data
+SpecialSceneRegistry._registerBuiltins({ data: {} });
+
+
+;/* —— js/systems/base-system.js —— */
+// ============================================
+// Базовый класс системы правил (Rule System)
+// ============================================
+
+class RuleSystem {
+  get id() { return 'generic'; }
+  get label() { return 'Generic d20'; }
+  get description() { return 'Универсальная система на основе d20.'; }
+
+  getStatKeys() { return ['str', 'dex', 'con', 'int', 'wis', 'cha']; }
+  getStatLabels() {
+    return { str: 'СИЛ', dex: 'ЛОВ', con: 'ТЕЛ', int: 'ИНТ', wis: 'МУД', cha: 'ХАР' };
+  }
+
+  getModifier(score) {
+    return Math.floor((Number(score) - 10) / 2);
+  }
+
+  getPointBuyConfig() { return { total: 27, min: 8, max: 15 }; }
+
+  pointCost(score) {
+    const cfg = this.getPointBuyConfig();
+    const s = Math.max(cfg.min, Math.min(cfg.max, Number(score) || cfg.min));
+    if (s <= cfg.min) return 0;
+    let cost = 0;
+    for (let v = cfg.min + 1; v <= s; v++) cost += v <= 13 ? 1 : 2;
+    return cost;
+  }
+
+  validateCharacter(draft) { return true; }
+
+  calculateHP(classKey, level, stats, data, conMod) {
+    const mod = conMod != null ? conMod : this.getModifier(stats?.con ?? 10);
+    return Math.max(1, 10 + mod);
+  }
+
+  calculateAC(stats, equipment, data, engine) {
+    const dexMod = this.getModifier(stats?.dex ?? 10);
+    return 10 + dexMod;
+  }
+
+  getProficiencyBonus(level) {
+    const lvl = Math.max(1, parseInt(level, 10) || 1);
+    return Math.max(2, 2 + Math.floor((lvl - 1) / 4));
+  }
+
+  rollAttack(attacker, target, engine) {
+    return { hit: false, dmg: 0, crit: false };
+  }
+
+  rollDamage(weapon, attacker, engine) {
+    return 0;
+  }
+
+  getMaxLevel(data) { return data?.progression?.maxLevel || 10; }
+  getExpTable(data) { return data?.progression?.expTable || [0]; }
+  getLevelConfig(level, classKey, data) {
+    return data?.classes?.[classKey]?.progression?.levels?.[String(level)] || {};
+  }
+
+  getResourceMode(classKey, level, data, engine) { return 'energy'; }
+
+  initResources(classKey, level, data, engine) {
+    const cls = data?.classes?.[classKey];
+    const max = cls?.resource?.max ?? 2;
+    return { mode: 'energy', current: max, max, spellSlots: null };
+  }
+
+  scaleEnemy(enemy, playerLevel, config, data) {
+    return enemy ? { ...enemy } : enemy;
+  }
+
+  getSkillDefs() { return {}; }
+
+  getStatForSkill(skill) {
+    const defs = this.getSkillDefs();
+    const key = String(skill || '').toLowerCase();
+    if (defs[key]?.stat) return defs[key].stat;
+    const byRu = Object.values(defs).find((d) => d.ru === skill);
+    return byRu?.stat || 'int';
+  }
+
+  getSkillBonus(skill, stats, classData, engine) {
+    const statKey = this.getStatForSkill(skill);
+    const statValue = stats?.[statKey] ?? 10;
+    return this.getModifier(statValue);
+  }
+}
+
+if (typeof window !== 'undefined') window.RuleSystem = RuleSystem;
+
+
+;/* —— js/systems/generic.js —— */
+// Generic d20 — использует базовые реализации RuleSystem
+
+class GenericRuleSystem extends RuleSystem {
+  get id() { return 'generic'; }
+  get label() { return 'Generic d20'; }
+  get description() { return 'Универсальная d20-система без привязки к конкретной игре.'; }
+}
+
+const GenericSystem = new GenericRuleSystem();
+if (typeof window !== 'undefined') window.GenericSystem = GenericSystem;
+
+
+;/* —— js/systems/dnd5e.js —— */
+// D&D 5e — системно-зависимая логика (вынесена из engine.js / character-creator)
+
+class DnD5eRuleSystem extends RuleSystem {
+  get id() { return 'dnd5e'; }
+  get label() { return 'D&D 5e'; }
+  get description() { return 'Dungeons & Dragons 5th Edition — модификаторы, КД, ячейки, proficiency.'; }
+
+  getPointBuyConfig() { return { total: 27, min: 8, max: 15 }; }
+
+  getSkillDefs() {
+    return {
+      acrobatics: { stat: 'dex', ru: 'Акробатика' },
+      animal_handling: { stat: 'wis', ru: 'Уход за животными' },
+      arcana: { stat: 'int', ru: 'Магия (тайные знания)' },
+      athletics: { stat: 'str', ru: 'Атлетика' },
+      deception: { stat: 'cha', ru: 'Обман' },
+      history: { stat: 'int', ru: 'История' },
+      insight: { stat: 'wis', ru: 'Проницательность' },
+      intimidation: { stat: 'cha', ru: 'Устрашение' },
+      investigation: { stat: 'int', ru: 'Расследование' },
+      medicine: { stat: 'wis', ru: 'Медицина' },
+      nature: { stat: 'int', ru: 'Природа' },
+      perception: { stat: 'wis', ru: 'Восприятие' },
+      performance: { stat: 'cha', ru: 'Выступление' },
+      persuasion: { stat: 'cha', ru: 'Убеждение' },
+      religion: { stat: 'int', ru: 'Религия' },
+      sleight_of_hand: { stat: 'dex', ru: 'Ловкость рук' },
+      stealth: { stat: 'dex', ru: 'Скрытность' },
+      survival: { stat: 'wis', ru: 'Выживание' },
+      magic: { stat: 'int', ru: 'Магия' },
+      dexterity: { stat: 'dex', ru: null },
+      strength: { stat: 'str', ru: null },
+      wisdom: { stat: 'wis', ru: null },
+      charisma: { stat: 'cha', ru: null },
+      intelligence: { stat: 'int', ru: null },
+      constitution: { stat: 'con', ru: null }
+    };
+  }
+
+  getStatForSkill(skill) {
+    const defs = this.getSkillDefs();
+    const key = String(skill || '').toLowerCase();
+    if (defs[key]?.stat) return defs[key].stat;
+    const byRu = Object.values(defs).find((d) => d.ru === skill);
+    return byRu?.stat || 'int';
+  }
+
+  calculateHP(classKey, level, stats, data, conMod) {
+    const hitDie = { warrior: 10, wizard: 6, paladin: 10 };
+    const cls = data?.classes?.[classKey];
+    const base = hitDie[classKey] ?? cls?.hpHitDie ?? cls?.hp ?? 10;
+    const mod = conMod != null ? conMod : this.getModifier(stats?.con ?? 10);
+    return Math.max(1, Number(base) + mod);
+  }
+
+  /** КД: броня + щит + DEX (ограничения light/medium/heavy) */
+  calculateAC(stats, equipment, data, engine) {
+    const dexMod = this.getModifier(stats?.dex ?? 10);
+    const shieldBonus = typeof engine?.getShieldAcBonus === 'function' ? engine.getShieldAcBonus() : 0;
+    const itemsData = equipment?.itemsData || data?.items || {};
+    const getEquipped = equipment?.getEquippedItem || ((slot) => engine?.getEquippedItem?.(slot));
+
+    const armor = typeof getEquipped === 'function' ? getEquipped('armor') : null;
+
+    if (armor && (armor.type === 'armor' || (armor.type === 'equipment' && armor.slot === 'armor'))) {
+      const baseAc = parseInt(armor.ac ?? armor.baseAc, 10);
+      if (!Number.isNaN(baseAc)) {
+        const armorType = String(armor.armorType || 'heavy').toLowerCase();
+        let ac = baseAc;
+        if (armorType === 'light') ac += dexMod;
+        else if (armorType === 'medium') ac += Math.min(dexMod, 2);
+        return ac + shieldBonus;
+      }
+    }
+
+    return 10 + dexMod + shieldBonus;
+  }
+
+  getResourceMode(classKey, level, data, engine) {
+    const cls = data?.classes?.[classKey];
+    if (!cls) return 'energy';
+    const lvl = level ?? 1;
+    const slots = typeof engine?.getSlotsArrayForLevel === 'function'
+      ? engine.getSlotsArrayForLevel(classKey, lvl)
+      : [];
+    if (!slots || !slots.length) return 'energy';
+    if (cls.spellcasting && slots.length >= 1) return 'spellSlots';
+    if (cls.halfCaster && lvl >= 2 && slots.length >= 1) return 'spellSlots';
+    if (slots.length === 1 && !cls.spellcasting && !cls.halfCaster) return 'energy';
+    if (slots.length > 1) return 'spellSlots';
+    return 'energy';
+  }
+
+  initResources(classKey, level, data, engine) {
+    const mode = this.getResourceMode(classKey, level, data, engine);
+    const cls = data?.classes?.[classKey];
+    if (mode === 'spellSlots') {
+      const arr = typeof engine?.getSlotsArrayForLevel === 'function'
+        ? engine.getSlotsArrayForLevel(classKey, level) || [2]
+        : [2];
+      const spellSlots = typeof engine?.buildSpellSlotsFromArray === 'function'
+        ? engine.buildSpellSlotsFromArray(arr)
+        : {};
+      return { mode: 'spellSlots', spellSlots, current: 0, max: 0 };
+    }
+    const arr = typeof engine?.getSlotsArrayForLevel === 'function'
+      ? engine.getSlotsArrayForLevel(classKey, level)
+      : null;
+    let max = cls?.resource?.max ?? 2;
+    if (arr && arr.length === 1) max = Number(arr[0]) || max;
+    return { mode: 'energy', current: max, max, spellSlots: null };
+  }
+
+  getSkillBonus(skill, stats, classData, engine) {
+    if (!classData || !stats) return 0;
+
+    const defs = this.getSkillDefs();
+    const key = String(skill || '').toLowerCase();
+    let def = defs[key];
+    let skillNameRu = skill;
+
+    if (def) {
+      skillNameRu = def.ru || skill;
+    } else {
+      const byRu = Object.values(defs).find((d) => d.ru === skill);
+      if (byRu) {
+        def = byRu;
+        skillNameRu = skill;
+      }
+    }
+
+    const statKey = def?.stat || this.getStatForSkill(skill);
+    const profList = engine?.getProficientSkillIds?.() || classData.skillIds || [];
+    const playerSkills = classData.skills || '';
+    const inList = profList.includes(key);
+    const proficientByRu = def?.ru && (inList || playerSkills.includes(skillNameRu));
+    const proficientById = !def?.ru && (inList || playerSkills.includes(skill));
+    const level = engine?.state?.level ?? 1;
+    const proficiency = proficientByRu || proficientById
+      ? this.getProficiencyBonus(level)
+      : 0;
+
+    const statValue = stats[statKey] || 10;
+    return this.getModifier(statValue) + proficiency;
+  }
+
+  scaleEnemy(enemy, playerLevel, config, data) {
+    if (typeof EnemyScaling !== 'undefined') {
+      return EnemyScaling.scaleEnemy(enemy, playerLevel, config);
+    }
+    return enemy ? { ...enemy } : enemy;
+  }
+}
+
+const DnD5eSystem = new DnD5eRuleSystem();
+if (typeof window !== 'undefined') window.DnD5eSystem = DnD5eSystem;
+
+
+;/* —— js/systems/pathfinder2e.js —— */
+// Pathfinder 2e — полная реализация RuleSystem
+
+class Pathfinder2eRuleSystem extends RuleSystem {
+  get id() { return 'pf2e'; }
+  get label() { return 'Pathfinder 2e'; }
+  get description() { return '3 действия за ход, 4 степени успеха, proficiency ranks.'; }
+
+  get PROFICIENCY_RANKS() {
+    return ['untrained', 'trained', 'expert', 'master', 'legendary'];
+  }
+
+  /** Бонус ранга к проверке навыка (PF2e Remastered) */
+  get RANK_BONUS() {
+    return {
+      untrained: -2,
+      trained: 2,
+      expert: 4,
+      master: 6,
+      legendary: 8
+    };
+  }
+
+  get RANK_SHORT() {
+    return {
+      untrained: 'U',
+      trained: 'T',
+      expert: 'E',
+      master: 'M',
+      legendary: 'L'
+    };
+  }
+
+  getSkillDefs() {
+    return {
+      acrobatics: { stat: 'dex', ru: 'Акробатика' },
+      arcana: { stat: 'int', ru: 'Магия (тайные знания)' },
+      athletics: { stat: 'str', ru: 'Атлетика' },
+      crafting: { stat: 'int', ru: 'Ремесло' },
+      deception: { stat: 'cha', ru: 'Обман' },
+      diplomacy: { stat: 'cha', ru: 'Дипломатия' },
+      intimidation: { stat: 'cha', ru: 'Запугивание' },
+      medicine: { stat: 'wis', ru: 'Медицина' },
+      nature: { stat: 'wis', ru: 'Природа' },
+      occultism: { stat: 'int', ru: 'Оккультизм' },
+      performance: { stat: 'cha', ru: 'Выступление' },
+      religion: { stat: 'wis', ru: 'Религия' },
+      society: { stat: 'int', ru: 'Общество' },
+      stealth: { stat: 'dex', ru: 'Скрытность' },
+      survival: { stat: 'wis', ru: 'Выживание' },
+      thievery: { stat: 'dex', ru: 'Воровство' },
+      perception: { stat: 'wis', ru: 'Восприятие' }
+    };
+  }
+
+  getAllSkillIds() {
+    return Object.keys(this.getSkillDefs());
+  }
+
+  normalizeSkillId(raw) {
+    const s = String(raw || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (this.getSkillDefs()[s]) return s;
+    const aliases = {
+      thievery: 'thievery',
+      stealth: 'stealth',
+      arcane: 'arcana',
+      lore: 'society'
+    };
+    return aliases[s] || s;
+  }
+
+  getNextRank(rank) {
+    const order = this.PROFICIENCY_RANKS;
+    const i = order.indexOf(rank || 'untrained');
+    if (i < 0 || i >= order.length - 1) return null;
+    return order[i + 1];
+  }
+
+  getModifier(score) {
+    return Math.floor((Number(score) - 10) / 2);
+  }
+
+  getPointBuyConfig() {
+    return {
+      mode: 'ability_boosts',
+      totalBoosts: 4,
+      minScore: 8,
+      maxScore: 18,
+      boostValue: 2
+    };
+  }
+
+  pointCost() {
+    return 0;
+  }
+
+  getProficiencyBonus(level, rank) {
+    const r = rank || 'trained';
+    if (r === 'untrained' || rank == null) return 0;
+    const rankBonus = { trained: 2, expert: 4, master: 6, legendary: 8 }[r] || 0;
+    return rankBonus + Math.max(1, parseInt(level, 10) || 1);
+  }
+
+  get PF2E_SKILL_TO_STAT() {
+    return {
+      acrobatics: 'dex',
+      athletics: 'str',
+      crafting: 'int',
+      deception: 'cha',
+      diplomacy: 'cha',
+      intimidation: 'cha',
+      medicine: 'wis',
+      nature: 'wis',
+      occultism: 'int',
+      performance: 'cha',
+      religion: 'wis',
+      society: 'int',
+      stealth: 'dex',
+      survival: 'wis',
+      thievery: 'dex',
+      perception: 'wis',
+      persuasion: 'cha',
+      investigation: 'int',
+      insight: 'wis',
+      arcana: 'int',
+      athletics_ru: 'str'
+    };
+  }
+
+  getStatForSkill(skill) {
+    const key = String(skill || '').toLowerCase();
+    return this.PF2E_SKILL_TO_STAT[key] || 'int';
+  }
+
+  /** Ранг навыка: state.skills → classData.skillProficiency → legacy строка skills */
+  getSkillProficiencyRank(skill, classData, engine) {
+    const key = this.normalizeSkillId(skill);
+    const stateSkills = engine?.state?.skills;
+    if (stateSkills && typeof stateSkills === 'object' && stateSkills[key]) {
+      return stateSkills[key];
+    }
+    if (!classData) return 'untrained';
+    const ranks = classData.skillProficiency || {};
+    if (ranks[key]) return ranks[key];
+    const skills = String(classData.skills || '').toLowerCase();
+    if (skills.includes(key)) return 'trained';
+    return 'untrained';
+  }
+
+  getSkillBonus(skill, stats, classData, engine) {
+    if (!stats) return 0;
+    const level = Math.max(1, parseInt(engine?.state?.level, 10) || 1);
+    const key = this.normalizeSkillId(skill);
+    const rank = this.getSkillProficiencyRank(key, classData, engine);
+    const rankBonus = this.RANK_BONUS[rank] ?? this.RANK_BONUS.untrained;
+    const statKey = this.getStatForSkill(key);
+    const statMod = this.getModifier(stats[statKey] || 10);
+    return level + statMod + rankBonus;
+  }
+
+  getSkillBonusBreakdown(skill, stats, classData, engine) {
+    const level = Math.max(1, parseInt(engine?.state?.level, 10) || 1);
+    const key = this.normalizeSkillId(skill);
+    const rank = this.getSkillProficiencyRank(key, classData, engine);
+    const rankBonus = this.RANK_BONUS[rank] ?? this.RANK_BONUS.untrained;
+    const statKey = this.getStatForSkill(key);
+    const statMod = this.getModifier(stats[statKey] || 10);
+    return { level, statMod, rank, rankBonus, total: level + statMod + rankBonus };
+  }
+
+  calculateHP(classKey, level, stats, data, conMod, engine) {
+    const cls = data?.classes?.[classKey];
+    if (!cls) return 10;
+    const draftRaceKey = engine?.CharacterCreator?.draft?.raceKey;
+    const raceKey = engine?.state?.raceKey || draftRaceKey || '';
+    const raceHp = raceKey && data?.races?.[raceKey]?.hp != null
+      ? data.races[raceKey].hp
+      : null;
+    const ancestryKey = cls.ancestry || 'human';
+    const ancestryHp = raceHp ?? data?.ancestries?.[ancestryKey]?.hp ?? cls.hp ?? 8;
+    const classHpPerLevel = cls.hpPerLevel ?? 8;
+    const mod = conMod != null ? conMod : this.getModifier(stats?.con ?? 10);
+    const lvl = Math.max(1, parseInt(level, 10) || 1);
+    return Math.max(1, ancestryHp + classHpPerLevel * lvl + mod * lvl);
+  }
+
+  calculateAC(stats, equipment, data, engineOrState) {
+    const statsSafe = stats || {};
+    const dexMod = this.getModifier(statsSafe.dex ?? 10);
+    const engine = engineOrState?.getEquippedItem ? engineOrState : null;
+    const playerState = engine?.state || engineOrState || {};
+    const level = playerState.level || 1;
+    const classKey = playerState.className;
+    const cls = data?.classes?.[classKey];
+    const armorProfRank = cls?.armorProficiency || playerState.armorProficiency || 'trained';
+
+    let armor = null;
+    if (engine?.getEquippedItem) {
+      armor = engine.getEquippedItem('armor');
+    } else if (equipment?.getEquippedItem) {
+      armor = equipment.getEquippedItem('armor');
+    } else {
+      const armorId = equipment?.armor || playerState.equipped?.armor;
+      armor = armorId ? (data?.items?.[armorId] || equipment?.itemsData?.[armorId]) : null;
+    }
+
+    const shieldBonus = engine?.getShieldAcBonus ? engine.getShieldAcBonus() : 0;
+
+    if (armor && (armor.type === 'armor' || armor.slot === 'armor')) {
+      const baseAc = parseInt(armor.ac ?? armor.baseAc, 10) || 10;
+      const dexCap = armor.dexCap != null ? parseInt(armor.dexCap, 10) : 5;
+      const effectiveDex = Math.min(dexMod, dexCap);
+      const profBonus = this.getProficiencyBonus(level, armorProfRank);
+      return baseAc + effectiveDex + profBonus + shieldBonus;
+    }
+
+    const unarmoredProf = this.getProficiencyBonus(level, armorProfRank);
+    return 10 + dexMod + unarmoredProf + shieldBonus;
+  }
+
+  getDegreeOfSuccess(total, dc) {
+    if (total >= dc + 10) return 'critical_success';
+    if (total >= dc) return 'success';
+    if (total <= dc - 10) return 'critical_failure';
+    return 'failure';
+  }
+
+  rollAttack(attacker, target, engine, options = {}) {
+    const map = options.mapPenalty || 0;
+    const roll = engine.d20();
+    const atkBonus = attacker?.atkBonus || 0;
+    const total = roll + atkBonus + map;
+    const ac = target?.ac || 10;
+    let degree = this.getDegreeOfSuccess(total, ac);
+    if (roll === 1) degree = 'critical_failure';
+    if (roll === 20 && degree !== 'critical_failure') degree = 'critical_success';
+
+    let dmg = 0;
+    let crit = false;
+    const dmgRoll = attacker?.dmgRoll || '1d6';
+    const dmgBonus = attacker?.dmgBonus || 0;
+
+    if (degree === 'critical_success') {
+      dmg = engine.parseRoll(dmgRoll) * 2 + dmgBonus * 2;
+      crit = true;
+    } else if (degree === 'success') {
+      dmg = engine.parseRoll(dmgRoll) + dmgBonus;
+    }
+
+    return {
+      roll,
+      total,
+      degree,
+      hit: degree === 'success' || degree === 'critical_success',
+      crit,
+      dmg,
+      map
+    };
+  }
+
+  getActionsPerTurn() { return 3; }
+
+  getResourceMode(classKey, level, data) {
+    const cls = data?.classes?.[classKey];
+    if (!cls) return 'energy';
+    if (cls.hasFocusPoints) return 'focus';
+    if (cls.spellcasting && (cls.baseSlots || cls.progression)) return 'spellSlots';
+    return 'energy';
+  }
+
+  initResources(classKey, level, data, engine) {
+    const cls = data?.classes?.[classKey];
+    if (!cls) {
+      return { mode: 'energy', current: 0, max: 0, spellSlots: null };
+    }
+    if (cls.hasFocusPoints) {
+      const maxFocus = Math.min(3, Math.max(1, parseInt(cls.focusPoints, 10) || 1));
+      return { mode: 'focus', current: maxFocus, max: maxFocus, spellSlots: null };
+    }
+    if (cls.spellcasting && cls.baseSlots) {
+      const slots = {};
+      (cls.baseSlots || []).forEach((max, i) => {
+        const n = Number(max) || 0;
+        if (n > 0) slots[String(i + 1)] = { c: n, m: n };
+      });
+      return { mode: 'spellSlots', spellSlots: slots, current: 0, max: 0 };
+    }
+    const max = cls.resource?.max ?? this.getActionsPerTurn();
+    return { mode: 'energy', current: max, max, spellSlots: null };
+  }
+
+  scaleEnemy(enemy, playerLevel, config, data) {
+    if (typeof EnemyScaling !== 'undefined') {
+      return EnemyScaling.scaleEnemy(enemy, playerLevel, config);
+    }
+    if (!enemy) return enemy;
+    const copy = { ...enemy };
+    copy.hp = parseInt(enemy.hp ?? enemy.maxHp, 10) || 1;
+    copy.maxHp = copy.hp;
+    return copy;
+  }
+
+  getMaxLevel(data) {
+    return data?.progression?.maxLevel || 20;
+  }
+
+  validateCharacter(draft) {
+    if (!draft) return false;
+    const cfg = this.getPointBuyConfig();
+    const boosts = draft.boostsRemaining != null ? draft.boostsRemaining : 0;
+    return boosts === 0;
+  }
+}
+
+const Pathfinder2eSystem = new Pathfinder2eRuleSystem();
+if (typeof window !== 'undefined') {
+  window.Pathfinder2eSystem = Pathfinder2eSystem;
+}
+
+
+;/* —— js/systems/registry.js —— */
+// Реестр систем правил RPG
+
+const SystemRegistry = {
+  _systems: {},
+
+  register(system) {
+    if (!system?.id) return;
+    this._systems[system.id] = system;
+  },
+
+  get(id) {
+    return this._systems[id] || this._systems.dnd5e || Object.values(this._systems)[0];
+  },
+
+  list() {
+    return Object.values(this._systems).map((s) => ({
+      id: s.id,
+      label: s.label,
+      description: s.description
+    }));
+  },
+
+  getDefault() { return 'dnd5e'; }
+};
+
+if (typeof window !== 'undefined') {
+  window.SystemRegistry = SystemRegistry;
+  if (typeof DnD5eSystem !== 'undefined') SystemRegistry.register(DnD5eSystem);
+  if (typeof Pathfinder2eSystem !== 'undefined') SystemRegistry.register(Pathfinder2eSystem);
+  if (typeof GenericSystem !== 'undefined') SystemRegistry.register(GenericSystem);
+}
+
+
+;/* —— js/sidebar-dock.js —— */
+/**
+ * Боковой dock: иконки 🎒 🔊 📁 открывают overlay-панели.
+ * Одновременно активна только одна панель; повторный клик — закрытие.
+ */
+const SidebarDock = {
+  activePanel: null,
+
+  init() {
+    const dock = document.getElementById('sidebar-dock');
+    if (!dock || dock.dataset.bound === '1') return;
+    dock.dataset.bound = '1';
+
+    dock.querySelectorAll('.dock-icon').forEach(btn => {
+      btn.addEventListener('click', () => this.toggle(btn.dataset.panel));
+    });
+
+    document.querySelectorAll('.panel-close').forEach(btn => {
+      btn.addEventListener('click', () => this.close(btn.dataset.panel));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.activePanel) this.closeAll();
+    });
+
+    this.bindMobilePanelSwipe();
+    window.addEventListener('rpg-mobile-change', () => this.bindMobilePanelSwipe());
+  },
+
+  /** Свайп вниз для закрытия bottom sheet на мобильном */
+  bindMobilePanelSwipe() {
+    if (!document.body.classList.contains('mobile')) return;
+
+    document.querySelectorAll('.panel-overlay-inner').forEach(inner => {
+      if (inner.dataset.swipeBound === '1') return;
+      inner.dataset.swipeBound = '1';
+
+      let startY = 0;
+      let tracking = false;
+
+      inner.addEventListener('touchstart', (e) => {
+        if (inner.scrollTop > 8) return;
+        startY = e.touches[0].clientY;
+        tracking = true;
+      }, { passive: true });
+
+      inner.addEventListener('touchmove', (e) => {
+        if (!tracking) return;
+        const dy = e.touches[0].clientY - startY;
+        if (dy > 0) {
+          const panel = inner.closest('.panel-overlay');
+          if (panel) panel.classList.add('panel-swiping');
+          inner.style.transform = `translateY(${Math.min(dy, 120)}px)`;
+        }
+      }, { passive: true });
+
+      inner.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const dy = e.changedTouches[0].clientY - startY;
+        inner.style.transform = '';
+        const panel = inner.closest('.panel-overlay');
+        if (panel) panel.classList.remove('panel-swiping');
+        if (dy > 72) {
+          const id = panel?.dataset?.panel;
+          if (id) this.close(id);
+        }
+      }, { passive: true });
+    });
+  },
+
+  /** Показать/скрыть dock вместе с основным sidebar (экран выбора кампании) */
+  setVisible(visible) {
+    const dock = document.getElementById('sidebar-dock');
+    const wrap = document.getElementById('sidebar-panels-wrap');
+    if (dock) dock.classList.toggle('hidden', !visible);
+    if (wrap) {
+      wrap.classList.toggle('hidden', !visible);
+      wrap.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
+    if (!visible) this.closeAll();
+  },
+
+  toggle(panelId) {
+    if (!panelId) return;
+    if (this.activePanel === panelId) {
+      this.closeAll();
+    } else {
+      this.open(panelId);
+    }
+  },
+
+  open(panelId) {
+    this.closeAll();
+    const panel = document.getElementById('panel-' + panelId);
+    const icon = document.querySelector(`.dock-icon[data-panel="${panelId}"]`);
+    if (panel) {
+      panel.classList.add('panel-active');
+      panel.setAttribute('aria-hidden', 'false');
+    }
+    if (icon) icon.classList.add('dock-icon-active');
+    this.activePanel = panelId;
+
+    const wrap = document.getElementById('sidebar-panels-wrap');
+    if (wrap) wrap.setAttribute('aria-hidden', 'false');
+    if (document.body.classList.contains('mobile')) {
+      document.body.style.overflow = 'hidden';
+    }
+    if (panelId === 'crafting' && typeof CraftingUI !== 'undefined') {
+      CraftingUI.render();
+    }
+    if (panelId === 'wait' && typeof WaitPanel !== 'undefined') {
+      WaitPanel.init(GameEngine);
+      WaitPanel.refresh();
+    }
+  },
+
+  close(panelId) {
+    if (this.activePanel === panelId) this.closeAll();
+  },
+
+  closeAll() {
+    document.querySelectorAll('.panel-overlay').forEach(p => {
+      p.classList.remove('panel-active');
+      p.setAttribute('aria-hidden', 'true');
+    });
+    document.querySelectorAll('.dock-icon').forEach(i => i.classList.remove('dock-icon-active'));
+    this.activePanel = null;
+
+    const wrap = document.getElementById('sidebar-panels-wrap');
+    if (wrap && !document.querySelector('.panel-overlay.panel-active')) {
+      wrap.setAttribute('aria-hidden', 'true');
+    }
+    if (document.body.classList.contains('mobile')) {
+      document.body.style.overflow = '';
+    }
+    document.querySelectorAll('.panel-overlay-inner').forEach(inner => {
+      inner.style.transform = '';
+    });
+  }
+};
+
+
+;/* —— js/actions/action-registry.js —— */
+// ============================================
+// Реестр атомарных действий (Action Registry)
+// ============================================
+
+const ACTION_CATEGORIES = {
+  inventory: { label: 'Инвентарь', icon: '📦' },
+  economy: { label: 'Экономика', icon: '💰' },
+  health: { label: 'Здоровье', icon: '❤️' },
+  scene: { label: 'Сцены', icon: '🎭' },
+  dialogue: { label: 'Диалог', icon: '🗣️' },
+  combat: { label: 'Бой', icon: '⚔️' },
+  effects: { label: 'Эффекты', icon: '🔮' },
+  utility: { label: 'Универсальные', icon: '🧩' }
+};
+
+const ACTION_REGISTRY = {
+  // ——— Инвентарь ———
+  add_item: {
+    id: 'add_item',
+    name: 'Добавить предмет',
+    category: 'inventory',
+    params: [
+      { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
+      { name: 'count', type: 'number', default: 1, label: 'Количество' }
+    ],
+    execute(engine, params) {
+      const count = Math.max(1, parseInt(params.count, 10) || 1);
+      const id = params.itemId;
+      if (!id) return false;
+      for (let i = 0; i < count; i++) engine.addItem(id);
+      const name = engine.data?.items?.[id]?.name || id;
+      engine.log(`📦 Получено: ${name} ×${count}`, 'log-heal');
+      engine.updateStats?.();
+      return true;
+    }
+  },
+
+  remove_item: {
+    id: 'remove_item',
+    name: 'Удалить предмет',
+    category: 'inventory',
+    params: [
+      { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
+      { name: 'count', type: 'number', default: 1, label: 'Количество' }
+    ],
+    returns: 'boolean',
+    execute(engine, params) {
+      const count = Math.max(1, parseInt(params.count, 10) || 1);
+      const id = params.itemId;
+      if (!id) return false;
+      let removed = 0;
+      for (let i = 0; i < count; i++) {
+        const idx = engine.state.inventory.indexOf(id);
+        if (idx === -1) break;
+        engine.state.inventory.splice(idx, 1);
+        removed++;
+      }
+      if (!removed) return false;
+      if (!engine.state.inventory.includes(id)) engine.unequipItem?.(id, { silent: true });
+      const name = engine.data?.items?.[id]?.name || id;
+      engine.log(`📦 Потеряно: ${name} ×${removed}`, 'log-damage');
+      engine.updateStats?.();
+      return removed >= count;
+    }
+  },
+
+  check_item: {
+    id: 'check_item',
+    name: 'Проверить наличие предмета',
+    category: 'inventory',
+    params: [
+      { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
+      { name: 'count', type: 'number', default: 1, label: 'Минимум' }
+    ],
+    returns: 'boolean',
+    execute(engine, params) {
+      const need = Math.max(1, parseInt(params.count, 10) || 1);
+      const have = (engine.state.inventory || []).filter((id) => id === params.itemId).length;
+      return have >= need;
+    }
+  },
+
+  // ——— Экономика ———
+  add_gold: {
+    id: 'add_gold',
+    name: 'Дать золото',
+    category: 'economy',
+    params: [{ name: 'amount', type: 'number', default: 10, label: 'Количество' }],
+    execute(engine, params) {
+      const amount = Math.max(0, parseInt(params.amount, 10) || 0);
+      engine.state.gold += amount;
+      engine.updateStats?.();
+      engine.log(`💰 +${amount} зм`, 'log-heal');
+      return true;
+    }
+  },
+
+  remove_gold: {
+    id: 'remove_gold',
+    name: 'Забрать золото',
+    category: 'economy',
+    params: [{ name: 'amount', type: 'number', default: 10, label: 'Количество' }],
+    returns: 'boolean',
+    execute(engine, params) {
+      const amount = Math.max(0, parseInt(params.amount, 10) || 0);
+      if (engine.state.gold < amount) return false;
+      engine.state.gold -= amount;
+      engine.updateStats?.();
+      engine.log(`💰 −${amount} зм`, 'log-gold');
+      return true;
+    }
+  },
+
+  check_gold: {
+    id: 'check_gold',
+    name: 'Проверить золото',
+    category: 'economy',
+    params: [{ name: 'amount', type: 'number', default: 1, label: 'Минимум' }],
+    returns: 'boolean',
+    execute(engine, params) {
+      const amount = Math.max(0, parseInt(params.amount, 10) || 0);
+      return engine.state.gold >= amount;
+    }
+  },
+
+  // ——— Здоровье ———
+  heal: {
+    id: 'heal',
+    name: 'Вылечить',
+    category: 'health',
+    params: [
+      { name: 'target', type: 'select', options: ['self', 'party'], label: 'Цель' },
+      { name: 'amount', type: 'text', default: '2d4+2', label: 'Формула (2d4+2 или 10)' },
+      { name: 'restoreResources', type: 'boolean', default: false, label: 'Восстановить ресурс' }
+    ],
+    execute(engine, params) {
+      const amount = engine.parseRollAmount(params.amount);
+      const target = params.target || 'self';
+      if (target === 'party' && Array.isArray(engine.state.party) && engine.state.party.length) {
+        engine.state.party.forEach((m) => {
+          m.hp = Math.min(m.maxHp || m.hp, (m.hp || 0) + amount);
+        });
+      } else {
+        engine.state.hp = Math.min(engine.state.maxHp, engine.state.hp + amount);
+      }
+      if (params.restoreResources) engine.restoreAllResources?.();
+      engine.updateStats?.();
+      engine.log(`❤️ Восстановлено ${amount} ОЗ`, 'log-heal');
+      return true;
+    }
+  },
+
+  damage: {
+    id: 'damage',
+    name: 'Нанести урон',
+    category: 'health',
+    params: [
+      { name: 'target', type: 'select', options: ['self', 'enemy'], label: 'Цель' },
+      { name: 'amount', type: 'text', default: '1d6', label: 'Формула' }
+    ],
+    execute(engine, params) {
+      const amount = engine.parseRollAmount(params.amount);
+      if (params.target === 'enemy' && engine.state.enemies?.length) {
+        const e = engine.state.enemies[0];
+        e.hp = Math.max(0, (e.hp || 0) - amount);
+        engine.log(`💥 ${e.name}: −${amount} ОЗ`, 'log-damage');
+        engine.renderCombat?.();
+      } else {
+        engine.takeDamage?.(amount) || (engine.state.hp = Math.max(0, engine.state.hp - amount));
+        engine.log(`💥 Вы получили ${amount} урона`, 'log-damage');
+        engine.updateStats?.();
+      }
+      return true;
+    }
+  },
+
+  apply_effect: {
+    id: 'apply_effect',
+    name: 'Наложить эффект',
+    category: 'health',
+    params: [
+      { name: 'target', type: 'select', options: ['self', 'enemy'], label: 'Цель' },
+      { name: 'effect', type: 'text', default: 'poisoned', label: 'Эффект' },
+      { name: 'duration', type: 'number', default: 3, label: 'Длительность (ходов)' }
+    ],
+    execute(engine, params) {
+      const dur = parseInt(params.duration, 10) || 3;
+      const spec = { id: params.effect, duration: dur };
+      if (params.target === 'enemy' && engine.state.enemies?.[0]) {
+        const enemy = engine.state.enemies[0];
+        if (typeof StatusManager !== 'undefined') {
+          const holder = StatusManager.getEnemyHolder(engine, enemy);
+          StatusManager.apply(engine, holder, spec, 'действие');
+        } else {
+          if (!enemy.effects) enemy.effects = [];
+          enemy.effects.push({ id: params.effect, duration: dur });
+        }
+      } else if (typeof StatusManager !== 'undefined') {
+        const holder = StatusManager.getPlayerHolder(engine);
+        StatusManager.apply(engine, holder, spec, 'действие');
+      } else {
+        if (!engine.state.combat) engine.state.combat = { effects: [] };
+        if (!engine.state.combat.effects) engine.state.combat.effects = [];
+        engine.state.combat.effects.push({ id: params.effect, duration: dur });
+      }
+      engine.log(`☠️ Эффект: ${params.effect} (${dur} ход.)`, 'log-dice');
+      return true;
+    }
+  },
+
+  remove_effect: {
+    id: 'remove_effect',
+    name: 'Снять эффект',
+    category: 'health',
+    params: [
+      { name: 'target', type: 'select', options: ['self', 'enemy'], label: 'Цель' },
+      { name: 'effect', type: 'text', label: 'Эффект' }
+    ],
+    execute(engine, params) {
+      const eff = params.effect;
+      if (params.target === 'enemy' && engine.state.enemies?.[0]) {
+        if (typeof StatusManager !== 'undefined') {
+          const holder = StatusManager.getEnemyHolder(engine, engine.state.enemies[0]);
+          StatusManager.remove(engine, holder, eff);
+        } else if (engine.state.enemies[0].effects) {
+          engine.state.enemies[0].effects = engine.state.enemies[0].effects.filter(
+            (e) => (e.id || e) !== eff
+          );
+        }
+      } else if (typeof StatusManager !== 'undefined') {
+        const holder = StatusManager.getPlayerHolder(engine);
+        StatusManager.remove(engine, holder, eff);
+      }
+      if (engine.state.flags) delete engine.state.flags[`effect_${eff}`];
+      engine.log(`✨ Снят эффект: ${eff}`, 'log-heal');
+      return true;
+    }
+  },
+
+  // ——— Сцены ———
+  change_scene: {
+    id: 'change_scene',
+    name: 'Сменить сцену',
+    category: 'scene',
+    params: [{ name: 'sceneId', type: 'select', source: 'scenes', label: 'Сцена' }],
+    execute(engine, params) {
+      if (params.sceneId) engine.showScene(params.sceneId);
+      return true;
+    }
+  },
+
+  set_flag: {
+    id: 'set_flag',
+    name: 'Изменить состояние игры',
+    category: 'scene',
+    params: [
+      { name: 'flag', type: 'text', label: 'Состояние' },
+      { name: 'value', type: 'select', options: [true, false, 'toggle'], label: 'Значение' }
+    ],
+    execute(engine, params) {
+      if (!params.flag) return false;
+      if (!engine.state.flags) engine.state.flags = {};
+      let val = params.value;
+      if (val === 'toggle') val = !engine.state.flags[params.flag];
+      engine.state.flags[params.flag] = val;
+      return true;
+    }
+  },
+
+  set_variable: {
+    id: 'set_variable',
+    name: 'Установить переменную проекта',
+    category: 'scene',
+    params: [
+      { name: 'variable', type: 'text', label: 'Переменная' },
+      { name: 'value', type: 'select', options: [true, false, 'toggle'], label: 'Значение' }
+    ],
+    execute(engine, params) {
+      if (!params.variable) return false;
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.setValue) {
+        return RuntimeVariables.setValue(engine, params.variable, params.value);
+      }
+      if (!engine.state.variables) engine.state.variables = {};
+      let val = params.value;
+      if (val === 'toggle') val = !engine.state.variables[params.variable];
+      engine.state.variables[params.variable] = val;
+      return true;
+    }
+  },
+
+  check_flag: {
+    id: 'check_flag',
+    name: 'Проверить состояние',
+    category: 'scene',
+    params: [
+      { name: 'flag', type: 'text', label: 'Состояние' },
+      { name: 'expected', type: 'select', options: [true, false], label: 'Ожидается' }
+    ],
+    returns: 'boolean',
+    execute(engine, params) {
+      const actual = !!engine.state.flags?.[params.flag];
+      const expected = params.expected === true || params.expected === 'true';
+      return actual === expected;
+    }
+  },
+
+  update_quest: {
+    id: 'update_quest',
+    name: 'Обновить квест',
+    category: 'scene',
+    params: [
+      { name: 'questId', type: 'text', label: 'ID квеста' },
+      { name: 'stage', type: 'text', label: 'Стадия (complete)' }
+    ],
+    execute(engine, params) {
+      if (params.questId && params.stage != null) {
+        engine.updateQuest?.(params.questId, params.stage);
+      }
+      return true;
+    }
+  },
+
+  // ——— Диалог ———
+  say: {
+    id: 'say',
+    name: 'Сказать (NPC)',
+    category: 'dialogue',
+    params: [
+      { name: 'npcId', type: 'select', source: 'npcs', label: 'NPC' },
+      { name: 'text', type: 'textarea', label: 'Текст' }
+    ],
+    execute(engine, params) {
+      const npc = engine.data?.npcs?.[params.npcId];
+      const icon = npc?.icon || '💬';
+      const name = npc?.name || params.npcId || 'NPC';
+      const body = params.text || '';
+      engine.setText(`${icon} **${name}:** ${body}`);
+      return true;
+    }
+  },
+
+  show_choices: {
+    id: 'show_choices',
+    name: 'Показать выборы',
+    category: 'dialogue',
+    params: [{ name: 'choices', type: 'json', label: 'Выборы (JSON)' }],
+    execute(engine, params) {
+      const raw = params.choices;
+      const list = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : []);
+      const choices = list.map((c) => {
+        if (typeof c === 'string') return { text: c };
+        const ch = { text: c.text || c.label || '…', icon: c.icon };
+        if (c.to) ch.to = c.to;
+        if (c.chain) ch.action = `chain:${c.chain}`;
+        if (c.action) ch.action = c.action;
+        return ch;
+      });
+      engine.setChoices(choices);
+      return true;
+    }
+  },
+
+  // ——— Бой ———
+  start_combat: {
+    id: 'start_combat',
+    name: 'Начать бой',
+    category: 'combat',
+    params: [
+      { name: 'enemies', type: 'json', label: 'ID врагов (массив)' },
+      { name: 'nextScene', type: 'select', source: 'scenes', label: 'Сцена после победы' }
+    ],
+    execute(engine, params) {
+      const ids = Array.isArray(params.enemies) ? params.enemies : [params.enemies].filter(Boolean);
+      const enemies = ids.map((eid) => {
+        const e = engine.data?.enemies?.[eid];
+        if (!e) return null;
+        return {
+          ...e,
+          id: eid,
+          maxHp: e.hp,
+          creatureType: e.creatureType || engine.getDefaultCreatureType?.()
+        };
+      }).filter(Boolean);
+      if (!enemies.length) return false;
+      engine.startCombat(enemies, params.nextScene || null, ids);
+      return true;
+    }
+  },
+
+  end_combat: {
+    id: 'end_combat',
+    name: 'Закончить бой',
+    category: 'combat',
+    params: [{ name: 'victory', type: 'boolean', default: true, label: 'Победа' }],
+    execute(engine, params) {
+      if (!engine.state.combat) return false;
+      if (params.victory !== false) {
+        engine.endCombatVictory?.() || engine.fleeCombat?.();
+      } else {
+        engine.showScene?.('game_over');
+      }
+      return true;
+    }
+  },
+
+  // ——— Эффекты / баффы ———
+  apply_buff: {
+    id: 'apply_buff',
+    name: 'Бафф (усиление)',
+    category: 'effects',
+    params: [
+      { name: 'stat', type: 'select', options: ['str', 'dex', 'con', 'int', 'wis', 'cha', 'ac', 'atk'], label: 'Характеристика' },
+      { name: 'value', type: 'number', default: 1, label: 'Бонус' },
+      { name: 'duration', type: 'number', default: 3, label: 'Длительность (ходов)' }
+    ],
+    execute(engine, params) {
+      if (!engine.state.actionBuffs) engine.state.actionBuffs = [];
+      engine.state.actionBuffs.push({
+        stat: params.stat,
+        value: Number(params.value) || 0,
+        duration: parseInt(params.duration, 10) || 3
+      });
+      engine.log(`🔮 Бафф ${params.stat} +${params.value}`, 'log-combat');
+      return true;
+    }
+  },
+
+  // ——— Универсальные ———
+  roll_dice: {
+    id: 'roll_dice',
+    name: 'Бросить кости',
+    category: 'utility',
+    params: [{ name: 'formula', type: 'text', default: '2d6', label: 'Формула' }],
+    returns: 'number',
+    execute(engine, params) {
+      const n = engine.parseRollAmount(params.formula);
+      engine.log(`🎲 Бросок ${params.formula} = ${n}`, 'log-dice');
+      return n;
+    }
+  },
+
+  check_skill: {
+    id: 'check_skill',
+    name: 'Проверка навыка',
+    category: 'utility',
+    params: [
+      { name: 'skill', type: 'select', source: 'skills', label: 'Навык' },
+      { name: 'dc', type: 'number', default: 12, label: 'Сложность (DC)' }
+    ],
+    returns: 'boolean',
+    execute(engine, params) {
+      const bonus = engine.getSkillBonus?.(params.skill) ?? 0;
+      const roll = engine.d20();
+      const total = roll + bonus;
+      engine.log(`🎲 ${params.skill}: ${roll}+${bonus}=${total} vs DC ${params.dc}`, 'log-dice');
+      return total >= (parseInt(params.dc, 10) || 12);
+    }
+  },
+
+  skill_check: {
+    id: 'skill_check',
+    name: 'Проверка навыка (с ветвлением)',
+    category: 'utility',
+    params: [
+      { name: 'skill', type: 'select', source: 'skills', label: 'Навык' },
+      { name: 'dc', type: 'number', default: 12, label: 'Сложность (DC)' },
+      { name: 'successText', type: 'textarea', label: 'Текст при успехе' },
+      { name: 'failText', type: 'textarea', label: 'Текст при провале' }
+    ],
+    returns: 'boolean',
+    execute(engine, params) {
+      const bonus = engine.getSkillBonus?.(params.skill) ?? 0;
+      const roll = engine.d20();
+      const total = roll + bonus;
+      const dc = parseInt(params.dc, 10) || 12;
+      const ok = total >= dc;
+      engine.log(`🎲 ${params.skill}: ${roll}+${bonus}=${total} vs DC ${dc}`, 'log-dice');
+      if (ok && params.successText) engine.setText?.(params.successText);
+      if (!ok && params.failText) engine.setText?.(params.failText);
+      return ok;
+    }
+  },
+
+  unlock_achievement: {
+    id: 'unlock_achievement',
+    name: 'Разблокировать достижение',
+    category: 'scene',
+    params: [
+      { name: 'achievementId', type: 'text', label: 'ID достижения' }
+    ],
+    execute(engine, params) {
+      const id = params.achievementId;
+      if (!id || typeof AchievementSystem === 'undefined') return false;
+      const ach = engine.data?.achievements?.[id];
+      return AchievementSystem.unlock(engine, id, ach);
+    }
+  },
+
+  show_image: {
+    id: 'show_image',
+    name: 'Показать изображение',
+    category: 'scene',
+    params: [
+      { name: 'src', type: 'text', label: 'Путь к изображению' },
+      { name: 'caption', type: 'text', label: 'Подпись' }
+    ],
+    execute(engine, params) {
+      if (typeof SceneElementRunner !== 'undefined') {
+        SceneElementRunner._showImage(engine, { src: params.src, caption: params.caption });
+      }
+      return true;
+    }
+  },
+
+  random: {
+    id: 'random',
+    name: 'Случайное число',
+    category: 'utility',
+    params: [
+      { name: 'min', type: 'number', default: 1, label: 'От' },
+      { name: 'max', type: 'number', default: 100, label: 'До' }
+    ],
+    returns: 'number',
+    execute(engine, params) {
+      const min = parseInt(params.min, 10) || 1;
+      const max = parseInt(params.max, 10) || 100;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+  },
+
+  log: {
+    id: 'log',
+    name: 'Сообщение в лог',
+    category: 'utility',
+    params: [
+      { name: 'message', type: 'textarea', label: 'Текст' },
+      { name: 'type', type: 'select', options: ['info', 'success', 'warning', 'danger', 'heal', 'gold'], label: 'Тип' }
+    ],
+    execute(engine, params) {
+      const cls = params.type === 'success' ? 'log-heal' : params.type === 'danger' ? 'log-damage' : `log-${params.type || 'info'}`;
+      engine.log(params.message || '…', cls);
+      return true;
+    }
+  },
+
+  wait: {
+    id: 'wait',
+    name: 'Ожидание (игровое время)',
+    category: 'utility',
+    params: [
+      { name: 'minutes', type: 'number', default: 60, label: 'Игровые минуты' },
+      { name: 'until', type: 'string', label: 'До периода (dawn/dusk/noon/midnight)' },
+      { name: 'rest', type: 'boolean', label: 'Отдыхать' },
+      { name: 'camp', type: 'boolean', label: 'Лагерь' }
+    ],
+    validate(ctx, params) {
+      if (ctx.engine?.state?.combat) {
+        return { ok: false, error: 'cannot_wait_in_combat' };
+      }
+      return { ok: true };
+    },
+    async execute(engine, params) {
+      if (params?.seconds != null && params.minutes == null && !params.until) {
+        const ms = Math.max(0, (parseFloat(params.seconds) || 0) * 1000);
+        if (ms > 0) await new Promise((r) => setTimeout(r, ms));
+        return true;
+      }
+
+      let minutes = parseInt(params.minutes, 10) || 0;
+      const ts = engine.timeSystem;
+      if (params.until && ts) {
+        switch (params.until) {
+          case 'dawn': minutes = ts.minutesUntilPeriod('dawn'); break;
+          case 'dusk': minutes = ts.minutesUntilPeriod('dusk'); break;
+          case 'noon': minutes = ts.minutesUntilHour(12); break;
+          case 'midnight': minutes = ts.minutesUntilHour(0); break;
+          default: break;
+        }
+      }
+      if (minutes <= 0) {
+        return { success: false, error: 'no_time_to_wait', log: 'Уже это время или нечего ждать.' };
+      }
+
+      const result = await engine.waitSystem?.executeWait?.(minutes, {
+        reason: params.reason || 'waiting',
+        rest: !!params.rest,
+        camp: !!params.camp
+      });
+
+      return {
+        effects: [
+          { type: 'ui_update', panels: ['clock', 'stats', 'scene', 'climate'] },
+          { type: 'refresh_scene' }
+        ],
+        log: result?.log || `⏳ Прошло ${ts?.formatDuration?.(minutes) || minutes + ' мин.'}.`
+      };
+    }
+  },
+
+  delay: {
+    id: 'delay',
+    name: 'Пауза (реальное время)',
+    category: 'utility',
+    params: [{ name: 'seconds', type: 'number', default: 1, label: 'Секунды' }],
+    async execute(engine, params) {
+      const ms = Math.max(0, (parseFloat(params.seconds) || 0) * 1000);
+      if (ms > 0) await new Promise((r) => setTimeout(r, ms));
+      return true;
+    }
+  },
+
+  advance_time: {
+    id: 'advance_time',
+    name: 'Продвинуть игровое время',
+    category: 'utility',
+    params: [{ name: 'minutes', type: 'number', default: 60, label: 'Игровые минуты' }],
+    execute(engine, params) {
+      const minutes = parseInt(params.minutes, 10) || 60;
+      engine.advanceTime?.(minutes);
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      const label = hours > 0
+        ? `${hours} ч.${mins ? ` ${mins} мин.` : ''}`
+        : `${minutes} мин.`;
+      return {
+        effects: [{ type: 'ui_update', panels: ['clock'] }],
+        log: `⏳ Прошло ${label}.`
+      };
+    }
+  },
+
+  rest_short_time: {
+    id: 'rest_short_time',
+    name: 'Короткий отдых (+1 час)',
+    category: 'utility',
+    execute(engine) {
+      engine.rest?.('short');
+      return {
+        effects: [{ type: 'ui_update', panels: ['clock', 'stats'] }],
+        log: 'Вы отдыхаете 1 час.'
+      };
+    }
+  },
+
+  rest_long_time: {
+    id: 'rest_long_time',
+    name: 'Долгий отдых (+8 часов)',
+    category: 'utility',
+    execute(engine) {
+      engine.rest?.('long');
+      return {
+        effects: [{ type: 'ui_update', panels: ['clock', 'stats'] }],
+        log: 'Вы спите всю ночь.'
+      };
+    }
+  },
+
+  refresh_ui: {
+    id: 'refresh_ui',
+    name: 'Обновить UI сцены',
+    category: 'utility',
+    params: [],
+    execute(engine) {
+      engine.refreshSceneComponents?.();
+      engine.updateStats?.();
+      return true;
+    }
+  },
+
+  roll_check: {
+    id: 'roll_check',
+    name: 'Проверка броска (d20 ≥ DC)',
+    category: 'utility',
+    params: [{ name: 'dc', type: 'number', default: 10, label: 'Сложность' }],
+    returns: 'boolean',
+    execute(engine, params) {
+      const roll = engine.d20();
+      const dc = parseInt(params.dc, 10) || 10;
+      engine.log(`🎲 Бросок ${roll} vs DC ${dc}`, 'log-dice');
+      return roll >= dc;
+    }
+  },
+
+  // ——— UI / сцена (создание персонажа и спец-сцены) ———
+  hide_sidebar: {
+    id: 'hide_sidebar',
+    name: 'Скрыть боковую панель',
+    category: 'scene',
+    params: [],
+    execute(engine) {
+      document.getElementById('sidebar')?.classList.add('hidden');
+      return true;
+    }
+  },
+
+  show_sidebar: {
+    id: 'show_sidebar',
+    name: 'Показать боковую панель',
+    category: 'scene',
+    params: [],
+    execute(engine) {
+      if (typeof engine.ensurePlayerUIVisible === 'function') {
+        engine.ensurePlayerUIVisible({ force: true });
+      } else {
+        const sidebar = document.getElementById('sidebar');
+        const hasHero = !!(engine.state?.charName?.trim() || engine.state?.className);
+        if (sidebar && hasHero) sidebar.classList.remove('hidden');
+      }
+      return true;
+    }
+  },
+
+  hide_combat_ui: {
+    id: 'hide_combat_ui',
+    name: 'Скрыть UI боя',
+    category: 'scene',
+    params: [],
+    execute(engine) {
+      document.getElementById('combat-area')?.classList.add('hidden');
+      return true;
+    }
+  },
+
+  show_combat_ui: {
+    id: 'show_combat_ui',
+    name: 'Показать UI боя',
+    category: 'scene',
+    params: [],
+    execute(engine) {
+      if (engine.state?.combat) {
+        document.getElementById('combat-area')?.classList.remove('hidden');
+      }
+      return true;
+    }
+  },
+
+  hide_dock: {
+    id: 'hide_dock',
+    name: 'Скрыть док панелей',
+    category: 'scene',
+    params: [],
+    execute() {
+      document.getElementById('sidebar-dock')?.classList.add('hidden');
+      return true;
+    }
+  },
+
+  show_dock: {
+    id: 'show_dock',
+    name: 'Показать док панелей',
+    category: 'scene',
+    params: [],
+    execute(engine) {
+      if (typeof SidebarDock !== 'undefined') SidebarDock.setVisible(true);
+      else document.getElementById('sidebar-dock')?.classList.remove('hidden');
+      if (engine && typeof engine.ensurePlayerUIVisible === 'function') {
+        engine.ensurePlayerUIVisible({ force: true });
+      }
+      return true;
+    }
+  },
+
+  apply_scene_visibility: {
+    id: 'apply_scene_visibility',
+    name: 'Видимость UI сцены',
+    category: 'scene',
+    params: [{ name: 'visibility', type: 'json', label: 'visibility' }],
+    execute(engine, params) {
+      const vis = params.visibility || params;
+      if (vis.sidebar === false) ACTION_REGISTRY.hide_sidebar.execute(engine, {});
+      if (vis.sidebar === true) ACTION_REGISTRY.show_sidebar.execute(engine, {});
+      if (vis.combat === false) ACTION_REGISTRY.hide_combat_ui.execute(engine, {});
+      if (vis.dock === false) ACTION_REGISTRY.hide_dock.execute(engine, {});
+      if (vis.dock === true) ACTION_REGISTRY.show_dock.execute(engine, {});
+      if (vis.log === false) document.body.classList.add('scene-hide-log');
+      if (vis.log === true) document.body.classList.remove('scene-hide-log');
+      return true;
+    }
+  },
+
+  /**
+   * Open a standard game UI panel (dock overlay or journal focus).
+   * panel: inventory | abilities | achievements | crafting | location | wait |
+   *        audio | menu | relations | journal | quests
+   */
+  open_panel: {
+    id: 'open_panel',
+    name: 'Открыть панель',
+    category: 'utility',
+    params: [
+      {
+        name: 'panel',
+        type: 'select',
+        options: [
+          'inventory',
+          'abilities',
+          'achievements',
+          'crafting',
+          'location',
+          'wait',
+          'audio',
+          'menu',
+          'relations',
+          'journal',
+          'quests'
+        ],
+        label: 'Панель'
+      }
+    ],
+    execute(engine, params) {
+      const panel = String(params.panel || params.id || '').toLowerCase();
+      if (!panel) return false;
+      if (panel === 'journal' || panel === 'quests') {
+        if (typeof engine?.renderQuestLog === 'function') {
+          try {
+            engine.renderQuestLog();
+          } catch (_) { /* optional */ }
+        }
+        if (typeof document !== 'undefined') {
+          const el =
+            document.getElementById('journal-wrap') ||
+            document.querySelector('.journal-card') ||
+            document.getElementById('log');
+          if (el && typeof el.scrollIntoView === 'function') {
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }
+        return true;
+      }
+      if (typeof SidebarDock !== 'undefined' && typeof SidebarDock.open === 'function') {
+        SidebarDock.open(panel);
+        return true;
+      }
+      if (typeof document !== 'undefined') {
+        const node = document.getElementById('panel-' + panel);
+        if (node) {
+          node.classList.add('panel-active');
+          node.setAttribute('aria-hidden', 'false');
+          return true;
+        }
+      }
+      return false;
+    }
+  },
+
+  push_state: {
+    id: 'push_state',
+    name: 'Сохранить UI-состояние',
+    category: 'scene',
+    params: [{ name: 'state', type: 'json', label: 'Фрагмент state' }],
+    execute(engine, params) {
+      const fragment = params.state && typeof params.state === 'object' ? params.state : {};
+      if (!engine.state._uiStack) engine.state._uiStack = [];
+      engine.state._uiStack.push({ ...fragment, _ts: Date.now() });
+      Object.assign(engine.state, fragment);
+      return true;
+    }
+  },
+
+  pop_state: {
+    id: 'pop_state',
+    name: 'Восстановить UI-состояние',
+    category: 'scene',
+    params: [{ name: 'keys', type: 'json', label: 'Ключи для снятия' }],
+    execute(engine, params) {
+      const stack = engine.state._uiStack;
+      if (!Array.isArray(stack) || !stack.length) return true;
+      const keys = Array.isArray(params.keys) ? params.keys : [];
+      const top = stack.pop();
+      if (keys.length && top) {
+        keys.forEach((k) => {
+          if (top[k] !== undefined) delete engine.state[k];
+        });
+      }
+      if (top?.inCharacterCreation) delete engine.state.inCharacterCreation;
+      return true;
+    }
+  },
+
+  play_music: {
+    id: 'play_music',
+    name: 'Музыка сцены',
+    category: 'scene',
+    params: [
+      { name: 'track', type: 'text', label: 'ID трека' },
+      { name: 'fadeIn', type: 'number', default: 0, label: 'Fade in (мс)' }
+    ],
+    execute(engine, params) {
+      const track = params.track || params.music;
+      if (!track || typeof AudioEngine === 'undefined') return true;
+      AudioEngine.unlock?.();
+      const vol = params.volume != null ? Number(params.volume) : undefined;
+      AudioEngine.playAmbient(track, { loop: true, volume: vol });
+      engine._sceneAmbientId = track;
+      return true;
+    }
+  },
+
+  stop_music: {
+    id: 'stop_music',
+    name: 'Остановить музыку',
+    category: 'scene',
+    params: [{ name: 'fadeOut', type: 'number', default: 0, label: 'Fade out (мс)' }],
+    execute(engine, params) {
+      if (typeof AudioEngine !== 'undefined') {
+        AudioEngine.stopAmbient((params?.fadeOut || 0) > 0);
+      }
+      engine._sceneAmbientId = null;
+      return true;
+    }
+  },
+
+  run_script: {
+    id: 'run_script',
+    name: 'Выполнить скрипт',
+    category: 'utility',
+    params: [
+      { name: 'script', type: 'text', label: 'Имя функции' },
+      { name: 'args', type: 'json', label: 'Аргументы' }
+    ],
+    execute(engine, params, ctx) {
+      const name = params.script;
+      if (!name) return false;
+      const fn = engine.scripts?.[name]
+        || (typeof window !== 'undefined' ? window[name] : null);
+      if (typeof fn !== 'function') {
+        console.warn('[ActionRegistry] Скрипт не найден:', name);
+        return false;
+      }
+      const draft = ctx?.component?.output?.draft;
+      let character = ActionRunner.resolveContextPath(ctx, params.source || 'component.output.character');
+      if (!character && draft && typeof CharacterCreationBridge !== 'undefined') {
+        character = CharacterCreationBridge.buildOutputFromDraft(engine, draft);
+      }
+      if (name === 'syncCharacterToUI') {
+        fn(engine, character);
+        return true;
+      }
+      const args = params.args != null ? params.args : (character != null ? [engine, character] : [engine, ctx]);
+      const list = Array.isArray(args) ? args : [args];
+      fn(...list);
+      return true;
+    }
+  },
+
+  set_character: {
+    id: 'set_character',
+    name: 'Применить персонажа',
+    category: 'scene',
+    params: [
+      { name: 'source', type: 'text', label: 'Путь в контексте' },
+      { name: 'draft', type: 'json', label: 'Черновик (draft)' }
+    ],
+    execute(engine, params, ctx) {
+      const draft = params.draft
+        || ActionRunner.resolveContextPath(ctx, params.source || 'component.output.draft')
+        || ctx?.component?.output?.draft;
+      if (!draft?.classKey) return false;
+      if (typeof CharacterCreationBridge !== 'undefined') {
+        CharacterCreationBridge.applyDraft(engine, draft, {
+          skipNavigation: true,
+          nextScene: params.nextScene
+            || ctx?.nextScene
+            || ctx?.scene?.exitScene
+            || ctx?.scene?.templateParams?.nextScene
+        });
+        return true;
+      }
+      const orig = engine.showScene.bind(engine);
+      engine.showScene = function () {};
+      try {
+        engine.finalizeCharacter(draft);
+      } finally {
+        engine.showScene = orig;
+      }
+      return true;
+    }
+  },
+
+  transition: {
+    id: 'transition',
+    name: 'Переход на сцену',
+    category: 'scene',
+    params: [
+      { name: 'target', type: 'select', source: 'scenes', label: 'Сцена' },
+      { name: 'sceneId', type: 'select', source: 'scenes', label: 'Сцена (alias)' }
+    ],
+    execute(engine, params, ctx) {
+      const id = params.target || params.sceneId || ctx?.nextScene
+        || ctx?.scene?.templateParams?.nextScene
+        || ctx?.scene?.exitScene;
+      if (id && engine.data?.scenes?.[id]) {
+        CharacterCreationBridge?.ensureGameVisible?.(engine);
+        engine.showScene(id, { forceRevisit: true });
+      }
+      return true;
+    }
+  },
+
+  confirm: {
+    id: 'confirm',
+    name: 'Подтверждение',
+    category: 'utility',
+    params: [{ name: 'message', type: 'textarea', label: 'Текст' }],
+    async execute(engine, params, ctx) {
+      const msg = params.message || 'Продолжить?';
+      const ok = typeof GameDialogs !== 'undefined'
+        ? await GameDialogs.confirm('', msg)
+        : true;
+      if (ok && params.onConfirm != null) {
+        await ActionRunner.resolveBranch(engine, params.onConfirm, ctx);
+      } else if (!ok && params.onCancel != null) {
+        await ActionRunner.resolveBranch(engine, params.onCancel, ctx);
+      }
+      return ok;
+    }
+  },
+
+  return_to_campaign_picker: {
+    id: 'return_to_campaign_picker',
+    name: 'К выбору кампании',
+    category: 'scene',
+    params: [],
+    execute(engine) {
+      engine.returnToCampaignPicker?.();
+      return true;
+    }
+  },
+
+  resume_character_creation: {
+    id: 'resume_character_creation',
+    name: 'Продолжить создание персонажа',
+    category: 'scene',
+    params: [],
+    execute(engine) {
+      engine.refreshSceneComponents?.();
+      if (typeof SceneComponentHandlers !== 'undefined' && SceneComponentHandlers.resumeCharacterCreation) {
+        SceneComponentHandlers.resumeCharacterCreation();
+      }
+      return true;
+    }
+  },
+
+  save_game: {
+    id: 'save_game',
+    name: 'Сохранить игру',
+    category: 'utility',
+    params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
+    async execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1 && slot <= (engine.SAVE_SLOTS || 5)) {
+          return engine.saveToSlot(slot, { skipConfirm: false, quiet: false });
+        }
+      }
+      engine.saveGame?.({ force: true });
+      return true;
+    }
+  },
+
+  load_game: {
+    id: 'load_game',
+    name: 'Загрузить игру',
+    category: 'utility',
+    params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
+    execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1) return engine.loadGame(slot);
+      }
+      if (typeof engine.openSaveSlotsPanel === 'function') {
+        engine.openSaveSlotsPanel();
+        return true;
+      }
+      if (typeof engine.loadGame === 'function') {
+        engine.loadGame();
+        return true;
+      }
+      return false;
+    }
+  },
+
+  craft_item: {
+    id: 'craft_item',
+    name: 'Создать предмет',
+    category: 'inventory',
+    params: [
+      { name: 'recipeId', type: 'text', label: 'ID рецепта' },
+      { name: 'resultId', type: 'text', label: 'Результат (legacy)' },
+      { name: 'materials', type: 'object', label: 'Материалы (legacy)' }
+    ],
+    validate(ctx, params) {
+      const engine = ctx.engine;
+      const recipe = CraftRecipeHelpers.resolveRecipe(engine, params);
+      if (!recipe) return { ok: false, error: 'unknown_recipe' };
+      if (typeof engine.isRecipeKnown === 'function' && !engine.isRecipeKnown(recipe.id)) {
+        return { ok: false, error: 'recipe_unknown' };
+      }
+      const inv = ctx.state?.inventory || engine.state?.inventory || [];
+      for (const ing of recipe.ingredients || []) {
+        const id = ing.id || ing.itemId || ing.ingredientId;
+        const need = Math.max(1, parseInt(ing.quantity, 10) || 1);
+        if (CraftRecipeHelpers.countInInventory(inv, id) < need) {
+          return { ok: false, error: 'no_materials' };
+        }
+      }
+      return { ok: true };
+    },
+    execute(engine, params) {
+      const recipe = CraftRecipeHelpers.resolveRecipe(engine, params);
+      if (!recipe) return false;
+      for (const ing of recipe.ingredients || []) {
+        const id = ing.id || ing.itemId || ing.ingredientId;
+        const need = Math.max(1, parseInt(ing.quantity, 10) || 1);
+        for (let i = 0; i < need; i++) {
+          if (!CraftRecipeHelpers.removeOne(engine, id)) return false;
+        }
+      }
+      const result = recipe.result || {};
+      const itemId = result.itemId || result.id;
+      const qty = Math.max(1, parseInt(result.quantity, 10) || 1);
+      if (!itemId) return false;
+      for (let i = 0; i < qty; i++) engine.addItem(itemId);
+      if (typeof engine.discoverRecipe === 'function') engine.discoverRecipe(recipe.id);
+      if (typeof QuestEvents !== 'undefined') {
+        QuestEvents.emit('ItemCrafted', { itemId, recipeId: recipe.id, qty });
+      }
+      engine.saveGame?.();
+      const name = engine.data?.items?.[itemId]?.name || recipe.name || itemId;
+      return {
+        effects: [{ type: 'ui_update', panels: ['inventory', 'crafting'] }],
+        log: `🔨 Создано: ${name}${qty > 1 ? ` ×${qty}` : ''}`
+      };
+    }
+  }
+};
+
+/** Хелперы крафта (рецепты + legacy materials) */
+const CraftRecipeHelpers = {
+  countInInventory(inventory, itemId) {
+    if (!itemId) return 0;
+    return (inventory || []).filter((id) => id === itemId).length;
+  },
+
+  removeOne(engine, itemId) {
+    if (!itemId) return false;
+    if (typeof engine.removeItem === 'function') {
+      const before = (engine.state.inventory || []).length;
+      engine.removeItem(itemId);
+      return (engine.state.inventory || []).length < before;
+    }
+    const inv = engine.state.inventory || [];
+    const idx = inv.indexOf(itemId);
+    if (idx === -1) return false;
+    inv.splice(idx, 1);
+    engine.unequipItem?.(itemId, { silent: true });
+    return true;
+  },
+
+  resolveRecipe(engine, params) {
+    if (!params) return null;
+    if (params.recipeId) {
+      return engine.data?.recipes?.[params.recipeId]
+        || (typeof engine.getRecipeById === 'function' ? engine.getRecipeById(params.recipeId) : null);
+    }
+    if (params.resultId) {
+      const materials = params.materials || {};
+      return {
+        id: '_legacy',
+        name: 'Создание',
+        ingredients: Object.entries(materials).map(([id, quantity]) => ({
+          id,
+          quantity: Math.max(1, parseInt(quantity, 10) || 1)
+        })),
+        result: { itemId: params.resultId, quantity: 1 }
+      };
+    }
+    return null;
+  }
+};
+
+/** Список навыков для редактора */
+const ACTION_SKILL_IDS = [
+  'athletics', 'acrobatics', 'stealth', 'perception', 'insight', 'persuasion',
+  'deception', 'intimidation', 'investigation', 'survival', 'arcana', 'history'
+];
+
+if (typeof window !== 'undefined') {
+  window.ACTION_REGISTRY = ACTION_REGISTRY;
+  window.ACTION_CATEGORIES = ACTION_CATEGORIES;
+  window.CraftRecipeHelpers = CraftRecipeHelpers;
+}
+
+
+;/* —— js/actions/action-registry-v3.js —— */
+// Расширения ACTION_REGISTRY: validate + effects (слой 3), без ломки legacy execute
+(function augmentActionRegistryV3() {
+  if (typeof ACTION_REGISTRY === 'undefined') return;
+
+  const heal = ACTION_REGISTRY.heal;
+  if (heal && !heal.validate) {
+    heal.validate = (ctx, params) => {
+      const cost = params.cost || { gold: params.costGold || 0 };
+      const gold = typeof cost === 'number' ? cost : (cost.gold || 0);
+      if (gold > 0 && (ctx.state?.gold ?? 0) < gold) return { ok: false, error: 'cannot_afford' };
+      return { ok: true };
+    };
+    heal.effects = () => [{ type: 'ui_update', panels: ['inventory', 'abilities'] }];
+  }
+
+  if (!ACTION_REGISTRY.trade_buy) {
+    ACTION_REGISTRY.trade_buy = {
+      id: 'trade_buy',
+      name: 'Купить предмет',
+      category: 'inventory',
+      params: [
+        { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
+        { name: 'price', type: 'number', label: 'Цена' }
+      ],
+      validate(ctx, params) {
+        const price = parseInt(params.price, 10) || 0;
+        if ((ctx.state?.gold ?? 0) < price) return { ok: false, error: 'cannot_afford' };
+        return { ok: true };
+      },
+      execute(engine, params) {
+        const price = parseInt(params.price, 10) || 0;
+        if (engine.state.gold < price) return false;
+        engine.state.gold -= price;
+        engine.addItem(params.itemId);
+        engine.updateStats?.();
+        const name = engine.data?.items?.[params.itemId]?.name || params.itemId;
+        return {
+          effects: [{ type: 'ui_update', panels: ['inventory'] }],
+          log: `📦 Куплено: ${name} (−${price} зм)`
+        };
+      }
+    };
+  }
+
+  if (!ACTION_REGISTRY.trade_sell) {
+    ACTION_REGISTRY.trade_sell = {
+      id: 'trade_sell',
+      name: 'Продать предмет',
+      category: 'inventory',
+      params: [
+        { name: 'itemId', type: 'select', source: 'items', label: 'Предмет' },
+        { name: 'price', type: 'number', label: 'Цена' }
+      ],
+      validate(ctx, params) {
+        const have = (ctx.state?.inventory || []).includes(params.itemId);
+        if (!have) return { ok: false, error: 'no_item' };
+        return { ok: true };
+      },
+      execute(engine, params) {
+        const idx = engine.state.inventory.indexOf(params.itemId);
+        if (idx === -1) return false;
+        const price = parseInt(params.price, 10) || 0;
+        engine.state.inventory.splice(idx, 1);
+        engine.state.gold += price;
+        engine.updateStats?.();
+        const name = engine.data?.items?.[params.itemId]?.name || params.itemId;
+        return {
+          effects: [{ type: 'ui_update', panels: ['inventory'] }],
+          log: `💰 Продано: ${name} (+${price} зм)`
+        };
+      }
+    };
+  }
+
+  if (!ACTION_REGISTRY.repair_item) {
+    ACTION_REGISTRY.repair_item = {
+      id: 'repair_item',
+      name: 'Починить предмет',
+      category: 'utility',
+      params: [
+        { name: 'itemId', type: 'text', label: 'ID предмета' },
+        { name: 'cost', type: 'number', label: 'Стоимость' }
+      ],
+      validate(ctx, params) {
+        const cost = parseInt(params.cost, 10) || 0;
+        if (cost > 0 && (ctx.state?.gold ?? 0) < cost) {
+          return { ok: false, error: 'cannot_afford' };
+        }
+        const lvl = ctx.engine?.getItemEnhancementLevel?.(params.itemId) ?? 0;
+        if (lvl <= 0) return { ok: false, error: 'no_wear' };
+        return { ok: true };
+      },
+      execute(engine, params) {
+        const cost = parseInt(params.cost, 10) || 0;
+        const lvl = engine.getItemEnhancementLevel?.(params.itemId) || 0;
+        if (lvl <= 0) return false;
+        if (cost > 0 && engine.state.gold < cost) return false;
+        if (cost > 0) engine.state.gold -= cost;
+        engine.setItemEnhancementLevel?.(params.itemId, 0);
+        engine.recalcDerivedStats?.();
+        engine.updateStats?.();
+        engine.saveGame?.();
+        return {
+          effects: [{ type: 'item_repaired' }, { type: 'ui_update' }],
+          log: `⚒️ Предмет отремонтирован (−${cost} зм)`
+        };
+      }
+    };
+  }
+
+  if (!ACTION_REGISTRY.enhance_item) {
+    ACTION_REGISTRY.enhance_item = {
+      id: 'enhance_item',
+      name: 'Заточить предмет',
+      category: 'utility',
+      params: [{ name: 'itemId', type: 'text', label: 'ID предмета' }],
+      validate(ctx, params) {
+        const engine = ctx.engine;
+        if (!engine?.getNextEnhancementCost) return { ok: true };
+        const cost = engine.getNextEnhancementCost(params.itemId);
+        if (cost == null) return { ok: false, error: 'max_level' };
+        if ((ctx.state?.gold ?? 0) < cost) return { ok: false, error: 'cannot_afford' };
+        return { ok: true };
+      },
+      execute(engine, params) {
+        const session = engine.state.blacksmithSession || {};
+        const equippedSlot = engine.ENHANCEMENT_SLOTS?.find(
+          (s) => engine.getEquippedItemId(s) === params.itemId
+        );
+        if (!equippedSlot) {
+          session.message = 'Предмет должен быть экипирован.';
+          return { effects: [{ type: 'ui_update' }], log: session.message };
+        }
+        const template = engine.itemsData?.[params.itemId];
+        const current = engine.getItemEnhancementLevel(params.itemId);
+        const max = session.maxEnhancement != null
+          ? Math.min(engine.getItemEnhancementMax(template), Number(session.maxEnhancement))
+          : engine.getItemEnhancementMax(template);
+        const cost = engine.getNextEnhancementCost(params.itemId);
+        if (!template || cost == null || current >= max) {
+          session.message = 'Достигнут максимум заточки.';
+          return { effects: [{ type: 'ui_update' }], log: session.message };
+        }
+        if (engine.state.gold < cost) {
+          session.message = `Недостаточно золота (нужно ${cost} зм).`;
+          return { effects: [{ type: 'ui_update' }], log: session.message };
+        }
+        engine.state.gold -= cost;
+        engine.setItemEnhancementLevel(params.itemId, current + 1);
+        engine.recalcDerivedStats();
+        engine.updateStats();
+        const newLevel = current + 1;
+        session.message = `Успех! ${template.name} теперь +${newLevel}. (−${cost} зм)`;
+        engine.saveGame();
+        return {
+          effects: [{ type: 'ui_update' }],
+          log: `⚒️ Заточка: ${template.name} +${newLevel} (−${cost} зм)`
+        };
+      }
+    };
+  }
+
+  if (!ACTION_REGISTRY.remove_curse) {
+    ACTION_REGISTRY.remove_curse = {
+      id: 'remove_curse',
+      name: 'Снять проклятие с экипировки',
+      category: 'utility',
+      params: [
+        { name: 'itemId', type: 'text', label: 'ID предмета' },
+        { name: 'cost', type: 'number', label: 'Стоимость' }
+      ],
+      validate(ctx, params) {
+        const cost = parseInt(params.cost, 10) || 0;
+        if (cost > 0 && (ctx.state?.gold ?? 0) < cost) {
+          return { ok: false, error: 'cannot_afford' };
+        }
+        return { ok: true };
+      },
+      execute(engine, params) {
+        if (typeof engine.templePriestRemoveCurse === 'function') {
+          engine.templePriestRemoveCurse(params.itemId);
+          return { effects: [{ type: 'ui_update' }], log: '✨ Проклятие снято с экипировки' };
+        }
+        return false;
+      }
+    };
+  }
+
+  if (!ACTION_REGISTRY.gamble_dice) {
+    ACTION_REGISTRY.gamble_dice = {
+      id: 'gamble_dice',
+      name: 'Игра в кости',
+      category: 'utility',
+      params: [
+        { name: 'bet', type: 'number', label: 'Ставка' },
+        { name: 'minBet', type: 'number', label: 'Мин.' },
+        { name: 'maxBet', type: 'number', label: 'Макс.' }
+      ],
+      validate(ctx, params) {
+        const bet = parseInt(params.bet, 10) || 0;
+        if (bet <= 0 || (ctx.state?.gold ?? 0) < bet) {
+          return { ok: false, error: 'cannot_afford' };
+        }
+        return { ok: true };
+      },
+      execute(engine, params) {
+        const min = Math.max(1, parseInt(params.minBet, 10) || 5);
+        const max = Math.max(min, parseInt(params.maxBet, 10) || 50);
+        let bet = parseInt(params.bet, 10) || min;
+        bet = Math.max(min, Math.min(max, bet));
+        if (engine.state.gold < bet) return false;
+        const roll = engine.d20();
+        let msg;
+        if (roll >= 15) {
+          const win = bet * 2;
+          engine.state.gold += win - bet;
+          msg = `Победа! Бросок ${roll}, вы получили ${win} зм.`;
+          engine.log(`🎲 Выигрыш! Бросок ${roll}: +${win} зм`, 'log-heal');
+        } else {
+          engine.state.gold -= bet;
+          msg = `Неудача. Бросок ${roll}, потеря ${bet} зм.`;
+          engine.log(`🎲 Проигрыш (${roll}). −${bet} зм`, 'log-damage');
+        }
+        engine._lastGambleMsg = msg;
+        engine.updateStats();
+        engine.saveGame();
+        return { effects: [{ type: 'ui_update' }], log: msg };
+      }
+    };
+  }
+
+  if (!ACTION_REGISTRY.craft_item) {
+    ACTION_REGISTRY.craft_item = {
+      id: 'craft_item',
+      name: 'Создать предмет',
+      category: 'inventory',
+      params: [
+        { name: 'resultId', type: 'text', label: 'Результат' },
+        { name: 'materials', type: 'object', label: 'Материалы' }
+      ],
+      validate(ctx, params) {
+        const mats = params.materials || {};
+        const inv = ctx.state?.inventory || [];
+        for (const [matId, need] of Object.entries(mats)) {
+          let have = 0;
+          for (const id of inv) {
+            if (id === matId) have++;
+          }
+          if (have < need) return { ok: false, error: 'no_materials' };
+        }
+        return { ok: true };
+      },
+      execute(engine, params) {
+        const mats = params.materials || {};
+        for (const [matId, need] of Object.entries(mats)) {
+          for (let i = 0; i < need; i++) {
+            if (engine.removeItem) engine.removeItem(matId);
+            else {
+              const idx = engine.state.inventory.indexOf(matId);
+              if (idx === -1) return false;
+              engine.state.inventory.splice(idx, 1);
+            }
+          }
+        }
+        engine.addItem(params.resultId);
+        if (typeof QuestEvents !== 'undefined') {
+          QuestEvents.emit('ItemCrafted', { itemId: params.resultId, recipeId: params.recipeId, qty: 1 });
+        }
+        const name = engine.data?.items?.[params.resultId]?.name || params.resultId;
+        engine.saveGame?.();
+        return {
+          effects: [{ type: 'ui_update', panels: ['inventory'] }],
+          log: `🔨 Создано: ${name}`
+        };
+      }
+    };
+  }
+})();
+
+
+
+;/* —— js/actions/action-context.js —— */
+// Единый контекст выполнения действий (слой 3)
+const ActionContext = (function () {
+  function build(engine, extra = {}) {
+    if (!engine) throw new Error('ActionContext.build: engine required');
+    const state = engine.state || {};
+    return {
+      engine,
+      state,
+      data: engine.data,
+      scene: extra.scene || null,
+      component: extra.component || null,
+      character: {
+        name: state.charName,
+        className: state.className,
+        level: state.level ?? 1,
+        hp: state.hp,
+        maxHp: state.maxHp,
+        gold: state.gold,
+        inventory: state.inventory || [],
+        equipment: state.equipped || {},
+        flags: state.flags || {},
+        stats: state.stats || {}
+      },
+      party: state.party || [],
+      conditions: typeof ConditionSystem !== 'undefined' ? ConditionSystem : null,
+      resources: {
+        canAfford: (cost) => ActionContext.canAfford(engine, cost),
+        spend: (cost) => ActionContext.spend(engine, cost)
+      },
+      log: (message, type) => engine.log?.(message, type || 'log-dice'),
+      snapshot: () => ActionContext.snapshot(engine),
+      restore: (snap) => ActionContext.restore(engine, snap),
+      ...extra
+    };
+  }
+
+  function snapshot(engine) {
+    const s = engine.state;
+    return {
+      gold: s.gold,
+      hp: s.hp,
+      maxHp: s.maxHp,
+      inventory: [...(s.inventory || [])],
+      flags: { ...(s.flags || {}) },
+      equipped: { ...(s.equipped || {}) },
+      questStages: { ...(s.questStages || {}) }
+    };
+  }
+
+  function restore(engine, snap) {
+    if (!snap) return;
+    Object.assign(engine.state, {
+      gold: snap.gold,
+      hp: snap.hp,
+      maxHp: snap.maxHp,
+      inventory: [...(snap.inventory || [])],
+      flags: { ...(snap.flags || {}) },
+      equipped: { ...(snap.equipped || {}) },
+      questStages: { ...(snap.questStages || {}) }
+    });
+    engine.updateStats?.();
+    engine.updateUI?.();
+  }
+
+  function parseCost(cost) {
+    if (!cost) return { gold: 0, items: {} };
+    if (typeof cost === 'number') return { gold: cost, items: {} };
+    if (typeof cost === 'string' && /^\d+$/.test(cost)) return { gold: parseInt(cost, 10), items: {} };
+    const gold = cost.gold ?? cost.amount ?? 0;
+    const items = { ...(cost.items || {}) };
+    if (cost.itemId) items[cost.itemId] = cost.count ?? cost.amount ?? 1;
+    if (cost.resource && cost.resource !== 'gold') {
+      items[cost.resource] = cost.amount ?? 1;
+    }
+    return { gold: Number(gold) || 0, items };
+  }
+
+  function canAfford(engine, cost) {
+    const parsed = parseCost(cost);
+    if ((engine.state.gold ?? 0) < parsed.gold) return false;
+    for (const [itemId, need] of Object.entries(parsed.items)) {
+      const have = (engine.state.inventory || []).filter((id) => id === itemId).length;
+      if (have < need) return false;
+    }
+    return true;
+  }
+
+  function spend(engine, cost) {
+    const parsed = parseCost(cost);
+    if (parsed.gold > 0) {
+      engine.state.gold -= parsed.gold;
+      engine.updateStats?.();
+    }
+    for (const [itemId, need] of Object.entries(parsed.items)) {
+      for (let i = 0; i < need; i++) {
+        const idx = (engine.state.inventory || []).indexOf(itemId);
+        if (idx === -1) break;
+        engine.state.inventory.splice(idx, 1);
+      }
+    }
+  }
+
+  return { build, snapshot, restore, canAfford, spend, parseCost };
+})();
+
+if (typeof window !== 'undefined') {
+  window.ActionContext = ActionContext;
+}
+
+
+;/* —— js/actions/action-effects.js —— */
+// Применение декларативных эффектов после execute()
+const ActionEffects = (function () {
+  async function applyOne(effect, ctx) {
+    if (!effect || !ctx?.engine) return;
+    const engine = ctx.engine;
+    const type = effect.type;
+
+    switch (type) {
+      case 'ui_update':
+        engine.updateStats?.();
+        engine.updateUI?.();
+        engine.refreshSceneComponents?.();
+        (effect.panels || []).forEach((p) => {
+          if (p === 'inventory') engine.renderInventory?.();
+          if (p === 'abilities') engine.renderAbilities?.();
+          if (p === 'equipment') engine.updateStats?.();
+          if (p === 'stats') engine.updateStats?.();
+          if (p === 'clock') engine.timeSystem?.updateUI?.();
+          if (p === 'climate') engine.updateClimateUI?.();
+          if (p === 'crafting' && typeof CraftingUI !== 'undefined') CraftingUI.render();
+        });
+        break;
+      case 'refresh_scene':
+        engine.refreshSceneForTime?.(true);
+        engine.refreshSceneForClimate?.(true);
+        engine.refreshSceneComponents?.();
+        break;
+      case 'modify_stat':
+        if (effect.stat === 'gold') engine.state.gold = (engine.state.gold || 0) + (effect.value || 0);
+        else if (effect.stat === 'hp') {
+          engine.state.hp = Math.min(engine.state.maxHp, (engine.state.hp || 0) + (effect.value || 0));
+        } else if (engine.state.stats && effect.stat in engine.state.stats) {
+          engine.state.stats[effect.stat] += effect.value || 0;
+        }
+        engine.updateStats?.();
+        break;
+      case 'set_flag':
+        if (!engine.state.flags) engine.state.flags = {};
+        engine.state.flags[effect.flag] = effect.value !== undefined ? effect.value : true;
+        break;
+      case 'set_variable':
+        if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.setValue) {
+          RuntimeVariables.setValue(engine, effect.variable, effect.value);
+        } else if (engine.state.variables) {
+          engine.state.variables[effect.variable] = effect.value !== undefined ? effect.value : true;
+        }
+        break;
+      case 'log':
+        ctx.log(effect.message || '…', effect.logType || 'log-dice');
+        break;
+      case 'transition':
+      case 'change_scene':
+        if (effect.target || effect.sceneId) {
+          engine.showScene(effect.target || effect.sceneId);
+        }
+        break;
+      case 'play_sound':
+        if (typeof AudioEngine !== 'undefined' && effect.sound) {
+          AudioEngine.playSFX?.(effect.sound, { volume: effect.volume });
+        }
+        break;
+      case 'trigger_event':
+        if (effect.event && typeof engine[effect.event] === 'function') {
+          engine[effect.event](...(effect.args || []));
+        } else if (effect.handler && typeof GameEngine.runSceneHandler === 'function') {
+          GameEngine.runSceneHandler(effect.handler, effect.data || {});
+        }
+        break;
+      case 'item_repaired':
+      case 'refresh_components':
+        engine.refreshSceneComponents?.();
+        break;
+      default:
+        break;
+    }
+  }
+
+  async function applyAll(effects, ctx) {
+    if (!Array.isArray(effects)) return;
+    for (const eff of effects) {
+      await applyOne(eff, ctx);
+    }
+  }
+
+  return { applyOne, applyAll };
+})();
+
+if (typeof window !== 'undefined') {
+  window.ActionEffects = ActionEffects;
+}
+
+
+;/* —— js/actions/action-chain-library.js —— */
+// ============================================
+// Библиотека готовых цепочек действий (примеры)
+// ============================================
+
+const DEFAULT_ACTION_CHAINS = {
+  not_enough_gold: {
+    name: 'Недостаточно золота',
+    steps: [
+      { action: 'log', params: { message: '❌ Недостаточно золота.', type: 'danger' } }
+    ]
+  },
+
+  buy_potion: {
+    name: 'Купить зелье лечения',
+    steps: [
+      { action: 'check_gold', params: { amount: 20 }, onFail: 'not_enough_gold' },
+      { action: 'remove_gold', params: { amount: 20 } },
+      { action: 'add_item', params: { itemId: 'healing_potion', count: 1 } },
+      { action: 'log', params: { message: '✅ Куплено зелье лечения!', type: 'success' } },
+      { action: 'refresh_ui' }
+    ]
+  },
+
+  buy_item: {
+    name: 'Купить предмет (шаблон)',
+    steps: [
+      { action: 'check_gold', params: { amount: 50 }, onFail: 'not_enough_gold' },
+      { action: 'remove_gold', params: { amount: 50 } },
+      { action: 'add_item', params: { itemId: 'healing_potion', count: 1 } },
+      { action: 'log', params: { message: 'Покупка завершена.', type: 'success' } }
+    ]
+  },
+
+  sell_item: {
+    name: 'Продать предмет (шаблон)',
+    steps: [
+      { action: 'check_item', params: { itemId: 'rope', count: 1 }, onFail: 'no_item_to_sell' },
+      { action: 'remove_item', params: { itemId: 'rope', count: 1 } },
+      { action: 'add_gold', params: { amount: 5 } },
+      { action: 'log', params: { message: '💰 Предмет продан.', type: 'success' } }
+    ]
+  },
+
+  no_item_to_sell: {
+    name: 'Нет предмета для продажи',
+    steps: [
+      { action: 'log', params: { message: 'У вас нет такого предмета.', type: 'warning' } }
+    ]
+  },
+
+  heal_at_temple: {
+    name: 'Лечение в храме',
+    steps: [
+      { action: 'check_gold', params: { amount: 50 }, onFail: 'not_enough_gold' },
+      { action: 'remove_gold', params: { amount: 50 } },
+      { action: 'heal', params: { target: 'self', amount: '2d8+4', restoreResources: true } },
+      { action: 'log', params: { message: '✨ Священник исцелил ваши раны.', type: 'success' } },
+      { action: 'refresh_ui' }
+    ]
+  },
+
+  heal_party: {
+    name: 'Лечение группы',
+    steps: [
+      { action: 'heal', params: { target: 'party', amount: '2d6+2' } },
+      { action: 'log', params: { message: 'Группа отдыхает и восстанавливает силы.', type: 'heal' } }
+    ]
+  },
+
+  remove_curse: {
+    name: 'Снятие проклятия',
+    steps: [
+      { action: 'check_gold', params: { amount: 200 }, onFail: 'not_enough_gold' },
+      { action: 'remove_gold', params: { amount: 200 } },
+      { action: 'remove_effect', params: { target: 'self', effect: 'cursed' } },
+      { action: 'log', params: { message: '✨ Проклятие ослаблено священником.', type: 'success' } }
+    ]
+  },
+
+  start_quest: {
+    name: 'Начать квест',
+    steps: [
+      { action: 'say', params: { npcId: 'marta', text: 'Помоги найти моего сына! Возьми это фото.' } },
+      { action: 'set_flag', params: { flag: 'quest_find_son', value: true } },
+      { action: 'update_quest', params: { questId: 'find_albert', stage: '1' } },
+      { action: 'log', params: { message: '📜 Новое задание: найти сына Марты.', type: 'success' } }
+    ]
+  },
+
+  complete_quest: {
+    name: 'Завершить квест',
+    steps: [
+      { action: 'update_quest', params: { questId: 'find_albert', stage: 'complete' } },
+      { action: 'add_gold', params: { amount: 100 } },
+      { action: 'log', params: { message: '🎉 Квест выполнен! +100 зм', type: 'success' } }
+    ]
+  },
+
+  enhance_item: {
+    name: 'Заточка (упрощённо)',
+    steps: [
+      { action: 'check_gold', params: { amount: 100 }, onFail: 'not_enough_gold' },
+      { action: 'remove_gold', params: { amount: 100 } },
+      { action: 'log', params: { message: '⚒️ Кузнец закалил ваше снаряжение!', type: 'success' } }
+    ]
+  },
+
+  gamble_dice: {
+    name: 'Азартная игра (кости)',
+    steps: [
+      { action: 'check_gold', params: { amount: 10 }, onFail: 'not_enough_gold' },
+      { action: 'remove_gold', params: { amount: 10 } },
+      {
+        action: 'roll_check',
+        params: { dc: 15 },
+        onSuccess: [
+          { action: 'add_gold', params: { amount: 25 } },
+          { action: 'log', params: { message: '🎲 Удача! Вы выиграли 25 зм.', type: 'success' } }
+        ],
+        onFail: [
+          { action: 'log', params: { message: '🎲 Неудача. Ставка потеряна.', type: 'warning' } }
+        ]
+      }
+    ]
+  },
+
+  jack_greeting: {
+    name: 'Приветствие Джека',
+    steps: [
+      {
+        action: 'say',
+        params: {
+          npcId: 'jack',
+          text: 'Добро пожаловать! Видишь кнопки — покупай быстро, или торгуйся как обычно.'
+        }
+      }
+    ]
+  },
+
+  npc_dialogue: {
+    name: 'Диалог с ветвлением',
+    steps: [
+      {
+        action: 'check_gold',
+        params: { amount: 100 },
+        onSuccess: [
+          { action: 'say', params: { npcId: 'jack', text: 'У тебя достаточно золота!' } },
+          {
+            action: 'show_choices',
+            params: {
+              choices: [
+                { text: 'Купить зелье', chain: 'buy_potion' },
+                { text: 'Уйти', to: 'village_hub' }
+              ]
+            }
+          }
+        ],
+        onFail: [
+          { action: 'say', params: { npcId: 'jack', text: 'Приходи, когда разбогатеешь.' } },
+          { action: 'change_scene', params: { sceneId: 'village_hub' } }
+        ]
+      }
+    ]
+  },
+
+  trap_disarm: {
+    name: 'Обезвреживание ловушки',
+    steps: [
+      {
+        action: 'check_skill',
+        params: { skill: 'investigation', dc: 14 },
+        onSuccess: [
+          { action: 'log', params: { message: '✅ Ловушка обезврежена!', type: 'success' } },
+          { action: 'set_flag', params: { flag: 'trap_disarmed', value: true } }
+        ],
+        onFail: [
+          { action: 'damage', params: { target: 'self', amount: '1d6' } },
+          { action: 'log', params: { message: '💥 Ловушка сработала!', type: 'danger' } }
+        ]
+      }
+    ]
+  },
+
+  leave_shop: {
+    name: 'Уйти из лавки',
+    steps: [
+      { action: 'change_scene', params: { sceneId: 'village_hub' } }
+    ]
+  }
+};
+
+const ActionChainLibrary = {
+  ensureActionChains(data) {
+    if (!data) return;
+    if (!data.actionChains) data.actionChains = {};
+    Object.keys(DEFAULT_ACTION_CHAINS).forEach((id) => {
+      if (!data.actionChains[id]) {
+        data.actionChains[id] = JSON.parse(JSON.stringify(DEFAULT_ACTION_CHAINS[id]));
+      }
+    });
+  },
+
+  getDefaults() {
+    return DEFAULT_ACTION_CHAINS;
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.DEFAULT_ACTION_CHAINS = DEFAULT_ACTION_CHAINS;
+  window.ActionChainLibrary = ActionChainLibrary;
+}
+
+
+;/* —— js/components/component-base.js —— */
+// Общие хелперы и базовый класс компонентов (слой 2)
+const SceneComponentBase = {
+  escape(engine, s) {
+    return engine.escapeHtml ? engine.escapeHtml(s) : String(s ?? '');
+  },
+
+  attr(engine, s) {
+    return engine.escapeAttr ? engine.escapeAttr(s) : String(s ?? '');
+  },
+
+  isVisible(engine, compDef) {
+    if (compDef.enabled === false) return false;
+    const cond = compDef.conditions || compDef.condition;
+    if (!cond) return true;
+    const ctx = engine.getConditionContext?.() || {
+      flags: engine.state?.flags || {},
+      inventory: engine.state?.inventory || [],
+      gold: engine.state?.gold ?? 0
+    };
+    if (typeof ConditionSystem !== 'undefined') {
+      if (typeof ConditionSystem.resolveRef === 'function') {
+        return ConditionSystem.resolveRef(cond, ctx);
+      }
+      if (cond.showIf && !ConditionSystem.evaluate(cond.showIf, ctx)) return false;
+      if (cond.hideIf && ConditionSystem.evaluate(cond.hideIf, ctx)) return false;
+    }
+    return true;
+  },
+
+  wrap(type, title, inner) {
+    return `<div class="scene-component-block scene-component-block--${type}">
+      <div class="scene-component-head">${title}</div>
+      <div class="scene-component-body">${inner}</div>
+    </div>`;
+  },
+
+  previewNote(preview) {
+    return preview ? '<p class="hint scene-component-preview">Предпросмотр — кнопки неактивны</p>' : '';
+  },
+
+  resolveInventory(engine, key, npcId) {
+    if (typeof SceneTemplateEngine !== 'undefined') {
+      return SceneTemplateEngine.resolveInventory(engine.data, key, npcId);
+    }
+    const inv = engine.data?.shopInventories?.[key];
+    if (inv?.items) return inv.items;
+    if (Array.isArray(inv)) return inv;
+    return Array.isArray(key) ? key : [];
+  },
+
+  getNpcName(engine, id, fallback) {
+    return engine.data?.npcs?.[id]?.name || fallback || id || 'NPC';
+  },
+
+  /** Стоимость для UI: золото + предметы */
+  renderCost(engine, cost) {
+    if (!cost) return '';
+    const parsed = typeof ActionContext !== 'undefined'
+      ? ActionContext.parseCost(cost)
+      : { gold: Number(cost.gold || cost) || 0, items: {} };
+    const parts = [];
+    if (parsed.gold > 0) parts.push(`${parsed.gold} зм`);
+    Object.entries(parsed.items).forEach(([id, n]) => {
+      const name = engine.data?.items?.[id]?.name || id;
+      parts.push(`${name} ×${n}`);
+    });
+    return parts.join(' · ') || 'бесплатно';
+  },
+
+  checkCondition(engine, conditionRef, args) {
+    const ctx = engine.getConditionContext?.();
+    if (typeof ConditionSystem !== 'undefined' && ConditionSystem.resolveRef) {
+      return ConditionSystem.resolveRef(conditionRef, ctx, args);
+    }
+    return true;
+  },
+
+  async runAction(engine, actionRef, params, extraCtx) {
+    if (typeof ActionRunner !== 'undefined' && ActionRunner.runV2) {
+      return ActionRunner.runV2(engine, actionRef, params, extraCtx);
+    }
+    if (typeof engine.executeChain === 'function' && typeof actionRef === 'string') {
+      return engine.executeChain(actionRef);
+    }
+    return { success: false };
+  },
+
+  getConfig(compDef) {
+    return compDef.config || compDef.params || {};
+  },
+
+  resolveType(compDef) {
+    return compDef.component || compDef.type || 'unknown';
+  }
+};
+
+/**
+ * Базовый класс UI-компонента сцены (слой 2 — без бизнес-логики).
+ */
+class SceneComponent {
+  constructor(type, config, engine, ctx) {
+    this.type = type;
+    this.config = config || {};
+    this.engine = engine;
+    this.ctx = ctx || {};
+    this.element = null;
+    this.state = {};
+  }
+
+  mount(container) {
+    this.element = container;
+    this.render();
+  }
+
+  unmount() {
+    if (this.element) this.element.innerHTML = '';
+    this.element = null;
+    this.state = {};
+  }
+
+  update(data) {
+    Object.assign(this.config, data || {});
+    if (this.element) this.render();
+  }
+
+  emit(event, data) {
+    const sceneId = this.ctx.sceneId || this.engine.state?.scene;
+    if (event === 'run_action' && data?.action) {
+      return SceneComponentBase.runAction(this.engine, data.action, data.params || {}, {
+        scene: this.ctx.scene,
+        component: this.ctx.compDef
+      });
+    }
+    if (event === 'run_chain' && data?.chain) {
+      return this.engine.executeChain?.(data.chain);
+    }
+    if (event === 'refresh') {
+      this.engine.refreshSceneComponents?.();
+    }
+  }
+
+  render() {
+    /* override */
+  }
+
+  renderCost(cost) {
+    return SceneComponentBase.renderCost(this.engine, cost);
+  }
+
+  checkCondition(ref, args) {
+    return SceneComponentBase.checkCondition(this.engine, ref, args);
+  }
+
+  runAction(actionRef, params) {
+    return this.emit('run_action', { action: actionRef, params });
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.SceneComponent = SceneComponent;
+}
+
+
+;/* —— js/components/component-normalize.js —— */
+// Нормализация legacy-компонентов → v3 (обратная совместимость)
+const SceneComponentNormalize = (function () {
+  const LEGACY_PANEL = {
+    repair: 'repair_panel',
+    upgrade: 'upgrade_panel',
+    enhance: 'upgrade_panel',
+    heal: null,
+    curse_remove: 'curse_remove_panel',
+    gambling: 'gamble_panel',
+    crafting: 'craft_panel'
+  };
+
+  const LEGACY_HEADER = {
+    repair: '⚒️ Ремонт',
+    upgrade: '⬆️ Заточка',
+    enhance: '⬆️ Заточка',
+    heal: '🩹 Лечение',
+    curse_remove: '✨ Снятие проклятий',
+    gambling: '🎲 Азарт',
+    crafting: '🔨 Создание'
+  };
+
+  function normalize(comp) {
+    if (!comp || typeof comp !== 'object') return comp;
+    const type = comp.component || comp.type;
+    if (!type) return comp;
+
+    if (type === 'trade') {
+      return {
+        ...comp,
+        component: 'trade_interface',
+        params: { ...(comp.params || comp.config || {}), _legacyTrade: true }
+      };
+    }
+
+    if (type === 'interactive') {
+      return {
+        ...comp,
+        component: 'interactive_panel',
+        params: comp.params || comp.config || {}
+      };
+    }
+
+    if (type === 'dialogue') {
+      return {
+        ...comp,
+        component: 'dialogue_tree',
+        params: comp.params || comp.config || {}
+      };
+    }
+
+    const panelId = LEGACY_PANEL[type];
+    if (panelId && comp._wrapServiceMenu !== false) {
+      return {
+        ...comp,
+        component: 'service_menu',
+        _legacyWrapped: type,
+        params: {
+          header: LEGACY_HEADER[type] || 'Услуги',
+          services: [
+            {
+              id: `${type}_panel`,
+              type: 'panel',
+              panel: panelId,
+              panelParams: { ...(comp.params || comp.config || {}) }
+            }
+          ]
+        }
+      };
+    }
+
+    if (comp.config && !comp.params) {
+      return { ...comp, params: comp.config };
+    }
+
+    return comp;
+  }
+
+  function normalizeList(components) {
+    if (!Array.isArray(components)) return [];
+    return components.map(normalize);
+  }
+
+  return { normalize, normalizeList, LEGACY_PANEL };
+})();
+
+if (typeof window !== 'undefined') {
+  window.SceneComponentNormalize = SceneComponentNormalize;
+}
+
+
+;/* —— js/scene-components.js —— */
+// ============================================
+// Компонентная архитектура сцен
+// ============================================
+
+const SceneComponentRegistry = (function () {
+  const _types = {};
+
+  const COMPONENT_META = {
+    dialogue_tree: { label: 'Диалог', icon: '💬' },
+    trade_interface: { label: 'Торговля', icon: '💰' },
+    service_menu: { label: 'Меню услуг', icon: '📋' },
+    interactive_panel: { label: 'Кнопка (цепочка)', icon: '🔘' },
+    character_creator: { label: 'Создание персонажа', icon: '🧝' }
+  };
+
+  function register(type, renderer) {
+    _types[type] = renderer;
+  }
+
+  /** Регистрация при загрузке до scene-components.js (очередь) */
+  function flushPendingRegistrations() {
+    const pending = typeof window !== 'undefined' ? window.__sceneComponentPending : null;
+    if (!Array.isArray(pending) || !pending.length) return;
+    pending.forEach((entry) => {
+      if (entry?.type && entry.renderer) register(entry.type, entry.renderer);
+    });
+    if (typeof window !== 'undefined') window.__sceneComponentPending = [];
+  }
+
+  function get(type) {
+    return _types[type] || null;
+  }
+
+  function listTypes() {
+    return Object.keys(COMPONENT_META).filter((t) => t !== 'enhance');
+  }
+
+  function getMeta(type) {
+    return COMPONENT_META[type] || { label: type, icon: '📦' };
+  }
+
+  function defaultParams(type) {
+    const r = get(type);
+    return r?.defaultParams ? { ...r.defaultParams } : {};
+  }
+
+  function bindGameEngine() {
+    if (typeof GameEngine === 'undefined') return;
+
+    GameEngine.hasSceneComponents = function (scene) {
+      return Array.isArray(scene?.components) && scene.components.length > 0;
+    };
+
+    GameEngine.clearSceneComponentsArea = function () {
+      const area = document.getElementById('scene-components-area');
+      if (area) {
+        area.innerHTML = '';
+        area.classList.add('hidden');
+      }
+    };
+
+    GameEngine.renderSceneComponents = function (sceneId, scene, options = {}) {
+      const area = document.getElementById('scene-components-area');
+      if (!area) return;
+      area.innerHTML = '';
+      area.classList.remove('hidden');
+
+      let list = scene?.components || [];
+      if (typeof SceneComponentNormalize !== 'undefined') {
+        list = SceneComponentNormalize.normalizeList(list);
+      }
+      this.state.componentScene = {
+        sceneId,
+        preview: !!options.preview,
+        activeIndex: null
+      };
+
+      list.forEach((comp, index) => {
+        if (!SceneComponentBase.isVisible(this, comp)) return;
+        const type = comp.component || comp.type;
+        const renderer = get(type);
+        if (!renderer) {
+          const wrap = document.createElement('div');
+          wrap.className = 'scene-component-unknown';
+          wrap.innerHTML = `<p class="hint">Неизвестный компонент: ${SceneComponentBase.escape(this, type)}</p>`;
+          area.appendChild(wrap);
+          return;
+        }
+        const wrap = document.createElement('div');
+        wrap.className = `scene-component scene-component--${type}`;
+        wrap.dataset.componentIndex = String(index);
+        area.appendChild(wrap);
+        try {
+          renderer.render(this, wrap, comp, {
+            sceneId,
+            index,
+            preview: !!options.preview,
+            scene
+          });
+        } catch (e) {
+          console.error('[SceneComponent]', type, e);
+          wrap.innerHTML = `<p class="hint">Ошибка компонента ${type}</p>`;
+        }
+      });
+
+      if (!options.preview) {
+        this.renderComponentSceneExit(sceneId, scene);
+      }
+      this.saveGame?.();
+    };
+
+    GameEngine.renderComponentSceneExit = function (sceneId, scene) {
+      const raw = this.data?.scenes?.[sceneId];
+      const fallbackExit = typeof this.getFirstStorySceneId === 'function'
+        ? this.getFirstStorySceneId()
+        : 'village_hub';
+      const exit = scene?.exit || scene?.exitScene || raw?.exitScene || fallbackExit;
+      const choices = [];
+      if (exit) {
+        choices.push({ text: '🚪 Уйти', to: exit, icon: '🚪' });
+      }
+      const hubBtn = this.buildHubReturnChoice?.(raw);
+      if (hubBtn && (!exit || hubBtn.to !== exit)) choices.push(hubBtn);
+      this.setChoices(choices);
+    };
+
+    GameEngine.refreshSceneComponents = function () {
+      const sid = this.state.scene;
+      if (!sid) return;
+      const scene = this.getProcessedScene?.(sid) || this.data?.scenes?.[sid];
+      if (this.hasSceneComponents(scene)) {
+        this.renderSceneComponents(sid, scene, { preview: this.state.componentScene?.preview });
+      }
+    };
+  }
+
+  bindGameEngine();
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', bindGameEngine);
+  }
+
+  return {
+    register,
+    get,
+    listTypes,
+    getMeta,
+    defaultParams,
+    COMPONENT_META,
+    flushPendingRegistrations
+  };
+})();
+
+if (typeof window !== 'undefined') {
+  window.SceneComponentRegistry = SceneComponentRegistry;
+  SceneComponentRegistry.flushPendingRegistrations?.();
+}
+
+/** Безопасная регистрация из файлов компонентов (если порядок скриптов нарушен) */
+function registerSceneComponent(type, renderer) {
+  if (typeof SceneComponentRegistry !== 'undefined' && SceneComponentRegistry.register) {
+    SceneComponentRegistry.register(type, renderer);
+    return;
+  }
+  if (typeof window !== 'undefined') {
+    window.__sceneComponentPending = window.__sceneComponentPending || [];
+    window.__sceneComponentPending.push({ type, renderer });
+  }
+}
+
+
+;/* —— js/components/component-panels.js —— */
+// Универсальные панели услуг: только UI, логика в ACTION_REGISTRY (runAction)
+(function () {
+  const PanelActions = {
+    async run(actionId, params, extraCtx) {
+      if (typeof SceneComponentBase === 'undefined') return;
+      await SceneComponentBase.runAction(GameEngine, actionId, params || {}, extraCtx || {});
+      GameEngine.refreshSceneComponents?.();
+      GameEngine.updateStats?.();
+    },
+    runGamble(inputId, min, max, resultId) {
+      const inp = document.getElementById(inputId);
+      let bet = parseInt(inp?.value, 10) || min;
+      bet = Math.max(min, Math.min(max, bet));
+      return PanelActions.run('gamble_dice', { bet, minBet: min, maxBet: max }).then(() => {
+        const el = document.getElementById(resultId);
+        if (el && GameEngine._lastGambleMsg) el.textContent = GameEngine._lastGambleMsg;
+      });
+    },
+    runCraft(btn) {
+      if (!btn?.dataset) return Promise.resolve();
+      let materials = {};
+      try {
+        materials = JSON.parse(btn.dataset.mats || '{}');
+      } catch (e) { /* ignore */ }
+      return PanelActions.run('craft_item', {
+        resultId: btn.dataset.resultId,
+        materials
+      });
+    }
+  };
+  if (typeof window !== 'undefined') window.PanelActions = PanelActions;
+
+  function attr(engine, s) {
+    return SceneComponentBase.attr(engine, s);
+  }
+
+  function esc(engine, s) {
+    return SceneComponentBase.escape(engine, s);
+  }
+
+  const RepairPanel = {
+    defaultParams: { npc: 'blacksmith_npc', flatCost: 15, costPerDurability: 1 },
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const preview = ctx.preview;
+      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Мастер');
+      const cost = Math.max(1, parseInt(p.flatCost ?? p.costPerDurability, 10) || 15);
+      const slots = engine.ENHANCEMENT_SLOTS || ['weapon_main', 'armor', 'shield'];
+      let rows = '';
+      slots.forEach((slot) => {
+        const id = engine.getEquippedItemId?.(slot);
+        const item = id ? engine.getEffectiveItemData?.(id) : null;
+        const label = slot === 'weapon_main' ? 'Оружие' : slot === 'armor' ? 'Броня' : 'Щит';
+        if (!item) {
+          rows += `<p class="hint">${label}: пусто</p>`;
+          return;
+        }
+        const lvl = engine.getItemEnhancementLevel?.(id) || 0;
+        const worn = lvl > 0;
+        const btn = worn && !preview
+          ? `<button type="button" class="choice" onclick="PanelActions.run('repair_item',{itemId:'${attr(engine, id)}',cost:${cost}})">Починить за ${cost} зм</button>`
+          : worn && preview ? '<button type="button" class="choice" disabled>Починить</button>' : '';
+        rows += `<div class="repair-row"><span>${esc(engine, item.name)} ${worn ? `(износ +${lvl})` : '(в порядке)'}</span> ${btn}</div>`;
+      });
+      container.innerHTML = SceneComponentBase.wrap(
+        'repair_panel',
+        `⚒️ Ремонт — ${esc(engine, npc)}`,
+        `${SceneComponentBase.previewNote(preview)}<p class="hint">Сбрасывает заточку (износ). Цена: ${cost} зм.</p>${rows}`
+      );
+    }
+  };
+
+  const UpgradePanel = {
+    defaultParams: { npc: 'blacksmith_npc', maxEnhancement: 3, costTable: [100, 300, 900] },
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const preview = ctx.preview;
+      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Мастер');
+      if (preview) {
+        container.innerHTML = SceneComponentBase.wrap(
+          'upgrade_panel',
+          `⬆️ ${esc(engine, npc)}`,
+          `${SceneComponentBase.previewNote(true)}<p class="hint">Заточка до +${p.maxEnhancement}</p>`
+        );
+        return;
+      }
+      engine.state.blacksmithSession = {
+        sceneId: ctx.sceneId,
+        message: '',
+        componentIndex: ctx.index,
+        componentContainer: container,
+        costTable: p.costTable,
+        maxEnhancement: p.maxEnhancement
+      };
+      const entries = engine.getBlacksmithEnhanceableEntries?.() || [];
+      let equipHtml = '<div class="blacksmith-equipped">';
+      (engine.ENHANCEMENT_SLOTS || []).forEach((slot) => {
+        const id = engine.getEquippedItemId(slot);
+        const item = id ? engine.getEffectiveItemData(id) : null;
+        const slotLabel = slot === 'weapon_main' ? 'Оружие' : slot === 'armor' ? 'Броня' : 'Щит';
+        equipHtml += item
+          ? `<div class="blacksmith-slot">${slotLabel}: <b>${esc(engine, item.name)}</b> (+${engine.getItemEnhancementLevel(id)})</div>`
+          : `<div class="blacksmith-slot">${slotLabel}: <span class="hint">— пусто —</span></div>`;
+      });
+      equipHtml += '</div>';
+      let actionsHtml = '';
+      if (entries.length) {
+        entries.forEach((e) => {
+          const afford = engine.state.gold >= e.cost;
+          actionsHtml += `<button type="button" class="choice" ${afford ? '' : 'disabled'}
+            ${afford ? `onclick="PanelActions.run('enhance_item',{itemId:'${attr(engine, e.itemId)}'})"` : ''}>
+            Заточить ${esc(engine, e.name)} до +${e.next} — ${e.cost} зм
+          </button>`;
+        });
+      } else {
+        actionsHtml = '<p class="hint">Нет доступных улучшений.</p>';
+      }
+      const session = engine.state.blacksmithSession;
+      const msg = session.message ? `<p class="shop-flash">${esc(engine, session.message)}</p>` : '';
+      container.innerHTML = SceneComponentBase.wrap(
+        'upgrade_panel',
+        `⬆️ Заточка — ${esc(engine, npc)}`,
+        `<p class="hint">💰 ${engine.state.gold} зм</p>${msg}${equipHtml}<div class="blacksmith-actions">${actionsHtml}</div>`
+      );
+    }
+  };
+
+  const CurseRemovePanel = {
+    defaultParams: { npc: 'priest', costBase: 50 },
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const preview = ctx.preview;
+      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Священник');
+      const entries = preview ? [] : (engine.getEquippedCursedEntries?.() || []);
+      let list = '';
+      if (!entries.length) {
+        list = '<p class="hint">Нет надетых проклятых предметов.</p>';
+      } else {
+        entries.forEach((e) => {
+          const afford = engine.state.gold >= e.cost;
+          list += `<div class="curse-row">
+            <span><b>${esc(engine, e.item.name)}</b> — ${e.cost} зм</span>
+            <button type="button" class="choice" ${!afford || preview ? 'disabled' : ''}
+              ${preview ? '' : `onclick="PanelActions.run('remove_curse',{itemId:'${attr(engine, e.itemId)}',cost:${e.cost}})"`}>
+              Снять проклятие
+            </button>
+          </div>`;
+        });
+      }
+      if (!preview) {
+        engine.state.templePriestSession = {
+          sceneId: ctx.sceneId,
+          message: '',
+          componentIndex: ctx.index
+        };
+      }
+      container.innerHTML = SceneComponentBase.wrap(
+        'curse_remove_panel',
+        `✨ ${esc(engine, npc)}`,
+        `${SceneComponentBase.previewNote(preview)}${list}`
+      );
+    }
+  };
+
+  const GamblePanel = {
+    defaultParams: { npc: 'jack', minBet: 5, maxBet: 50 },
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const preview = ctx.preview;
+      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Игрок');
+      const min = Math.max(1, parseInt(p.minBet, 10) || 5);
+      const max = Math.max(min, parseInt(p.maxBet, 10) || 50);
+      const hostId = `gamble-result-${ctx.index}`;
+      container.innerHTML = SceneComponentBase.wrap(
+        'gamble_panel',
+        `🎲 ${esc(engine, npc)}`,
+        `${SceneComponentBase.previewNote(preview)}
+         <p>Кости: ставка ${min}–${max} зм. Выигрыш ×2 при броске 15+.</p>
+         <label>Ставка: <input type="number" id="gamble-bet-${ctx.index}" min="${min}" max="${max}" value="${min}" style="width:60px;" ${preview ? 'disabled' : ''}></label>
+         <button type="button" class="choice" ${preview ? 'disabled' : ''}
+           ${preview ? '' : `onclick="PanelActions.runGamble('gamble-bet-${ctx.index}',${min},${max},'${hostId}')"`}>
+           🎲 Бросить кости
+         </button>
+         <div id="${hostId}" class="hint"></div>`
+      );
+    }
+  };
+
+  const CraftPanel = {
+    defaultParams: { npc: 'blacksmith_npc', recipes: [] },
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const preview = ctx.preview;
+      const npc = SceneComponentBase.getNpcName(engine, p.npc, 'Мастер');
+      const recipes = Array.isArray(p.recipes) ? p.recipes : [];
+      let rows = '';
+      recipes.forEach((r, i) => {
+        const rec = typeof r === 'string' ? { id: r, result: r } : r;
+        const resultId = rec.result || rec.itemId || rec.id;
+        const db = engine.data?.items?.[resultId];
+        const mats = rec.materials || rec.cost || {};
+        const matStr = Object.entries(mats).map(([k, v]) => `${k}×${v}`).join(', ') || '—';
+        rows += `<div class="craft-row">
+          <span>${esc(engine, db?.name || resultId)}</span>
+          <span class="hint">${esc(engine, matStr)}</span>
+          <button type="button" class="choice" ${preview ? 'disabled' : ''}
+            data-result-id="${attr(engine, resultId)}"
+            data-mats="${attr(engine, JSON.stringify(mats))}"
+            ${preview ? '' : 'onclick="PanelActions.runCraft(this)"'}>
+            Создать
+          </button>
+        </div>`;
+      });
+      if (!rows) rows = '<p class="hint">Нет рецептов в panelParams.recipes</p>';
+      container.innerHTML = SceneComponentBase.wrap(
+        'craft_panel',
+        `🔨 ${esc(engine, npc)}`,
+        `${SceneComponentBase.previewNote(preview)}${rows}`
+      );
+    }
+  };
+
+  const PANEL_MAP = {
+    repair_panel: RepairPanel,
+    upgrade_panel: UpgradePanel,
+    enhance_panel: UpgradePanel,
+    curse_remove_panel: CurseRemovePanel,
+    gamble_panel: GamblePanel,
+    craft_panel: CraftPanel
+  };
+
+  Object.keys(PANEL_MAP).forEach((id) => {
+    registerSceneComponent(id, PANEL_MAP[id]);
+  });
+
+  if (typeof window !== 'undefined') {
+    window.SceneComponentPanels = { PANEL_MAP, get: (id) => PANEL_MAP[id] || null };
+  }
+})();
+
+
+;/* —— js/components/service-menu.js —— */
+// Универсальный компонент: меню услуг (кузнец, храм, жрец, …)
+(function () {
+  const ServiceMenuComponent = {
+    defaultParams: {
+      header: 'Услуги',
+      services: []
+    },
+
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const preview = ctx.preview;
+      const services = p.services || [];
+
+      const hours = p.operatingHours;
+      if (hours && !preview && engine.isOpen) {
+        const climateHours = engine.getClimateOperatingHours
+          ? engine.getClimateOperatingHours({ operatingHours: hours, seasonalHours: hours.seasonal !== false })
+          : hours;
+        const open = climateHours.open ?? climateHours.openHour ?? 0;
+        const close = climateHours.close ?? climateHours.closeHour ?? 24;
+        const weatherDep = p.weatherDependent || hours.weatherDependent;
+        const closedByWeather = weatherDep && engine.weatherSystem?.isShelterRequired?.();
+        if (closedByWeather || !engine.isOpen(open, close)) {
+          const after = p.afterHours || {};
+          const head = SceneComponentBase.escape(engine, p.header || 'Услуги');
+          let body = after.text
+            ? `<p>${SceneComponentBase.escape(engine, after.text)}</p>`
+            : '<p class="hint">Заведение закрыто.</p>';
+          if (Array.isArray(after.choices) && after.choices.length) {
+            body += '<div class="service-after-hours-choices">';
+            after.choices.forEach((ch, ci) => {
+              if (!ConditionSystem?.isChoiceVisible?.(ch, engine.getConditionContext?.())) return;
+              body += `<button type="button" class="choice" data-after-choice="${ci}">${SceneComponentBase.escape(engine, ch.text || '…')}</button>`;
+            });
+            body += '</div>';
+          }
+          container.innerHTML = SceneComponentBase.wrap('service_menu', head + ' — закрыто', body);
+          if (!preview) {
+            container.querySelectorAll('[data-after-choice]').forEach((btn) => {
+              btn.onclick = () => {
+                const ch = after.choices[parseInt(btn.getAttribute('data-after-choice'), 10)];
+                if (ch?.to) engine.showScene(ch.to);
+                else if (ch?.action) engine.makeChoice?.(ch);
+              };
+            });
+          }
+          return;
+        }
+      }
+
+      const panelHosts = [];
+      let body = SceneComponentBase.previewNote(preview);
+
+      if (!services.length) {
+        body += '<p class="hint">Нет услуг в конфигурации.</p>';
+      }
+
+      services.forEach((svc, svcIndex) => {
+        if (!svc) return;
+        const cond = svc.condition || svc.conditions;
+        const condArgs = svc.conditionParams || svc.params || null;
+        if (cond && !SceneComponentBase.checkCondition(engine, cond, condArgs)) return;
+
+        const type = svc.type || 'action';
+        const label = svc.label || svc.id || 'Услуга';
+        const icon = svc.icon || '▸';
+        const desc = svc.description || svc.desc || '';
+
+        if (type === 'panel' && svc.panel) {
+          const hostId = `svc-panel-${ctx.index}-${svcIndex}`;
+          body += `<div class="service-menu-panel-host" id="${hostId}"></div>`;
+          panelHosts.push({
+            hostId,
+            panelType: svc.panel,
+            panelParams: svc.panelParams || svc.params || {}
+          });
+          return;
+        }
+
+        if (type === 'chain' && svc.chain) {
+          const costStr = svc.cost ? SceneComponentBase.renderCost(engine, svc.cost) : '';
+          body += `<div class="service-menu-row">
+            <button type="button" class="choice service-menu-btn" ${preview ? 'disabled' : ''}
+              data-svc="${svcIndex}" data-kind="chain">
+              ${SceneComponentBase.escape(engine, icon)} ${SceneComponentBase.escape(engine, label)}
+              ${costStr ? `<span class="service-cost">(${SceneComponentBase.escape(engine, costStr)})</span>` : ''}
+            </button>
+            ${desc ? `<p class="hint service-desc">${SceneComponentBase.escape(engine, desc)}</p>` : ''}
+          </div>`;
+          return;
+        }
+
+        const action = svc.action || svc.actionRef;
+        const costStr = svc.cost ? SceneComponentBase.renderCost(engine, svc.cost) : '';
+        const canRun = !preview && action && (!svc.cost || (typeof ActionContext !== 'undefined' && ActionContext.canAfford(engine, svc.cost)));
+
+        body += `<div class="service-menu-row">
+          <button type="button" class="choice service-menu-btn" ${!canRun ? 'disabled' : ''}
+            data-svc="${svcIndex}" data-kind="action">
+            ${SceneComponentBase.escape(engine, icon)} ${SceneComponentBase.escape(engine, label)}
+            ${costStr ? `<span class="service-cost">(${SceneComponentBase.escape(engine, costStr)})</span>` : ''}
+          </button>
+          ${desc ? `<p class="hint service-desc">${SceneComponentBase.escape(engine, desc)}</p>` : ''}
+        </div>`;
+      });
+
+      const head = SceneComponentBase.escape(engine, p.header || 'Услуги');
+      container.innerHTML = SceneComponentBase.wrap('service_menu', head, body);
+
+      panelHosts.forEach(({ hostId, panelType, panelParams }) => {
+        const host = container.querySelector(`#${hostId}`);
+        if (!host) return;
+        const renderer = SceneComponentRegistry.get(panelType)
+          || (typeof SceneComponentPanels !== 'undefined' ? SceneComponentPanels.get(panelType) : null);
+        if (!renderer) {
+          host.innerHTML = `<p class="hint">Неизвестная панель: ${panelType}</p>`;
+          return;
+        }
+        try {
+          renderer.render(engine, host, { component: panelType, params: panelParams, enabled: true }, ctx);
+        } catch (e) {
+          host.innerHTML = `<p class="hint">Ошибка панели: ${panelType}</p>`;
+        }
+      });
+
+      if (!preview) {
+        container.querySelectorAll('.service-menu-btn').forEach((btn) => {
+          btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-svc'), 10);
+            const kind = btn.getAttribute('data-kind');
+            const svc = services[idx];
+            if (!svc) return;
+            if (kind === 'chain' && svc.chain) {
+              engine.executeChain?.(svc.chain);
+              engine.refreshSceneComponents?.();
+              return;
+            }
+            const actionId = svc.action || svc.actionRef;
+            const params = { ...(svc.actionParams || svc.params || {}), cost: svc.cost };
+            Promise.resolve(SceneComponentBase.runAction(engine, actionId, params, {
+              scene: ctx.scene,
+              component: compDef
+            })).then(() => engine.refreshSceneComponents?.());
+          };
+        });
+      }
+    }
+  };
+
+  registerSceneComponent('service_menu', ServiceMenuComponent);
+})();
+
+
+;/* —— js/components/trade-interface.js —— */
+// Универсальный компонент торговли (v3)
+(function () {
+  const TradeInterfaceComponent = {
+    defaultParams: {
+      merchant: 'jack',
+      inventory: 'village_shop',
+      sellMultiplier: 1,
+      buyMultiplier: 0.5,
+      repFaction: 'rep_village'
+    },
+
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const merchant = SceneComponentBase.getNpcName(engine, p.merchant || p.npc, 'Торговец');
+      const itemIds = SceneComponentBase.resolveInventory(engine, p.inventory, p.merchant);
+      const preview = ctx.preview;
+
+      const rawScene = engine.data?.scenes?.[ctx.sceneId];
+      const isJackShop = !!(p.jackShop || p.merchant === 'jack' || rawScene?.shopConfig?.jackShop);
+      let cfg = {
+        inventory: itemIds,
+        sellMultiplier: Number(p.sellMultiplier) ?? 1,
+        buyMultiplier: Number(p.buyMultiplier) ?? 0.5,
+        repFlag: p.repFaction || p.repFlag || null,
+        exitScene: ctx.scene?.exit || ctx.scene?.exitScene || rawScene?.exitScene || 'village_hub',
+        jackShop: isJackShop
+      };
+      if (isJackShop && typeof engine.getJackShopConfig === 'function') {
+        const jackCfg = engine.getJackShopConfig(rawScene || ctx.scene);
+        cfg = { ...jackCfg, ...cfg, inventory: cfg.inventory?.length ? cfg.inventory : jackCfg.inventory };
+      }
+
+      if (preview) {
+        const rows = itemIds.slice(0, 6).map((id) => {
+          const db = engine.data?.items?.[id];
+          const price = engine.getShopBuyPrice?.(id, cfg) ?? db?.price ?? '?';
+          return `<div class="trade-item-row"><span>${SceneComponentBase.escape(engine, (db?.icon || '📦') + ' ' + (db?.name || id))}</span><span>${price} зм</span></div>`;
+        }).join('');
+        container.innerHTML = SceneComponentBase.wrap(
+          'trade_interface',
+          `💰 ${SceneComponentBase.escape(engine, merchant)}`,
+          `${SceneComponentBase.previewNote(true)}<div class="trade-inventory">${rows || '<p class="hint">Пустой ассортимент</p>'}</div>`
+        );
+        return;
+      }
+
+      engine.state.shopSession = {
+        sceneId: ctx.sceneId,
+        config: cfg,
+        selectedBuyId: null,
+        selectedSellId: null,
+        message: '',
+        componentIndex: ctx.index,
+        containerEl: container
+      };
+
+      if (cfg.repFlag) {
+        const rep = engine.getReputationValue?.(cfg.repFlag) ?? 0;
+        if (rep <= -20) {
+          container.innerHTML = SceneComponentBase.wrap(
+            'trade_interface',
+            `💰 ${SceneComponentBase.escape(engine, merchant)}`,
+            '<p>Торговец отворачивается — с вами не торгуют.</p>'
+          );
+          return;
+        }
+      }
+
+      engine.renderShopUIInto?.(container);
+    }
+  };
+
+  registerSceneComponent('trade_interface', TradeInterfaceComponent);
+  registerSceneComponent('trade', TradeInterfaceComponent);
+})();
+
+
+;/* —— js/components/dialogue-tree.js —— */
+// Диалог с NPC (v3)
+(function () {
+  const DialogueTreeComponent = {
+    defaultParams: {
+      npc: 'marta',
+      greeting: 'Приветствую, путник!',
+      topics: []
+    },
+
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const npc = engine.data?.npcs?.[p.npc];
+      const name = SceneComponentBase.getNpcName(engine, p.npc, 'Собеседник');
+      const topics = Array.isArray(p.topics) ? p.topics : [];
+      const preview = ctx.preview;
+
+      let topicsHtml = '';
+      topics.forEach((t, i) => {
+        if (typeof t === 'object' && t.showIf && typeof ConditionSystem !== 'undefined') {
+          const ctx = {
+            inventory: engine.state?.inventory || [],
+            gold: engine.state?.gold ?? 0,
+            flags: engine.state?.flags || {},
+            questStages: engine.state?.questStages || {},
+            level: engine.state?.level ?? 1,
+            className: engine.state?.className || ''
+          };
+          if (!ConditionSystem.evaluate(t.showIf, ctx)) return;
+        }
+        if (typeof t === 'object' && t.hideIf && typeof ConditionSystem !== 'undefined') {
+          const ctx = {
+            inventory: engine.state?.inventory || [],
+            gold: engine.state?.gold ?? 0,
+            flags: engine.state?.flags || {},
+            questStages: engine.state?.questStages || {},
+            level: engine.state?.level ?? 1,
+            className: engine.state?.className || ''
+          };
+          if (ConditionSystem.evaluate(t.hideIf, ctx)) return;
+        }
+        const label = typeof t === 'string' ? t : (t.label || t.text || `Тема ${i + 1}`);
+        if (preview) {
+          topicsHtml += `<button type="button" class="choice" disabled>${SceneComponentBase.escape(engine, label)}</button>`;
+        } else {
+          topicsHtml += `<button type="button" class="choice" onclick="SceneComponentHandlers.dialogueTopic(${ctx.index},${i})">${SceneComponentBase.escape(engine, label)}</button>`;
+        }
+      });
+
+      container.innerHTML = SceneComponentBase.wrap(
+        'dialogue_tree',
+        `💬 ${SceneComponentBase.escape(engine, name)}`,
+        `${SceneComponentBase.previewNote(preview)}
+         <p class="scene-component-greeting">${SceneComponentBase.escape(engine, p.greeting || npc?.dialogues?.default?.[0]?.text || '...')}</p>
+         <div class="scene-component-actions">${topicsHtml || '<p class="hint">Нет тем диалога</p>'}</div>
+         <div id="dialogue-component-reply-${ctx.index}" class="scene-component-reply"></div>`
+      );
+
+      if (!window.SceneComponentHandlers) window.SceneComponentHandlers = {};
+      if (!window.SceneComponentHandlers._dialogue) window.SceneComponentHandlers._dialogue = {};
+      window.SceneComponentHandlers._dialogue[ctx.index] = { topics, name, npcId: p.npc, npc: p.npc };
+    }
+  };
+
+  registerSceneComponent('dialogue_tree', DialogueTreeComponent);
+  registerSceneComponent('dialogue', DialogueTreeComponent);
+})();
+
+
+;/* —— js/components/interactive-panel.js —— */
+// Интерактивная кнопка → цепочка действий (v3)
+(function () {
+  const InteractivePanelComponent = {
+    defaultParams: {
+      label: 'Действие',
+      chain: '',
+      icon: '➡️'
+    },
+
+    render(engine, container, compDef, ctx) {
+      const p = { ...this.defaultParams, ...SceneComponentBase.getConfig(compDef) };
+      const preview = ctx.preview;
+      const label = p.label || 'Действие';
+      const icon = p.icon || '➡️';
+      const chain = p.chain || compDef.chain;
+
+      const objectId = p.objectId || compDef.id || chain || 'interactive';
+      const safeObj = SceneComponentBase.attr(engine, objectId);
+      const safeChain = chain ? SceneComponentBase.attr(engine, chain) : '';
+      container.innerHTML = SceneComponentBase.wrap(
+        'interactive_panel',
+        `${icon} ${SceneComponentBase.escape(engine, label)}`,
+        `${SceneComponentBase.previewNote(preview)}
+         <button type="button" class="choice scene-chain-btn" ${preview ? 'disabled' : ''}
+           ${preview ? '' : `onclick="GameEngine.interactSceneObject('${safeObj}','${safeChain}')"`}>
+           ${SceneComponentBase.escape(engine, label)}
+         </button>
+         ${!chain && !p.objectId ? '<p class="hint">Укажите objectId или chain</p>' : ''}`
+      );
+    }
+  };
+
+  registerSceneComponent('interactive_panel', InteractivePanelComponent);
+  registerSceneComponent('interactive', InteractivePanelComponent);
+})();
+
+
+;/* —— js/components/component-handlers.js —— */
+// Обработчики UI компонентов сцен (диалог, создание персонажа)
+const SceneComponentHandlers = {
+  dialogueTopic(compIndex, topicIndex) {
+    const store = this._dialogue?.[compIndex];
+    if (!store) return;
+    const t = store.topics[topicIndex];
+    const reply = typeof t === 'object' ? (t.reply || t.text || '') : `«${t}» — отвечает ${store.name}.`;
+    const el = document.getElementById(`dialogue-component-reply-${compIndex}`);
+    if (el) el.innerHTML = `<p class="scene-component-reply-text">${GameEngine.escapeHtml(reply)}</p>`;
+    if (typeof t === 'object' && t.flags) GameEngine.applyFlags(t.flags);
+    if (typeof t === 'object' && t.questSet) {
+      GameEngine.updateQuest(t.questSet.questId, t.questSet.stage);
+    }
+    // Quest events: dialogue finished with NPC
+    const npcId = store.npcId || store.npc || (typeof t === 'object' ? t.npc : null);
+    if (typeof QuestEvents !== 'undefined') {
+      QuestEvents.emit('NPCTalked', { npcId, npc: npcId, topicIndex });
+      QuestEvents.emit('NPCDialogueFinished', { npcId, npc: npcId, topicIndex });
+      if (typeof t === 'object' && t.choiceFlag) {
+        QuestEvents.emit('ChoiceSelected', { flag: t.choiceFlag, sceneId: GameEngine.state?.scene });
+      }
+    }
+    if (typeof t === 'object' && t.donate) {
+      const cost = parseInt(t.donate.cost, 10) || 10;
+      if (GameEngine.state.gold < cost) {
+        if (el) el.innerHTML = '<p class="hint">Недостаточно золота для подношения.</p>';
+        return;
+      }
+      GameEngine.state.gold -= cost;
+      if (typeof QuestEvents !== 'undefined') {
+        QuestEvents.emit('GoldSpent', { amount: cost, reason: 'donate' });
+      }
+      if (t.donate.flag) GameEngine.state.flags[t.donate.flag] = true;
+      GameEngine.updateStats();
+      GameEngine.log(`🙏 Пожертвование в храм (−${cost} зм).`, 'log-heal');
+    }
+    if (typeof t === 'object' && Array.isArray(t.actions)) {
+      t.actions.forEach((step) => {
+        if (!step?.action) return;
+        if (typeof ActionRunner !== 'undefined' && ActionRunner.runV2) {
+          ActionRunner.runV2(GameEngine, step.action, step.params || {}, { source: 'dialogue_topic' });
+        } else if (typeof GameEngine.runAction === 'function') {
+          GameEngine.runAction(step.action, step.params || {});
+        }
+      });
+    }
+    const nextScene = typeof t === 'object' ? (t.nextScene || t.to) : null;
+    if (nextScene && typeof GameEngine.showScene === 'function') {
+      GameEngine.showScene(String(nextScene));
+    }
+  },
+
+  resumeCharacterCreation() {
+    const sid = GameEngine.state.scene;
+    const scene = GameEngine.data?.scenes?.[sid];
+    if (GameEngine.hasSceneComponents?.(scene)) {
+      GameEngine.renderSceneComponents(sid, scene);
+    } else if (GameEngine.CharacterCreator?.open) {
+      GameEngine.CharacterCreator.open();
+    }
+  }
+};
+
+
+;/* —— js/components/combat/CombatTimeline.js —— */
+/**
+ * CombatTimeline — горизонтальная полоса порядка ходов в бою.
+ * Использует state.combat (battleState) и combat.battleParticipants.
+ * @module CombatTimeline
+ */
+(function (global) {
+  'use strict';
+
+  const DEFAULT_VISIBLE = 5;
+  const UPCOMING_AFTER_CURRENT = 3;
+
+  /** @typedef {object} BattleParticipant
+   * @property {string} id
+   * @property {'player'|'enemy'} type
+   * @property {number} [enemyIndex]
+   * @property {string} name
+   * @property {string} icon
+   * @property {number} initiative
+   * @property {number} [die]
+   * @property {number} [bonus]
+   * @property {string} tooltip
+   * @property {string[]} tooltipLines
+   * @property {boolean} isCurrent
+   * @property {boolean} isDelayed
+   * @property {boolean} isReady
+   * @property {boolean} isDead
+   * @property {number} orderIndex
+   */
+
+  function escapeHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function getSceneInitiativeRules(engine) {
+    const sceneId = engine?.state?.scene;
+    const scene = sceneId && engine?.data?.scenes?.[sceneId];
+    const raw = scene?.combatInitiative || scene?.combatRules?.initiative || {};
+    return {
+      enemyBonus: Number(raw.enemyBonus ?? raw.enemyInitiativeBonus ?? 0) || 0,
+      playerBonus: Number(raw.playerBonus ?? raw.playerInitiativeBonus ?? 0) || 0,
+      ambush: !!(raw.ambush ?? raw.isAmbush),
+      surpriseRound: !!(raw.surpriseRound ?? raw.surprise),
+      enemiesActFirst: !!(raw.enemiesActFirst ?? raw.enemyFirst),
+      ambushLabel: raw.ambushLabel || null
+    };
+  }
+
+  function isOrderEntryAlive(engine, entry) {
+    if (!entry) return false;
+    if (entry.type === 'player') return (engine.state?.hp ?? 0) > 0;
+    const enemy = engine.state?.enemies?.[entry.index];
+    return enemy && enemy.hp > 0;
+  }
+
+  function getParticipantIcon(engine, entry) {
+    if (entry.type === 'player') {
+      const cls = engine.state?.classData || engine.data?.classes?.[engine.state?.className];
+      return cls?.icon || '⚔️';
+    }
+    const enemy = engine.state?.enemies?.[entry.index];
+    const tplId = engine.state?.combat?.enemies?.[entry.index] || engine.state?.combat?.enemyIds?.[entry.index];
+    const tpl = tplId && engine.data?.enemies?.[tplId];
+    return enemy?.icon || tpl?.icon || '💀';
+  }
+
+  function getParticipantName(engine, entry) {
+    if (entry.type === 'player') {
+      return engine.state?.charName || 'Герой';
+    }
+    const enemy = engine.state?.enemies?.[entry.index];
+    return engine.getEnemyDisplayName
+      ? engine.getEnemyDisplayName(enemy)
+      : (enemy?.name || 'Враг');
+  }
+
+  /**
+   * Формирует текст подсказки инициативы для участника.
+   */
+  function buildInitiativeTooltip(engine, entry, context) {
+    const lines = [];
+    const rules = context.rules;
+    const order = context.order;
+    const roll = entry.roll ?? 0;
+    const die = entry.die;
+    const bonus = entry.bonus;
+    const name = getParticipantName(engine, entry);
+
+    const sortedRolls = order.map((o) => o.roll ?? 0);
+    const maxRoll = sortedRolls.length ? Math.max(...sortedRolls) : roll;
+    const tied = sortedRolls.filter((r) => r === roll).length > 1;
+
+    if (entry.type === 'player') {
+      if (rules.surpriseRound || rules.enemiesActFirst) {
+        lines.push('Сюрпризный раунд — враги ходят первыми');
+      }
+      if (rules.playerBonus) {
+        lines.push(`Бонус сцены: +${rules.playerBonus} к инициативе`);
+      }
+      if (roll === maxRoll && !rules.enemiesActFirst) {
+        lines.push(`Высшая инициатива (${roll})`);
+      } else if (tied && roll === maxRoll) {
+        lines.push(`Инициатива равна (${roll}), первым идёт игрок`);
+      } else if (die != null && bonus != null) {
+        lines.push(`Бросок: ${die} + ${bonus} = ${roll}`);
+      } else {
+        lines.push(`Инициатива: ${roll}`);
+      }
+    } else {
+      if (rules.ambush || rules.enemyBonus) {
+        const bonusVal = rules.enemyBonus || (rules.ambush ? 5 : 0);
+        if (bonusVal) {
+          lines.push(
+            rules.ambushLabel ||
+              `Засада: +${bonusVal} к инициативе в этой сцене`
+          );
+        }
+      }
+      if (rules.surpriseRound || rules.enemiesActFirst) {
+        lines.push('Сюрпризный раунд — враги ходят первыми');
+      }
+      if (roll === maxRoll && !rules.enemiesActFirst) {
+        lines.push(`Высшая инициатива (${roll}) — ${name}`);
+      } else if (tied && entry === context.firstEnemyInOrder) {
+        lines.push(`Инициатива равна (${roll}), среди врагов ходит первым`);
+      } else if (die != null && bonus != null) {
+        lines.push(`${name}: ${die} + ${bonus} = ${roll}`);
+      } else {
+        lines.push(`Инициатива ${name}: ${roll}`);
+      }
+    }
+
+    if (entry.delayed) lines.push('Отложенный ход (Delay) — в конце очереди');
+    if (entry.ready) lines.push('Подготовленное действие (Ready)');
+
+    const tooltip = lines[0] || `Инициатива: ${roll}`;
+    return { tooltip, tooltipLines: lines };
+  }
+
+  /**
+   * Собирает battleParticipants из combat.order и состояния движка.
+   */
+  function buildBattleParticipants(engine, combat) {
+    if (!combat?.order?.length) return [];
+
+    const rules = getSceneInitiativeRules(engine);
+    const order = combat.order;
+    const turnIndex = Math.max(0, combat.turnIndex ?? 0);
+    const firstEnemy = order.find((o) => o.type === 'enemy');
+
+    return order.map((entry, orderIndex) => {
+      const alive = isOrderEntryAlive(engine, entry);
+      const tip = buildInitiativeTooltip(engine, entry, {
+        rules,
+        order,
+        firstEnemyInOrder: firstEnemy
+      });
+
+      const position =
+        entry.type === 'player'
+          ? (typeof CombatPosition !== 'undefined'
+              ? CombatPosition.getPlayerPosition(engine)
+              : 'close')
+          : (typeof CombatPosition !== 'undefined'
+              ? CombatPosition.getEnemyPosition(engine, entry.index)
+              : 'close');
+
+      return {
+        id: entry.type === 'player' ? 'player' : `enemy_${entry.index}`,
+        type: entry.type,
+        enemyIndex: entry.type === 'enemy' ? entry.index : undefined,
+        name: getParticipantName(engine, entry),
+        icon: getParticipantIcon(engine, entry),
+        position,
+        initiative: entry.roll ?? 0,
+        die: entry.die,
+        bonus: entry.bonus,
+        tooltip: tip.tooltip,
+        tooltipLines: tip.tooltipLines,
+        isCurrent: orderIndex === turnIndex && alive,
+        isDelayed: !!entry.delayed,
+        isReady: !!entry.ready,
+        isDead: !alive,
+        orderIndex
+      };
+    });
+  }
+
+  /**
+   * Очередь для отображения: текущий + следующие N живых участников.
+   */
+  function buildDisplayQueue(participants, turnIndex, maxVisible) {
+    const alive = participants.filter((p) => !p.isDead);
+    if (!alive.length) return [];
+
+    const byOrder = [...participants]
+      .filter((p) => !p.isDead)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+
+    const n = byOrder.length;
+    let startIdx = 0;
+    for (let i = 0; i < n; i++) {
+      if (byOrder[i].orderIndex === turnIndex || byOrder[i].isCurrent) {
+        startIdx = i;
+        break;
+      }
+    }
+    const currentId = participants.find((p) => p.isCurrent)?.id
+      || byOrder[startIdx]?.id;
+
+    const queue = [];
+    for (let k = 0; k < n && queue.length < maxVisible; k++) {
+      const p = byOrder[(startIdx + k) % n];
+      queue.push({
+        ...p,
+        isCurrent: p.id === currentId || (k === 0 && p.orderIndex === turnIndex),
+        queuePosition: k
+      });
+    }
+    return queue;
+  }
+
+  class CombatTimeline {
+    /**
+     * @param {object} options
+     * @param {string} [options.hostId]
+     * @param {HTMLElement} [options.host]
+     */
+    constructor(options = {}) {
+      this.host =
+        options.host ||
+        (options.hostId ? document.getElementById(options.hostId) : null);
+      this.root = null;
+      this.track = null;
+      this._lastSignature = '';
+      this._cardRects = new Map();
+      this.visibleCount = options.visibleCount ?? DEFAULT_VISIBLE;
+      this.upcomingCount = options.upcomingCount ?? UPCOMING_AFTER_CURRENT;
+    }
+
+    static buildParticipants(engine, combat) {
+      return buildBattleParticipants(engine, combat);
+    }
+
+    static syncBattleState(engine) {
+      if (!engine?.state?.combat) return [];
+      const participants = buildBattleParticipants(engine, engine.state.combat);
+      engine.state.combat.battleParticipants = participants;
+      return participants;
+    }
+
+    static getInstance() {
+      return CombatTimeline._instance || null;
+    }
+
+    static attach(engine, options = {}) {
+      let host = options.host || document.getElementById('combat-timeline-host');
+      if (!host) {
+        const gameContent = document.getElementById('game-content');
+        host = document.createElement('div');
+        host.id = 'combat-timeline-host';
+        host.className = 'combat-timeline-host hidden';
+        host.setAttribute('aria-label', 'Порядок ходов');
+        const combatArea = document.getElementById('combat-area');
+        if (gameContent && combatArea) {
+          gameContent.insertBefore(host, combatArea);
+        } else if (gameContent) {
+          gameContent.prepend(host);
+        } else {
+          document.body.prepend(host);
+        }
+      }
+      if (!CombatTimeline._instance) {
+        CombatTimeline._instance = new CombatTimeline({ host });
+      }
+      CombatTimeline._instance.engine = engine;
+      return CombatTimeline._instance;
+    }
+
+    ensureDom() {
+      if (!this.host) return false;
+      if (this.root) return true;
+
+      this.host.innerHTML = '';
+      this.root = document.createElement('div');
+      this.root.className = 'combat-timeline';
+      this.root.innerHTML = `
+        <div class="combat-timeline__header">
+          <span class="combat-timeline__title">Порядок ходов</span>
+          <span class="combat-timeline__round" data-round></span>
+        </div>
+        <div class="combat-timeline__scroll">
+          <div class="combat-timeline__track" role="list"></div>
+        </div>
+      `;
+      this.host.appendChild(this.root);
+      this.track = this.root.querySelector('.combat-timeline__track');
+      this.roundEl = this.root.querySelector('[data-round]');
+      return true;
+    }
+
+    hide() {
+      this.host?.classList.add('hidden');
+      this._lastSignature = '';
+      this._cardRects.clear();
+    }
+
+    show() {
+      this.host?.classList.remove('hidden');
+    }
+
+    /**
+     * @param {object} battleState — state.combat
+     * @param {object} engine — GameEngine
+     */
+    update(battleState, engine) {
+      if (!battleState || !engine) {
+        this.hide();
+        return;
+      }
+      if (!this.ensureDom()) return;
+
+      let participants =
+        battleState.battleParticipants ||
+        buildBattleParticipants(engine, battleState);
+      if (typeof CombatPosition !== 'undefined') {
+        participants = CombatPosition.syncParticipantPositions(engine, participants);
+      }
+      battleState.battleParticipants = participants;
+
+      const turnIndex = battleState.turnIndex ?? 0;
+      const maxShow = 1 + this.upcomingCount;
+      const queue = buildDisplayQueue(participants, turnIndex, maxShow);
+
+      if (!queue.length) {
+        this.hide();
+        return;
+      }
+
+      this.show();
+      if (this.roundEl) {
+        const round = battleState.round ?? 1;
+        this.roundEl.textContent = `Раунд ${round}`;
+      }
+
+      const signature = queue
+        .map((p) => `${p.id}:${p.isCurrent}:${p.isDelayed}:${p.isReady}:${p.initiative}`)
+        .join('|');
+
+      const animate = signature !== this._lastSignature && this._lastSignature !== '';
+      this._lastSignature = signature;
+
+      if (animate && this.track) {
+        this.track.querySelectorAll('.combat-timeline__card').forEach((el) => {
+          this._cardRects.set(el.dataset.participantId, el.getBoundingClientRect());
+        });
+      }
+
+      const cards = queue.map((p, i) => this.renderCard(p, i === 0, engine));
+      let html = cards[0] || '';
+      if (cards.length > 1) {
+        html += '<div class="combat-timeline__next-label">Далее</div>' + cards.slice(1).join('');
+      }
+      this.track.innerHTML = html;
+
+      this.track.querySelectorAll('.combat-timeline__info').forEach((btn) => {
+        const lines = (btn.dataset.tooltipLines || btn.dataset.tooltip || '')
+          .split('|')
+          .filter(Boolean);
+        const text = lines.join('\n');
+        btn.setAttribute('title', text);
+        btn.setAttribute('aria-label', text || 'Подсказка инициативы');
+      });
+
+      if (animate) {
+        requestAnimationFrame(() => this.runFlipAnimation());
+      }
+    }
+
+    renderCard(p, isHead, engine) {
+      const mod = [
+        'combat-timeline__card',
+        p.isCurrent || isHead ? 'combat-timeline__card--active' : '',
+        p.isDelayed ? 'combat-timeline__card--delayed' : '',
+        p.isReady ? 'combat-timeline__card--ready' : '',
+        p.type === 'player' ? 'combat-timeline__card--player' : 'combat-timeline__card--enemy',
+        p.queuePosition > 0 ? 'combat-timeline__card--upcoming' : ''
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      const showInfo =
+        (p.isCurrent || isHead) &&
+        (p.type === 'enemy' || p.queuePosition === 0);
+      const linesAttr = escapeHtml((p.tooltipLines || [p.tooltip]).join('|'));
+
+      return `
+        <div class="${mod}"
+             role="listitem"
+             data-participant-id="${escapeHtml(p.id)}"
+             data-order="${p.orderIndex}">
+          ${
+            showInfo
+              ? `<button type="button" class="combat-timeline__info"
+                    data-tooltip="${escapeHtml(p.tooltip)}"
+                    data-tooltip-lines="${linesAttr}">ⓘ</button>`
+              : ''
+          }
+          <div class="combat-timeline__portrait-wrap">
+            <div class="combat-timeline__portrait" aria-hidden="true">${escapeHtml(p.icon)}</div>
+            ${
+              typeof StatusManager !== 'undefined' && engine
+                ? StatusManager.renderTimelineBadges(engine, p)
+                : ''
+            }
+          </div>
+          <div class="combat-timeline__meta">
+            <span class="combat-timeline__name">${escapeHtml(p.name)}</span>
+            ${
+              p.position && typeof CombatPosition !== 'undefined'
+                ? CombatPosition.renderZoneBadge(p.position, 'combat-timeline__zone')
+                : ''
+            }
+            <span class="combat-timeline__init" title="Инициатива">${escapeHtml(String(p.initiative))}</span>
+          </div>
+          ${p.isDelayed ? '<span class="combat-timeline__badge">Delay</span>' : ''}
+          ${p.isReady ? '<span class="combat-timeline__badge combat-timeline__badge--ready">Ready</span>' : ''}
+        </div>
+      `;
+    }
+
+    runFlipAnimation() {
+      if (!this.track) return;
+      const cards = this.track.querySelectorAll('.combat-timeline__card');
+      cards.forEach((el) => {
+        const id = el.dataset.participantId;
+        const first = this._cardRects.get(id);
+        if (!first) {
+          el.classList.add('combat-timeline__card--enter');
+          return;
+        }
+        const last = el.getBoundingClientRect();
+        const dx = first.left - last.left;
+        if (Math.abs(dx) < 2) return;
+        el.style.transform = `translateX(${dx}px)`;
+        el.classList.add('combat-timeline__card--animating');
+        requestAnimationFrame(() => {
+          el.style.transform = '';
+          el.addEventListener(
+            'transitionend',
+            () => {
+              el.classList.remove('combat-timeline__card--animating');
+            },
+            { once: true }
+          );
+        });
+      });
+      this._cardRects.clear();
+    }
+
+    destroy() {
+      this.hide();
+      if (this.host) this.host.innerHTML = '';
+      this.root = null;
+      this.track = null;
+      if (CombatTimeline._instance === this) CombatTimeline._instance = null;
+    }
+  }
+
+  CombatTimeline._instance = null;
+  CombatTimeline.buildBattleParticipants = buildBattleParticipants;
+  CombatTimeline.getSceneInitiativeRules = getSceneInitiativeRules;
+
+  global.CombatTimeline = CombatTimeline;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+;/* —— js/components/combat/CombatManager.js —— */
+/**
+ * CombatManager — data-driven разбор и выполнение боевых действий (abilities / actions).
+ * Обратная совместимость: effect (строка/объект), actionType, targeting.scope, cost.
+ * @module CombatManager
+ */
+(function (global) {
+  'use strict';
+
+  const TARGET_TYPES = {
+    self: 'self',
+    singleEnemy: 'singleEnemy',
+    allEnemies: 'allEnemies',
+    singleAlly: 'singleAlly',
+    allAllies: 'allAllies',
+    area: 'area'
+  };
+
+  const SCOPE_TO_TARGET = {
+    single: TARGET_TYPES.singleEnemy,
+    single_enemy: TARGET_TYPES.singleEnemy,
+    all_enemies: TARGET_TYPES.allEnemies,
+    area: TARGET_TYPES.area,
+    self: TARGET_TYPES.self
+  };
+
+  const TARGET_TO_SCOPE = {
+    [TARGET_TYPES.singleEnemy]: 'single',
+    [TARGET_TYPES.allEnemies]: 'all_enemies',
+    [TARGET_TYPES.area]: 'area',
+    [TARGET_TYPES.self]: 'self',
+    [TARGET_TYPES.singleAlly]: 'self',
+    [TARGET_TYPES.allAllies]: 'self'
+  };
+
+  const REQUIREMENT_HANDLERS = {
+    frontline(engine) {
+      return REQUIREMENT_HANDLERS.close_zone(engine);
+    },
+    close_zone(engine) {
+      if (!engine.state?.combat) return { ok: false, reason: 'Только в бою' };
+      if (typeof CombatPosition !== 'undefined' && CombatPosition.isEnabled(engine)) {
+        const z = CombatPosition.getPlayerPosition(engine);
+        if (z !== CombatPosition.ZONES.CLOSE) {
+          return {
+            ok: false,
+            reason: `Нужна ближняя зона (Close) — сейчас «${CombatPosition.getZoneLabel(z)}». Переместитесь на 1 зону.`
+          };
+        }
+        return { ok: true };
+      }
+      const alive = (engine.state.enemies || []).some((e) => e.hp > 0);
+      return alive
+        ? { ok: true }
+        : { ok: false, reason: 'Нет противников в ближнем бою' };
+    },
+    hasWeaponEquipped(engine) {
+      const slots = ['weapon_main', 'weapon_off', 'weapon'];
+      const has = slots.some((s) => {
+        const id = engine.getEquippedItemId?.(s);
+        if (!id) return false;
+        const db = engine.itemsData?.[id] || engine.data?.items?.[id];
+        return db && (db.type === 'weapon' || db.slot === 'weapon');
+      });
+      return has
+        ? { ok: true }
+        : { ok: false, reason: 'Нужно экипированное оружие' };
+    },
+    notSurprised(engine) {
+      const surprised =
+        engine.state?.combat?.playerSurprised ||
+        (typeof StatusManager !== 'undefined' &&
+          StatusManager.hasStatus(StatusManager.getPlayerHolder(engine), 'surprised'));
+      if (surprised) {
+        return { ok: false, reason: 'Вы застигнуты врасплох' };
+      }
+      return { ok: true };
+    }
+  };
+
+  function getRulesSystem(engine) {
+    if (engine?.isPf2e?.()) return 'pf2e';
+    return 'dnd5e';
+  }
+
+  /** Запись в CombatLog с fallback на engine.log */
+  function combatLog(engine, type, data = {}) {
+    const payload = {
+      ...data,
+      message: data.message ?? data.text ?? '',
+      engine
+    };
+    if (typeof CombatLog !== 'undefined') {
+      return CombatLog.log(engine, type, payload);
+    }
+    const legacy = {
+      damage: 'log-damage',
+      crit: 'log-damage',
+      heal: 'log-heal',
+      miss: 'log-dice',
+      fail: 'log-dice',
+      effect: 'log-combat',
+      status: 'log-combat',
+      buff: 'log-combat',
+      combat: 'log-combat',
+      ability: 'log-combat',
+      death: 'log-combat'
+    };
+    engine?.log?.(payload.message, legacy[type] || 'log-combat');
+    return null;
+  }
+
+  function clone(obj) {
+    return JSON.parse(JSON.stringify(obj ?? {}));
+  }
+
+  /**
+   * Нормализует actionCost под активную систему.
+   */
+  function resolveActionCost(raw, system) {
+    if (!raw || typeof raw !== 'object') return null;
+
+    if (raw[system]) return clone(raw[system]);
+
+    if (system === 'pf2e' && raw.actions != null) {
+      return { actions: Number(raw.actions) || 1 };
+    }
+    if (system === 'dnd5e') {
+      if (
+        raw.action != null ||
+        raw.bonusAction != null ||
+        raw.reaction != null
+      ) {
+        return {
+          action: Number(raw.action) || 0,
+          bonusAction: Number(raw.bonusAction) || 0,
+          reaction: Number(raw.reaction) || 0
+        };
+      }
+    }
+    if (raw.action != null || raw.bonusAction != null || raw.reaction != null) {
+      return {
+        action: Number(raw.action) || 0,
+        bonusAction: Number(raw.bonusAction) || 0,
+        reaction: Number(raw.reaction) || 0
+      };
+    }
+    if (raw.actions != null) return { actions: Number(raw.actions) || 1 };
+    return null;
+  }
+
+  function legacyActionTypeToCost(actionType) {
+    switch (actionType) {
+      case 'bonus_action':
+        return { action: 0, bonusAction: 1, reaction: 0 };
+      case 'reaction':
+        return { action: 0, bonusAction: 0, reaction: 1 };
+      case 'free':
+        return { action: 0, bonusAction: 0, reaction: 0 };
+      case 'passive':
+        return null;
+      default:
+        return { action: 1, bonusAction: 0, reaction: 0 };
+    }
+  }
+
+  function inferTargetType(action) {
+    if (action.targetType && TARGET_TYPES[action.targetType]) {
+      return action.targetType;
+    }
+    const scope =
+      action.targeting?.scope ||
+      action.effects?.find((e) => e?.targeting?.scope)?.targeting?.scope;
+    if (scope && SCOPE_TO_TARGET[scope]) return SCOPE_TO_TARGET[scope];
+    if (Array.isArray(action.effects)) {
+      for (const ef of action.effects) {
+        if (ef?.allTargets) return TARGET_TYPES.allEnemies;
+        if (ef?.type === 'heal' && !ef.targeting) return TARGET_TYPES.self;
+      }
+    }
+    if (typeof action.effect === 'string') {
+      if (action.effect.startsWith('heal:')) return TARGET_TYPES.self;
+      if (action.effect.startsWith('aoe_') || action.effect.includes('all')) {
+        return TARGET_TYPES.allEnemies;
+      }
+      if (action.effect.startsWith('damage:')) return TARGET_TYPES.singleEnemy;
+    }
+    if (action.effect?.type === 'heal') return TARGET_TYPES.self;
+    if (action.effect?.allTargets || action.effect?.targeting?.scope === 'all_enemies') {
+      return TARGET_TYPES.allEnemies;
+    }
+    if (action.effect?.type === 'damage' || action.effect?.type === 'apply_status') {
+      return TARGET_TYPES.singleEnemy;
+    }
+    return TARGET_TYPES.self;
+  }
+
+  function ensureTargeting(action) {
+    const targetType = action.targetType || inferTargetType(action);
+    const scope = TARGET_TO_SCOPE[targetType] || 'self';
+    if (!action.targeting) action.targeting = { scope };
+    else if (!action.targeting.scope) action.targeting.scope = scope;
+    action.targetType = targetType;
+    return action;
+  }
+
+  function normalizeEffects(action) {
+    if (Array.isArray(action.effects) && action.effects.length) {
+      return action.effects.map((ef) => {
+        if (typeof ef === 'string') return legacyStringToEffect(ef);
+        return clone(ef);
+      });
+    }
+    if (action.effect != null) {
+      if (typeof action.effect === 'string') {
+        return [legacyStringToEffect(action.effect)];
+      }
+      return [clone(action.effect)];
+    }
+    return [];
+  }
+
+  function legacyStringToEffect(str) {
+    const s = String(str);
+    if (s.startsWith('heal:')) {
+      return { type: 'heal', value: s.slice(5) };
+    }
+    if (s.startsWith('damage:')) {
+      return {
+        type: 'damage',
+        value: s.slice(7),
+        targeting: { scope: 'single' }
+      };
+    }
+    if (s.startsWith('ac_bonus:')) {
+      return {
+        type: 'grantBonus',
+        stat: 'ac',
+        value: parseInt(s.split(':')[1], 10) || 0,
+        duration: 'turn'
+      };
+    }
+    if (s.startsWith('aoe_fire:')) {
+      return {
+        type: 'damage',
+        value: s.slice(9),
+        damageType: 'fire',
+        targeting: { scope: 'all_enemies' },
+        allTargets: true
+      };
+    }
+    if (s.startsWith('smite:')) {
+      return { type: 'smite', value: s.slice(6) };
+    }
+    if (s === 'extra_attack') return { type: 'extra_attack' };
+    if (s === 'magic_missile') return { type: 'magic_missile' };
+    return { type: 'custom', message: s };
+  }
+
+  function inferActionTypeFromCost(cost, system) {
+    if (!cost) return 'passive';
+    if (system === 'pf2e') return 'action';
+    if (cost.reaction) return 'reaction';
+    if (cost.bonusAction && !cost.action) return 'bonus_action';
+    if (!cost.action && !cost.bonusAction && !cost.reaction) return 'free';
+    return 'action';
+  }
+
+  /**
+   * Парсинг действия в единую структуру (idempotent).
+   * @param {object} raw
+   * @param {object} [opts]
+   * @param {string} [opts.system]
+   * @returns {object}
+   */
+  function parseAction(raw, opts = {}) {
+    const action = clone(raw);
+    if (!action.id) action.id = 'action_' + Math.random().toString(36).slice(2, 9);
+
+    const system = opts.system || 'dnd5e';
+
+    let actionCost = resolveActionCost(action.actionCost, system);
+    if (!actionCost && action.actionType) {
+      actionCost = legacyActionTypeToCost(action.actionType);
+    }
+    if (!actionCost && action.type === 'passive') {
+      actionCost = null;
+    }
+    if (!actionCost && system === 'pf2e' && action.cost != null) {
+      actionCost = { actions: Number(action.cost) || 1 };
+    }
+    if (!actionCost && system === 'dnd5e' && !action.passive && action.type !== 'passive') {
+      const legacyType =
+        action.actionType ||
+        (action.type === 'passive' ? 'passive' : 'action');
+      actionCost = legacyActionTypeToCost(legacyType);
+    }
+
+    action._parsedSystem = system;
+    action.actionCost = actionCost;
+    action.actionType =
+      action.actionType || inferActionTypeFromCost(actionCost, system);
+
+    action.effects = normalizeEffects(action);
+    ensureTargeting(action);
+
+    if (action.range == null && action.targeting?.range != null) {
+      action.range = action.targeting.range;
+    }
+
+    action.requirements = Array.isArray(action.requirements)
+      ? [...action.requirements]
+      : [];
+
+    action.tags = Array.isArray(action.tags) ? [...action.tags] : [];
+
+    if (action.soundEffect && !action.soundCast) {
+      action.soundCast = action.soundEffect;
+    }
+
+    action._combatParsed = true;
+    return action;
+  }
+
+  function checkRequirements(engine, action) {
+    const reqs = action.requirements || [];
+    for (const key of reqs) {
+      const fn = REQUIREMENT_HANDLERS[key];
+      if (!fn) continue;
+      const res = fn(engine, action);
+      if (res && !res.ok) return res;
+    }
+    return { ok: true };
+  }
+
+  function canAffordDnd5eCost(engine, cost) {
+    const c = engine.state.combat;
+    if (!c) return true;
+    if (cost.action && c.actionSpent && !c.actionSurge) return false;
+    if (cost.bonusAction && c.bonusActionSpent) return false;
+    if (cost.reaction && !c.reactionAvailable) return false;
+    return true;
+  }
+
+  function spendDnd5eCost(engine, cost) {
+    if (!cost || !engine.state.combat) return;
+    if (cost.action && !engine.state.combat.actionSurge) {
+      engine.spendCombatActionType('action');
+    }
+    if (cost.bonusAction) engine.spendCombatActionType('bonus_action');
+    if (cost.reaction) engine.spendCombatActionType('reaction');
+  }
+
+  function canAffordPf2eCost(engine, cost) {
+    if (!engine.state.combat || !cost?.actions) return true;
+    return (
+      (engine.state.combat.actionsRemaining ?? 0) >= (cost.actions || 1)
+    );
+  }
+
+  function spendPf2eCost(engine, action, cost) {
+    const n = cost?.actions ?? action?.cost ?? 1;
+    engine.spendPf2eActions?.(n);
+  }
+
+  function getUnavailableFromEconomy(engine, action) {
+    const system = action._parsedSystem || getRulesSystem(engine);
+    const cost = action.actionCost;
+    if (!cost || action.actionType === 'passive') return null;
+
+    if (system === 'pf2e') {
+      if (!canAffordPf2eCost(engine, cost)) {
+        return `Нужно ${cost.actions || 1} действий`;
+      }
+      return null;
+    }
+
+    if (action.actionType === 'reaction') {
+      return 'Реакция срабатывает по триггеру';
+    }
+    if (!canAffordDnd5eCost(engine, cost)) {
+      if (cost.bonusAction && !cost.action) return 'Бонусное действие потрачено';
+      if (cost.reaction) return 'Реакция уже использована';
+      return 'Действие потрачено';
+    }
+    return null;
+  }
+
+  function needsTargetSelection(action) {
+    if (action.actionType === 'passive' || action.type === 'passive') {
+      return false;
+    }
+    const tt = action.targetType;
+    return tt === TARGET_TYPES.singleEnemy || tt === TARGET_TYPES.singleAlly;
+  }
+
+  function effectNeedsEnemyTarget(effect) {
+    if (!effect || typeof effect !== 'object') return false;
+    if (effect.type === 'damage' || effect.type === 'apply_status') {
+      const scope = effect.targeting?.scope;
+      return !scope || scope === 'single' || scope === 'single_enemy';
+    }
+    return false;
+  }
+
+  function actionNeedsEnemyTarget(action) {
+    if (!needsTargetSelection(action)) return false;
+    if (action.targetType === TARGET_TYPES.singleEnemy) {
+      return (action.effects || []).some(effectNeedsEnemyTarget) || !!action.effect;
+    }
+    return false;
+  }
+
+  function attachTargetingToEffects(action) {
+    const scope = TARGET_TO_SCOPE[action.targetType] || 'self';
+    (action.effects || []).forEach((ef) => {
+      if (ef && typeof ef === 'object' && !ef.targeting) {
+        ef.targeting = { scope };
+      }
+      if (
+        action.targetType === TARGET_TYPES.allEnemies ||
+        action.targetType === TARGET_TYPES.area
+      ) {
+        ef.allTargets = true;
+      }
+    });
+  }
+
+  function applyGrantBonus(engine, effect) {
+    const val = parseInt(effect.value, 10) || 0;
+    const stat = effect.stat || effect.buffType || 'atk';
+    if (!engine.state.combat) {
+      engine.log('Бонус действует только в бою.', 'log-dice');
+      return true;
+    }
+    if (stat === 'ac') {
+      engine.applyAcBonus?.(val);
+    } else if (stat === 'atk') {
+      engine.state.combat.tempAtkBonus =
+        (engine.state.combat.tempAtkBonus || 0) + val;
+      combatLog(engine, 'buff', {
+        message: `⚔️ ${val >= 0 ? '+' : ''}${val} к атаке (${effect.duration || 'ход'})`
+      });
+    } else if (stat === 'dmg') {
+      engine.state.combat.tempDmgBonus =
+        (engine.state.combat.tempDmgBonus || 0) + val;
+      combatLog(engine, 'buff', {
+        message: `💥 ${val >= 0 ? '+' : ''}${val} к урону (${effect.duration || 'ход'})`
+      });
+    } else {
+      combatLog(engine, 'buff', { message: `Бонус ${stat}: ${val}` });
+    }
+    engine.playCombatSound?.('buff');
+    return true;
+  }
+
+  function applyRemoveStatus(engine, effect, target) {
+    const statusId = effect.statusId || effect.status;
+    if (typeof StatusManager !== 'undefined') {
+      if (effect.target === 'self' || !target) {
+        const holder = StatusManager.getPlayerHolder(engine);
+        StatusManager.remove(engine, holder, statusId);
+        combatLog(engine, 'heal', { message: `✨ Снят эффект: ${statusId}` });
+        return true;
+      }
+      const holder = StatusManager.getEnemyHolder(engine, target);
+      if (holder) {
+        StatusManager.remove(engine, holder, statusId);
+        combatLog(engine, 'effect', {
+          message: `✨ С ${target.name} снят ${statusId}`,
+          target: target.name
+        });
+      }
+      return true;
+    }
+    return true;
+  }
+
+  function applyMoveEffect(engine, effect) {
+    const dist = effect.distance ?? effect.value ?? 0;
+    combatLog(engine, 'position', { message: `🏃 Перемещение на ${dist} фт.` });
+    return true;
+  }
+
+  function applyActionEffect(engine, effect, ctx) {
+    if (!effect) return true;
+    const target = ctx.target ?? null;
+
+    switch (effect.type) {
+      case 'grantBonus':
+        return applyGrantBonus(engine, effect);
+      case 'removeStatus':
+        return applyRemoveStatus(engine, effect, target);
+      case 'move':
+        return applyMoveEffect(engine, effect);
+      case 'apply_status':
+        if (typeof StatusManager !== 'undefined') {
+          return StatusManager.applyFromEffect(engine, effect, target);
+        }
+        return engine.applyAbilityAddEffect?.(effect, target) ?? true;
+      default:
+        if (typeof engine.applyEffect === 'function') {
+          return engine.applyEffect(effect, target);
+        }
+        engine.log(`Эффект ${effect.type} не реализован`, 'log-dice');
+        return true;
+    }
+  }
+
+  function applyActionEffects(engine, action, ctx) {
+    attachTargetingToEffects(action);
+    let endsTurn = true;
+
+    for (const effect of action.effects || []) {
+      const result = applyActionEffect(engine, effect, ctx);
+      if (result === false) endsTurn = false;
+    }
+
+    if (action.actionType === 'bonus_action' || action.actionType === 'free') {
+      if (endsTurn !== false) endsTurn = false;
+    } else if (action.actionType === 'action' && endsTurn !== false) {
+      endsTurn = true;
+    }
+
+    return endsTurn;
+  }
+
+  function spendActionEconomy(engine, action) {
+    const system = action._parsedSystem || getRulesSystem(engine);
+    const cost = action.actionCost;
+    if (!cost || !engine.state.combat) return;
+
+    if (system === 'pf2e') {
+      spendPf2eCost(engine, action, cost);
+      return;
+    }
+    spendDnd5eCost(engine, cost);
+  }
+
+  /**
+   * Выполнение действия (основная точка входа).
+   * @param {object} engine — GameEngine
+   * @param {object} rawAction — умение / действие из JSON
+   * @param {object} [context]
+   * @param {object} [context.target] — враг (объект)
+   * @param {boolean} [context.skipEconomy] — не тратить action/bonus (уже потрачено)
+   * @param {boolean} [context.skipResourceCost] — не тратить ячейки/ярость
+   * @returns {{ success: boolean, endsTurn?: boolean, needsTarget?: boolean, reason?: string }}
+   */
+  function performAction(engine, rawAction, context = {}) {
+    if (!engine || !rawAction) {
+      return { success: false, reason: 'Нет действия' };
+    }
+
+    const system = getRulesSystem(engine);
+    const action = rawAction._combatParsed
+      ? rawAction
+      : parseAction(rawAction, { system });
+
+    if (action.flavorText) {
+      combatLog(engine, 'ability', { message: action.flavorText });
+    }
+
+    const req = checkRequirements(engine, action);
+    if (!req.ok) {
+      combatLog(engine, 'fail', { message: `❌ ${req.reason}` });
+      return { success: false, reason: req.reason };
+    }
+
+    if (!context.skipValidation) {
+      const econ = getUnavailableFromEconomy(engine, action);
+      if (econ) {
+        combatLog(engine, 'fail', { message: `❌ ${econ}` });
+        return { success: false, reason: econ };
+      }
+      if (
+        engine.state.combat &&
+        actionNeedsEnemyTarget(action) &&
+        (!context.target ||
+          context.target.hp == null ||
+          context.target.hp <= 0)
+      ) {
+        return { success: true, needsTarget: true, endsTurn: false };
+      }
+    }
+
+    if (!context.skipResourceCost && engine.spendAbilityCost) {
+      if (!engine.canAffordAbility?.(action)) {
+        combatLog(engine, 'fail', { message: '❌ Недостаточно ресурса!' });
+        return { success: false, reason: 'resource' };
+      }
+      const spendPayload = { ...action };
+      if (system === 'pf2e' && spendPayload.actionCost?.actions != null) {
+        spendPayload._skipPf2eActionSpend = true;
+      }
+      engine.spendAbilityCost(spendPayload);
+    }
+
+    if (!context.skipEconomy) {
+      spendActionEconomy(engine, action);
+    }
+
+    const castLv = engine.getCastSlotLevel?.(action);
+    const minLv = engine.getAbilitySpellLevel?.(action);
+    let castNote = '';
+    if (engine.abilityUsesSpellSlots?.(action) && castLv >= 1) {
+      castNote =
+        castLv > minLv
+          ? ` — ячейка ${castLv} круга (усилено)`
+          : ` — круг ${castLv}`;
+    }
+    combatLog(engine, 'ability', {
+      message: `💫 ${action.name}${castNote}`,
+      actor: engine.state?.charName,
+      target: context.target?.name
+    });
+    engine.playAbilityCast?.(action);
+
+    engine._abilitySoundCtx = action;
+    const endsTurn = applyActionEffects(engine, action, context);
+    engine._abilitySoundCtx = null;
+
+    if (engine.state.combat && engine.isConcentrationAbility?.(action)) {
+      engine.beginConcentration?.(action);
+    }
+
+    if (engine.state.combat && action.oncePerCombat) {
+      if (!engine.state.combat.abilitiesUsed) {
+        engine.state.combat.abilitiesUsed = {};
+      }
+      engine.state.combat.abilitiesUsed[action.id] = true;
+    }
+
+    engine.updateStats?.();
+    engine.renderCombat?.();
+
+    return {
+      success: true,
+      endsTurn: endsTurn !== false,
+      needsTarget: false
+    };
+  }
+
+  function canPerformAction(engine, rawAction) {
+    const action = rawAction._combatParsed
+      ? rawAction
+      : parseAction(rawAction, { system: getRulesSystem(engine) });
+    const req = checkRequirements(engine, action);
+    if (!req.ok) return req.reason;
+    const econ = getUnavailableFromEconomy(engine, action);
+    if (econ) return econ;
+    if (engine.isSpellBlockedByCurse?.(action)) {
+      return 'Проклятие безмолвия';
+    }
+    if (engine.canAffordAbility && !engine.canAffordAbility(action)) {
+      return 'Недостаточно ресурса';
+    }
+    return null;
+  }
+
+  function normalizeAbilityForEngine(engine, ab, classKey, index) {
+    const base = engine.normalizeAbility
+      ? engine.normalizeAbility(ab, classKey, index)
+      : clone(ab);
+    return parseAction(base, { system: getRulesSystem(engine) });
+  }
+
+  function normalizeProgressionAbilities(data, engine) {
+    const pool = data?.progression?.abilities;
+    if (!pool) return;
+    const system =
+      data?.meta?.system === 'pf2e' ? 'pf2e' : 'dnd5e';
+    Object.keys(pool).forEach((id) => {
+      pool[id] = parseAction(pool[id], { system });
+    });
+  }
+
+  const CombatManager = {
+    TARGET_TYPES,
+    parseAction,
+    performAction,
+    combatLog,
+    canPerformAction,
+    checkRequirements,
+    needsTargetSelection,
+    actionNeedsEnemyTarget,
+    normalizeAbilityForEngine,
+    normalizeProgressionAbilities,
+    getRulesSystem,
+    resolveActionCost
+  };
+
+  global.CombatManager = CombatManager;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+;/* —— js/components/combat/CombatPosition.js —— */
+/**
+ * CombatPosition — зоны боя Far / Mid / Close и дальность действий (data-driven).
+ * @module CombatPosition
+ */
+(function (global) {
+  'use strict';
+
+  const ZONES = {
+    FAR: 'far',
+    MID: 'mid',
+    CLOSE: 'close'
+  };
+
+  const ZONE_ORDER = [ZONES.FAR, ZONES.MID, ZONES.CLOSE];
+
+  const RANGE_TYPES = {
+    MELEE: 'melee',
+    TOUCH: 'touch',
+    CONE: 'cone',
+    RANGED: 'ranged',
+    SPELL: 'spell'
+  };
+
+  const SAME_ZONE_RANGE_TYPES = new Set([
+    RANGE_TYPES.MELEE,
+    RANGE_TYPES.TOUCH,
+    RANGE_TYPES.CONE
+  ]);
+
+  /** @deprecated Совместимость с кодом, использующим ZONE_REACH */
+  const ZONE_REACH = {
+    SAME_ZONE: 'same_zone',
+    ANY_ZONE: 'any_zone'
+  };
+
+  const DEFAULT_CONFIG = {
+    enabled: true,
+    defaultPlayerPosition: ZONES.CLOSE,
+    defaultEnemyPosition: ZONES.CLOSE,
+    flankingAttackBonus: 2,
+    flankingUsesAdvantage: true,
+    shiftCostsAction: false,
+    /** Помеха / штраф при ranged или spell в одной зоне с живым врагом */
+    sameZonePenalty: {
+      ranged: { disadvantage: true, attackBonus: 0 },
+      spell: { disadvantage: true, attackBonus: 0 }
+    }
+  };
+
+  function getConfig(engine) {
+    const meta = engine?.data?.meta?.combatZones || {};
+    return { ...DEFAULT_CONFIG, ...meta };
+  }
+
+  function isEnabled(engine) {
+    return getConfig(engine).enabled !== false;
+  }
+
+  function migrateLegacyZone(z) {
+    const s = String(z || '').toLowerCase();
+    if (s === 'frontline') return ZONES.CLOSE;
+    if (s === 'backline') return ZONES.FAR;
+    if (ZONE_ORDER.includes(s)) return s;
+    return null;
+  }
+
+  function normalizeZone(z) {
+    const migrated = migrateLegacyZone(z);
+    if (migrated) return migrated;
+    return ZONES.MID;
+  }
+
+  function zoneIndex(zone) {
+    const z = normalizeZone(zone);
+    const i = ZONE_ORDER.indexOf(z);
+    return i >= 0 ? i : 1;
+  }
+
+  function getZoneDistance(a, b) {
+    return Math.abs(zoneIndex(a) - zoneIndex(b));
+  }
+
+  function isAdjacentZone(from, to) {
+    return getZoneDistance(from, to) === 1;
+  }
+
+  function getZoneLabel(zone) {
+    const z = normalizeZone(zone);
+    if (z === ZONES.FAR) return 'Дальняя';
+    if (z === ZONES.CLOSE) return 'Ближняя';
+    return 'Средняя';
+  }
+
+  function getZoneIcon(zone) {
+    const z = normalizeZone(zone);
+    if (z === ZONES.FAR) return '🏹';
+    if (z === ZONES.CLOSE) return '⚔️';
+    return '🛡️';
+  }
+
+  function inferDefaultPlayerZone(engine) {
+    const cfg = getConfig(engine);
+    if (cfg.defaultPlayerPosition) {
+      return normalizeZone(cfg.defaultPlayerPosition);
+    }
+    const cls = engine.state?.className || '';
+    if (['wizard', 'pf2e_wizard', 'pf2e_sorcerer', 'bard'].includes(cls)) {
+      return ZONES.FAR;
+    }
+    if (['ranger', 'rogue', 'pf2e_rogue'].includes(cls)) {
+      return ZONES.MID;
+    }
+    return ZONES.CLOSE;
+  }
+
+  function inferEnemyZone(enemy, index, template, engine) {
+    if (enemy?.position) return normalizeZone(enemy.position);
+    if (template?.position) return normalizeZone(template.position);
+    if (template?.combatPosition) return normalizeZone(template.combatPosition);
+    if (template?.ranged || template?.isRanged || enemy?.ranged || enemy?.isRanged) {
+      return ZONES.FAR;
+    }
+    const cfg = engine ? getConfig(engine) : DEFAULT_CONFIG;
+    if (cfg.defaultEnemyPosition) return normalizeZone(cfg.defaultEnemyPosition);
+    if (index % 3 === 1) return ZONES.MID;
+    if (index % 3 === 2) return ZONES.FAR;
+    return ZONES.CLOSE;
+  }
+
+  function initCombatPositions(engine) {
+    if (!engine?.state?.combat) return;
+    const combat = engine.state.combat;
+    combat.playerPosition = migrateLegacyZone(combat.playerPosition)
+      || inferDefaultPlayerZone(engine);
+    combat.flankingMarks = {};
+    combat.zoneConfig = getConfig(engine);
+    combat.zoneMovedThisTurn = false;
+
+    (engine.state.enemies || []).forEach((enemy, i) => {
+      const tplId = combat.enemies?.[i] || combat.enemyIds?.[i];
+      const tpl = tplId && engine.data?.enemies?.[tplId];
+      enemy.position = migrateLegacyZone(enemy.position)
+        || inferEnemyZone(enemy, i, tpl, engine);
+      enemy.zoneMovedThisTurn = false;
+    });
+  }
+
+  function resetTurnMovement(engine) {
+    if (engine.state?.combat) engine.state.combat.zoneMovedThisTurn = false;
+  }
+
+  function getPlayerPosition(engine) {
+    if (!isEnabled(engine)) return ZONES.CLOSE;
+    return normalizeZone(
+      engine.state?.combat?.playerPosition || inferDefaultPlayerZone(engine)
+    );
+  }
+
+  function getEnemyPosition(engine, enemyOrIndex) {
+    if (!isEnabled(engine)) return ZONES.CLOSE;
+    const enemy =
+      typeof enemyOrIndex === 'number'
+        ? engine.state?.enemies?.[enemyOrIndex]
+        : enemyOrIndex;
+    return normalizeZone(enemy?.position || ZONES.CLOSE);
+  }
+
+  function setPlayerPosition(engine, zone) {
+    if (!engine.state?.combat) return false;
+    engine.state.combat.playerPosition = normalizeZone(zone);
+    return true;
+  }
+
+  function setEnemyPosition(engine, index, zone) {
+    const enemy = engine.state?.enemies?.[index];
+    if (!enemy) return false;
+    enemy.position = normalizeZone(zone);
+    return true;
+  }
+
+  function normalizeRangeType(raw, opts = {}) {
+    const ability = opts.ability || null;
+    const tags = (opts.tags || ability?.tags || []).map((t) => String(t).toLowerCase());
+    const s = typeof raw === 'string' ? raw.toLowerCase().trim() : '';
+
+    const known = Object.values(RANGE_TYPES);
+    if (known.includes(s)) return s;
+
+    if (typeof raw === 'number') {
+      if (tags.includes('spell') || ability?.spellLevel != null) return RANGE_TYPES.SPELL;
+      return RANGE_TYPES.RANGED;
+    }
+
+    if (ability?.combatZoneReach != null && ability.combatZoneReach !== '') {
+      const reach = String(ability.combatZoneReach).toLowerCase();
+      if (reach === 'same_zone') {
+        if (tags.includes('cone')) return RANGE_TYPES.CONE;
+        if (tags.includes('touch')) return RANGE_TYPES.TOUCH;
+        return RANGE_TYPES.MELEE;
+      }
+      if (reach === 'any_zone') return RANGE_TYPES.SPELL;
+    }
+
+    if (tags.includes('cone')) return RANGE_TYPES.CONE;
+    if (tags.includes('touch')) return RANGE_TYPES.TOUCH;
+    if (tags.includes('spell')) return RANGE_TYPES.SPELL;
+    if (tags.includes('ranged')) return RANGE_TYPES.RANGED;
+    if (tags.includes('weapon') || tags.includes('martial')) return RANGE_TYPES.MELEE;
+
+    if (ability?.spellLevel != null) return RANGE_TYPES.SPELL;
+    return RANGE_TYPES.MELEE;
+  }
+
+  function rangeTypeRequiresSameZone(rangeType) {
+    return SAME_ZONE_RANGE_TYPES.has(rangeType);
+  }
+
+  function rangeTypeToZoneReach(rangeType) {
+    return rangeTypeRequiresSameZone(rangeType)
+      ? ZONE_REACH.SAME_ZONE
+      : ZONE_REACH.ANY_ZONE;
+  }
+
+  function getAbilityRangeType(ability) {
+    if (!ability) return RANGE_TYPES.SPELL;
+    const raw = ability.range != null ? ability.range : ability.targeting?.range;
+    return normalizeRangeType(raw, { ability, tags: ability.tags });
+  }
+
+  function getWeaponRangeType(engine, profile) {
+    if (!profile) return RANGE_TYPES.MELEE;
+    const weapon = profile.weaponId
+      ? engine?.itemsData?.[profile.weaponId] || engine?.data?.items?.[profile.weaponId]
+      : null;
+    if (!weapon) return RANGE_TYPES.MELEE;
+    if (weapon.range === 'ranged' || weapon.weaponRange === 'ranged') {
+      return RANGE_TYPES.RANGED;
+    }
+    const wr = normalizeRangeType(weapon.range, { tags: weapon.tags });
+    if (wr !== RANGE_TYPES.MELEE || weapon.combatZoneReach === 'any_zone') {
+      if (weapon.combatZoneReach === 'any_zone') return RANGE_TYPES.RANGED;
+      if (wr !== RANGE_TYPES.MELEE) return wr;
+    }
+    return RANGE_TYPES.MELEE;
+  }
+
+  function isWeaponRanged(weapon) {
+    if (!weapon) return false;
+    if (weapon.range === 'ranged' || weapon.weaponRange === 'ranged') return true;
+    if (weapon.combatZoneReach === 'any_zone') return true;
+    const wr = normalizeRangeType(weapon.range, { tags: weapon.tags });
+    return wr === RANGE_TYPES.RANGED;
+  }
+
+  function getAbilityZoneReach(ability) {
+    return rangeTypeToZoneReach(getAbilityRangeType(ability));
+  }
+
+  function getWeaponZoneReach(engine, profile) {
+    return rangeTypeToZoneReach(getWeaponRangeType(engine, profile));
+  }
+
+  function getAttackModeFromRangeType(rangeType) {
+    if (rangeType === RANGE_TYPES.RANGED) return 'ranged';
+    if (rangeType === RANGE_TYPES.SPELL) return 'spell';
+    if (rangeType === RANGE_TYPES.MELEE || rangeType === RANGE_TYPES.TOUCH) {
+      return 'melee';
+    }
+    if (rangeType === RANGE_TYPES.CONE) return 'cone';
+    return 'melee';
+  }
+
+  function getAttackModeFromProfile(engine, profile) {
+    return getAttackModeFromRangeType(getWeaponRangeType(engine, profile));
+  }
+
+  function getAttackModeFromAbility(ability) {
+    return getAttackModeFromRangeType(getAbilityRangeType(ability));
+  }
+
+  function hasLivingEnemyInZone(engine, zone) {
+    const z = normalizeZone(zone);
+    return (engine.state?.enemies || []).some(
+      (e, i) => e.hp > 0 && getEnemyPosition(engine, i) === z
+    );
+  }
+
+  function hasHostileInAttackerZone(engine, attackerZone, ctx) {
+    const zone = normalizeZone(attackerZone);
+    if (ctx?.attackerIsEnemy) {
+      return zone === getPlayerPosition(engine) && (engine.state?.hp > 0);
+    }
+    return hasLivingEnemyInZone(engine, zone);
+  }
+
+  function applySameZonePenalty(engine, rangeType, attackerZone, out, ctx) {
+    if (!SAME_ZONE_RANGE_TYPES.has(rangeType) && rangeType !== RANGE_TYPES.RANGED && rangeType !== RANGE_TYPES.SPELL) {
+      return;
+    }
+    if (rangeType !== RANGE_TYPES.RANGED && rangeType !== RANGE_TYPES.SPELL) return;
+    if (!hasHostileInAttackerZone(engine, attackerZone, ctx)) return;
+
+    const cfg = getConfig(engine);
+    const pen =
+      cfg.sameZonePenalty?.[rangeType] ||
+      cfg.sameZonePenalty?.default ||
+      null;
+    if (!pen) return;
+
+    if (pen.disadvantage) {
+      out.disadvantage = true;
+      out.notes.push(
+        rangeType === RANGE_TYPES.SPELL
+          ? 'Помеха: заклинание в одной зоне с врагом'
+          : 'Помеха: дальний бой в одной зоне с врагом'
+      );
+    }
+    const bonus = parseInt(pen.attackBonus, 10) || 0;
+    if (bonus) {
+      out.attackBonus += bonus;
+      out.notes.push(
+        `Штраф в своей зоне: ${bonus >= 0 ? '+' : ''}${bonus}`
+      );
+    }
+  }
+
+  function resetFlankingMarksIfNewRound(engine) {
+    const combat = engine.state?.combat;
+    if (!combat) return;
+    const round = combat.round || 1;
+    if (combat._flankingRound !== round) {
+      combat.flankingMarks = {};
+      combat._flankingRound = round;
+    }
+  }
+
+  function getFlankingMarks(engine, enemyIndex) {
+    resetFlankingMarksIfNewRound(engine);
+    const key = String(enemyIndex);
+    if (!engine.state.combat.flankingMarks[key]) {
+      engine.state.combat.flankingMarks[key] = { zones: {} };
+    }
+    if (!engine.state.combat.flankingMarks[key].zones) {
+      engine.state.combat.flankingMarks[key].zones = {};
+    }
+    return engine.state.combat.flankingMarks[key];
+  }
+
+  function recordAttackOnEnemy(engine, enemyIndex, attackerZone) {
+    if (!isEnabled(engine)) return;
+    const marks = getFlankingMarks(engine, enemyIndex);
+    marks.zones[normalizeZone(attackerZone)] = true;
+  }
+
+  function hasFlankingOnEnemy(engine, enemyIndex) {
+    if (!isEnabled(engine)) return false;
+    const marks = getFlankingMarks(engine, enemyIndex);
+    const hitZones = Object.keys(marks.zones || {}).filter((z) => marks.zones[z]);
+    return hitZones.length >= 2;
+  }
+
+  function getAttackModifiers(engine, ctx) {
+    const cfg = getConfig(engine);
+    const out = {
+      attackBonus: 0,
+      advantage: false,
+      disadvantage: false,
+      notes: []
+    };
+    if (!isEnabled(engine)) return out;
+
+    const attackerZone = ctx.attackerZone || getPlayerPosition(engine);
+    const targetZone = ctx.targetZone || ZONES.CLOSE;
+    const rangeType =
+      ctx.rangeType ||
+      (ctx.zoneReach === ZONE_REACH.SAME_ZONE
+        ? RANGE_TYPES.MELEE
+        : ctx.attackMode === 'ranged'
+          ? RANGE_TYPES.RANGED
+          : RANGE_TYPES.SPELL);
+
+    applySameZonePenalty(engine, rangeType, attackerZone, out, ctx);
+
+    if (ctx.enemyIndex != null && hasFlankingOnEnemy(engine, ctx.enemyIndex)) {
+      if (cfg.flankingUsesAdvantage && engine.isPf2e?.() !== true) {
+        out.advantage = true;
+        out.notes.push('Фланг: преимущество (Advantage)');
+      } else {
+        out.attackBonus += cfg.flankingAttackBonus || 2;
+        out.notes.push(`Фланг: +${cfg.flankingAttackBonus} к атаке`);
+      }
+    }
+
+    if (ctx.extraPenalty) out.attackBonus += ctx.extraPenalty;
+    return out;
+  }
+
+  function validateAttack(engine, ctx) {
+    const ok = { valid: true, reason: null, modifiers: null, suggestShift: false };
+
+    if (!isEnabled(engine)) return ok;
+
+    const attackerZone = ctx.attackerZone || getPlayerPosition(engine);
+    const targetZone =
+      ctx.targetZone != null
+        ? normalizeZone(ctx.targetZone)
+        : getEnemyPosition(engine, ctx.enemyIndex);
+
+    const rangeType =
+      ctx.rangeType ||
+      (ctx.zoneReach === ZONE_REACH.SAME_ZONE
+        ? RANGE_TYPES.MELEE
+        : ctx.attackMode === 'ranged'
+          ? RANGE_TYPES.RANGED
+          : RANGE_TYPES.SPELL);
+
+    if (rangeTypeRequiresSameZone(rangeType) && attackerZone !== targetZone) {
+      return {
+        valid: false,
+        reason: `Дистанция «${rangeType}»: нужна одна зона с целью (вы: ${getZoneLabel(attackerZone)}, цель: ${getZoneLabel(targetZone)}). Переместитесь на соседнюю зону.`,
+        suggestShift: true,
+        modifiers: null
+      };
+    }
+
+    ok.modifiers = getAttackModifiers(engine, {
+      ...ctx,
+      attackerZone,
+      targetZone,
+      rangeType
+    });
+    return ok;
+  }
+
+  function validateAbilityTarget(engine, ability, enemyIndex) {
+    if (!isEnabled(engine)) return { valid: true };
+
+    const rangeType = getAbilityRangeType(ability);
+    const targetType = ability.targetType || ability.targeting?.scope;
+
+    if (
+      enemyIndex == null &&
+      (targetType === 'area' || targetType === 'allEnemies' || targetType === 'all_enemies')
+    ) {
+      if (rangeTypeRequiresSameZone(rangeType)) {
+        const pz = getPlayerPosition(engine);
+        if (!hasLivingEnemyInZone(engine, pz)) {
+          return {
+            valid: false,
+            reason: `В зоне «${getZoneLabel(pz)}» нет врагов (${rangeType}).`,
+            suggestShift: false,
+            modifiers: null
+          };
+        }
+      }
+      return { valid: true, modifiers: null };
+    }
+
+    if (enemyIndex == null) return { valid: true };
+
+    return validateAttack(engine, {
+      enemyIndex,
+      rangeType,
+      targetZone: getEnemyPosition(engine, enemyIndex)
+    });
+  }
+
+  function getAbilityZoneUnavailableReason(engine, ability) {
+    if (!isEnabled(engine) || !ability || !engine.state?.combat) return null;
+    const rangeType = getAbilityRangeType(ability);
+    if (!rangeTypeRequiresSameZone(rangeType)) return null;
+    const pz = getPlayerPosition(engine);
+    const scope = ability.targetType || ability.targeting?.scope;
+    if (
+      scope === 'singleEnemy' ||
+      scope === 'single' ||
+      scope === 'single_enemy' ||
+      scope === 'area' ||
+      scope === 'allEnemies' ||
+      scope === 'all_enemies'
+    ) {
+      return hasLivingEnemyInZone(engine, pz)
+        ? null
+        : `Нет врагов в зоне «${getZoneLabel(pz)}» (${rangeType})`;
+    }
+    return null;
+  }
+
+  function rollD20(engine, modifiers) {
+    const m = modifiers || {};
+    if (m.advantage && !m.disadvantage) {
+      const a = engine.d20();
+      const b = engine.d20();
+      return {
+        roll: Math.max(a, b),
+        advantage: true,
+        detail: `max(${a}, ${b})`
+      };
+    }
+    if (m.disadvantage && !m.advantage) {
+      const a = engine.d20();
+      const b = engine.d20();
+      return {
+        roll: Math.min(a, b),
+        disadvantage: true,
+        detail: `min(${a}, ${b})`
+      };
+    }
+    return { roll: engine.d20() };
+  }
+
+  function getZoneStepToward(fromZone, toZone) {
+    const from = zoneIndex(fromZone);
+    const to = zoneIndex(toZone);
+    if (from === to) return null;
+    if (to > from) return ZONE_ORDER[from + 1];
+    return ZONE_ORDER[from - 1];
+  }
+
+  function getZoneStepAway(fromZone, toZone) {
+    const from = zoneIndex(fromZone);
+    const to = zoneIndex(toZone);
+    if (from === to) return null;
+    if (to > from) return ZONE_ORDER[from - 1];
+    return ZONE_ORDER[from + 1];
+  }
+
+  function canReachWithRangeType(attackerZone, targetZone, rangeType) {
+    const a = normalizeZone(attackerZone);
+    const t = normalizeZone(targetZone);
+    if (rangeTypeRequiresSameZone(rangeType)) return a === t;
+    return true;
+  }
+
+  /**
+   * Перемещение врага на соседнюю зону (макс. 1 за ход на экземпляр).
+   */
+  function notifyZoneLeave(engine, leaveEvent) {
+    if (!leaveEvent || leaveEvent.fromZone === leaveEvent.toZone) return;
+    if (typeof OpportunityAttack !== 'undefined') {
+      OpportunityAttack.onZoneLeave(engine, leaveEvent);
+    }
+  }
+
+  function moveEnemyOneZone(engine, enemyIndex, nextZone) {
+    const enemy = engine.state?.enemies?.[enemyIndex];
+    if (!enemy || enemy.hp <= 0) return false;
+    if (enemy.zoneMovedThisTurn) return false;
+    const cur = getEnemyPosition(engine, enemyIndex);
+    const next = normalizeZone(nextZone);
+    if (!isAdjacentZone(cur, next)) return false;
+    setEnemyPosition(engine, enemyIndex, next);
+    enemy.zoneMovedThisTurn = true;
+    engine.log?.(
+      `↔️ ${enemy.name}: ${getZoneLabel(cur)} → ${getZoneLabel(next)}`,
+      'log-combat'
+    );
+    notifyZoneLeave(engine, {
+      actorType: 'enemy',
+      enemyIndex,
+      fromZone: cur,
+      toZone: next,
+      actorName: enemy.name
+    });
+    engine.renderCombat?.();
+    engine.updateCombatTimeline?.();
+    return true;
+  }
+
+  function validateAttackAgainstPlayer(engine, enemyIndex, rangeType) {
+    return validateAttack(engine, {
+      attackerZone: getEnemyPosition(engine, enemyIndex),
+      targetZone: getPlayerPosition(engine),
+      rangeType,
+      attackerIsEnemy: true
+    });
+  }
+
+  function getShiftOptions(engine) {
+    const cur = getPlayerPosition(engine);
+    const idx = zoneIndex(cur);
+    return {
+      towardClose: idx < ZONE_ORDER.length - 1 ? ZONE_ORDER[idx + 1] : null,
+      towardFar: idx > 0 ? ZONE_ORDER[idx - 1] : null,
+      current: cur
+    };
+  }
+
+  /**
+   * @param {object} engine
+   * @param {'toward_close'|'toward_far'} direction
+   */
+  function shiftPlayerPosition(engine, direction) {
+    if (!engine.state?.combat) return false;
+    if (engine.getCombatPhase?.() !== 'player_turn') {
+      engine.log('Переместиться можно только в свой ход.', 'log-damage');
+      return false;
+    }
+
+    if (engine.state.combat.zoneMovedThisTurn) {
+      engine.log('В этом ходу уже перемещались (максимум 1 зона).', 'log-damage');
+      return false;
+    }
+
+    const cfg = getConfig(engine);
+    if (cfg.shiftCostsAction) {
+      if (engine.state.combat.actionSpent && !engine.state.combat.actionSurge) {
+        engine.log('Действие уже потрачено в этом ходу.', 'log-damage');
+        return false;
+      }
+      engine.spendCombatActionType?.('action');
+    }
+
+    const opts = getShiftOptions(engine);
+    const cur = opts.current;
+    let next = null;
+    if (direction === 'toward_close') next = opts.towardClose;
+    else if (direction === 'toward_far') next = opts.towardFar;
+    else next = normalizeZone(direction);
+
+    if (!next || !isAdjacentZone(cur, next)) {
+      engine.log('За один ход можно сменить только соседнюю зону.', 'log-damage');
+      return false;
+    }
+
+    setPlayerPosition(engine, next);
+    engine.state.combat.zoneMovedThisTurn = true;
+    engine.log(
+      `↔️ ${engine.state.charName || 'Герой'}: ${getZoneLabel(cur)} → ${getZoneLabel(next)}`,
+      'log-combat'
+    );
+    notifyZoneLeave(engine, {
+      actorType: 'player',
+      fromZone: cur,
+      toZone: next,
+      actorName: engine.state.charName || 'Герой'
+    });
+    engine.renderCombat?.();
+    engine.updateCombatTimeline?.();
+    engine.playerCombatTurn?.();
+    return true;
+  }
+
+  function shiftCostsAction(engine) {
+    return getConfig(engine).shiftCostsAction === true;
+  }
+
+  function renderZoneBadge(zone, extraClass) {
+    const z = normalizeZone(zone);
+    const cls = ['combat-zone-badge', `combat-zone-badge--${z}`, extraClass || '']
+      .filter(Boolean)
+      .join(' ');
+    return `<span class="${cls}" title="${getZoneLabel(z)}">${getZoneIcon(z)} ${getZoneLabel(z)}</span>`;
+  }
+
+  function renderZoneFieldHtml(engine, opts = {}) {
+    if (!isEnabled(engine)) return '';
+    const playerZone = getPlayerPosition(engine);
+    const enemies = engine.state?.enemies || [];
+    const byZone = { far: [], mid: [], close: [] };
+
+    enemies.forEach((e, idx) => {
+      if (e.hp <= 0 && !opts.showDead) return;
+      const card = renderCombatantCard(engine, e, idx, opts);
+      const z = getEnemyPosition(engine, e);
+      byZone[z].push(card);
+    });
+
+    const playerCard =
+      opts.hidePlayer && document.body.classList.contains('mobile')
+        ? ''
+        : renderPlayerCard(engine, playerZone, opts);
+
+    const column = (zoneKey, cssKey) => {
+      const units = byZone[zoneKey].join('') || '<div class="combat-zone-empty">—</div>';
+      const playerHere = playerZone === zoneKey ? playerCard : '';
+      return `
+        <div class="combat-zone-column combat-zone-column--${cssKey}">
+          <div class="combat-zone-column__head">${getZoneIcon(zoneKey)} ${getZoneLabel(zoneKey)}</div>
+          <div class="combat-zone-column__body">
+            ${playerHere}
+            ${units}
+          </div>
+        </div>`;
+    };
+
+    return `
+      <div class="combat-zone-field combat-zone-field--triple" aria-label="Позиции в бою">
+        ${column(ZONES.FAR, 'far')}
+        ${column(ZONES.MID, 'mid')}
+        ${column(ZONES.CLOSE, 'close')}
+      </div>`;
+  }
+
+  function renderPlayerCard(engine, zone, opts) {
+    const pPct = Math.max(0, (engine.state.hp / engine.state.maxHp) * 100);
+    const fx = engine.renderStatusEffectsHtml?.(engine.state.combat?.effects) || '';
+    const selecting = engine.getCombatPhase?.() === 'select_target';
+    return `
+      <div class="combat-zone-unit combat-zone-unit--player ${selecting ? 'combat-zone-unit--selecting' : ''}">
+        ${renderZoneBadge(zone, 'combat-zone-badge--on-card')}
+        <div class="combat-zone-unit__name">${engine.escapeHtml(engine.state.charName || 'Герой')}</div>
+        <div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${pPct}%"></div></div>
+        <span class="combat-hp-text">${engine.state.hp}/${engine.state.maxHp}</span>
+        ${fx ? `<div class="combat-effects-row">${fx}</div>` : ''}
+      </div>`;
+  }
+
+  function renderCombatantCard(engine, enemy, idx, opts) {
+    const alive = enemy.hp > 0;
+    const pct = Math.max(0, (enemy.hp / enemy.maxHp) * 100);
+    const zone = getEnemyPosition(engine, enemy);
+    const selecting = engine.getCombatPhase?.() === 'select_target';
+    let rowClass = 'combat-zone-unit combat-zone-unit--enemy';
+    if (!alive) rowClass += ' combat-zone-unit--dead';
+    if (selecting && alive) rowClass += ' combat-zone-unit--targetable';
+    const clickAttr =
+      selecting && alive
+        ? ` role="button" tabindex="0" onclick="GameEngine.onCombatEnemyClick(${idx})"`
+        : '';
+    const flank = hasFlankingOnEnemy(engine, idx);
+    const flankTag = flank
+      ? '<span class="combat-zone-flank" title="Фланг: атаки с разных зон">⊞</span>'
+      : '';
+
+    return `
+      <div class="${rowClass}" data-enemy-index="${idx}"${clickAttr}>
+        ${renderZoneBadge(zone, 'combat-zone-badge--on-card')}
+        ${flankTag}
+        <div class="combat-zone-unit__name">${engine.escapeHtml(engine.getEnemyDisplayName(enemy))}</div>
+        <div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${pct}%"></div></div>
+        <span class="combat-hp-text">${enemy.hp}/${enemy.maxHp}</span>
+      </div>`;
+  }
+
+  function syncParticipantPositions(engine, participants) {
+    if (!participants?.length) return participants;
+    return participants.map((p) => {
+      if (p.type === 'player') {
+        return { ...p, position: getPlayerPosition(engine) };
+      }
+      if (p.type === 'enemy' && p.enemyIndex != null) {
+        return {
+          ...p,
+          position: getEnemyPosition(engine, p.enemyIndex)
+        };
+      }
+      return p;
+    });
+  }
+
+  const CombatPosition = {
+    ZONES,
+    ZONE_ORDER,
+    RANGE_TYPES,
+    SAME_ZONE_RANGE_TYPES,
+    ZONE_REACH,
+    getConfig,
+    isEnabled,
+    migrateLegacyZone,
+    normalizeZone,
+    zoneIndex,
+    getZoneDistance,
+    isAdjacentZone,
+    isWeaponRanged,
+    initCombatPositions,
+    resetTurnMovement,
+    getPlayerPosition,
+    getEnemyPosition,
+    setPlayerPosition,
+    setEnemyPosition,
+    normalizeRangeType,
+    rangeTypeRequiresSameZone,
+    rangeTypeToZoneReach,
+    getAbilityRangeType,
+    getWeaponRangeType,
+    getAttackModeFromProfile,
+    getAttackModeFromAbility,
+    getAttackModeFromRangeType,
+    getAbilityZoneReach,
+    getWeaponZoneReach,
+    getAbilityZoneUnavailableReason,
+    validateAttack,
+    validateAbilityTarget,
+    getAttackModifiers,
+    recordAttackOnEnemy,
+    hasFlankingOnEnemy,
+    rollD20,
+    getZoneStepToward,
+    getZoneStepAway,
+    canReachWithRangeType,
+    moveEnemyOneZone,
+    notifyZoneLeave,
+    validateAttackAgainstPlayer,
+    hasHostileInAttackerZone,
+    getShiftOptions,
+    shiftPlayerPosition,
+    shiftCostsAction,
+    renderZoneBadge,
+    renderZoneFieldHtml,
+    syncParticipantPositions,
+    getZoneLabel,
+    getZoneIcon
+  };
+
+  global.CombatPosition = CombatPosition;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+;/* —— js/components/combat/OpportunityAttack.js —— */
+/**
+ * OpportunityAttack — атаки возможности при выходе из общей зоны (D&D / PF2e / Free Strike).
+ * @module OpportunityAttack
+ */
+(function (global) {
+  'use strict';
+
+  const REACTION_TYPES = {
+    OPPORTUNITY_ATTACK: 'opportunity_attack',
+    COUNTERATTACK: 'counterattack',
+    GUARD_ALLY: 'guard_ally',
+    INTERCEPT: 'intercept',
+    TALENT: 'talent'
+  };
+
+  /** Зарегистрированные типы реакций (расширяемо) */
+  const REACTION_REGISTRY = {
+    [REACTION_TYPES.OPPORTUNITY_ATTACK]: {
+      id: REACTION_TYPES.OPPORTUNITY_ATTACK,
+      label: 'Атака возможности',
+      canMake: null,
+      trigger: null
+    }
+  };
+
+  function getConfig(engine) {
+    const zones = engine?.data?.meta?.combatZones || {};
+    const oa = zones.opportunityAttack || zones.opportunityAttacks || {};
+    return {
+      enabled: zones.enabled !== false && oa.enabled !== false,
+      requireMelee: oa.requireMelee !== false,
+      useInitiativeOrder: oa.useInitiativeOrder !== false
+    };
+  }
+
+  function isEnabled(engine) {
+    if (!engine?.state?.combat) return false;
+    if (typeof CombatPosition === 'undefined' || !CombatPosition.isEnabled(engine)) {
+      return false;
+    }
+    return getConfig(engine).enabled;
+  }
+
+  function participantKey(participant) {
+    if (!participant || !participant.type) return '';
+    return participant.type === 'player'
+      ? 'player'
+      : `enemy:${participant.enemyIndex}`;
+  }
+
+  function initReactionState(engine) {
+    if (!engine.state?.combat) return;
+    const c = engine.state.combat;
+    if (!c.reactions || typeof c.reactions !== 'object') {
+      c.reactions = { usedThisRound: {} };
+    }
+    if (!c.reactions.usedThisRound) c.reactions.usedThisRound = {};
+    c.reactionAvailable = true;
+    clearOpportunityUsageForRound(engine);
+    (engine.state.enemies || []).forEach((e) => {
+      if (e) e.reactionAvailable = true;
+    });
+  }
+
+  /**
+   * Восстановление реакций в начале нового раунда.
+   */
+  function restoreReactionsForRound(engine) {
+    if (!engine?.state?.combat) return;
+    initReactionState(engine);
+  }
+
+  function hasUsedOpportunityThisRound(engine, participant) {
+    const key = participantKey(participant);
+    return !!engine.state.combat?.reactions?.usedThisRound?.[key];
+  }
+
+  function markOpportunityUsed(engine, participant) {
+    if (!engine.state.combat) return;
+    if (!engine.state.combat.reactions) engine.state.combat.reactions = { usedThisRound: {} };
+    if (!engine.state.combat.reactions.usedThisRound) {
+      engine.state.combat.reactions.usedThisRound = {};
+    }
+    engine.state.combat.reactions.usedThisRound[participantKey(participant)] = true;
+  }
+
+  function clearOpportunityUsageForRound(engine) {
+    if (engine.state?.combat?.reactions) {
+      engine.state.combat.reactions.usedThisRound = {};
+    }
+  }
+
+  function isParticipantAlive(engine, participant) {
+    if (participant.type === 'player') {
+      return (parseInt(engine.state?.hp, 10) || 0) > 0;
+    }
+    const enemy = engine.state?.enemies?.[participant.enemyIndex];
+    return !!(enemy && enemy.hp > 0);
+  }
+
+  function isParticipantAbleToAct(engine, participant) {
+    if (!isParticipantAlive(engine, participant)) return false;
+    if (typeof StatusManager === 'undefined') return true;
+    const holder =
+      participant.type === 'player'
+        ? StatusManager.getPlayerHolder(engine)
+        : StatusManager.getEnemyHolder(
+            engine,
+            engine.state.enemies[participant.enemyIndex]
+          );
+    if (!holder) return true;
+    if (StatusManager.hasStatus(holder, 'stunned')) return false;
+    if (StatusManager.hasStatus(holder, 'surprised')) return false;
+    return true;
+  }
+
+  function hasReactionResource(engine, participant) {
+    if (participant.type === 'player') {
+      return engine.state.combat?.reactionAvailable !== false;
+    }
+    const enemy = engine.state.enemies?.[participant.enemyIndex];
+    return enemy?.reactionAvailable !== false;
+  }
+
+  function spendReaction(engine, participant, reactionType) {
+    if (reactionType === REACTION_TYPES.OPPORTUNITY_ATTACK) {
+      markOpportunityUsed(engine, participant);
+    }
+    if (participant.type === 'player') {
+      engine.spendCombatActionType?.('reaction');
+      return;
+    }
+    const enemy = engine.state.enemies?.[participant.enemyIndex];
+    if (enemy) enemy.reactionAvailable = false;
+  }
+
+  function pickPlayerMeleeAttack(engine) {
+    if (typeof CombatPosition === 'undefined') return null;
+    const trySlot = (slot) => {
+      const profile = engine.getWeaponAttackProfile?.(slot);
+      if (!profile?.weaponId) return slot === 'weapon_main' ? profile : null;
+      const rt = CombatPosition.getWeaponRangeType(engine, profile);
+      if (CombatPosition.rangeTypeRequiresSameZone(rt)) return profile;
+      return null;
+    };
+    return trySlot('weapon_main') || trySlot('weapon_off') || engine.getWeaponAttackProfile?.('weapon_main');
+  }
+
+  function pickEnemyMeleeAttack(engine, enemy, enemyIndex) {
+    if (typeof EnemyTacticalAI === 'undefined') {
+      return {
+        id: 'default',
+        range: 'melee',
+        atkBonus: enemy.atkBonus,
+        dmgRoll: enemy.dmgRoll,
+        dmgBonus: enemy.dmgBonus,
+        label: 'Атака возможности'
+      };
+    }
+    const attacks = EnemyTacticalAI.getEnemyAttacks(engine, enemy);
+    const CP = CombatPosition;
+    const melee = attacks.filter((a) =>
+      CP.rangeTypeRequiresSameZone(CP.normalizeRangeType(a.range, { tags: a.tags }))
+    );
+    const list = melee.length ? melee : attacks;
+    return EnemyTacticalAI.pickBestAttack(engine, enemyIndex, list, {
+      preferRangeTypes: [CP.RANGE_TYPES.MELEE, 'melee', 'touch'],
+      enemyZone: CP.getEnemyPosition(engine, enemyIndex),
+      playerZone: CP.getPlayerPosition(engine)
+    });
+  }
+
+  function canPerformOpportunityStrike(engine, participant) {
+    const cfg = getConfig(engine);
+    if (!cfg.requireMelee) return true;
+    if (participant.type === 'player') {
+      return !!pickPlayerMeleeAttack(engine);
+    }
+    const enemy = engine.state.enemies?.[participant.enemyIndex];
+    if (!enemy) return false;
+    return !!pickEnemyMeleeAttack(engine, enemy, participant.enemyIndex);
+  }
+
+  /**
+   * @param {object} engine
+   * @param {{ type: 'player'|'enemy', enemyIndex?: number }} participant — кто бьёт
+   * @param {object} leaveEvent — событие выхода из зоны
+   */
+  function canMakeOpportunityAttack(engine, participant, leaveEvent) {
+    if (!isEnabled(engine) || !leaveEvent) return false;
+    if (!leaveEvent.fromZone || leaveEvent.fromZone === leaveEvent.toZone) return false;
+
+    if (!isParticipantAlive(engine, participant)) return false;
+    if (!isParticipantAbleToAct(engine, participant)) return false;
+    if (!hasReactionResource(engine, participant)) return false;
+    if (hasUsedOpportunityThisRound(engine, participant)) return false;
+    if (!canPerformOpportunityStrike(engine, participant)) return false;
+
+    const CP = CombatPosition;
+    const reactorZone =
+      participant.type === 'player'
+        ? CP.getPlayerPosition(engine)
+        : CP.getEnemyPosition(engine, participant.enemyIndex);
+
+    if (normalizeZone(reactorZone) !== normalizeZone(leaveEvent.fromZone)) {
+      return false;
+    }
+
+    if (leaveEvent.actorType === participant.type) {
+      if (
+        leaveEvent.actorType === 'enemy' &&
+        leaveEvent.enemyIndex === participant.enemyIndex
+      ) {
+        return false;
+      }
+      if (leaveEvent.actorType === 'player' && participant.type === 'player') {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function normalizeZone(z) {
+    return typeof CombatPosition !== 'undefined'
+      ? CombatPosition.normalizeZone(z)
+      : z;
+  }
+
+  function listReactorsInZone(engine, fromZone, leavingActor) {
+    const zone = normalizeZone(fromZone);
+    const reactors = [];
+    const CP = CombatPosition;
+
+    if (
+      leavingActor.actorType !== 'player' &&
+      (parseInt(engine.state?.hp, 10) || 0) > 0 &&
+      CP.getPlayerPosition(engine) === zone
+    ) {
+      reactors.push({ type: 'player' });
+    }
+
+    (engine.state.enemies || []).forEach((e, i) => {
+      if (!e || e.hp <= 0) return;
+      if (leavingActor.actorType === 'enemy' && leavingActor.enemyIndex === i) {
+        return;
+      }
+      if (CP.getEnemyPosition(engine, i) === zone) {
+        reactors.push({ type: 'enemy', enemyIndex: i });
+      }
+    });
+
+    return reactors;
+  }
+
+  function sortReactorsByInitiative(engine, reactors) {
+    if (!getConfig(engine).useInitiativeOrder) return reactors;
+    const order = engine.state.combat?.order || [];
+    const indexOf = (p) => {
+      if (p.type === 'player') {
+        return order.findIndex((o) => o.type === 'player');
+      }
+      return order.findIndex(
+        (o) => o.type === 'enemy' && o.index === p.enemyIndex
+      );
+    };
+    return [...reactors].sort((a, b) => {
+      const ia = indexOf(a);
+      const ib = indexOf(b);
+      const ai = ia >= 0 ? ia : 999;
+      const bi = ib >= 0 ? ib : 999;
+      return ai - bi;
+    });
+  }
+
+  /**
+   * Выполнить атаку возможности.
+   */
+  function triggerOpportunityAttack(engine, participant, leaveEvent) {
+    if (!canMakeOpportunityAttack(engine, participant, leaveEvent)) return false;
+
+    const moverName =
+      leaveEvent.actorName ||
+      (leaveEvent.actorType === 'player'
+        ? engine.state?.charName || 'Герой'
+        : engine.state.enemies?.[leaveEvent.enemyIndex]?.name || 'Противник');
+
+    const reactorName =
+      participant.type === 'player'
+        ? engine.state?.charName || 'Герой'
+        : engine.state.enemies?.[participant.enemyIndex]?.name || 'Враг';
+
+    engine.log?.(
+      `⚡ Атака возможности: ${reactorName} → ${moverName} (покидает ${CombatPosition.getZoneLabel(leaveEvent.fromZone)})`,
+      'log-combat'
+    );
+
+    let ok = false;
+    if (participant.type === 'player') {
+      ok = !!engine.executePlayerOpportunityAttack?.(
+        leaveEvent.enemyIndex,
+        leaveEvent
+      );
+    } else {
+      ok = !!engine.executeEnemyOpportunityAttack?.(
+        participant.enemyIndex,
+        leaveEvent
+      );
+    }
+
+    if (ok) {
+      spendReaction(engine, participant, REACTION_TYPES.OPPORTUNITY_ATTACK);
+    }
+    return ok;
+  }
+
+  /**
+   * Точка входа: существо покинуло зону (вызывается из CombatPosition, не из логики сдвига).
+   * @param {object} engine
+   * @param {object} leaveEvent
+   */
+  function onZoneLeave(engine, leaveEvent) {
+    if (!isEnabled(engine) || !leaveEvent) return [];
+    const reactors = sortReactorsByInitiative(
+      engine,
+      listReactorsInZone(engine, leaveEvent.fromZone, leaveEvent)
+    );
+    const triggered = [];
+    reactors.forEach((reactor) => {
+      if (canMakeOpportunityAttack(engine, reactor, leaveEvent)) {
+        if (triggerOpportunityAttack(engine, reactor, leaveEvent)) {
+          triggered.push(reactor);
+        }
+      }
+    });
+    return triggered;
+  }
+
+  REACTION_REGISTRY[REACTION_TYPES.OPPORTUNITY_ATTACK].canMake = canMakeOpportunityAttack;
+  REACTION_REGISTRY[REACTION_TYPES.OPPORTUNITY_ATTACK].trigger = triggerOpportunityAttack;
+
+  const OpportunityAttack = {
+    REACTION_TYPES,
+    REACTION_REGISTRY,
+    getConfig,
+    isEnabled,
+    initReactionState,
+    restoreReactionsForRound,
+    canMakeOpportunityAttack,
+    triggerOpportunityAttack,
+    onZoneLeave,
+    spendReaction,
+    hasReactionResource,
+    pickPlayerMeleeAttack,
+    pickEnemyMeleeAttack,
+    participantKey
+  };
+
+  global.OpportunityAttack = OpportunityAttack;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+;/* —— js/components/combat/EnemyTacticalAI.js —— */
+/**
+ * EnemyTacticalAI — тактика врагов по combatRole, range и зонам (CombatPosition).
+ * @module EnemyTacticalAI
+ */
+(function (global) {
+  'use strict';
+
+  const COMBAT_ROLES = {
+    MELEE: 'melee',
+    RANGED: 'ranged',
+    CASTER: 'caster',
+    SUPPORT: 'support',
+    TANK: 'tank',
+    SUMMONER: 'summoner'
+  };
+
+  const IMPLEMENTED_ROLES = new Set([
+    COMBAT_ROLES.MELEE,
+    COMBAT_ROLES.RANGED,
+    COMBAT_ROLES.CASTER,
+    COMBAT_ROLES.TANK
+  ]);
+
+  function getCp() {
+    return typeof CombatPosition !== 'undefined' ? CombatPosition : null;
+  }
+
+  function getTemplate(engine, enemy) {
+    return engine?.data?.enemies?.[enemy?.id] || null;
+  }
+
+  function resolveCombatRole(engine, enemy) {
+    const tpl = getTemplate(engine, enemy);
+    const raw = String(enemy?.combatRole || tpl?.combatRole || '').toLowerCase();
+    if (raw && Object.values(COMBAT_ROLES).includes(raw)) return raw;
+    if (enemy?.ranged || tpl?.ranged) return COMBAT_ROLES.RANGED;
+    return COMBAT_ROLES.MELEE;
+  }
+
+  function normalizeAttackRange(attack) {
+    const CP = getCp();
+    if (!CP) return String(attack?.range || 'melee').toLowerCase();
+    return CP.normalizeRangeType(attack?.range, { tags: attack?.tags });
+  }
+
+  function isSameZoneRange(rangeType) {
+    const CP = getCp();
+    return CP ? CP.rangeTypeRequiresSameZone(rangeType) : rangeType === 'melee';
+  }
+
+  function getEnemyAttacks(engine, enemy) {
+    const tpl = getTemplate(engine, enemy);
+    const list = enemy?.attacks || tpl?.attacks;
+    if (Array.isArray(list) && list.length) {
+      return list.map((a, i) => ({
+        id: a.id || `attack_${i}`,
+        label: a.label || a.name || a.id || 'Атака',
+        range: a.range,
+        atkBonus: a.atkBonus != null ? a.atkBonus : enemy.atkBonus,
+        dmgRoll: a.dmgRoll || enemy.dmgRoll,
+        dmgBonus: a.dmgBonus != null ? a.dmgBonus : enemy.dmgBonus,
+        tags: a.tags || [],
+        weight: a.weight != null ? Number(a.weight) : 1
+      }));
+    }
+    const role = resolveCombatRole(engine, enemy);
+    const defaultRange = role === COMBAT_ROLES.RANGED ? 'ranged' : 'melee';
+    return [
+      {
+        id: 'default',
+        label: 'Атака',
+        range: defaultRange,
+        atkBonus: enemy.atkBonus,
+        dmgRoll: enemy.dmgRoll,
+        dmgBonus: enemy.dmgBonus,
+        tags: [defaultRange, 'weapon'],
+        weight: 1
+      }
+    ];
+  }
+
+  function getEnemyAbilities(engine, enemy) {
+    const tpl = getTemplate(engine, enemy);
+    const raw = enemy?.combatAbilities || enemy?.abilities || tpl?.combatAbilities || tpl?.abilities;
+    if (!Array.isArray(raw) || !raw.length) return [];
+    const out = [];
+    raw.forEach((entry, i) => {
+      if (!entry) return;
+      if (typeof entry === 'string') {
+        const fromGlobal = engine.data?.progression?.abilities?.[entry]
+          || engine.data?.abilities?.[entry];
+        if (fromGlobal) out.push({ ...fromGlobal, id: fromGlobal.id || entry });
+        return;
+      }
+      if (entry.id || entry.name) {
+        out.push(entry);
+      }
+    });
+    return out.map((ab, i) => {
+      const parsed =
+        typeof CombatManager !== 'undefined' && CombatManager.parseAction
+          ? CombatManager.parseAction(ab, {
+              system: engine.isPf2e?.() ? 'pf2e' : 'dnd5e'
+            })
+          : ab;
+      return parsed;
+    });
+  }
+
+  function canAttackHitPlayer(engine, enemyIndex, attack) {
+    const CP = getCp();
+    if (!CP || !CP.isEnabled(engine)) return true;
+    const rangeType = normalizeAttackRange(attack);
+    const check = CP.validateAttackAgainstPlayer(engine, enemyIndex, rangeType);
+    return check.valid;
+  }
+
+  function estimateAttackScore(attack) {
+    const dice = String(attack.dmgRoll || '1d6');
+    const m = dice.match(/(\d+)d(\d+)/);
+    let avg = 4;
+    if (m) avg = (parseInt(m[1], 10) || 1) * ((parseInt(m[2], 10) || 6) + 1) / 2;
+    return avg + (parseInt(attack.dmgBonus, 10) || 0) + (parseInt(attack.weight, 10) || 0) * 0.5;
+  }
+
+  function pickBestAttack(engine, enemyIndex, attacks, opts = {}) {
+    const { preferRangeTypes = null, enemyZone, playerZone } = opts;
+    const CP = getCp();
+    let candidates = attacks.filter((a) =>
+      canAttackHitPlayer(engine, enemyIndex, a)
+    );
+    if (!candidates.length) return null;
+
+    if (preferRangeTypes?.length) {
+      const preferred = candidates.filter((a) =>
+        preferRangeTypes.includes(normalizeAttackRange(a))
+      );
+      if (preferred.length) candidates = preferred;
+    }
+
+    if (CP && enemyZone != null && playerZone != null) {
+      const dist = CP.getZoneDistance(enemyZone, playerZone);
+      if (dist > 0) {
+        const ranged = candidates.filter((a) => !isSameZoneRange(normalizeAttackRange(a)));
+        if (ranged.length) candidates = ranged;
+      } else {
+        const melee = candidates.filter((a) => isSameZoneRange(normalizeAttackRange(a)));
+        if (melee.length) candidates = melee;
+      }
+    }
+
+    candidates.sort(
+      (a, b) => estimateAttackScore(b) - estimateAttackScore(a)
+    );
+    return candidates[0];
+  }
+
+  function planMoveTowardPlayer(engine, enemyIndex) {
+    const CP = getCp();
+    if (!CP || !CP.isEnabled(engine)) return null;
+    const enemy = engine.state.enemies[enemyIndex];
+    if (!enemy || enemy.zoneMovedThisTurn) return null;
+    const cur = CP.getEnemyPosition(engine, enemyIndex);
+    const pz = CP.getPlayerPosition(engine);
+    const next = CP.getZoneStepToward(cur, pz);
+    if (!next) return null;
+    return { kind: 'move', zone: next };
+  }
+
+  function planMoveAwayFromPlayer(engine, enemyIndex) {
+    const CP = getCp();
+    if (!CP || !CP.isEnabled(engine)) return null;
+    const enemy = engine.state.enemies[enemyIndex];
+    if (!enemy || enemy.zoneMovedThisTurn) return null;
+    const cur = CP.getEnemyPosition(engine, enemyIndex);
+    const pz = CP.getPlayerPosition(engine);
+    const next = CP.getZoneStepAway(cur, pz);
+    if (!next) return null;
+    return { kind: 'move', zone: next };
+  }
+
+  /**
+   * MELEE: атака в зоне досягаемости, иначе шаг к игроку.
+   */
+  function planMeleeTurn(engine, enemy, enemyIndex) {
+    const CP = getCp();
+    const attacks = getEnemyAttacks(engine, enemy);
+    const playerZone = CP ? CP.getPlayerPosition(engine) : null;
+    const enemyZone = CP ? CP.getEnemyPosition(engine, enemyIndex) : null;
+
+    const hit = pickBestAttack(engine, enemyIndex, attacks, {
+      preferRangeTypes: [CP?.RANGE_TYPES?.MELEE || 'melee', 'touch'],
+      enemyZone,
+      playerZone
+    });
+    if (hit) return { kind: 'attack', attack: hit };
+
+    const move = planMoveTowardPlayer(engine, enemyIndex);
+    if (move) return move;
+
+    return { kind: 'wait' };
+  }
+
+  /**
+   * RANGED: в одной зоне — мили, иначе отход + дальняя; издалека — дальняя.
+   */
+  function planRangedTurn(engine, enemy, enemyIndex) {
+    const CP = getCp();
+    const attacks = getEnemyAttacks(engine, enemy);
+    const playerZone = CP ? CP.getPlayerPosition(engine) : null;
+    const enemyZone = CP ? CP.getEnemyPosition(engine, enemyIndex) : null;
+    const sameZone = CP && playerZone === enemyZone;
+
+    if (sameZone) {
+      const meleeTypes = [
+        CP.RANGE_TYPES.MELEE,
+        CP.RANGE_TYPES.TOUCH,
+        'melee',
+        'touch'
+      ];
+      const meleeHit = pickBestAttack(engine, enemyIndex, attacks, {
+        preferRangeTypes: meleeTypes,
+        enemyZone,
+        playerZone
+      });
+      if (meleeHit) {
+        return { kind: 'attack', attack: meleeHit, note: 'melee_fallback' };
+      }
+
+      const move = planMoveAwayFromPlayer(engine, enemyIndex);
+      if (move) return move;
+
+      const rangedHit = pickBestAttack(engine, enemyIndex, attacks, {
+        preferRangeTypes: [CP.RANGE_TYPES.RANGED, CP.RANGE_TYPES.SPELL, 'ranged', 'spell'],
+        enemyZone,
+        playerZone
+      });
+      if (rangedHit) return { kind: 'attack', attack: rangedHit, note: 'ranged_in_melee' };
+      return { kind: 'wait' };
+    }
+
+    const rangedHit = pickBestAttack(engine, enemyIndex, attacks, {
+      preferRangeTypes: [CP.RANGE_TYPES.RANGED, CP.RANGE_TYPES.SPELL, 'ranged', 'spell'],
+      enemyZone,
+      playerZone
+    });
+    if (rangedHit) return { kind: 'attack', attack: rangedHit };
+
+    const move = planMoveTowardPlayer(engine, enemyIndex);
+    if (move) return move;
+
+    const any = pickBestAttack(engine, enemyIndex, attacks, { enemyZone, playerZone });
+    if (any) return { kind: 'attack', attack: any };
+
+    return { kind: 'wait' };
+  }
+
+  /**
+   * CASTER: приоритет действий с range spell, иначе как ranged.
+   */
+  function planCasterTurn(engine, enemy, enemyIndex) {
+    const CP = getCp();
+    const abilities = getEnemyAbilities(engine, enemy);
+    const playerZone = CP ? CP.getPlayerPosition(engine) : null;
+    const enemyZone = CP ? CP.getEnemyPosition(engine, enemyIndex) : null;
+
+    const spells = abilities.filter((ab) => {
+      const rt = CP ? CP.getAbilityRangeType(ab) : 'spell';
+      return rt === CP.RANGE_TYPES.SPELL || rt === 'spell';
+    });
+
+    for (const ab of spells) {
+      const rt = CP.getAbilityRangeType(ab);
+      const inRange =
+        !CP ||
+        !CP.isEnabled(engine) ||
+        CP.canReachWithRangeType(enemyZone, playerZone, rt);
+      if (!inRange) continue;
+      const scope = ab.targetType || ab.targeting?.scope;
+      if (
+        scope === 'singleEnemy' ||
+        scope === 'single' ||
+        scope === 'single_enemy'
+      ) {
+        return { kind: 'ability', ability: ab };
+      }
+      if (
+        scope === 'area' ||
+        scope === 'allEnemies' ||
+        scope === 'all_enemies'
+      ) {
+        return { kind: 'ability', ability: ab };
+      }
+    }
+
+    return planRangedTurn(engine, enemy, enemyIndex);
+  }
+
+  /** TANK: как melee, активнее сближается. */
+  function planTankTurn(engine, enemy, enemyIndex) {
+    const plan = planMeleeTurn(engine, enemy, enemyIndex);
+    if (plan.kind !== 'wait') return plan;
+    return planMoveTowardPlayer(engine, enemyIndex) || plan;
+  }
+
+  /** SUPPORT / SUMMONER — заглушки (базовая атака или ожидание). */
+  function planSupportTurn(engine, enemy, enemyIndex) {
+    const attacks = getEnemyAttacks(engine, enemy);
+    const hit = pickBestAttack(engine, enemyIndex, attacks);
+    if (hit) return { kind: 'attack', attack: hit };
+    return { kind: 'wait' };
+  }
+
+  function planSummonerTurn(engine, enemy, enemyIndex) {
+    return planSupportTurn(engine, enemy, enemyIndex);
+  }
+
+  const ROLE_PLANNERS = {
+    [COMBAT_ROLES.MELEE]: planMeleeTurn,
+    [COMBAT_ROLES.RANGED]: planRangedTurn,
+    [COMBAT_ROLES.CASTER]: planCasterTurn,
+    [COMBAT_ROLES.TANK]: planTankTurn,
+    [COMBAT_ROLES.SUPPORT]: planSupportTurn,
+    [COMBAT_ROLES.SUMMONER]: planSummonerTurn
+  };
+
+  function planTurn(engine, enemy, enemyIndex) {
+    const role = resolveCombatRole(engine, enemy);
+    const planner = ROLE_PLANNERS[role] || planMeleeTurn;
+    return planner(engine, enemy, enemyIndex);
+  }
+
+  function executeMove(engine, enemyIndex, zone) {
+    const CP = getCp();
+    if (!CP) return false;
+    return CP.moveEnemyOneZone(engine, enemyIndex, zone);
+  }
+
+  /**
+   * Выполнить ход врага (план + действия). Возвращает true, если что-то сделано.
+   */
+  function runTurn(engine, enemy, enemyIndex) {
+    if (!enemy || enemy.hp <= 0) return false;
+
+    enemy.zoneMovedThisTurn = false;
+
+    const CP = getCp();
+    if (!CP || !CP.isEnabled(engine)) {
+      if (typeof engine.executeEnemyBasicAttack === 'function') {
+        return engine.executeEnemyBasicAttack(enemy, enemyIndex, null);
+      }
+      return false;
+    }
+
+    const plan = planTurn(engine, enemy, enemyIndex);
+
+    if (plan.kind === 'move' && plan.zone) {
+      executeMove(engine, enemyIndex, plan.zone);
+      const role = resolveCombatRole(engine, enemy);
+      const allowFollowUp =
+        role === COMBAT_ROLES.RANGED || role === COMBAT_ROLES.CASTER;
+      if (allowFollowUp) {
+        const attacks = getEnemyAttacks(engine, enemy);
+        const followUp = pickBestAttack(engine, enemyIndex, attacks, {
+          enemyZone: CP.getEnemyPosition(engine, enemyIndex),
+          playerZone: CP.getPlayerPosition(engine)
+        });
+        if (followUp && typeof engine.executeEnemyAttack === 'function') {
+          return engine.executeEnemyAttack(enemy, enemyIndex, followUp, plan.note);
+        }
+      }
+      return true;
+    }
+
+    if (plan.kind === 'attack' && plan.attack) {
+      if (typeof engine.executeEnemyAttack === 'function') {
+        return engine.executeEnemyAttack(enemy, enemyIndex, plan.attack, plan.note);
+      }
+    }
+
+    if (plan.kind === 'ability' && plan.ability) {
+      engine.log?.(
+        `💫 ${enemy.name}: ${plan.ability.name} (AI, способности врага — в разработке)`,
+        'log-combat'
+      );
+      const fallback = pickBestAttack(engine, enemyIndex, getEnemyAttacks(engine, enemy));
+      if (fallback && typeof engine.executeEnemyAttack === 'function') {
+        return engine.executeEnemyAttack(enemy, enemyIndex, fallback);
+      }
+      return true;
+    }
+
+    if (plan.kind === 'wait') {
+      engine.log?.(`⏳ ${enemy.name} не находит удачной позиции для атаки.`, 'log-dice');
+      return true;
+    }
+
+    if (typeof engine.executeEnemyBasicAttack === 'function') {
+      return engine.executeEnemyBasicAttack(enemy, enemyIndex, null);
+    }
+    return false;
+  }
+
+  const EnemyTacticalAI = {
+    COMBAT_ROLES,
+    IMPLEMENTED_ROLES,
+    resolveCombatRole,
+    getEnemyAttacks,
+    getEnemyAbilities,
+    planTurn,
+    runTurn,
+    pickBestAttack,
+    planMeleeTurn,
+    planRangedTurn
+  };
+
+  global.EnemyTacticalAI = EnemyTacticalAI;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+;/* —— js/components/combat/CombatLog.js —— */
+/**
+ * CombatLog — журнал боя с раундами, иконками и цветовой дифференциацией.
+ * API: CombatLog.add(type, data)
+ * @module CombatLog
+ */
+(function (global) {
+  'use strict';
+
+  const TYPES = {
+    damage: {
+      icon: '💥',
+      label: 'Урон',
+      className: 'combat-log-entry--damage'
+    },
+    crit: {
+      icon: '⚡',
+      label: 'Крит',
+      className: 'combat-log-entry--crit'
+    },
+    heal: {
+      icon: '✨',
+      label: 'Лечение',
+      className: 'combat-log-entry--heal'
+    },
+    miss: {
+      icon: '💨',
+      label: 'Промах',
+      className: 'combat-log-entry--miss'
+    },
+    fail: {
+      icon: '✖',
+      label: 'Провал',
+      className: 'combat-log-entry--fail'
+    },
+    effect: {
+      icon: '🔮',
+      label: 'Эффект',
+      className: 'combat-log-entry--effect'
+    },
+    status: {
+      icon: '🛡️',
+      label: 'Статус',
+      className: 'combat-log-entry--effect'
+    },
+    buff: {
+      icon: '📈',
+      label: 'Бафф',
+      className: 'combat-log-entry--buff'
+    },
+    debuff: {
+      icon: '📉',
+      label: 'Дебафф',
+      className: 'combat-log-entry--effect'
+    },
+    combat: {
+      icon: '⚔️',
+      label: 'Бой',
+      className: 'combat-log-entry--combat'
+    },
+    ability: {
+      icon: '💫',
+      label: 'Умение',
+      className: 'combat-log-entry--ability'
+    },
+    attack: {
+      icon: '⚔️',
+      label: 'Атака',
+      className: 'combat-log-entry--combat'
+    },
+    death: {
+      icon: '☠️',
+      label: 'Смерть',
+      className: 'combat-log-entry--death'
+    },
+    info: {
+      icon: 'ℹ️',
+      label: 'Инфо',
+      className: 'combat-log-entry--info'
+    },
+    round: {
+      icon: '🔄',
+      label: 'Раунд',
+      className: 'combat-log-entry--round'
+    },
+    position: {
+      icon: '↔️',
+      label: 'Позиция',
+      className: 'combat-log-entry--combat'
+    }
+  };
+
+  const LEGACY_CLASS_MAP = {
+    'log-damage': 'damage',
+    'log-heal': 'heal',
+    'log-combat': 'combat',
+    'log-dice': 'info',
+    'log-info': 'info'
+  };
+
+  const COMBAT_LOG_CLASSES = new Set(Object.keys(LEGACY_CLASS_MAP));
+
+  let instance = null;
+
+  function escapeHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function inferTypeFromMessage(text, fallback = 'info') {
+    const t = String(text || '');
+    const low = t.toLowerCase();
+    if (/☠|повержен|убит|погиб|уничтожен|все враги|не дышит/.test(low)) {
+      return 'death';
+    }
+    if (/крит|critical_success|критический успех/i.test(t)) return 'crit';
+    if (/промах|autопровал|— промах|miss/i.test(low)) return 'miss';
+    if (/провал|провален|failure|critical_failure/i.test(low)) return 'fail';
+    if (/восстановлено|\+.*оз|лечение|heal|исцел/i.test(t)) return 'heal';
+    if (/урон|💥|получает \d|damage/i.test(t)) return 'damage';
+    if (/оглуш|яд|кровотеч|статус|status|эффект|концентрац/i.test(low)) {
+      return 'effect';
+    }
+    if (/позици|frontline|backline|фронт|тыл|far|mid|close|дальн|средн|ближн/i.test(low)) return 'position';
+    if (/умение|💫|заклинан|кара|ярость|огненный шар|magic_missile/i.test(low)) {
+      return 'ability';
+    }
+    if (/атак|🎲|vs кд|попадание/i.test(low)) return 'attack';
+    if (/❌|недостаточно|нельзя/i.test(low)) return 'fail';
+    return fallback;
+  }
+
+  function isImportant(type, data, text) {
+    if (data.important || data.highlight) return true;
+    if (type === 'death' || type === 'crit') return true;
+    const low = String(text).toLowerCase();
+    if (/божественн|огненный шар|8d6|крит|☠|повержен/i.test(low)) return true;
+    return false;
+  }
+
+  class CombatLog {
+    constructor(options = {}) {
+      this.hostId = options.hostId || 'combat-log-host';
+      this.host = null;
+      this.scrollEl = null;
+      this.rounds = new Map();
+      this.currentRound = 1;
+      this.maxEntries = options.maxEntries ?? 400;
+      this.autoCollapseOldRounds = options.autoCollapseOldRounds !== false;
+      this.engine = null;
+      this.active = false;
+      this.reviewMode = false;
+      this._entryCount = 0;
+      this._hideTimer = null;
+    }
+
+    static getInstance() {
+      return instance;
+    }
+
+    static attach(engine, options = {}) {
+      if (!instance) {
+        instance = new CombatLog(options);
+      }
+      instance.engine = engine;
+      instance.ensureDom();
+      return instance;
+    }
+
+    static isCombatLogClass(cls) {
+      return COMBAT_LOG_CLASSES.has(cls);
+    }
+
+    static add(type, data = {}) {
+      const log = CombatLog.attach(
+        data.engine || (typeof GameEngine !== 'undefined' ? GameEngine : null)
+      );
+      return log.add(type, data);
+    }
+
+    static addFromLegacy(msg, cls, engine) {
+      const log = CombatLog.attach(engine);
+      let type = LEGACY_CLASS_MAP[cls] || 'info';
+      const text = String(msg || '');
+      if (type === 'damage' && /крит/i.test(text)) type = 'crit';
+      if (type === 'info') type = inferTypeFromMessage(text, type);
+      if (/промах/i.test(text)) type = 'miss';
+      if (/провал/i.test(text) && type !== 'damage') type = 'fail';
+      return log.add(type, {
+        message: text,
+        engine,
+        round: engine?.state?.combat?.round
+      });
+    }
+
+    /** Удобная обёртка для CombatManager */
+    static log(engine, type, data = {}) {
+      return CombatLog.add(type, { ...data, engine });
+    }
+
+    ensureDom() {
+      let host = document.getElementById(this.hostId);
+      if (!host) {
+        const journal = document.getElementById('journal-wrap');
+        const logEl = document.getElementById('log');
+        host = document.createElement('div');
+        host.id = this.hostId;
+        host.className = 'combat-log-host hidden';
+        host.setAttribute('aria-label', 'Журнал боя');
+        if (journal && logEl) {
+          journal.insertBefore(host, logEl);
+        } else if (logEl?.parentNode) {
+          logEl.parentNode.insertBefore(host, logEl);
+        } else {
+          document.body.appendChild(host);
+        }
+      }
+      this.ensurePlacement();
+      this.host = host;
+
+      if (!host.querySelector('.combat-log')) {
+        host.innerHTML = `
+          <div class="combat-log">
+            <div class="combat-log__toolbar">
+              <span class="combat-log__title">📜 Журнал боя</span>
+              <div class="combat-log__actions">
+                <button type="button" class="combat-log__btn" data-action="collapse-old" title="Свернуть старые раунды">Свернуть старые</button>
+                <button type="button" class="combat-log__btn" data-action="expand-all" title="Развернуть все">Развернуть</button>
+                <button type="button" class="combat-log__btn combat-log__btn--dismiss hidden" data-action="dismiss" title="Скрыть журнал">Скрыть</button>
+              </div>
+            </div>
+            <div class="combat-log__scroll" tabindex="0"></div>
+          </div>`;
+        this.scrollEl = host.querySelector('.combat-log__scroll');
+        host.querySelector('[data-action="collapse-old"]')?.addEventListener(
+          'click',
+          () => this.collapseOldRounds()
+        );
+        host.querySelector('[data-action="expand-all"]')?.addEventListener(
+          'click',
+          () => this.expandAllRounds()
+        );
+        host.querySelector('[data-action="dismiss"]')?.addEventListener('click', () =>
+          this.dismiss()
+        );
+      } else {
+        this.scrollEl = host.querySelector('.combat-log__scroll');
+      }
+    }
+
+    _cancelHideTimer() {
+      if (this._hideTimer) {
+        clearTimeout(this._hideTimer);
+        this._hideTimer = null;
+      }
+    }
+
+    hasEntries() {
+      return this._entryCount > 0;
+    }
+
+    /** Журнал боя всегда внутри нижнего блока журнала (перед событиями). */
+    ensurePlacement() {
+      document.getElementById('combat-log-reopen-btn')?.remove();
+      const journal = document.getElementById('journal-wrap');
+      const logEl = document.getElementById('log');
+      if (!journal || !logEl || !this.host) return;
+      if (this.host.parentNode !== journal) {
+        journal.insertBefore(this.host, logEl);
+      } else if (this.host.nextElementSibling !== logEl) {
+        journal.insertBefore(this.host, logEl);
+      }
+    }
+
+    show() {
+      this.ensureDom();
+      this.ensurePlacement();
+      this._cancelHideTimer();
+      this.host?.classList.remove('hidden');
+      this.active = true;
+    }
+
+    hide() {
+      this._cancelHideTimer();
+      this.host?.classList.add('hidden');
+      this.active = false;
+      this._updateDismissButton();
+    }
+
+    dismiss() {
+      if (this.reviewMode) {
+        this.hide();
+        return;
+      }
+      this.hide();
+    }
+
+    enterArchiveMode() {
+      if (!this.hasEntries()) {
+        this.hide();
+        return;
+      }
+      if (this.reviewMode) {
+        this.ensureDom();
+        this.ensurePlacement();
+        this.host?.classList.remove('hidden', 'combat-log-host--live');
+        this.host?.classList.add('combat-log-host--archive');
+        return;
+      }
+      this.ensureDom();
+      this.ensurePlacement();
+      this._cancelHideTimer();
+      this.active = false;
+      this.reviewMode = true;
+      this.host?.classList.remove('hidden', 'combat-log-host--live');
+      this.host?.classList.add('combat-log-host--archive');
+      this._updateTitle();
+      this._updateDismissButton();
+      this.collapseOldRounds(this.currentRound);
+      this.scrollJournalIntoView();
+    }
+
+    /** @deprecated alias */
+    enterReviewMode() {
+      this.enterArchiveMode();
+    }
+
+    _updateTitle() {
+      const title = this.host?.querySelector('.combat-log__title');
+      if (!title) return;
+      if (this.reviewMode) {
+        title.textContent = '⚔️ Последний бой';
+      } else if (this.active) {
+        title.textContent = '⚔️ Бой';
+      } else {
+        title.textContent = '⚔️ Бой';
+      }
+    }
+
+    _updateDismissButton() {
+      const btn = this.host?.querySelector('[data-action="dismiss"]');
+      if (!btn) return;
+      btn.classList.toggle('hidden', !this.reviewMode);
+      btn.title = this.reviewMode ? 'Свернуть блок боя' : 'Скрыть журнал';
+    }
+
+    scrollJournalIntoView() {
+      const wrap = document.getElementById('journal-wrap');
+      if (!wrap) return;
+      requestAnimationFrame(() => {
+        wrap.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+    }
+
+    clear() {
+      this.rounds.clear();
+      this._entryCount = 0;
+      if (this.scrollEl) this.scrollEl.innerHTML = '';
+    }
+
+    startCombat(engine, round = 1) {
+      this.engine = engine;
+      this.ensureDom();
+      this.ensurePlacement();
+      this._cancelHideTimer();
+      this.reviewMode = false;
+      this.host?.classList.remove('combat-log-host--archive', 'combat-log-host--review');
+      this.host?.classList.add('combat-log-host--live');
+      this.clear();
+      this.currentRound = round || 1;
+      this.show();
+      this._updateTitle();
+      this._updateDismissButton();
+      this.setRound(this.currentRound, { announce: true });
+      this.add('combat', {
+        message: '⚔️ Бой начался',
+        important: true,
+        round: this.currentRound
+      });
+    }
+
+    endCombat() {
+      this.add('combat', {
+        message: '🏁 Бой завершён',
+        important: true,
+        round: this.currentRound
+      });
+    }
+
+    /**
+     * Завершение боя: запись «Бой завершён», блок остаётся внизу в общем журнале.
+     * @param {{ keepReviewVisible?: boolean }} [opts]
+     */
+    finishCombatSession(opts = {}) {
+      this._cancelHideTimer();
+      this.endCombat();
+      this.host?.classList.remove('combat-log-host--live', 'combat-log-host--review');
+      if (opts.keepReviewVisible !== false) {
+        this.enterArchiveMode();
+        return;
+      }
+      this.reviewMode = false;
+      this.hide();
+    }
+
+    setRound(round, opts = {}) {
+      const r = Math.max(1, parseInt(round, 10) || 1);
+      const prev = this.currentRound;
+      this.currentRound = r;
+      if (opts.announce && r > 1 && r !== prev) {
+        this.add('round', {
+          message: `Раунд ${r}`,
+          round: r,
+          important: false
+        });
+      }
+      this.ensureRoundGroup(r);
+      if (this.autoCollapseOldRounds) {
+        this.collapseOldRounds(r);
+      }
+    }
+
+    ensureRoundGroup(round) {
+      const r = Math.max(1, parseInt(round, 10) || 1);
+      if (this.rounds.has(r)) return this.rounds.get(r);
+
+      const section = document.createElement('section');
+      section.className = 'combat-log-round';
+      section.dataset.round = String(r);
+      const isCurrent = r === this.currentRound;
+      section.classList.toggle('combat-log-round--current', isCurrent);
+      if (!isCurrent && this.autoCollapseOldRounds) {
+        section.classList.add('combat-log-round--collapsed');
+      }
+
+      section.innerHTML = `
+        <button type="button" class="combat-log-round__head" aria-expanded="${isCurrent ? 'true' : 'false'}">
+          <span class="combat-log-round__chevron" aria-hidden="true">▼</span>
+          <span class="combat-log-round__label">Раунд ${r}</span>
+          <span class="combat-log-round__count">0</span>
+        </button>
+        <div class="combat-log-round__body"></div>`;
+
+      const head = section.querySelector('.combat-log-round__head');
+      head.addEventListener('click', () => this.toggleRound(r));
+
+      if (this.scrollEl) {
+        this.scrollEl.appendChild(section);
+      }
+
+      const group = {
+        round: r,
+        el: section,
+        body: section.querySelector('.combat-log-round__body'),
+        countEl: section.querySelector('.combat-log-round__count'),
+        count: 0
+      };
+      this.rounds.set(r, group);
+      return group;
+    }
+
+    toggleRound(round) {
+      const g = this.rounds.get(round);
+      if (!g) return;
+      const collapsed = g.el.classList.toggle('combat-log-round--collapsed');
+      const head = g.el.querySelector('.combat-log-round__head');
+      if (head) head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    }
+
+    collapseOldRounds(keepRound) {
+      const keep = keepRound ?? this.currentRound;
+      this.rounds.forEach((g, r) => {
+        if (r < keep) {
+          g.el.classList.add('combat-log-round--collapsed');
+          g.el.querySelector('.combat-log-round__head')?.setAttribute(
+            'aria-expanded',
+            'false'
+          );
+        }
+      });
+    }
+
+    expandAllRounds() {
+      this.rounds.forEach((g) => {
+        g.el.classList.remove('combat-log-round--collapsed');
+        g.el.querySelector('.combat-log-round__head')?.setAttribute(
+          'aria-expanded',
+          'true'
+        );
+      });
+    }
+
+    /**
+     * @param {string} type — ключ из TYPES
+     * @param {object} data
+     * @param {string} [data.message] — текст записи
+     * @param {string} [data.text] — alias message
+     * @param {number} [data.round] — раунд (иначе текущий)
+     * @param {boolean} [data.important]
+     * @param {string} [data.actor]
+     * @param {string} [data.target]
+     * @param {number|string} [data.amount]
+     */
+    add(type, data = {}) {
+      this.ensureDom();
+      if (!this.active && this.engine?.state?.combat) {
+        this.show();
+        this.active = true;
+      }
+
+      const def = TYPES[type] || TYPES.info;
+      const round =
+        data.round ??
+        data.engine?.state?.combat?.round ??
+        this.engine?.state?.combat?.round ??
+        this.currentRound;
+      const r = Math.max(1, parseInt(round, 10) || 1);
+      if (r !== this.currentRound) {
+        this.setRound(r, { announce: r > this.currentRound });
+      }
+
+      const text = data.message ?? data.text ?? '';
+      const important = isImportant(type, data, text);
+      const group = this.ensureRoundGroup(r);
+
+      const entry = document.createElement('div');
+      entry.className = [
+        'combat-log-entry',
+        def.className,
+        important ? 'combat-log-entry--important' : ''
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      const metaParts = [];
+      if (data.actor) metaParts.push(escapeHtml(data.actor));
+      if (data.target) metaParts.push('→ ' + escapeHtml(data.target));
+      if (data.amount != null && data.amount !== '') {
+        metaParts.push(`[${escapeHtml(String(data.amount))}]`);
+      }
+
+      entry.innerHTML = `
+        <span class="combat-log-entry__icon" aria-hidden="true">${def.icon}</span>
+        <div class="combat-log-entry__content">
+          <span class="combat-log-entry__text">${escapeHtml(text)}</span>
+          ${metaParts.length ? `<span class="combat-log-entry__meta">${metaParts.join(' ')}</span>` : ''}
+        </div>`;
+
+      group.body.appendChild(entry);
+      group.count += 1;
+      if (group.countEl) group.countEl.textContent = String(group.count);
+      this._entryCount += 1;
+
+      if (this._entryCount > this.maxEntries) {
+        const firstKey = Math.min(...this.rounds.keys());
+        const first = this.rounds.get(firstKey);
+        if (first?.body?.firstChild) {
+          first.body.removeChild(first.body.firstChild);
+          first.count = Math.max(0, first.count - 1);
+          if (first.countEl) first.countEl.textContent = String(first.count);
+          this._entryCount -= 1;
+        }
+      }
+
+      this.scrollToBottom();
+      return entry;
+    }
+
+    scrollToBottom() {
+      if (!this.scrollEl) return;
+      requestAnimationFrame(() => {
+        this.scrollEl.scrollTop = this.scrollEl.scrollHeight;
+      });
+    }
+  }
+
+  global.CombatLog = CombatLog;
+  global.CombatLog.TYPES = TYPES;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+;/* —— js/campaign-covers.js —— */
+// Обложки кампаний: кэш, градиенты, извлечение из game_data
+
+const CampaignCovers = {
+  MEMORY_CACHE: new Map(),
+  LS_PREFIX: 'rpg_cover_cache_v1_',
+  MAX_UPLOAD_BYTES: 500 * 1024,
+  ACCEPT_TYPES: new Set(['image/png', 'image/jpeg', 'image/jpg']),
+  ACCEPT_EXT: /\.(png|jpe?g)$/i,
+
+  hashString(str) {
+    let h = 0;
+    const s = String(str || '');
+    for (let i = 0; i < s.length; i += 1) {
+      h = ((h << 5) - h) + s.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  },
+
+  gradientFromTitle(title) {
+    const h = this.hashString(title);
+    const hue1 = h % 360;
+    const hue2 = (hue1 + 40 + (h % 80)) % 360;
+    const sat = 48 + (h % 22);
+    const light = 32 + (h % 14);
+    return `linear-gradient(135deg, hsl(${hue1}, ${sat}%, ${light}%) 0%, hsl(${hue2}, ${sat + 8}%, ${light - 8}%) 100%)`;
+  },
+
+  getSceneImageCandidates(scene) {
+    if (!scene || typeof scene !== 'object') return [];
+    const found = [];
+    const fields = ['cover', 'image', 'illustration', 'background', 'bg', 'bgImage', 'sceneImage'];
+    fields.forEach((key) => {
+      const v = scene[key];
+      if (typeof v === 'string' && v.trim()) found.push(v.trim());
+    });
+    const text = String(scene.text || '');
+    const patterns = [
+      /!\[[^\]]*]\(([^)]+\.(?:png|jpe?g|webp)(?:\?[^)]*)?)\)/gi,
+      /<img[^>]+src=["']([^"']+\.(?:png|jpe?g|webp)(?:\?[^"']*)?)["']/gi,
+      /(https?:\/\/[^\s"'<>]+\.(?:png|jpe?g|webp)(?:\?[^\s"'<>]*)?)/gi,
+      /(?:^|[\s("'"])([a-zA-Z0-9_./-]+\.(?:png|jpe?g|webp))/gi
+    ];
+    patterns.forEach((re) => {
+      let m;
+      const rx = new RegExp(re.source, re.flags);
+      while ((m = rx.exec(text)) !== null) {
+        const src = (m[1] || m[0] || '').trim().replace(/^["'(]+|["')]+$/g, '');
+        if (src && !found.includes(src)) found.push(src);
+      }
+    });
+    return found;
+  },
+
+  normalizeImageSrc(src) {
+    if (!src || typeof src !== 'string') return null;
+    const s = src.trim();
+    if (/^data:image\//i.test(s)) return s;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (s.startsWith('/')) return s;
+    return s;
+  },
+
+  getFirstSceneId(data) {
+    if (!data?.scenes) return null;
+    if (data.scenes.village_hub) return 'village_hub';
+    if (data.scenes.start) return 'start';
+    const keys = Object.keys(data.scenes);
+    return keys[0] || null;
+  },
+
+  findFirstSceneImage(data) {
+    if (!data?.scenes) return null;
+    const order = [];
+    const first = this.getFirstSceneId(data);
+    if (first) order.push(first);
+    Object.keys(data.scenes).forEach((id) => {
+      if (!order.includes(id)) order.push(id);
+    });
+    for (let i = 0; i < order.length; i += 1) {
+      const scene = data.scenes[order[i]];
+      const candidates = this.getSceneImageCandidates(scene);
+      for (let j = 0; j < candidates.length; j += 1) {
+        const norm = this.normalizeImageSrc(candidates[j]);
+        if (norm) return norm;
+      }
+    }
+    return null;
+  },
+
+  getCoverFromData(data) {
+    const metaCover = data?.meta?.cover;
+    if (typeof metaCover === 'string' && metaCover.trim()) {
+      return metaCover.trim();
+    }
+    return this.findFirstSceneImage(data);
+  },
+
+  getCacheStorageKey(campaign) {
+    return campaign?.cacheKey || campaign?.id || 'default';
+  },
+
+  readCachedGameData(cacheKey) {
+    if (!cacheKey) return null;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
+  },
+
+  getLsCover(cacheKey) {
+    try {
+      return localStorage.getItem(this.LS_PREFIX + cacheKey);
+    } catch (_) {
+      return null;
+    }
+  },
+
+  setLsCover(cacheKey, src) {
+    if (!cacheKey || !src) return;
+    try {
+      localStorage.setItem(this.LS_PREFIX + cacheKey, src);
+    } catch (_) { /* quota */ }
+  },
+
+  clearCoverCache(cacheKey) {
+    if (cacheKey) this.MEMORY_CACHE.delete(cacheKey);
+    try {
+      if (cacheKey) localStorage.removeItem(this.LS_PREFIX + cacheKey);
+    } catch (_) { /* ignore */ }
+  },
+
+  clearAllCoverCaches() {
+    this.MEMORY_CACHE.clear();
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith(this.LS_PREFIX)) localStorage.removeItem(key);
+      });
+    } catch (_) { /* ignore */ }
+  },
+
+  resolveCoverPayload(campaign, data) {
+    const src = this.getCoverFromData(data);
+    if (src) {
+      return { type: 'image', src };
+    }
+    return {
+      type: 'gradient',
+      gradient: this.gradientFromTitle(campaign?.title || campaign?.id || 'Game'),
+      icon: '🎮'
+    };
+  },
+
+  async getCoverForCampaign(campaign, fetchDataFn) {
+    const cacheKey = this.getCacheStorageKey(campaign);
+    if (this.MEMORY_CACHE.has(cacheKey)) {
+      return this.MEMORY_CACHE.get(cacheKey);
+    }
+
+    const lsCover = this.getLsCover(cacheKey);
+    if (lsCover) {
+      const payload = { type: 'image', src: lsCover };
+      this.MEMORY_CACHE.set(cacheKey, payload);
+      return payload;
+    }
+
+    let data = this.readCachedGameData(cacheKey);
+    if (!data && typeof fetchDataFn === 'function') {
+      try {
+        data = await fetchDataFn(campaign);
+      } catch (_) {
+        data = null;
+      }
+    }
+
+    const payload = this.resolveCoverPayload(campaign, data);
+    if (payload.type === 'image' && payload.src) {
+      this.setLsCover(cacheKey, payload.src);
+    }
+    this.MEMORY_CACHE.set(cacheKey, payload);
+    return payload;
+  },
+
+  applyToCardElement(coverEl, payload) {
+    if (!coverEl || !payload) return;
+    const img = coverEl.querySelector('.campaign-card-cover-img');
+    const fallback = coverEl.querySelector('.campaign-card-cover-fallback');
+    if (!img || !fallback) return;
+
+    if (payload.type === 'image' && payload.src) {
+      img.onload = () => {
+        img.classList.add('is-loaded');
+        fallback.classList.add('is-hidden');
+      };
+      img.onerror = () => {
+        img.classList.remove('is-loaded');
+        img.hidden = true;
+        fallback.classList.remove('is-hidden');
+        fallback.style.background = payload.fallbackGradient
+          || this.gradientFromTitle(coverEl.dataset.coverTitle || '');
+      };
+      img.src = payload.src;
+      img.hidden = false;
+      img.alt = '';
+      return;
+    }
+
+    img.hidden = true;
+    img.classList.remove('is-loaded');
+    fallback.classList.remove('is-hidden');
+    fallback.style.background = payload.gradient || this.gradientFromTitle(coverEl.dataset.coverTitle || '');
+    const icon = fallback.querySelector('.campaign-card-cover-icon');
+    if (icon) icon.textContent = payload.icon || '🎮';
+  },
+
+  readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  dataUrlByteSize(dataUrl) {
+    if (typeof dataUrl !== 'string') return 0;
+    const base64 = dataUrl.split(',')[1] || '';
+    return Math.ceil(base64.length * 0.75);
+  },
+
+  loadImageFromDataUrl(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Некорректное изображение'));
+      img.src = dataUrl;
+    });
+  },
+
+  canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), type, quality);
+    });
+  },
+
+  async compressToLimit(dataUrl, maxBytes, mimeType) {
+    const img = await this.loadImageFromDataUrl(dataUrl);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const isJpeg = /jpe?g/i.test(mimeType);
+    const outType = isJpeg ? 'image/jpeg' : 'image/png';
+    let scale = 1;
+    let quality = isJpeg ? 0.88 : undefined;
+    const maxW = 1280;
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      if (w > maxW) {
+        const ratio = maxW / w;
+        canvas.width = maxW;
+        canvas.height = Math.round(h * ratio);
+      } else {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const blob = await this.canvasToBlob(canvas, outType, quality);
+      if (!blob) break;
+      if (blob.size <= maxBytes) {
+        return this.readFileAsDataUrl(blob);
+      }
+      if (isJpeg && quality > 0.5) {
+        quality -= 0.1;
+      } else {
+        scale *= 0.82;
+      }
+    }
+    throw new Error('Не удалось сжать изображение до 500 КБ');
+  },
+
+  async fileToCoverDataUrl(file) {
+    if (!file) throw new Error('Файл не выбран');
+    const type = (file.type || '').toLowerCase();
+    if (!this.ACCEPT_TYPES.has(type) && !this.ACCEPT_EXT.test(file.name || '')) {
+      throw new Error('Поддерживаются только PNG и JPG');
+    }
+    let dataUrl = await this.readFileAsDataUrl(file);
+    const mime = type || ( /\.jpe?g$/i.test(file.name) ? 'image/jpeg' : 'image/png');
+    if (this.dataUrlByteSize(dataUrl) > this.MAX_UPLOAD_BYTES) {
+      dataUrl = await this.compressToLimit(dataUrl, this.MAX_UPLOAD_BYTES, mime);
+    }
+    if (this.dataUrlByteSize(dataUrl) > this.MAX_UPLOAD_BYTES) {
+      throw new Error('Изображение больше 500 КБ даже после сжатия');
+    }
+    return dataUrl;
+  }
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { CampaignCovers };
 }
 
 

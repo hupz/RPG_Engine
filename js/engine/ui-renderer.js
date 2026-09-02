@@ -144,6 +144,8 @@
       }
       return {
         flags: { ...(this.state.flags || {}) },
+        variables: { ...(this.state.variables || {}) },
+        projectVariables: this.data?.variables || {},
         inventory: [...(this.state.inventory || [])],
         gold: this.state.gold ?? 0,
         className: this.state.className || '',
@@ -1647,6 +1649,9 @@
       Object.assign(start, this.data?.reputation?.starting || {});
       for (const [key, value] of Object.entries(start)) {
         if (this.state.flags[key] === undefined) this.state.flags[key] = value;
+      }
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.initFromCatalog) {
+        RuntimeVariables.initFromCatalog(this);
       }
     },
 

@@ -99,6 +99,15 @@ npm run verify
 2. Иначе V1 (`questStages` / flags) → hydrate → `questProgress`.
 3. Mirror `questStages` обновляется из progress для старых читателей.
 
+### Переменные проекта и рантайм
+
+Каталог переменных живёт в `data.variables` (`ProjectSchema.ensureProjectVariables`, UI — `editor-variables.js`). В рантайме значения хранятся в `state.variables` (отдельно от `state.flags`).
+
+- **Условия:** правила `{ flag, equals }` / `{ notFlag }` сначала читают `state.flags`; если ключа нет в флагах, но id есть в каталоге переменных — берётся `state.variables[id]`, иначе `defaultValue` из каталога.
+- **Запись:** действие `set_variable` (`ACTION_REGISTRY`) пишет в `state.variables`; `set_flag` по-прежнему пишет только в флаги.
+- **Сохранения:** поле `variables` в payload сейва; старые сейвы без него получают дефолты из каталога при загрузке.
+- **Модуль:** `js/engine/project-variables.js` (`RuntimeVariables`).
+
 ## 7. Тесты
 
 `tests/quest-*.js` — baseline **138 passed**.

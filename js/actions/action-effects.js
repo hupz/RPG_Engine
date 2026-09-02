@@ -38,6 +38,13 @@ const ActionEffects = (function () {
         if (!engine.state.flags) engine.state.flags = {};
         engine.state.flags[effect.flag] = effect.value !== undefined ? effect.value : true;
         break;
+      case 'set_variable':
+        if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.setValue) {
+          RuntimeVariables.setValue(engine, effect.variable, effect.value);
+        } else if (engine.state.variables) {
+          engine.state.variables[effect.variable] = effect.value !== undefined ? effect.value : true;
+        }
+        break;
       case 'log':
         ctx.log(effect.message || '…', effect.logType || 'log-dice');
         break;

@@ -267,6 +267,27 @@ const ACTION_REGISTRY = {
     }
   },
 
+  set_variable: {
+    id: 'set_variable',
+    name: 'Установить переменную проекта',
+    category: 'scene',
+    params: [
+      { name: 'variable', type: 'text', label: 'Переменная' },
+      { name: 'value', type: 'select', options: [true, false, 'toggle'], label: 'Значение' }
+    ],
+    execute(engine, params) {
+      if (!params.variable) return false;
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.setValue) {
+        return RuntimeVariables.setValue(engine, params.variable, params.value);
+      }
+      if (!engine.state.variables) engine.state.variables = {};
+      let val = params.value;
+      if (val === 'toggle') val = !engine.state.variables[params.variable];
+      engine.state.variables[params.variable] = val;
+      return true;
+    }
+  },
+
   check_flag: {
     id: 'check_flag',
     name: 'Проверить состояние',
