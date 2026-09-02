@@ -178,27 +178,27 @@
     }
   });
 
-  const origUpdateProjectPanel = Editor.updateProjectPanel.bind(Editor);
-  Editor.updateProjectPanel = function () {
-    const p = document.getElementById('project-panel');
-    if (!this.data) {
-      if (p) p.innerHTML = 'Нет открытого проекта';
-      return;
-    }
-    if (!p) return;
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('updateProjectPanel', function updateProjectPanelCover() {
+      const p = document.getElementById('project-panel');
+      if (!this.data) {
+        if (p) p.innerHTML = 'Нет открытого проекта';
+        return;
+      }
+      if (!p) return;
 
-    if (typeof this.ensureProjectMetaSystem === 'function') {
-      this.ensureProjectMetaSystem();
-    }
-    const sid = this.data.meta?.system;
-    const sysLabel = typeof this.getRuleSystemLabel === 'function'
-      ? this.getRuleSystemLabel(sid)
-      : (sid || '—');
-    const systemRow = sid
-      ? `<b>Система:</b> ${this.escapeHtml(sysLabel)} (<code>${this.escapeHtml(sid)}</code>)<br>`
-      : '';
+      if (typeof this.ensureProjectMetaSystem === 'function') {
+        this.ensureProjectMetaSystem();
+      }
+      const sid = this.data.meta?.system;
+      const sysLabel = typeof this.getRuleSystemLabel === 'function'
+        ? this.getRuleSystemLabel(sid)
+        : (sid || '—');
+      const systemRow = sid
+        ? `<b>Система:</b> ${this.escapeHtml(sysLabel)} (<code>${this.escapeHtml(sid)}</code>)<br>`
+        : '';
 
-    p.innerHTML = `
+      p.innerHTML = `
       <b>Название:</b> ${this.escapeHtml(this.data.meta?.title || '—')}<br>
       <b>Версия:</b> ${this.escapeHtml(this.data.meta?.version || '—')}<br>
       <b>Автор:</b> ${this.escapeHtml(this.data.meta?.author || '—')}<br>
@@ -206,11 +206,46 @@
       <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="Editor.editMeta()">✏️ Мета</button>
       <div style="margin-top:14px;">${this.renderProjectStartSceneField()}</div>
       <div style="margin-top:14px;">${this.renderProjectCoverSection()}</div>`;
-    this.bindProjectCoverUi();
-    if (typeof this.bindEntityPickers === 'function') {
-      this.bindEntityPickers(p);
-    }
-  };
+      this.bindProjectCoverUi();
+      if (typeof this.bindEntityPickers === 'function') {
+        this.bindEntityPickers(p);
+      }
+    }, 'editor-cover');
+  } else {
+    // hooks-exempt: fallback when Editor.hooks unavailable
+    Editor.updateProjectPanel = function () {
+      const p = document.getElementById('project-panel');
+      if (!this.data) {
+        if (p) p.innerHTML = 'Нет открытого проекта';
+        return;
+      }
+      if (!p) return;
+
+      if (typeof this.ensureProjectMetaSystem === 'function') {
+        this.ensureProjectMetaSystem();
+      }
+      const sid = this.data.meta?.system;
+      const sysLabel = typeof this.getRuleSystemLabel === 'function'
+        ? this.getRuleSystemLabel(sid)
+        : (sid || '—');
+      const systemRow = sid
+        ? `<b>Система:</b> ${this.escapeHtml(sysLabel)} (<code>${this.escapeHtml(sid)}</code>)<br>`
+        : '';
+
+      p.innerHTML = `
+      <b>Название:</b> ${this.escapeHtml(this.data.meta?.title || '—')}<br>
+      <b>Версия:</b> ${this.escapeHtml(this.data.meta?.version || '—')}<br>
+      <b>Автор:</b> ${this.escapeHtml(this.data.meta?.author || '—')}<br>
+      ${systemRow}
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="Editor.editMeta()">✏️ Мета</button>
+      <div style="margin-top:14px;">${this.renderProjectStartSceneField()}</div>
+      <div style="margin-top:14px;">${this.renderProjectCoverSection()}</div>`;
+      this.bindProjectCoverUi();
+      if (typeof this.bindEntityPickers === 'function') {
+        this.bindEntityPickers(p);
+      }
+    };
+  }
 
   function afterExportInvalidate() {
     if (typeof Editor.invalidateProjectCoverCache === 'function') {

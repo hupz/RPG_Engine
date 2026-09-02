@@ -72,13 +72,21 @@ const ConditionSystem = {
     return this.explainRuleFailure(rule, ctx);
   },
 
+  /** Значение флага или переменной проекта (флаг имеет приоритет). */
+  resolveFlagOrVariable(name, ctx) {
+    if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.resolveValue) {
+      return RuntimeVariables.resolveValue(name, ctx);
+    }
+    return (ctx?.flags || {})[name];
+  },
+
   evaluateRule(rule, ctx) {
     if (!rule || typeof rule !== 'object') return true;
     const flags = ctx.flags || {};
     const inventory = ctx.inventory || [];
 
     if (rule.flag != null && rule.flag !== '') {
-      const val = flags[rule.flag];
+      const val = this.resolveFlagOrVariable(rule.flag, ctx);
       if (rule.min != null || rule.max != null) {
         const n = Number(val);
         if (Number.isNaN(n)) return false;
@@ -90,7 +98,7 @@ const ConditionSystem = {
       if (typeof eq === 'boolean') return !!val === eq;
       return val == eq;
     }
-    if (rule.notFlag) return !flags[rule.notFlag];
+    if (rule.notFlag) return !this.resolveFlagOrVariable(rule.notFlag, ctx);
     if (rule.hasItem) return inventory.includes(rule.hasItem);
     if (rule.notHasItem) return !inventory.includes(rule.notHasItem);
     if (rule.goldMin != null) return (ctx.gold ?? 0) >= rule.goldMin;
@@ -229,7 +237,7 @@ const ConditionSystem = {
     const inventory = ctx.inventory || [];
 
     if (rule.flag != null && rule.flag !== '') {
-      const val = flags[rule.flag];
+      const val = this.resolveFlagOrVariable(rule.flag, ctx);
       if (rule.min != null || rule.max != null) {
         const n = Number(val);
         if (Number.isNaN(n)) {
@@ -531,17 +539,19 @@ const ConditionSystem = {
     if (rule.flag != null && rule.flag !== '') {
       // Не светим сырой id; смягчённая формулировка
       const label = String(rule.flag).replace(/^rep_/, 'репутация ').replace(/_/g, ' ');
+      const cur = this.resolveFlagOrVariable(rule.flag, ctx);
       return {
         ok,
         title: 'Состояние: ' + label,
         required: rule.min != null ? '≥ ' + rule.min : (rule.equals !== undefined ? String(rule.equals) : 'да'),
-        current: String(flags[rule.flag]),
+        current: String(cur),
         detail: ok ? '✓ Выполнено' : '❌ Не выполнено'
       };
     }
     if (rule.notFlag) {
       const label = String(rule.notFlag).replace(/_/g, ' ');
-      return { ok, title: 'Состояние: ' + label, required: 'выключено', current: flags[rule.notFlag] ? 'включено' : 'выключено', detail: ok ? '✓' : '❌' };
+      const cur = this.resolveFlagOrVariable(rule.notFlag, ctx);
+      return { ok, title: 'Состояние: ' + label, required: 'выключено', current: cur ? 'включено' : 'выключено', detail: ok ? '✓' : '❌' };
     }
     if (rule.choiceUsed) {
       return { ok, title: 'Выбор уже сделан', required: 'да', current: ok ? 'да' : 'нет', detail: ok ? '✓' : '❌ Ещё не сделан' };

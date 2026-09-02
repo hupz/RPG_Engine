@@ -650,8 +650,35 @@
 
     // Entity refs inside rules
     const rules = result.rules || [];
+    const varCatalog = data.variables || {};
+    const isKnownRuntimeFlag = (name) => {
+      if (!name) return true;
+      if (data.startingFlags && Object.prototype.hasOwnProperty.call(data.startingFlags, name)) return true;
+      if (/^quest_|^sc_|^ch_|^rep_/.test(name)) return true;
+      if (name !== 'starting' && data.reputation && Object.prototype.hasOwnProperty.call(data.reputation, name)) {
+        return true;
+      }
+      return false;
+    };
     rules.forEach((rule, i) => {
       if (!rule || typeof rule !== 'object') return;
+      const warnMissingProjectVariable = (name, field) => {
+        if (!name || varCatalog[name] || isKnownRuntimeFlag(name)) return;
+        if (!/^[a-z][a-z0-9_]*$/.test(name)) return;
+        push(issue({
+          type: 'unknown_project_variable',
+          severity: SEVERITY.WARNING,
+          message: 'Условие ссылается на «' + name + '», которой нет в каталоге переменных проекта',
+          entityType: ctx.entityType,
+          entityId: ctx.entityId,
+          path: ctx.path + '.rule[' + i + '].' + field,
+          tab: ctx.tab,
+          sceneId: ctx.sceneId,
+          fixHint: 'Добавьте переменную в каталог «Переменные» или используйте флаг из квестов/startingFlags'
+        }));
+      };
+      if (rule.flag) warnMissingProjectVariable(rule.flag, 'flag');
+      if (rule.notFlag) warnMissingProjectVariable(rule.notFlag, 'notFlag');
       if (rule.hasItem && !data.items?.[rule.hasItem]) {
         push(issue({
           type: 'missing_item',
@@ -1106,11 +1133,8 @@
      * Keeps legacy validateProjectExtended for IDE panel; this returns
      * { valid, errors, warnings, info, summary }.
      */
-    const prevValidateProject = typeof Editor.validateProject === 'function'
-      ? Editor.validateProject.bind(Editor)
-      : null;
-
-    Editor.validateProject = function validateProjectPhase111(data) {
+    let prevValidateProject;
+    function validateProjectPhase111(data) {
       const payload = data != null ? data : this.data;
       const report = validateProject(payload || {}, {
         actionRegistry: typeof ACTION_REGISTRY !== 'undefined' ? ACTION_REGISTRY : null,
@@ -1159,7 +1183,12 @@
         }
       }
       return report;
-    };
+    }
+    if (Editor.hooks?.replace) {
+      prevValidateProject = Editor.hooks.replace('validateProject', validateProjectPhase111, 'editor-project-validator');
+    } else {
+      Editor.validateProject = validateProjectPhase111;
+    }
 
     Editor.showProjectIntegrityPanel = function showProjectIntegrityPanel(report) {
       report = report || this.validateProject();
@@ -1206,50 +1235,6 @@
         if (e.target.closest('[data-pi-close]')) modal.classList.add('hidden');
         if (e.target.closest('[data-pi-recheck]')) Editor.showProjectIntegrityPanel(Editor.validateProject());
       };
-    };
-
-    const prevRun = typeof Editor.runProjectValidation === 'function'
-      ? Editor.runProjectValidation.bind(Editor)
-      : null;
-
-    Editor.runProjectValidation = function runProjectValidationPhase111() {
-      if (typeof this.collectProjectIssues === 'function' &&
-          typeof this.showProjectValidationResults === 'function') {
-        const result = this.collectProjectIssues();
-        this.showProjectValidationResults(result);
-        if (typeof this.refreshValidationUI === 'function') {
-          try { this.refreshValidationUI(); } catch (e) { /* */ }
-        }
-        if (result.ok) {
-          this.toast?.success?.('Проект в порядке');
-        } else {
-          this.toast?.warning?.(
-            'Ошибок: ' + result.errors.length +
-            (result.warnings.length ? ', предупреждений: ' + result.warnings.length : '')
-          );
-        }
-        return result;
-      }
-
-      const report = this.validateProject();
-      if (typeof this.showProjectIntegrityPanel === 'function') {
-        this.showProjectIntegrityPanel(report);
-      }
-      if (typeof this.refreshValidationUI === 'function') {
-        try { this.refreshValidationUI(); } catch (e) { /* */ }
-      }
-      if (report.valid) {
-        this.toast?.success?.('Проект в порядке');
-      } else {
-        this.toast?.warning?.(
-          'Ошибок: ' + report.summary.errors +
-          (report.summary.warnings ? ', предупреждений: ' + report.summary.warnings : '')
-        );
-      }
-      if (prevRun && typeof this.collectProjectIssues !== 'function') {
-        try { prevRun(); } catch (e) { /* */ }
-      }
-      return report;
     };
 
     if (Editor.commands?.register) {

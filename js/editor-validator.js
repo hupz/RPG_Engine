@@ -459,20 +459,17 @@
     }
   });
 
-  Editor.validateProject = function validateProject() {
-    return this.validateProjectExtended();
-  };
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('validateProject', function validateProjectLegacy() {
+      return this.validateProjectExtended();
+    }, 'editor-validator');
 
-  const origRun = Editor.runProjectValidation?.bind(Editor);
-  Editor.runProjectValidation = function runProjectValidation() {
-    const result = this.validateProjectExtended();
-    this.refreshValidationUI(result);
-    this.expandValidationPanel();
-    if (typeof origRun === 'function' && typeof this.showValidationModal === 'function') {
-      this.showValidationModal(result);
-    }
-    return result;
-  };
+  } else {
+    // hooks-exempt: fallback when Editor.hooks unavailable (non-editor shell)
+    Editor.validateProject = function validateProject() {
+      return this.validateProjectExtended();
+    };
+  }
 
   const validationMethods = [
     'updateJSONPreview', 'renderAll', 'renderSceneEditor', 'renderSceneList',

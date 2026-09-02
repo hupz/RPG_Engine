@@ -666,20 +666,24 @@
       // доп. поля action type уже могут быть в renderAbilityEditor
       return html;
     });
-  } else if (typeof Editor.renderGlobalAbilityEditor === 'function') {
-    const orig = Editor.renderGlobalAbilityEditor.bind(Editor);
-    Editor.renderGlobalAbilityEditor = function (id, ab, idx) {
-      return enhanceGlobalAbilityHtml(orig(id, ab, idx), id, ab, idx);
-    };
+  } else if (typeof Editor.renderGlobalAbilityEditor === 'function' && Editor.hooks?.replace) {
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('renderGlobalAbilityEditor', function (id, ab, idx) {
+      return enhanceGlobalAbilityHtml(savedPrev(id, ab, idx), id, ab, idx);
+    }, 'editor-abilities');
   }
 
-  // Полный редактор умения (заменяет базовый в editor-scene-crud.js)
-  Editor.renderGlobalAbilityEditor = function (id, ab, idx) {
+  function renderGlobalAbilityEditorRich(id, ab, idx) {
     if (typeof Editor.renderRichGlobalAbilityEditor === 'function') {
       return Editor.renderRichGlobalAbilityEditor(id, ab, idx);
     }
     return '';
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('renderGlobalAbilityEditor', renderGlobalAbilityEditorRich, 'editor-abilities');
+  } else if (typeof Editor.renderGlobalAbilityEditor !== 'function') {
+    Editor.renderGlobalAbilityEditor = renderGlobalAbilityEditorRich;
+  }
 
   const _origUpdateGlobalEffectType = Editor.updateGlobalAbilityEffectType?.bind(Editor);
   Editor.updateGlobalAbilityEffectType = function (id, type) {

@@ -267,6 +267,27 @@ const ACTION_REGISTRY = {
     }
   },
 
+  set_variable: {
+    id: 'set_variable',
+    name: 'Установить переменную проекта',
+    category: 'scene',
+    params: [
+      { name: 'variable', type: 'text', label: 'Переменная' },
+      { name: 'value', type: 'select', options: [true, false, 'toggle'], label: 'Значение' }
+    ],
+    execute(engine, params) {
+      if (!params.variable) return false;
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.setValue) {
+        return RuntimeVariables.setValue(engine, params.variable, params.value);
+      }
+      if (!engine.state.variables) engine.state.variables = {};
+      let val = params.value;
+      if (val === 'toggle') val = !engine.state.variables[params.variable];
+      engine.state.variables[params.variable] = val;
+      return true;
+    }
+  },
+
   check_flag: {
     id: 'check_flag',
     name: 'Проверить состояние',
@@ -983,7 +1004,9 @@ const ACTION_REGISTRY = {
     params: [{ name: 'message', type: 'textarea', label: 'Текст' }],
     async execute(engine, params, ctx) {
       const msg = params.message || 'Продолжить?';
-      const ok = typeof window !== 'undefined' ? window.confirm(msg) : true;
+      const ok = typeof GameDialogs !== 'undefined'
+        ? await GameDialogs.confirm('', msg)
+        : true;
       if (ok && params.onConfirm != null) {
         await ActionRunner.resolveBranch(engine, params.onConfirm, ctx);
       } else if (!ok && params.onCancel != null) {
@@ -1023,8 +1046,15 @@ const ACTION_REGISTRY = {
     name: 'Сохранить игру',
     category: 'utility',
     params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    execute(engine) {
-      engine.saveGame?.();
+    async execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1 && slot <= (engine.SAVE_SLOTS || 5)) {
+          return engine.saveToSlot(slot, { skipConfirm: false, quiet: false });
+        }
+      }
+      engine.saveGame?.({ force: true });
       return true;
     }
   },
@@ -1034,7 +1064,16 @@ const ACTION_REGISTRY = {
     name: 'Загрузить игру',
     category: 'utility',
     params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    execute(engine) {
+    execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1) return engine.loadGame(slot);
+      }
+      if (typeof engine.openSaveSlotsPanel === 'function') {
+        engine.openSaveSlotsPanel();
+        return true;
+      }
       if (typeof engine.loadGame === 'function') {
         engine.loadGame();
         return true;

@@ -4,41 +4,46 @@
 // ============================================================
 (function attachSceneWorkspacePolish() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') return;
 
   const SECTION_META = {
     overview: {
-      title: 'Обзор',
-      desc: 'Сводка по сцене и быстрые переходы.'
+      titleKey: 'editor.sceneWorkspacePolish.sections.overview.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.overview.desc'
     },
     content: {
-      title: 'Контент',
-      desc: 'Текст сцены и сюжетные модули.',
-      primary: { label: '+ Добавить модуль', action: 'content-add-module' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.content.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.content.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.content.addModule', action: 'content-add-module' }
     },
     choices: {
-      title: 'Выборы',
-      desc: 'Варианты ответа игрока в этой сцене.',
-      primary: { label: '+ Добавить выбор', action: 'choices-add' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.choices.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.choices.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.choices.addChoice', action: 'choices-add' }
     },
     visual: {
-      title: 'Visual',
-      desc: 'Интерактивные объекты и hotspots сцены.',
-      primary: { label: '+ Добавить объект', action: 'visual-add-hotspot' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.visual.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.visual.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.visual.addObject', action: 'visual-add-hotspot' }
     },
     game_ui: {
-      title: 'Game UI',
-      desc: 'HUD и UI-экраны, связанные с проектом.',
-      primary: { label: '+ Добавить UI-элемент', action: 'game-ui-add' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.gameUi.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.gameUi.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.gameUi.addUi', action: 'game-ui-add' }
     },
     conditions: {
-      title: 'Условия',
-      desc: 'Видимость сцены, выборов и объектов.',
-      primary: { label: '+ Добавить условие', action: 'conditions-add' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.conditions.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.conditions.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.conditions.addCondition', action: 'conditions-add' }
     },
     advanced: {
-      title: 'Advanced',
-      desc: 'ID, тип сцены и данные для продвинутого режима.'
+      titleKey: 'editor.sceneWorkspacePolish.sections.advanced.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.advanced.desc'
     }
   };
 
@@ -67,7 +72,7 @@
 
   function sectionLabel(sectionId) {
     const meta = SECTION_META[sectionId];
-    if (meta) return meta.title;
+    if (meta) return tr(meta.titleKey);
     const list = typeof Editor.getSceneWorkspaceSections === 'function'
       ? Editor.getSceneWorkspaceSections() : [];
     const found = list.find((s) => s.id === sectionId);
@@ -204,10 +209,12 @@
     const scene = Editor.data?.scenes?.[sceneId];
     if (!scene) return '';
     const title = scene.location || scene.title || sceneId;
-    const dirty = isDirty() ? ' <span class="usw-bc__dirty" title="Несохранённые изменения">*</span>' : '';
+    const dirty = isDirty()
+      ? ' <span class="usw-bc__dirty" title="' + escAttr(tr('editor.sceneWorkspacePolish.breadcrumb.unsavedTitle')) + '">*</span>'
+      : '';
     return (
-      '<nav class="usw-breadcrumb" aria-label="Навигация по сцене">' +
-      '<button type="button" class="usw-bc__link" data-usw-bc="project">Проект</button>' +
+      '<nav class="usw-breadcrumb" aria-label="' + escAttr(tr('editor.sceneWorkspacePolish.breadcrumb.ariaLabel')) + '">' +
+      '<button type="button" class="usw-bc__link" data-usw-bc="project">' + esc(tr('editor.sceneWorkspacePolish.breadcrumb.project')) + '</button>' +
       '<span class="usw-bc__sep" aria-hidden="true">›</span>' +
       '<span class="usw-bc__current">' + esc(title) + dirty + '</span>' +
       '<span class="usw-bc__sep" aria-hidden="true">›</span>' +
@@ -221,13 +228,13 @@
     if (!meta) return '';
     const primary = meta.primary
       ? '<button type="button" class="btn btn-primary btn-sm usw-section-header__primary" data-usw-primary="' +
-        escAttr(meta.primary.action) + '">' + esc(meta.primary.label) + '</button>'
+        escAttr(meta.primary.action) + '">' + esc(tr(meta.primary.labelKey)) + '</button>'
       : '';
     return (
       '<header class="usw-section-header" data-usw-section-header="' + escAttr(sectionId) + '">' +
       '<div class="usw-section-header__text">' +
-      '<h3 class="usw-section-header__title">' + esc(meta.title) + '</h3>' +
-      (meta.desc ? '<p class="usw-section-header__desc hint">' + esc(meta.desc) + '</p>' : '') +
+      '<h3 class="usw-section-header__title">' + esc(tr(meta.titleKey)) + '</h3>' +
+      (meta.descKey ? '<p class="usw-section-header__desc hint">' + esc(tr(meta.descKey)) + '</p>' : '') +
       '</div>' +
       (primary ? '<div class="usw-section-header__actions">' + primary + '</div>' : '') +
       '</header>'
@@ -279,14 +286,15 @@
   }
 
   function wrapSetSceneWorkspaceSection() {
-    if (Editor._usw13SectionWrapped || typeof Editor.setSceneWorkspaceSection !== 'function') return;
-    const orig = Editor.setSceneWorkspaceSection.bind(Editor);
-    Editor.setSceneWorkspaceSection = function setSceneWorkspaceSectionPolish(sectionId) {
+    if (Editor._usw13SectionWrapped || typeof Editor.setSceneWorkspaceSection !== 'function' || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('setSceneWorkspaceSection', function setSceneWorkspaceSectionPolish(sectionId) {
       captureSelectionFromInspector();
-      orig(sectionId);
+      const result = savedPrev ? savedPrev.call(this, sectionId) : undefined;
       injectWorkspaceChrome(Editor.currentScene);
       restoreWorkspaceSelection(sectionId);
-    };
+      return result;
+    }, 'editor-scene-workspace-polish');
     Editor._usw13SectionWrapped = true;
   }
 

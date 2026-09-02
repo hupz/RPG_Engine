@@ -12,11 +12,12 @@
     "export:dist": "node scripts/export-dist.mjs",
     "sync-version": "node scripts/sync-version.mjs",
     "check:native-dialogs": "node scripts/find-native-dialogs.mjs --check",
-    "check:runtime-dialogs": "node scripts/find-native-dialogs.mjs --runtime",
+    "check:runtime-dialogs": "node scripts/find-native-dialogs.mjs --runtime --check",
     "check:duplicates": "node scripts/find-duplicate-editor-methods.mjs --check-baseline",
+    "check:editor-monkey-patches": "node scripts/find-editor-monkey-patches.mjs --check",
     "check": "node scripts/find-native-dialogs.mjs --check && node scripts/find-duplicate-editor-methods.mjs --check-baseline",
     "test": "node scripts/run-tests.mjs",
-    "verify": "npm run test && npm run check:native-dialogs && npm run check:duplicates"
+    "verify": "npm run test && npm run check:native-dialogs && npm run check:runtime-dialogs && npm run check:duplicates && npm run check:editor-monkey-patches"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"

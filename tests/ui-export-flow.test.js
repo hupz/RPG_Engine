@@ -20,6 +20,29 @@ function read(rel) {
   return fs.readFileSync(path.join(root, rel), 'utf8');
 }
 
+function bootI18n(ctx, lang) {
+  const ru = JSON.parse(fs.readFileSync(path.join(root, 'locales/ru.json'), 'utf8'));
+  const en = JSON.parse(fs.readFileSync(path.join(root, 'locales/en.json'), 'utf8'));
+  const primary = lang === 'en' ? en : ru;
+  const fallback = ru;
+  function nestedGet(obj, key) {
+    return String(key).split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), obj);
+  }
+  function t(key, params) {
+    let val = nestedGet(primary, key);
+    if (val == null) val = nestedGet(fallback, key);
+    if (val == null) return String(key);
+    if (params && typeof params === 'object') {
+      Object.entries(params).forEach(([k, v]) => {
+        val = val.replace(new RegExp('\\{' + k + '\\}', 'g'), String(v ?? ''));
+      });
+    }
+    return val;
+  }
+  ctx.t = t;
+  ctx.I18n = { t };
+}
+
 const html = read('editor.html');
 const flow = read('js/editor/editor-export-flow.js');
 const exporter = read('js/editor-export.js');
@@ -48,6 +71,7 @@ assert(!flow.includes('Open Folder'), 'does not promise open folder in browser')
 
 function bootEditorCtx(opts) {
   opts = opts || {};
+  const validation = opts.validation || { ok: true, issues: [], errors: [], warnings: [] };
   const ctx = {
     console: { log() {}, info() {}, warn() {}, error() {} },
     window: opts.window || { showDirectoryPicker: function () {} },
@@ -65,28 +89,23 @@ function bootEditorCtx(opts) {
     },
     Editor: Object.assign({
       data: { meta: { title: 'Demo RPG' }, scenes: { hub: { id: 'hub', text: 'Hi' } } },
-      hooks: { register() {} },
       toast: { success() {}, warning() {}, error() {}, info() {} },
       escapeHtml(s) { return String(s); },
-      validateProjectExportReady() {
-        return opts.validation || { ok: true, issues: [], errors: [], warnings: [] };
-      },
-      guardExportWithValidation(guardOpts) {
-        const r = ctx.Editor.validateProjectExportReady();
-        if (r.ok) return true;
-        if (guardOpts && guardOpts.force) return true;
-        return (r.errors || []).length === 0;
-      },
-      exportJSON() { ctx._jsonCalled = true; },
-      exportHTML: async function () { ctx._htmlCalled = true; },
-      exportGameStandalone: async function () { ctx._folderCalled = true; },
-      showProjectValidationResults() { ctx._validationShown = true; },
-      applyValidatorExportGuardPatch() {}
+      exportJSON() { ctx.Editor._jsonCalled = true; },
+      exportHTML: async function () { ctx.Editor._htmlCalled = true; },
+      exportGameStandalone: async function () { ctx.Editor._folderCalled = true; },
+      showProjectValidationResults() { ctx._validationShown = true; }
     }, opts.editor || {})
   };
   ctx.globalThis = ctx;
+  bootI18n(ctx, 'en');
   vm.createContext(ctx);
+  vm.runInContext(read('js/editor/editor-hooks.js'), ctx);
+  vm.runInContext(phaseH, ctx);
   vm.runInContext(flow, ctx);
+  ctx.Editor.validateProjectExportReady = function () {
+    return validation;
+  };
   return ctx;
 }
 
@@ -115,7 +134,7 @@ async function runAsyncTests() {
   });
   const blocked = await blockedCtx.Editor.ExportFlow.runExport('json');
   assert(blocked === null, 'errors block export execution');
-  assert(!blockedCtx._jsonCalled, 'exportJSON not called when blocked');
+  assert(!blockedCtx.Editor._jsonCalled, 'exportJSON not called when blocked');
   assert(blockedCtx._validationShown === true, 'validation modal on blocked export');
 
   const warnCtx = bootEditorCtx({
@@ -128,11 +147,11 @@ async function runAsyncTests() {
   });
   const ok = await warnCtx.Editor.ExportFlow.runExport('json');
   assert(ok && ok.files[0] === 'Demo_RPG.json', 'json export output contract');
-  assert(warnCtx._jsonCalled, 'existing exportJSON called for warning-only project');
+  assert(warnCtx.Editor._jsonCalled, 'existing exportJSON called for warning-only project');
 
   const htmlCtx = bootEditorCtx();
   const htmlResult = await htmlCtx.Editor.ExportFlow.runExport('html');
-  assert(htmlCtx._htmlCalled, 'existing exportHTML called');
+  assert(htmlCtx.Editor._htmlCalled, 'existing exportHTML called');
   assert(htmlResult.files[0].endsWith('.html'), 'html output filename contract');
 }
 

@@ -144,6 +144,8 @@
       }
       return {
         flags: { ...(this.state.flags || {}) },
+        variables: { ...(this.state.variables || {}) },
+        projectVariables: this.data?.variables || {},
         inventory: [...(this.state.inventory || [])],
         gold: this.state.gold ?? 0,
         className: this.state.className || '',
@@ -1648,6 +1650,9 @@
       for (const [key, value] of Object.entries(start)) {
         if (this.state.flags[key] === undefined) this.state.flags[key] = value;
       }
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.initFromCatalog) {
+        RuntimeVariables.initFromCatalog(this);
+      }
     },
 
     getReputationFactionMeta(repFlag) {
@@ -3012,7 +3017,8 @@
 
       const ability = this.resolveAbilityDefinition(abilityId);
       if (!ability) {
-        alert('Умение не найдено в данных progression.abilities');
+        const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+        void GameDialogs.alert(tr('common.error'), tr('game.dialog.abilityNotFound'));
         return;
       }
 

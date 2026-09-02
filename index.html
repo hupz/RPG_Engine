@@ -347,9 +347,7 @@
         <h3>📁 <span data-i18n="game.panelMenu">Меню</span></h3>
         <div class="panel-menu-actions">
           <button type="button" class="choice" onclick="GameEngine.loadGameDataFromFile()" data-i18n="game.menuLoadContent">📂 Загрузить контент JSON</button>
-          <button type="button" class="choice" onclick="GameEngine.saveGame({ force: true })" data-i18n="game.menuSaveGame">💾 Сохранить игру</button>
-          <button type="button" class="choice" onclick="GameEngine.loadGame()" data-i18n="game.menuLoadGame">📂 Загрузить игру</button>
-          <button type="button" class="choice panel-menu-danger" onclick="GameEngine.deleteSave()" data-i18n="game.menuDeleteSave">🗑️ Удалить сохранение</button>
+          <button type="button" class="choice" onclick="GameEngine.openSaveSlotsPanel()" data-i18n="game.saveSlots.open">💾 Сохранить / загрузить</button>
           <button type="button" class="choice" onclick="GameEngine.returnToCampaignPicker()" data-i18n="game.menuCampaignPicker">🏠 К выбору игры</button>
           <button type="button" class="choice" onclick="GameEngine.resetGame()" data-i18n="game.menuReset">🔄 Начать заново</button>
         </div>
@@ -429,6 +427,14 @@
   </div>
 </div>
 
+<div id="save-slots-modal" class="modal-overlay hidden" onclick="if(event.target===this)GameEngine.closeSaveSlotsPanel()">
+  <div class="modal-box paper-sheet save-slots-box" onclick="event.stopPropagation()">
+    <span class="modal-close" onclick="GameEngine.closeSaveSlotsPanel()">&times;</span>
+    <div class="modal-title" data-i18n="game.saveSlots.title">Сохранения</div>
+    <div id="save-slots-list" class="save-slots-list"></div>
+  </div>
+</div>
+
 <script src="js/engine-version.js"></script>
 <script src="js/data-schema.js"></script>
 <script src="js/project-schema.js"></script>
@@ -438,6 +444,7 @@
 <script src="js/pf2e-mill-progression.js"></script>
 <script src="js/reputation-system.js"></script>
 <script src="js/achievements.js"></script>
+<script src="js/engine/project-variables.js"></script>
 <script src="js/conditions.js"></script>
 <script src="js/quests/task-base.js"></script>
 <script src="js/quests/task-types.js"></script>
@@ -481,6 +488,7 @@
 <!-- Движок: модули js/engine/ (порядок важен) -->
 <script src="js/engine/core.js"></script>
 <script src="js/engine/ui-renderer.js"></script>
+<script src="js/engine/game-dialogs.js"></script>
 <script src="js/engine/inventory.js"></script>
 <script src="js/scene-elements.js"></script>
 <script src="js/engine/scene-manager.js"></script>

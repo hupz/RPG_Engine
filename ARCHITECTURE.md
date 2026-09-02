@@ -93,11 +93,25 @@ npm run verify
 
 В active production path **нет** `QuestSystem`.
 
+Регрессионный гейт `npm run verify` включает `check:editor-monkey-patches` — скрипт
+`scripts/find-editor-monkey-patches.mjs --check` (порядок `editor.html`): повторное
+`Editor.method = function` без `Editor.hooks.*` = нарушение; допустим комментарий
+`// hooks-exempt: …` на строке назначения.
+
 ## 6. Save / Load
 
 1. Есть `questProgress` → использовать.
 2. Иначе V1 (`questStages` / flags) → hydrate → `questProgress`.
 3. Mirror `questStages` обновляется из progress для старых читателей.
+
+### Переменные проекта и рантайм
+
+Каталог переменных живёт в `data.variables` (`ProjectSchema.ensureProjectVariables`, UI — `editor-variables.js`). В рантайме значения хранятся в `state.variables` (отдельно от `state.flags`).
+
+- **Условия:** правила `{ flag, equals }` / `{ notFlag }` сначала читают `state.flags`; если ключа нет в флагах, но id есть в каталоге переменных — берётся `state.variables[id]`, иначе `defaultValue` из каталога.
+- **Запись:** действие `set_variable` (`ACTION_REGISTRY`) пишет в `state.variables`; `set_flag` по-прежнему пишет только в флаги.
+- **Сохранения:** поле `variables` в payload сейва; старые сейвы без него получают дефолты из каталога при загрузке.
+- **Модуль:** `js/engine/project-variables.js` (`RuntimeVariables`).
 
 ## 7. Тесты
 
@@ -219,3 +233,12 @@ Quest tests → 138 passed / 0 failed
 ```
 
 См. также: `docs/DEVELOPER-GUIDE.md`, `js/editor/editor-hooks.js`.
+
+## 9. Локализация редактора (I18n)
+
+- Словари: `locales/ru.json`, `locales/en.json`; в `editor.html` подключаются `locales/ru.js` и `locales/en.js` (сгенерированы из JSON).
+- API: `I18n.t('module.section.key', { param: value })` или глобальный `t()`; в Editor-модулях — локальный `tr()` с тем же контрактом.
+- **Новые UI-строки — только через `I18n.t` / `tr()`**, не литералами в HTML/JS. Исключения: комментарии, `console.*`, технические id/ключи, keywords палитры команд для поиска.
+- Ключи: `editor.<module>.<section>.<name>` (как в существующем словаре). Значения `ru.json` не «улучшать» при переносе — только копировать.
+- Конвейер help: `node scripts/build-locales.js` (дополняет секцию `help` из `editor-help-data.js`; не заменяет ручные ключи редактора).
+- **Фолбэк `I18n.t`:** сначала активная локаль (`localStorage rpgengine_lang`, по умолчанию `ru`), затем `FALLBACK_LANG` (`ru`), затем возврат самого ключа строкой. Переключение на `en` без перевода не падает — показывается ru или ключ.

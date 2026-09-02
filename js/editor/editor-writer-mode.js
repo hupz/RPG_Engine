@@ -3,6 +3,12 @@
 // (миграция бывшего Writer Mode + Advanced Mode)
 // ============================================================
 (function attachEditorWriterMode() {
+  'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') {
     console.warn('editor-writer-mode.js: Editor не определён');
     return;
@@ -66,17 +72,13 @@
     'tabs.engineer': { writer: false, cartographer: false, engineer: true }
   });
 
-  const LEVEL_LABELS = Object.freeze({
-    writer: '✏️ Писатель',
-    cartographer: '🗺️ Картограф',
-    engineer: '⚙️ Инженер'
-  });
+  function levelLabel(level) {
+    return tr('editor.writerMode.levels.' + level);
+  }
 
-  const LEVEL_HINTS = Object.freeze({
-    writer: 'Текст сцен, выборы, квесты и персонажи — без технических панелей.',
-    cartographer: 'Писатель + карта истории в рабочей области и чеклист связности.',
-    engineer: 'Полный доступ: JSON, баланс, флаги, события входа и отладка.'
-  });
+  function levelHint(level) {
+    return tr('editor.writerMode.hints.' + level);
+  }
 
   function normalizeLevel(mode) {
     const m = String(mode == null ? 'writer' : mode).toLowerCase();
@@ -109,7 +111,7 @@
       .editor-level-switch__btn + .editor-level-switch__btn {
         border-left: 1px solid var(--border, #ccc);
       }
-      body.editor-cartographer-mode .editor-nav-writer-badge::after { content: ' · карта'; }
+      body.editor-cartographer-mode .editor-nav-writer-badge::after { content: '${tr('editor.writerMode.cartographerBadge').replace(/'/g, "\\'")}'; }
     `;
     document.head.appendChild(st);
   }
@@ -125,14 +127,14 @@
       wrap.id = 'editor-level-switch';
       wrap.className = 'editor-level-switch';
       wrap.setAttribute('role', 'group');
-      wrap.setAttribute('aria-label', 'Уровень редактора');
+      wrap.setAttribute('aria-label', tr('editor.writerMode.levelAriaLabel'));
       LEVELS.forEach((level) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'editor-level-switch__btn';
         btn.dataset.editorLevel = level;
-        btn.textContent = LEVEL_LABELS[level].replace(/^[^\s]+\s/, '');
-        btn.title = LEVEL_HINTS[level];
+        btn.textContent = levelLabel(level).replace(/^[^\s]+\s/, '');
+        btn.title = levelHint(level);
         btn.addEventListener('click', () => {
           Editor.applyEditorLevel(level);
         });
@@ -158,7 +160,7 @@
 
     getEditorLevelLabel(level) {
       level = normalizeLevel(level || this.getEditorLevel());
-      return LEVEL_LABELS[level] || LEVEL_LABELS.writer;
+      return levelLabel(level || this.getEditorLevel()) || levelLabel('writer');
     },
 
     getEditorLevelProjectKey() {
@@ -236,9 +238,9 @@
 
     getEditorModeToggleLabel() {
       const level = this.getEditorLevel();
-      if (level === 'writer') return '⚙️ Advanced Mode';
-      if (level === 'cartographer') return '⚙️ Инженер';
-      return '✏️ Writer Mode';
+      if (level === 'writer') return tr('editor.writerMode.toggleAdvancedMode');
+      if (level === 'cartographer') return tr('editor.writerMode.toggleEngineer');
+      return tr('editor.writerMode.toggleWriterMode');
     },
 
     updateEditorModeToggleButton() {
@@ -334,7 +336,7 @@
         this.updateEditorModeToggleButton();
 
         const hint = document.getElementById('writer-mode-hint');
-        if (hint) hint.textContent = LEVEL_HINTS[level];
+        if (hint) hint.textContent = levelHint(level);
 
         if (typeof this.syncNavLayout === 'function') {
           try { this.syncNavLayout(this.currentTab || 'scenes'); } catch (e) { /* */ }

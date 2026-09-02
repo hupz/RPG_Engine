@@ -4,9 +4,14 @@
 // ============================================================
 (function attachProductHardening() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') return;
 
-  function computeProjectContentEmpty() {
+  function fallbackIsProjectContentEmpty() {
     if (!Editor.data) return true;
     const d = Editor.data;
     const counts = [
@@ -20,23 +25,21 @@
     return counts.every((n) => n === 0);
   }
 
+  function projectHasNoContent() {
+    if (!Editor.data) return true;
+    if (typeof Editor.isProjectContentEmpty === 'function') return Editor.isProjectContentEmpty();
+    return fallbackIsProjectContentEmpty();
+  }
+
   /** Unified template entry — starter project vs scene template */
   Editor.openProjectTemplatePicker = function openProjectTemplatePicker() {
-    if (!Editor.data || computeProjectContentEmpty()) {
+    if (!Editor.data || projectHasNoContent()) {
       if (typeof Editor.openNewProjectModal === 'function') return Editor.openNewProjectModal();
     }
     if (typeof Editor.openCreateSceneModal === 'function') return Editor.openCreateSceneModal();
     if (typeof Editor.openSceneWizard === 'function') return Editor.openSceneWizard();
-    Editor.toast?.info?.('Шаблоны недоступны');
+    Editor.toast?.info?.(tr('editor.productHardening.templatesUnavailable'));
     return false;
-  };
-
-  /** Legacy alias — scene creation goes through canonical wizard */
-  Editor.openTemplateSceneModal = function openTemplateSceneModalRedirect() {
-    if (!Editor.data || computeProjectContentEmpty()) {
-      if (typeof Editor.openNewProjectModal === 'function') return Editor.openNewProjectModal();
-    }
-    return Editor.openSceneWizard();
   };
 
   function markLegacyNavHidden() {
@@ -53,7 +56,7 @@
   function syncEmptyProjectShell() {
     if (typeof document === 'undefined' || !document.body) return;
     const noProject = !Editor.data;
-    const empty = !!Editor.data && computeProjectContentEmpty();
+    const empty = !!Editor.data && projectHasNoContent();
     document.body.dataset.ui24NoProject = noProject ? '1' : '0';
     document.body.dataset.ui24EmptyProject = empty ? '1' : '0';
     const startScreen = document.getElementById('start-screen');
@@ -84,11 +87,12 @@
   }
 
   function wrapLegacyEntry(name, redirect) {
-    if (typeof Editor[name] !== 'function' || Editor['_ui24' + name]) return;
-    const orig = Editor[name].bind(Editor);
-    Editor[name] = function ui24Redirect() {
-      return redirect.apply(this, arguments) ?? orig.apply(this, arguments);
-    };
+    if (typeof Editor[name] !== 'function' || Editor['_ui24' + name] || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace(name, function ui24Redirect(...args) {
+      const redirected = redirect.apply(this, args);
+      return redirected !== undefined ? redirected : (savedPrev ? savedPrev.apply(this, args) : undefined);
+    }, 'editor-product-hardening');
     Editor['_ui24' + name] = true;
   }
 
@@ -99,11 +103,10 @@
       wrapLegacyEntry('openExportMenu', function () { return Editor.openExportSurface(); });
     }
     if (typeof Editor.openProjectSearch === 'function' && typeof Editor.openCommandPalette === 'function') {
-      const origSearch = Editor.openProjectSearch.bind(Editor);
-      Editor.openProjectSearch = function openProjectSearchUi24(prefill) {
+      Editor.hooks.replace('openProjectSearch', function openProjectSearchUi24(prefill) {
         return Editor.openCommandPalette(prefill);
-      };
-      Editor._ui24OpenProjectSearch = origSearch;
+      }, 'editor-product-hardening');
+      Editor._ui24openProjectSearch = true;
     }
   }
 
@@ -133,11 +136,12 @@
     }
   }
 
-  Editor.isProjectContentEmpty = computeProjectContentEmpty;
+  if (typeof Editor.isProjectContentEmpty !== 'function') {
+    Editor.isProjectContentEmpty = fallbackIsProjectContentEmpty;
+  }
 
   if (Editor.hooks?.register) {
     Editor.hooks.register('editor-product-hardening', {
-      isProjectContentEmpty: computeProjectContentEmpty,
       openProjectTemplatePicker: Editor.openProjectTemplatePicker,
       syncEmptyProjectShell
     }, { force: true });

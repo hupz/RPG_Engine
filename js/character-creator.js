@@ -491,13 +491,14 @@
       return true;
     },
 
-    requestCancel() {
+    async requestCancel() {
       const cfg = this._sceneConfig || {};
       if (typeof GameEngine.runSceneHandler === 'function' && cfg.onCancel) {
         GameEngine.runSceneHandler(cfg.onCancel, { sceneId: cfg.sceneId || GameEngine.state.scene });
         return;
       }
-      if (typeof window !== 'undefined' && window.confirm('Отменить создание персонажа?')) {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (await GameDialogs.confirm('', tr('game.dialog.cancelCharCreation'))) {
         GameEngine.returnToCampaignPicker?.();
       }
     },

@@ -255,6 +255,21 @@
       ]
     },
     {
+      id: 'set_variable',
+      label: 'Установить переменную проекта',
+      category: 'advanced',
+      description: 'Запись в runtime state.variables (каталог переменных проекта).',
+      writerSafe: false,
+      params: [
+        { id: 'variable', type: 'variable', label: 'Переменная', required: true },
+        { id: 'value', type: 'select', label: 'Значение', options: [
+          { value: 'true', label: 'true' },
+          { value: 'false', label: 'false' },
+          { value: 'toggle', label: 'toggle' }
+        ] }
+      ]
+    },
+    {
       id: 'run_script',
       label: 'Выполнить скрипт',
       category: 'advanced',

@@ -1,4 +1,4 @@
-/* engine bundle generated 2026-09-01T20:43:37.355Z */
+/* engine bundle generated 2026-09-02T11:40:45.556Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -4430,6 +4430,11 @@ Object.assign(GameEngine, {
 
     /** Нет сохранения или в нём нет готового персонажа */
     needsCharacterCreation() {
+      if (typeof this.resolveStartupSaveSlot === 'function') {
+        const slot = this.resolveStartupSaveSlot();
+        this.setActiveSaveSlot(slot);
+        return !this.isSaveSlotOccupied(slot);
+      }
       const raw = localStorage.getItem(this.getSaveKey());
       if (!raw) return true;
       try {
@@ -4457,15 +4462,24 @@ Object.assign(GameEngine, {
     continueNormalStartup() {
       document.getElementById('char-creator-screen')?.classList.add('hidden');
       document.getElementById('main')?.classList.remove('hidden');
-      const saved = localStorage.getItem(this.getSaveKey());
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          if (data.charName?.trim() && data.className) {
-            this.loadGame();
-            return;
-          }
-        } catch (_) { /* ignore */ }
+      if (typeof this.resolveStartupSaveSlot === 'function') {
+        const slot = this.resolveStartupSaveSlot();
+        this.setActiveSaveSlot(slot);
+        if (this.isSaveSlotOccupied(slot)) {
+          this.loadGame(slot);
+          return;
+        }
+      } else {
+        const saved = localStorage.getItem(this.getSaveKey());
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            if (data.charName?.trim() && data.className) {
+              this.loadGame();
+              return;
+            }
+          } catch (_) { /* ignore */ }
+        }
       }
       document.getElementById('class-screen')?.classList.remove('hidden');
       this.renderClassSelection();
@@ -4492,7 +4506,11 @@ Object.assign(GameEngine, {
           this.applyGameData(data, 'file-picker');
           this.log('✅ Контент загружен: ' + (data.meta?.title || file.name), 'log-heal');
         } catch (err) {
-          alert('❌ Ошибка чтения JSON: ' + err.message);
+          const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+          await GameDialogs.alert(
+            tr('common.error'),
+            tr('game.dialog.jsonReadError', { message: err.message })
+          );
         }
       };
       input.click();
@@ -4515,6 +4533,9 @@ Object.assign(GameEngine, {
     },
 
     getSaveKey() {
+      if (typeof this.getSaveKeyForSlot === 'function') {
+        return this.getSaveKeyForSlot(this.getActiveSaveSlot?.() || 1);
+      }
       return this.getActiveCampaign().saveKey;
     },
 
@@ -4523,14 +4544,19 @@ Object.assign(GameEngine, {
     },
 
     hasCampaignSave(campaign) {
+      const slots = typeof this.SAVE_SLOTS === 'number' ? this.SAVE_SLOTS : 1;
       try {
-        const raw = localStorage.getItem(campaign.saveKey);
-        if (!raw) return false;
-        const save = JSON.parse(raw);
-        return !!(save.charName?.trim() && save.className);
+        for (let slot = 1; slot <= slots; slot++) {
+          const key = slot === 1 ? campaign.saveKey : `${campaign.saveKey}#slot${slot}`;
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const save = JSON.parse(raw);
+          if (save.charName?.trim() && save.className) return true;
+        }
       } catch (_) {
         return false;
       }
+      return false;
     },
 
     loadScriptOnce(src, globalName) {
@@ -4781,9 +4807,11 @@ Object.assign(GameEngine, {
       }
     },
 
-    returnToCampaignPicker() {
-      if (this.state.charName?.trim() && !confirm('Вернуться к выбору игры? Несохранённый прогресс может быть потерян.')) {
-        return;
+    async returnToCampaignPicker() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (this.state.charName?.trim()) {
+        const ok = await GameDialogs.confirm('', tr('game.dialog.returnToPicker'));
+        if (!ok) return;
       }
       document.getElementById('char-creator-screen')?.classList.add('hidden');
       document.getElementById('game-content')?.classList.add('hidden');
@@ -5421,6 +5449,7 @@ Object.assign(GameEngine, {
       this.state.supplies = 0;
       this.state.inventory = [...(cls.startingItems || [])];
       this.state.flags = {};
+      this.state.variables = {};
       this.applyStartingFlags();
       this.state.questStages = {};
       this.state.sceneVisits = {};
@@ -6216,6 +6245,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return {
         flags: { ...(this.state.flags || {}) },
+        variables: { ...(this.state.variables || {}) },
+        projectVariables: this.data?.variables || {},
         inventory: [...(this.state.inventory || [])],
         gold: this.state.gold ?? 0,
         className: this.state.className || '',
@@ -7720,6 +7751,9 @@ document.addEventListener('DOMContentLoaded', () => {
       for (const [key, value] of Object.entries(start)) {
         if (this.state.flags[key] === undefined) this.state.flags[key] = value;
       }
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.initFromCatalog) {
+        RuntimeVariables.initFromCatalog(this);
+      }
     },
 
     getReputationFactionMeta(repFlag) {
@@ -9084,7 +9118,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const ability = this.resolveAbilityDefinition(abilityId);
       if (!ability) {
-        alert('Умение не найдено в данных progression.abilities');
+        const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+        void GameDialogs.alert(tr('common.error'), tr('game.dialog.abilityNotFound'));
         return;
       }
 
@@ -9985,6 +10020,177 @@ document.addEventListener('DOMContentLoaded', () => {
 
   });
 })();
+
+
+;/* —— js/engine/game-dialogs.js —— */
+/**
+ * Внутриигровые модалки alert / confirm / prompt (без window.alert).
+ * Стили: .modal-overlay / .modal-box из css/style.css
+ */
+(function initGameDialogs(global) {
+  const ROOT_ID = 'game-dialog-overlay';
+  let activeResolve = null;
+  let activeKind = null;
+  let queue = Promise.resolve();
+
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function onKeyDown(event) {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    if (activeKind === 'prompt') dismiss(null);
+    else if (activeKind === 'confirm') dismiss(false);
+    else dismiss(undefined);
+  }
+
+  function ensureRoot() {
+    let root = document.getElementById(ROOT_ID);
+    if (root) return root;
+    root = document.createElement('div');
+    root.id = ROOT_ID;
+    root.className = 'modal-overlay hidden game-dialog-overlay';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    document.body.appendChild(root);
+    return root;
+  }
+
+  function dismiss(result) {
+    const root = document.getElementById(ROOT_ID);
+    if (root) {
+      root.classList.add('hidden');
+      root.innerHTML = '';
+      root.onclick = null;
+    }
+    document.removeEventListener('keydown', onKeyDown);
+    const resolve = activeResolve;
+    activeResolve = null;
+    activeKind = null;
+    if (resolve) resolve(result);
+  }
+
+  function showBox(innerHtml, kind) {
+    const root = ensureRoot();
+    activeKind = kind;
+    root.innerHTML = innerHtml;
+    root.classList.remove('hidden');
+    document.addEventListener('keydown', onKeyDown);
+    root.onclick = (event) => {
+      if (event.target !== root) return;
+      if (kind === 'prompt') dismiss(null);
+      else if (kind === 'confirm') dismiss(false);
+      else dismiss(undefined);
+    };
+  }
+
+  function enqueue(factory) {
+    const run = queue.then(() => factory());
+    queue = run.catch(() => {});
+    return run;
+  }
+
+  function alert(title, text) {
+    return enqueue(() => new Promise((resolve) => {
+      activeResolve = () => resolve();
+      const okLabel = tr('game.dialog.ok');
+      const titleHtml = title
+        ? `<div class="modal-title">${escapeHtml(title)}</div>`
+        : '';
+      showBox(`
+        <div class="modal-box paper-sheet game-dialog-box" onclick="event.stopPropagation()">
+          ${titleHtml}
+          <div class="modal-body">${escapeHtml(text || '')}</div>
+          <div class="game-dialog-actions">
+            <button type="button" class="start-btn game-dialog-ok">${escapeHtml(okLabel)}</button>
+          </div>
+        </div>
+      `, 'alert');
+      const root = document.getElementById(ROOT_ID);
+      const okBtn = root.querySelector('.game-dialog-ok');
+      okBtn?.addEventListener('click', () => dismiss(undefined));
+      okBtn?.focus();
+    }));
+  }
+
+  function confirm(title, text) {
+    return enqueue(() => new Promise((resolve) => {
+      activeResolve = resolve;
+      const okLabel = tr('game.dialog.confirm');
+      const cancelLabel = tr('game.dialog.cancel');
+      const titleHtml = title
+        ? `<div class="modal-title">${escapeHtml(title)}</div>`
+        : '';
+      showBox(`
+        <div class="modal-box paper-sheet game-dialog-box" onclick="event.stopPropagation()">
+          ${titleHtml}
+          <div class="modal-body">${escapeHtml(text || '')}</div>
+          <div class="game-dialog-actions">
+            <button type="button" class="choice game-dialog-cancel">${escapeHtml(cancelLabel)}</button>
+            <button type="button" class="start-btn game-dialog-ok">${escapeHtml(okLabel)}</button>
+          </div>
+        </div>
+      `, 'confirm');
+      const root = document.getElementById(ROOT_ID);
+      root.querySelector('.game-dialog-cancel')?.addEventListener('click', () => dismiss(false));
+      root.querySelector('.game-dialog-ok')?.addEventListener('click', () => dismiss(true));
+      root.querySelector('.game-dialog-ok')?.focus();
+    }));
+  }
+
+  function prompt(title, text, defaultValue = '') {
+    return enqueue(() => new Promise((resolve) => {
+      activeResolve = resolve;
+      const okLabel = tr('game.dialog.confirm');
+      const cancelLabel = tr('game.dialog.cancel');
+      const placeholder = tr('game.dialog.promptPlaceholder');
+      const titleHtml = title
+        ? `<div class="modal-title">${escapeHtml(title)}</div>`
+        : '';
+      showBox(`
+        <div class="modal-box paper-sheet game-dialog-box" onclick="event.stopPropagation()">
+          ${titleHtml}
+          <div class="modal-body">${escapeHtml(text || '')}</div>
+          <input type="text" class="game-dialog-input" value="${escapeHtml(defaultValue)}" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
+          <div class="game-dialog-actions">
+            <button type="button" class="choice game-dialog-cancel">${escapeHtml(cancelLabel)}</button>
+            <button type="button" class="start-btn game-dialog-ok">${escapeHtml(okLabel)}</button>
+          </div>
+        </div>
+      `, 'prompt');
+      const root = document.getElementById(ROOT_ID);
+      const input = root.querySelector('.game-dialog-input');
+      const submit = () => dismiss(input ? input.value : '');
+      root.querySelector('.game-dialog-cancel')?.addEventListener('click', () => dismiss(null));
+      root.querySelector('.game-dialog-ok')?.addEventListener('click', submit);
+      input?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          submit();
+        }
+      });
+      input?.focus();
+      input?.select();
+    }));
+  }
+
+  const GameDialogs = { alert, confirm, prompt, dismiss };
+  global.GameDialogs = GameDialogs;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { GameDialogs };
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : window);
 
 
 ;/* —— js/engine/inventory.js —— */
@@ -11354,12 +11560,10 @@ document.addEventListener('DOMContentLoaded', () => {
       this.showScene('game_over');
     },
 
-    resetGame() {
-      if (confirm('Начать новую игру? Текущий прогресс будет сброшен.')) {
-        localStorage.removeItem(this.getSaveKey());
-      } else {
-        return;
-      }
+    async resetGame() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (!(await GameDialogs.confirm('', tr('game.dialog.resetGame')))) return;
+      localStorage.removeItem(this.getSaveKey());
       this.state.hp = 25;
       this.state.maxHp = 25;
       this.state.gold = 0;
@@ -14032,7 +14236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ;/* —— js/engine/save-load.js —— */
 // ============================================================
-// engine/save-load.js — сохранение и загрузка
+// engine/save-load.js — сохранение и загрузка (многослотовое)
 // ============================================================
 
 (function attachEngineSaveLoad() {
@@ -14042,11 +14246,179 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  const SAVE_SLOTS = 5;
+
+  function trKey(k, p) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(k, p);
+    if (typeof t === 'function') return t(k, p);
+    return k;
+  }
+
   Object.assign(GameEngine, {
+    SAVE_SLOTS,
+
+    /** Базовый ключ кампании (слот 1 — легаси без суффикса). */
+    getSaveBaseKey() {
+      return this.getActiveCampaign().saveKey;
+    },
+
+    getSaveKeyForSlot(slot) {
+      const base = this.getSaveBaseKey();
+      const n = Math.max(1, Math.min(SAVE_SLOTS, parseInt(slot, 10) || 1));
+      return n === 1 ? base : `${base}#slot${n}`;
+    },
+
+    getActiveSaveSlotStorageKey() {
+      return `${this.getSaveBaseKey()}#activeSlot`;
+    },
+
+    restoreActiveSaveSlot() {
+      try {
+        const raw = localStorage.getItem(this.getActiveSaveSlotStorageKey());
+        const n = parseInt(raw, 10);
+        if (n >= 1 && n <= SAVE_SLOTS) this._activeSaveSlot = n;
+      } catch (_) { /* ignore */ }
+      if (!this._activeSaveSlot) this._activeSaveSlot = 1;
+    },
+
+    persistActiveSaveSlot() {
+      localStorage.setItem(this.getActiveSaveSlotStorageKey(), String(this.getActiveSaveSlot()));
+    },
+
+    getActiveSaveSlot() {
+      if (!this._activeSaveSlot) this.restoreActiveSaveSlot();
+      return this._activeSaveSlot || 1;
+    },
+
+    setActiveSaveSlot(slot) {
+      this._activeSaveSlot = Math.max(1, Math.min(SAVE_SLOTS, parseInt(slot, 10) || 1));
+      this.persistActiveSaveSlot();
+    },
+
+    /** Текущий ключ автосохранения (активный слот). */
+    getSaveKey() {
+      return this.getSaveKeyForSlot(this.getActiveSaveSlot());
+    },
+
+    readSaveSlotRaw(slot) {
+      try {
+        return localStorage.getItem(this.getSaveKeyForSlot(slot));
+      } catch (_) {
+        return null;
+      }
+    },
+
+    readSaveSlotData(slot) {
+      const raw = this.readSaveSlotRaw(slot);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (_) {
+        return null;
+      }
+    },
+
+    isSaveSlotOccupied(slot) {
+      const data = this.readSaveSlotData(slot);
+      return !!(data?.charName?.trim() && data?.className);
+    },
+
+    /** Слот для автопродолжения: активный → слот 1 (легаси) → любой занятый. */
+    resolveStartupSaveSlot() {
+      this.restoreActiveSaveSlot();
+      const active = this.getActiveSaveSlot();
+      if (this.isSaveSlotOccupied(active)) return active;
+      if (this.isSaveSlotOccupied(1)) return 1;
+      for (let i = 2; i <= SAVE_SLOTS; i++) {
+        if (this.isSaveSlotOccupied(i)) return i;
+      }
+      return 1;
+    },
+
+    _playtimeSessionStart: 0,
+    _playtimeSec: 0,
+
+    syncPlaytimeClock() {
+      if (!this._playtimeSessionStart) {
+        this._playtimeSessionStart = Date.now();
+        return;
+      }
+      const elapsed = Math.floor((Date.now() - this._playtimeSessionStart) / 1000);
+      if (elapsed > 0) {
+        this._playtimeSec = (this._playtimeSec || 0) + elapsed;
+        this._playtimeSessionStart = Date.now();
+      }
+    },
+
+    getPlaytimeSec() {
+      this.syncPlaytimeClock();
+      return this._playtimeSec || 0;
+    },
+
+    setPlaytimeFromSave(sec) {
+      this._playtimeSec = Math.max(0, parseInt(sec, 10) || 0);
+      this._playtimeSessionStart = Date.now();
+    },
+
+    formatPlaytime(sec) {
+      const total = Math.max(0, parseInt(sec, 10) || 0);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    },
+
+    deriveSaveMeta(data) {
+      if (!data || typeof data !== 'object') return null;
+      if (data.meta && typeof data.meta === 'object') return { ...data.meta };
+      const sceneId = data.scene || '';
+      const scene = this.data?.scenes?.[sceneId];
+      const savedAt = data.timestamp
+        ? new Date(data.timestamp).toISOString()
+        : null;
+      return {
+        savedAt,
+        sceneId,
+        sceneName: scene?.title || scene?.location || sceneId || '',
+        playtimeSec: data.meta?.playtimeSec ?? 0,
+        charLevel: parseInt(data.level, 10) || 1,
+        charName: data.charName || ''
+      };
+    },
+
+    buildSaveMeta() {
+      this.syncPlaytimeClock();
+      const sceneId = this.state.scene || '';
+      const scene = this.data?.scenes?.[sceneId];
+      return {
+        savedAt: new Date().toISOString(),
+        sceneId,
+        sceneName: scene?.title || scene?.location || sceneId || '',
+        playtimeSec: this.getPlaytimeSec(),
+        charLevel: parseInt(this.state.level, 10) || 1,
+        charName: this.state.charName || ''
+      };
+    },
+
+    listSaveSlots() {
+      const slots = [];
+      for (let i = 1; i <= SAVE_SLOTS; i++) {
+        const data = this.readSaveSlotData(i);
+        slots.push({
+          slot: i,
+          empty: !data,
+          occupied: this.isSaveSlotOccupied(i),
+          meta: data ? this.deriveSaveMeta(data) : null,
+          active: i === this.getActiveSaveSlot()
+        });
+      }
+      return slots;
+    },
+
     /**
      * Сохранение в localStorage.
-     * @param {{ force?: boolean, quiet?: boolean }} [opts]
-     * force — сразу (кнопка «Сохранить»); иначе отложено до смены сцены.
+     * @param {{ force?: boolean, quiet?: boolean, slot?: number, skipConfirm?: boolean }} [opts]
      */
     saveGame(opts = {}) {
       if (opts.force) {
@@ -14056,71 +14428,75 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     },
 
-    /** Автосохранение только при переходе на другую сцену */
     autosaveOnSceneChange(prevSceneId) {
       if (prevSceneId === this.state.scene) return;
       this._saveDirty = false;
       this.persistSave({ quiet: true });
     },
 
+    buildSavePayload() {
+      return {
+        version: this.data?.meta?.version || '2.0',
+        timestamp: Date.now(),
+        charName: this.state.charName,
+        className: this.state.className,
+        gender: this.state.gender || 'male',
+        raceKey: this.state.raceKey || '',
+        heritageId: this.state.heritageId || '',
+        pf2eFixedBoosts: this.state.pf2eFixedBoosts || null,
+        pf2eFreeBoosts: this.state.pf2eFreeBoosts || null,
+        stats: this.state.stats,
+        hp: this.state.hp,
+        maxHp: this.state.maxHp,
+        baseMaxHp: this.state.baseMaxHp,
+        gold: this.state.gold,
+        inventory: this.state.inventory,
+        flags: this.state.flags,
+        variables: this.state.variables || {},
+        scene: this.state.scene,
+        supplies: this.state.supplies,
+        resources: this.state.resources,
+        questSaveVersion: 2,
+        questProgress: (typeof QuestRuntime !== 'undefined'
+          ? (QuestRuntime.bind(this), QuestRuntime.serializeAll())
+          : (this.state.questProgress || {})),
+        questStages: (typeof QuestRuntime !== 'undefined'
+          ? (QuestRuntime._mirrorProgressToLegacyStages(), this.state.questStages || {})
+          : (this.state.questStages || {})),
+        level: this.state.level,
+        exp: this.state.exp,
+        expAwarded: this.state.expAwarded,
+        classData: this.state.classData,
+        proficiencies: this.state.proficiencies || { skills: [] },
+        skills: this.state.skills || {},
+        skillIncreases: this.state.skillIncreases || [],
+        equipped: this.state.equipped || {},
+        curseEffects: this.state.curseEffects || {},
+        itemEnhancements: this.state.itemEnhancements || {},
+        itemCharges: this.state.itemCharges || {},
+        resumeAfterLevelUp: this.state.resumeAfterLevelUp,
+        favoredEnemyTypes: this.state.favoredEnemyTypes || [],
+        wildShape: this.state.wildShape || null,
+        transformation: this.state.transformation || null,
+        passiveTransformModifiers: this.state.passiveTransformModifiers || [],
+        crafting: this.state.crafting || { knownRecipes: [] },
+        sceneVisits: this.state.sceneVisits || {},
+        visitedLocations: this.state.visitedLocations || {},
+        clearedCombats: this.state.clearedCombats || {},
+        gameTime: this.timeSystem?.getSaveState?.() || this.state.gameTime || null,
+        gameSeason: this.seasonSystem?.getSaveState?.() || this.state.gameSeason || null,
+        gameWeather: this.weatherSystem?.getSaveState?.() || this.state.gameWeather || null,
+        achievementUnlocks: this.state.achievementUnlocks || {}
+      };
+    },
+
     persistSave(opts = {}) {
       try {
-        const saveData = {
-          version: this.data?.meta?.version || "2.0",
-          timestamp: Date.now(),
-          charName: this.state.charName,
-          className: this.state.className,
-          gender: this.state.gender || 'male',
-          raceKey: this.state.raceKey || '',
-          heritageId: this.state.heritageId || '',
-          pf2eFixedBoosts: this.state.pf2eFixedBoosts || null,
-          pf2eFreeBoosts: this.state.pf2eFreeBoosts || null,
-          stats: this.state.stats,
-          hp: this.state.hp,
-          maxHp: this.state.maxHp,
-          baseMaxHp: this.state.baseMaxHp,
-          gold: this.state.gold,
-          inventory: this.state.inventory,
-          flags: this.state.flags,
-          scene: this.state.scene,
-          supplies: this.state.supplies,
-          resources: this.state.resources,
-          // Quest save: questProgress is source of truth (format v2).
-          // questStages is a derived mirror for older readers / conditions.
-          questSaveVersion: 2,
-          questProgress: (typeof QuestRuntime !== 'undefined'
-            ? (QuestRuntime.bind(this), QuestRuntime.serializeAll())
-            : (this.state.questProgress || {})),
-          questStages: (typeof QuestRuntime !== 'undefined'
-            ? (QuestRuntime._mirrorProgressToLegacyStages(), this.state.questStages || {})
-            : (this.state.questStages || {})),
-          level: this.state.level,
-          exp: this.state.exp,
-          expAwarded: this.state.expAwarded,
-          classData: this.state.classData,
-          proficiencies: this.state.proficiencies || { skills: [] },
-          skills: this.state.skills || {},
-          skillIncreases: this.state.skillIncreases || [],
-          equipped: this.state.equipped || {},
-          curseEffects: this.state.curseEffects || {},
-          itemEnhancements: this.state.itemEnhancements || {},
-          itemCharges: this.state.itemCharges || {},
-          resumeAfterLevelUp: this.state.resumeAfterLevelUp,
-          favoredEnemyTypes: this.state.favoredEnemyTypes || [],
-          wildShape: this.state.wildShape || null,
-          transformation: this.state.transformation || null,
-          passiveTransformModifiers: this.state.passiveTransformModifiers || [],
-          crafting: this.state.crafting || { knownRecipes: [] },
-          sceneVisits: this.state.sceneVisits || {},
-          visitedLocations: this.state.visitedLocations || {},
-          clearedCombats: this.state.clearedCombats || {},
-          gameTime: this.timeSystem?.getSaveState?.() || this.state.gameTime || null,
-          gameSeason: this.seasonSystem?.getSaveState?.() || this.state.gameSeason || null,
-          gameWeather: this.weatherSystem?.getSaveState?.() || this.state.gameWeather || null,
-          achievementUnlocks: this.state.achievementUnlocks || {}
-        };
-
-        localStorage.setItem(this.getSaveKey(), JSON.stringify(saveData));
+        const slot = opts.slot != null ? opts.slot : this.getActiveSaveSlot();
+        const saveData = this.buildSavePayload();
+        saveData.meta = this.buildSaveMeta();
+        localStorage.setItem(this.getSaveKeyForSlot(slot), JSON.stringify(saveData));
+        this.setActiveSaveSlot(slot);
         if (!opts.quiet) {
           this.log('💾 Игра сохранена успешно', 'log-heal');
         }
@@ -14132,187 +14508,205 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    /** Загрузка сохранения (алиас для loadGame) */
-    loadSave() {
-      return this.loadGame();
+    async saveToSlot(slot, opts = {}) {
+      const n = Math.max(1, Math.min(SAVE_SLOTS, parseInt(slot, 10) || 1));
+      if (!opts.skipConfirm && this.isSaveSlotOccupied(n)) {
+        const ok = await GameDialogs.confirm('', trKey('game.saveSlots.overwrite', { n }));
+        if (!ok) return false;
+      }
+      return this.persistSave({ ...opts, slot: n, quiet: opts.quiet, force: true });
     },
 
-        loadGame() {
+    loadSave(slot) {
+      return this.loadGame(slot);
+    },
+
+    _applySavePayload(data) {
+      this.state.charName = data.charName || 'Герой';
+      this.state.className = data.className;
+      this.state.gender = data.gender || 'male';
+      this.state.raceKey = data.raceKey || '';
+      this.state.raceData = this.state.raceKey ? this.getRaceData(this.state.raceKey) : null;
+      this.state.heritageId = data.heritageId || '';
+      this.state.pf2eFixedBoosts = data.pf2eFixedBoosts || null;
+      this.state.pf2eFreeBoosts = data.pf2eFreeBoosts || null;
+      this.state.stats = data.stats || data.classData?.stats || null;
+      this.state.hp = parseInt(data.hp) || 25;
+      this.state.maxHp = parseInt(data.maxHp) || 25;
+      this.state.baseMaxHp = data.baseMaxHp != null ? parseInt(data.baseMaxHp, 10) : null;
+      this.state._lastComputedMaxHp = this.state.maxHp;
+      this.state.gold = parseInt(data.gold) || 0;
+      this.state.inventory = data.inventory || [];
+      this.state.flags = data.flags || {};
+      this.applyStartingFlags();
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.applyFromSave) {
+        RuntimeVariables.applyFromSave(this, data.variables);
+      } else {
+        this.state.variables = data.variables && typeof data.variables === 'object' ? { ...data.variables } : {};
+      }
+      this.state.scene = data.scene || 'village';
+      this.state.supplies = parseInt(data.supplies) || 0;
+      this.state.questStages = data.questStages || {};
+      this.state.questProgress = data.questProgress || {};
+      if (typeof QuestRuntime !== 'undefined') {
+        QuestRuntime.bind(this);
+        QuestRuntime.hydrateFromSave(this);
+      }
+      this.migrateSaveQuestStages();
+      this.state.resources = data.resources || { mode: 'energy', current: 2, max: 2, spellSlots: null };
+      this.migrateResourcesState();
+      this.state.level = parseInt(data.level, 10) || 1;
+      this.state.exp = parseInt(data.exp, 10) || 0;
+      this.state.expAwarded = data.expAwarded || {};
+      this.state.pendingLevelUp = null;
+      this.state.resumeAfterLevelUp = data.resumeAfterLevelUp || null;
+      this.state.sceneVisits = data.sceneVisits || {};
+      this.state.visitedLocations = data.visitedLocations || {};
+      this.state.clearedCombats = data.clearedCombats || {};
+      this.state.achievementUnlocks = data.achievementUnlocks || {};
+      this.migrateClearedCombatsFromSave();
+      this.migrateQuestMapUnlocksFromSave();
+      this.migrateVisitedLocations();
+      this.state.itemCharges = data.itemCharges || {};
+      this.migrateSuppliesState();
+      this.migrateArrowAmmoState();
+      if (this.state.inventory.includes('water_flask')) {
+        this.initItemChargesOnAdd('water_flask');
+      }
+
+      this.state.equipped = data.equipped || {};
+      this.state.curseEffects = data.curseEffects || {};
+      this.state.itemEnhancements = data.itemEnhancements || {};
+      this.migrateEquippedSlots();
+      this.migrateCurseState();
+      this.migrateMillAccessFlag();
+      this.migrateAlbertQuestState();
+
+      if (this.state.className && !this.data?.classes?.[this.state.className]) {
+        this.state.className = 'warrior';
+        this.log('⚠️ Неизвестный класс в сохранении — выбран Воин.', 'log-dice');
+      }
+
+      const savedProf = data.proficiencies?.skills;
+      if (Array.isArray(savedProf)) {
+        this.state.proficiencies = { skills: savedProf.map(s => String(s).toLowerCase()) };
+      } else if (data.classData?.skillIds?.length) {
+        this.state.proficiencies = { skills: [...data.classData.skillIds] };
+      } else {
+        this.state.proficiencies = { skills: [] };
+      }
+
+      this.state.skills = data.skills && typeof data.skills === 'object' ? { ...data.skills } : {};
+      this.state.skillIncreases = Array.isArray(data.skillIncreases) ? [...data.skillIncreases] : [];
+      this.migratePf2eSkillsState();
+      this.state.favoredEnemyTypes = Array.isArray(data.favoredEnemyTypes)
+        ? [...data.favoredEnemyTypes]
+        : [];
+      this.state.wildShape = data.wildShape && typeof data.wildShape === 'object'
+        ? { ...data.wildShape, knownForms: [...(data.wildShape.knownForms || [])] }
+        : null;
+      this.state.transformation = data.transformation && typeof data.transformation === 'object'
+        ? { ...data.transformation }
+        : null;
+      this.state.passiveTransformModifiers = Array.isArray(data.passiveTransformModifiers)
+        ? [...data.passiveTransformModifiers]
+        : [];
+      if (this.state.passiveTransformModifiers.length && typeof this.applyTransformModifiers === 'function') {
+        this.applyTransformModifiers(this.state.passiveTransformModifiers);
+      }
+      if (data.gameTime && typeof data.gameTime === 'object') {
+        this.state.gameTime = { ...data.gameTime };
+        if (this.timeSystem) {
+          this.timeSystem.loadState(this.state.gameTime);
+          this.timeSystem.updateUI?.();
+        }
+      }
+      if (typeof this.migrateWildShapeState === 'function') {
+        this.migrateWildShapeState();
+      }
+      this.state.crafting = data.crafting && typeof data.crafting === 'object'
+        ? { knownRecipes: [...(data.crafting.knownRecipes || [])] }
+        : null;
+      this.migrateCraftingState();
+
+      if (data.classData && data.className) {
+        this.state.classData = data.classData;
+        if (!this.state.classData.skillIds?.length && this.state.proficiencies.skills.length) {
+          this.state.classData.skillIds = [...this.state.proficiencies.skills];
+        }
+        this.state.classData.abilities = this.reconcileAbilities(
+          this.state.classData.abilities,
+          data.className
+        );
+        const race = this.getRaceData(this.state.raceKey);
+        const racial = this.buildRacialAbilities(race);
+        racial.forEach(ab => {
+          if (!this.state.classData.abilities.some(a => a.id === ab.id)) {
+            this.state.classData.abilities.push(
+              this.normalizeAbility(ab, data.className, this.state.classData.abilities.length)
+            );
+          }
+        });
+      } else if (this.state.className && this.data?.classes?.[this.state.className]) {
+        const cls = this.data.classes[this.state.className];
+        const resource = cls.resource || { name: 'Ресурс', max: 2, desc: '' };
+        this.state.classData = {
+          ac: cls.ac ?? 10,
+          atkBonus: cls.atkBonus ?? 0,
+          dmgRoll: cls.dmgRoll || '1d6',
+          dmgBonus: cls.dmgBonus ?? 0,
+          initBonus: cls.initBonus ?? 0,
+          stats: JSON.parse(JSON.stringify(cls.stats || {})),
+          skills: cls.skills || '',
+          resourceName: resource.name,
+          resourceDesc: resource.desc || '',
+          abilities: this.normalizeAbilities(cls.abilities, this.state.className)
+        };
+        if (!Object.keys(this.state.equipped).length) {
+          this.autoEquipStartingGear(this.state.className);
+        }
+      }
+
+      if (this.state.classData) {
+        this.recalculateCombatStats();
+      }
+
+      const meta = this.deriveSaveMeta(data);
+      this.setPlaytimeFromSave(meta?.playtimeSec ?? 0);
+
+      this.hideCharacterCreator();
+      document.getElementById('class-screen')?.classList.add('hidden');
+      document.getElementById('name-screen')?.classList.add('hidden');
+      this.ensurePlayerUIVisible({ force: true });
+
+      this.setCharName(this.state.charName);
+      this.renderClassDisplay(this.state.className);
+      this.migratePf2eSkillsState();
+      this.updateUI();
+
+      const resLabel = document.getElementById('resource-label');
+      if (resLabel && this.state.classData?.resourceName) {
+        resLabel.textContent = this.state.classData.resourceName;
+      }
+
+      this.showScene(this.state.scene);
+      this.migrateFavoredEnemyState();
+    },
+
+    loadGame(slot) {
       try {
-        const saved = localStorage.getItem(this.getSaveKey());
+        const n = slot != null
+          ? Math.max(1, Math.min(SAVE_SLOTS, parseInt(slot, 10) || 1))
+          : this.getActiveSaveSlot();
+        const saved = this.readSaveSlotRaw(n);
         if (!saved) {
           this.log('💾 Сохранений не найдено', 'log-dice');
           return false;
         }
 
         const data = JSON.parse(saved);
-
-        this.state.charName = data.charName || 'Герой';
-        this.state.className = data.className;
-        this.state.gender = data.gender || 'male';
-        this.state.raceKey = data.raceKey || '';
-        this.state.raceData = this.state.raceKey ? this.getRaceData(this.state.raceKey) : null;
-        this.state.heritageId = data.heritageId || '';
-        this.state.pf2eFixedBoosts = data.pf2eFixedBoosts || null;
-        this.state.pf2eFreeBoosts = data.pf2eFreeBoosts || null;
-        this.state.stats = data.stats || data.classData?.stats || null;
-        this.state.hp = parseInt(data.hp) || 25;
-        this.state.maxHp = parseInt(data.maxHp) || 25;
-        this.state.baseMaxHp = data.baseMaxHp != null ? parseInt(data.baseMaxHp, 10) : null;
-        this.state._lastComputedMaxHp = this.state.maxHp;
-        this.state.gold = parseInt(data.gold) || 0;
-        this.state.inventory = data.inventory || [];
-        this.state.flags = data.flags || {};
-        this.applyStartingFlags();
-        this.state.scene = data.scene || 'village';
-        this.state.supplies = parseInt(data.supplies) || 0;
-        // Load quests: prefer questProgress (V2); hydrate migrates V1 questStages if needed
-        this.state.questStages = data.questStages || {};
-        this.state.questProgress = data.questProgress || {};
-        if (typeof QuestRuntime !== 'undefined') {
-          QuestRuntime.bind(this);
-          QuestRuntime.hydrateFromSave(this);
-        }
-        this.migrateSaveQuestStages();
-        this.state.resources = data.resources || { mode: 'energy', current: 2, max: 2, spellSlots: null };
-        this.migrateResourcesState();
-        this.state.level = parseInt(data.level, 10) || 1;
-        this.state.exp = parseInt(data.exp, 10) || 0;
-        this.state.expAwarded = data.expAwarded || {};
-        this.state.pendingLevelUp = null;
-        this.state.resumeAfterLevelUp = data.resumeAfterLevelUp || null;
-        this.state.sceneVisits = data.sceneVisits || {};
-        this.state.visitedLocations = data.visitedLocations || {};
-        this.state.clearedCombats = data.clearedCombats || {};
-        this.state.achievementUnlocks = data.achievementUnlocks || {};
-        this.migrateClearedCombatsFromSave();
-        this.migrateQuestMapUnlocksFromSave();
-        this.migrateVisitedLocations();
-        this.state.itemCharges = data.itemCharges || {};
-        this.migrateSuppliesState();
-        this.migrateArrowAmmoState();
-        if (this.state.inventory.includes('water_flask')) {
-          this.initItemChargesOnAdd('water_flask');
-        }
-
-        this.state.equipped = data.equipped || {};
-        this.state.curseEffects = data.curseEffects || {};
-        this.state.itemEnhancements = data.itemEnhancements || {};
-        this.migrateEquippedSlots();
-        this.migrateCurseState();
-        this.migrateMillAccessFlag();
-        this.migrateAlbertQuestState();
-
-        if (this.state.className && !this.data?.classes?.[this.state.className]) {
-          this.state.className = 'warrior';
-          this.log('⚠️ Неизвестный класс в сохранении — выбран Воин.', 'log-dice');
-        }
-
-        const savedProf = data.proficiencies?.skills;
-        if (Array.isArray(savedProf)) {
-          this.state.proficiencies = { skills: savedProf.map(s => String(s).toLowerCase()) };
-        } else if (data.classData?.skillIds?.length) {
-          this.state.proficiencies = { skills: [...data.classData.skillIds] };
-        } else {
-          this.state.proficiencies = { skills: [] };
-        }
-
-        this.state.skills = data.skills && typeof data.skills === 'object' ? { ...data.skills } : {};
-        this.state.skillIncreases = Array.isArray(data.skillIncreases) ? [...data.skillIncreases] : [];
-        this.migratePf2eSkillsState();
-        this.state.favoredEnemyTypes = Array.isArray(data.favoredEnemyTypes)
-          ? [...data.favoredEnemyTypes]
-          : [];
-        this.state.wildShape = data.wildShape && typeof data.wildShape === 'object'
-          ? { ...data.wildShape, knownForms: [...(data.wildShape.knownForms || [])] }
-          : null;
-        this.state.transformation = data.transformation && typeof data.transformation === 'object'
-          ? { ...data.transformation }
-          : null;
-        this.state.passiveTransformModifiers = Array.isArray(data.passiveTransformModifiers)
-          ? [...data.passiveTransformModifiers]
-          : [];
-        if (this.state.passiveTransformModifiers.length && typeof this.applyTransformModifiers === 'function') {
-          this.applyTransformModifiers(this.state.passiveTransformModifiers);
-        }
-        if (data.gameTime && typeof data.gameTime === 'object') {
-          this.state.gameTime = { ...data.gameTime };
-          if (this.timeSystem) {
-            this.timeSystem.loadState(this.state.gameTime);
-            this.timeSystem.updateUI?.();
-          }
-        }
-        if (typeof this.migrateWildShapeState === 'function') {
-          this.migrateWildShapeState();
-        }
-        this.state.crafting = data.crafting && typeof data.crafting === 'object'
-          ? { knownRecipes: [...(data.crafting.knownRecipes || [])] }
-          : null;
-        this.migrateCraftingState();
-
-        if (data.classData && data.className) {
-          this.state.classData = data.classData;
-          if (!this.state.classData.skillIds?.length && this.state.proficiencies.skills.length) {
-            this.state.classData.skillIds = [...this.state.proficiencies.skills];
-          }
-          this.state.classData.abilities = this.reconcileAbilities(
-            this.state.classData.abilities,
-            data.className
-          );
-          const race = this.getRaceData(this.state.raceKey);
-          const racial = this.buildRacialAbilities(race);
-          racial.forEach(ab => {
-            if (!this.state.classData.abilities.some(a => a.id === ab.id)) {
-              this.state.classData.abilities.push(
-                this.normalizeAbility(ab, data.className, this.state.classData.abilities.length)
-              );
-            }
-          });
-        } else if (this.state.className && this.data?.classes?.[this.state.className]) {
-          const cls = this.data.classes[this.state.className];
-          const resource = cls.resource || { name: 'Ресурс', max: 2, desc: '' };
-          this.state.classData = {
-            ac: cls.ac ?? 10,
-            atkBonus: cls.atkBonus ?? 0,
-            dmgRoll: cls.dmgRoll || '1d6',
-            dmgBonus: cls.dmgBonus ?? 0,
-            initBonus: cls.initBonus ?? 0,
-            stats: JSON.parse(JSON.stringify(cls.stats || {})),
-            skills: cls.skills || '',
-            resourceName: resource.name,
-            resourceDesc: resource.desc || '',
-            abilities: this.normalizeAbilities(cls.abilities, this.state.className)
-          };
-          if (!Object.keys(this.state.equipped).length) {
-            this.autoEquipStartingGear(this.state.className);
-          }
-        }
-
-        if (this.state.classData) {
-          this.recalculateCombatStats();
-        }
-
-        // Переключение экранов
-        this.hideCharacterCreator();
-        document.getElementById('class-screen').classList.add('hidden');
-        document.getElementById('name-screen').classList.add('hidden');
-        this.ensurePlayerUIVisible({ force: true });
-
-        // Обновление интерфейса
-        this.setCharName(this.state.charName);
-
-        this.renderClassDisplay(this.state.className);
-        this.migratePf2eSkillsState();
-        this.updateUI();
-
-        const resLabel = document.getElementById('resource-label');
-        if (resLabel && this.state.classData?.resourceName) {
-          resLabel.textContent = this.state.classData.resourceName;
-        }
-
-        this.showScene(this.state.scene);
-        this.migrateFavoredEnemyState();
-
+        this.setActiveSaveSlot(n);
+        this._applySavePayload(data);
         this.log('✅ Сохранение загружено', 'log-heal');
         return true;
       } catch (e) {
@@ -14322,11 +14716,90 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    deleteSave() {
-      if (confirm('Удалить сохранение игры?')) {
-        localStorage.removeItem(this.getSaveKey());
-        this.log('🗑 Сохранение удалено', 'log-dice');
+    async deleteSaveSlot(slot) {
+      const n = Math.max(1, Math.min(SAVE_SLOTS, parseInt(slot, 10) || 1));
+      if (!(await GameDialogs.confirm('', trKey('game.saveSlots.deleteConfirm', { n })))) return false;
+      localStorage.removeItem(this.getSaveKeyForSlot(n));
+      this.log('🗑 Сохранение удалено', 'log-dice');
+      this.renderSaveSlotsPanel();
+      return true;
+    },
+
+    /** @deprecated используйте deleteSaveSlot или панель слотов */
+    async deleteSave() {
+      return this.deleteSaveSlot(this.getActiveSaveSlot());
+    },
+
+    openSaveSlotsPanel() {
+      const modal = document.getElementById('save-slots-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      this.renderSaveSlotsPanel();
+      document.getElementById('panel-menu')?.classList.remove('open');
+    },
+
+    closeSaveSlotsPanel() {
+      document.getElementById('save-slots-modal')?.classList.add('hidden');
+    },
+
+    formatSaveSlotDate(iso) {
+      if (!iso) return '—';
+      try {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '—';
+        return d.toLocaleString(undefined, {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      } catch (_) {
+        return '—';
       }
+    },
+
+    renderSaveSlotsPanel() {
+      const list = document.getElementById('save-slots-list');
+      if (!list) return;
+      const slots = this.listSaveSlots();
+      list.innerHTML = slots.map((entry) => {
+        const { slot, occupied, meta, active } = entry;
+        const slotLabel = trKey('game.saveSlots.slotLabel', { n: slot });
+        const activeBadge = active
+          ? `<span class="save-slot-active">${this.escapeHtml(trKey('game.saveSlots.active'))}</span>`
+          : '';
+        let body;
+        if (!occupied || !meta) {
+          body = `<div class="save-slot-empty">${this.escapeHtml(trKey('game.saveSlots.empty'))}</div>`;
+        } else {
+          const dateStr = this.formatSaveSlotDate(meta.savedAt);
+          body = `
+            <div class="save-slot-meta">
+              <div class="save-slot-char">${this.escapeHtml(meta.charName || '—')}</div>
+              <div class="save-slot-detail">${this.escapeHtml(trKey('game.saveSlots.level', { level: meta.charLevel || 1 }))}</div>
+              <div class="save-slot-detail">${this.escapeHtml(trKey('game.saveSlots.scene', { name: meta.sceneName || meta.sceneId || '—' }))}</div>
+              <div class="save-slot-detail">${this.escapeHtml(trKey('game.saveSlots.playtime', { time: this.formatPlaytime(meta.playtimeSec) }))}</div>
+              <div class="save-slot-date">${this.escapeHtml(trKey('game.saveSlots.savedAt', { date: dateStr }))}</div>
+            </div>`;
+        }
+        const loadBtn = occupied
+          ? `<button type="button" class="choice save-slot-btn" onclick="GameEngine.loadGame(${slot}); GameEngine.closeSaveSlotsPanel();">${this.escapeHtml(trKey('game.saveSlots.load'))}</button>`
+          : '';
+        const deleteBtn = occupied
+          ? `<button type="button" class="choice panel-menu-danger save-slot-btn" onclick="GameEngine.deleteSaveSlot(${slot})">${this.escapeHtml(trKey('game.saveSlots.delete'))}</button>`
+          : '';
+        return `
+          <div class="save-slot-row${active ? ' save-slot-row-active' : ''}" data-slot="${slot}">
+            <div class="save-slot-head">
+              <span class="save-slot-title">${this.escapeHtml(slotLabel)}</span>
+              ${activeBadge}
+            </div>
+            ${body}
+            <div class="save-slot-actions">
+              <button type="button" class="start-btn save-slot-btn" onclick="GameEngine.saveToSlot(${slot}).then(function(ok){ if(ok) GameEngine.renderSaveSlotsPanel(); })">${this.escapeHtml(trKey('game.saveSlots.save'))}</button>
+              ${loadBtn}
+              ${deleteBtn}
+            </div>
+          </div>`;
+      }).join('');
     }
   });
 })();
@@ -14340,12 +14813,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return data;
   };
-  const origLoadFile = GameEngine.loadGameDataFromFile;
-  if (typeof origLoadFile === 'function') {
-    // leave file picker; patch internal assign if any
-  }
-  const origApply = GameEngine.applyGameData || GameEngine.setGameData || GameEngine.loadData;
-  // Patch common path: when state gets data from JSON.parse in load
   const origLoad = GameEngine.loadGame;
   if (typeof origLoad === 'function' && !GameEngine._dataSchemaPatched) {
     GameEngine._dataSchemaPatched = true;

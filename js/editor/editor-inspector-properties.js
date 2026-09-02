@@ -260,6 +260,11 @@
           if (m) advancedBody += m[0];
         } catch (e) { /* */ }
       }
+      if (!advancedBody.includes('insp8-raw-json')) {
+        try {
+          advancedBody += '<pre class="insp8-raw-json">' + esc(JSON.stringify(selected, null, 2)) + '</pre>';
+        } catch (e2) { /* */ }
+      }
     }
 
     return '<div class="visual-inspector insp8-inspector insp15-inspector" data-insp15="1">' +
@@ -436,13 +441,21 @@
   function applyPatches() {
     if (typeof Editor.buildVisualNodeInspectorHtml === 'function') {
       Editor._buildVisualNodeInspectorHtmlUi8 = Editor._buildVisualNodeInspectorHtmlUi8 ||
-        Editor.buildVisualNodeInspectorHtml;
-      Editor.buildVisualNodeInspectorHtml = buildVisualNodeInspectorV15;
+        Editor.buildVisualNodeInspectorHtml.bind(Editor);
+      if (Editor.hooks?.replace) {
+        Editor.hooks.replace('buildVisualNodeInspectorHtml', function buildVisualNodeInspectorHtmlV15(selected) {
+          return buildVisualNodeInspectorV15(selected);
+        }, 'editor-inspector-properties');
+      }
     }
     if (typeof Editor.buildGameUiNodeInspectorHtml === 'function') {
       Editor._buildGameUiNodeInspectorHtmlUi8 = Editor._buildGameUiNodeInspectorHtmlUi8 ||
-        Editor.buildGameUiNodeInspectorHtml;
-      Editor.buildGameUiNodeInspectorHtml = buildGameUiNodeInspectorV15;
+        Editor.buildGameUiNodeInspectorHtml.bind(Editor);
+      if (Editor.hooks?.replace) {
+        Editor.hooks.replace('buildGameUiNodeInspectorHtml', function buildGameUiNodeInspectorHtmlV15(selected) {
+          return buildGameUiNodeInspectorV15(selected);
+        }, 'editor-inspector-properties');
+      }
     }
     if (Editor.InspectorUI) {
       Object.assign(Editor.InspectorUI, {

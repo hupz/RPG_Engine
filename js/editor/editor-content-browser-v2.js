@@ -4,24 +4,32 @@
 // ============================================================
 (function attachContentBrowserV2() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
   const IDX = typeof EditorContentIndex !== 'undefined' ? EditorContentIndex : null;
 
   const CATEGORIES = [
-    { id: 'scenes', indexId: 'scenes', label: 'Сцены', icon: '🎬', createType: 'scene', openType: 'scene' },
-    { id: 'quests', indexId: 'quests', label: 'Квесты', icon: '📜', createType: 'quest', openType: 'quest' },
-    { id: 'items', indexId: 'items', label: 'Предметы', icon: '🎒', createType: 'item', openType: 'item' },
-    { id: 'npcs', indexId: 'npcs', label: 'NPC', icon: '👤', createType: 'npc', openType: 'npc' },
-    { id: 'characters', indexId: 'player_characters', label: 'Герои', icon: '🎭', createType: 'player_character', openType: 'player_character' },
-    { id: 'combat', indexId: 'enemies', label: 'Бой', icon: '⚔', createType: 'enemy', openType: 'enemy' },
-    { id: 'game_ui', indexId: 'ui_screens', label: 'Игровой UI', icon: '🖥', createType: 'ui_screen', openType: 'ui_screen' },
-    { id: 'assets', indexId: 'assets', label: 'Ассеты', icon: '📦', createType: 'asset', openType: 'asset' }
+    { id: 'scenes', indexId: 'scenes', get label() { return tr('editor.contentBrowserV2.categories.scenes'); }, icon: '🎬', createType: 'scene', openType: 'scene' },
+    { id: 'quests', indexId: 'quests', get label() { return tr('editor.contentBrowserV2.categories.quests'); }, icon: '📜', createType: 'quest', openType: 'quest' },
+    { id: 'items', indexId: 'items', get label() { return tr('editor.contentBrowserV2.categories.items'); }, icon: '🎒', createType: 'item', openType: 'item' },
+    { id: 'npcs', indexId: 'npcs', get label() { return tr('editor.contentBrowserV2.categories.npcs'); }, icon: '👤', createType: 'npc', openType: 'npc' },
+    { id: 'characters', indexId: 'player_characters', get label() { return tr('editor.contentBrowserV2.categories.characters'); }, icon: '🎭', createType: 'player_character', openType: 'player_character' },
+    { id: 'combat', indexId: 'enemies', get label() { return tr('editor.contentBrowserV2.categories.combat'); }, icon: '⚔', createType: 'enemy', openType: 'enemy' },
+    { id: 'game_ui', indexId: 'ui_screens', get label() { return tr('editor.contentBrowserV2.categories.game_ui'); }, icon: '🖥', createType: 'ui_screen', openType: 'ui_screen' },
+    { id: 'assets', indexId: 'assets', get label() { return tr('editor.contentBrowserV2.categories.assets'); }, icon: '📦', createType: 'asset', openType: 'asset' }
   ];
 
   Editor._contentBrowserCategory = Editor._contentBrowserCategory || 'scenes';
   Editor._contentBrowserQuery = Editor._contentBrowserQuery || '';
+  Editor._sceneListQuery = Editor._sceneListQuery || '';
+  Editor._sceneListFilter = Editor._sceneListFilter || 'all';
+  Editor._sceneListSort = Editor._sceneListSort || 'title';
 
   function esc(s) {
     return typeof Editor.escapeHtml === 'function'
@@ -128,11 +136,11 @@
       : buildIndex();
     const hits = IDX.filterContentEntries(all, { category: 'all', query });
     if (!hits.length) {
-      return '<p class="hint cb-no-match">Ничего не найдено по запросу «' + esc(query) + '»</p>';
+      return '<p class="hint cb-no-match">' + esc(tr('editor.contentBrowserV2.search.noMatch', { query })) + '</p>';
     }
     return (
       '<div class="cb2-global-results">' +
-      '<div class="cb2-global-results__title hint">Результаты поиска (' + hits.length + ')</div>' +
+      '<div class="cb2-global-results__title hint">' + esc(tr('editor.contentBrowserV2.search.resultsTitle', { count: hits.length })) + '</div>' +
       hits.slice(0, 40).map((row) =>
         '<button type="button" class="cb2-row cb2-row--search" data-cb2-open="' + escAttr(row.type) +
         '" data-cb2-id="' + escAttr(row.id) + '" data-cb2-title="' + escAttr(row.title) + '">' +
@@ -154,7 +162,7 @@
     if (!recent.length) return '';
     return (
       '<div class="cb2-recent">' +
-      '<div class="cb2-recent__title hint">Недавно открыто</div>' +
+      '<div class="cb2-recent__title hint">' + esc(tr('editor.contentBrowserV2.recentTitle')) + '</div>' +
       recent.map((e) =>
         '<button type="button" class="cb2-recent__item" data-cb2-open="' + escAttr(e.type) +
         '" data-cb2-id="' + escAttr(e.id) + '" data-cb2-title="' + escAttr(e.title) + '">' +
@@ -167,7 +175,7 @@
   function renderCategoryNav(activeId) {
     const cats = visibleCategories();
     return (
-      '<nav class="cb2-cat-nav" aria-label="Категории контента">' +
+      '<nav class="cb2-cat-nav" aria-label="' + escAttr(tr('editor.contentBrowserV2.categoryNavAria')) + '">' +
       cats.map((cat) => {
         const n = getCategoryCount(cat);
         const active = cat.id === activeId ? ' is-active' : '';
@@ -183,11 +191,11 @@
   function renderEmptyProjectWelcome() {
     return (
       '<div class="cb-welcome empty-state cb-empty cb2-welcome" role="status">' +
-      '<h2>Welcome to your RPG project</h2>' +
-      '<p>Start with your first scene — quests, items, and visuals live here too.</p>' +
+      '<h2>' + esc(tr('editor.contentBrowserV2.welcome.title')) + '</h2>' +
+      '<p>' + esc(tr('editor.contentBrowserV2.welcome.body')) + '</p>' +
       '<div class="cb-welcome__actions">' +
-      '<button type="button" class="btn btn-primary btn-sm" data-cb2-create="scene">Create First Scene</button>' +
-      '<button type="button" class="btn btn-ghost btn-sm" data-cb2-template="1">Choose Template</button>' +
+      '<button type="button" class="btn btn-primary btn-sm" data-cb2-create="scene">' + esc(tr('editor.contentBrowserV2.welcome.createFirstScene')) + '</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-cb2-template="1">' + esc(tr('editor.contentBrowserV2.welcome.chooseTemplate')) + '</button>' +
       '</div></div>'
     );
   }
@@ -207,7 +215,7 @@
 
   function renderCategoryList(catId) {
     const cat = categoryDef(catId);
-    if (!IDX) return '<p class="hint">Content index не загружен</p>';
+    if (!IDX) return '<p class="hint">' + esc(tr('editor.contentBrowserV2.indexNotLoaded')) + '</p>';
 
     if (catId === 'scenes') {
       return null;
@@ -221,19 +229,19 @@
 
     if (!filtered.length) {
       const createLabel = {
-        quest: '+ Создать квест',
-        item: '+ Создать предмет',
-        npc: '+ Создать NPC',
-        player_character: '+ Создать героя',
-        enemy: '+ Создать врага',
-        ui_screen: '+ Создать UI-экран',
-        asset: '+ Добавить ассет'
-      }[cat.createType] || '+ Создать';
+        quest: tr('editor.contentBrowserV2.create.quest'),
+        item: tr('editor.contentBrowserV2.create.item'),
+        npc: tr('editor.contentBrowserV2.create.npc'),
+        player_character: tr('editor.contentBrowserV2.create.player_character'),
+        enemy: tr('editor.contentBrowserV2.create.enemy'),
+        ui_screen: tr('editor.contentBrowserV2.create.ui_screen'),
+        asset: tr('editor.contentBrowserV2.create.asset')
+      }[cat.createType] || tr('editor.contentBrowserV2.create.default');
       if (typeof Editor.AuthorGuidance !== 'undefined') {
         const wrap = document.createElement('div');
         Editor.renderAuthorEmptyState(wrap, 'content_category', {
-          title: 'Нет объектов',
-          explanation: 'Категория «' + (cat.label || '') + '» пуста. Создайте первый объект.',
+          title: tr('editor.contentBrowserV2.empty.noObjects'),
+          explanation: tr('editor.contentBrowserV2.empty.categoryEmpty', { label: cat.label || '' }),
           primaryLabel: createLabel,
           action: 'create-content',
           createType: cat.createType
@@ -242,8 +250,8 @@
       }
       return (
         '<div class="cb2-empty empty-state">' +
-        '<p class="cb2-empty__title">Нет объектов</p>' +
-        '<p class="hint">Категория «' + esc(cat.label) + '» пуста.</p>' +
+        '<p class="cb2-empty__title">' + esc(tr('editor.contentBrowserV2.empty.noObjects')) + '</p>' +
+        '<p class="hint">' + esc(tr('editor.contentBrowserV2.empty.categoryEmptyShort', { label: cat.label })) + '</p>' +
         '<button type="button" class="btn btn-primary btn-sm" data-cb2-create="' + escAttr(cat.createType) + '">' +
         esc(createLabel) + '</button></div>'
       );
@@ -262,13 +270,42 @@
     const cats = visibleCategories();
     return (
       '<div class="cb2-create-wrap">' +
-      '<button type="button" class="btn btn-primary btn-sm cb2-create-toggle" id="cb2-create-toggle">+ Create</button>' +
+      '<button type="button" class="btn btn-primary btn-sm cb2-create-toggle" id="cb2-create-toggle">' + esc(tr('editor.contentBrowserV2.create.toggle')) + '</button>' +
       '<div class="cb2-create-menu" id="cb2-create-menu" hidden>' +
       cats.map((cat) =>
         '<button type="button" data-cb2-create="' + escAttr(cat.createType) + '">' +
         esc(cat.icon + ' ' + cat.label) + '</button>'
       ).join('') +
       '</div></div>'
+    );
+  }
+
+  function renderSceneFiltersPanel() {
+    const filter = Editor._sceneListFilter || 'all';
+    const sort = Editor._sceneListSort || 'title';
+    const pills = [
+      { id: 'all', label: tr('editor.contentBrowserV2.sceneFilters.all') },
+      { id: 'text', label: tr('editor.contentBrowserV2.sceneFilters.text') },
+      { id: 'visual', label: tr('editor.contentBrowserV2.sceneFilters.visual') },
+      { id: 'mixed', label: tr('editor.contentBrowserV2.sceneFilters.mixed') }
+    ].map((p) =>
+      '<button type="button" class="cb-filter-pill' + (filter === p.id ? ' is-active' : '') +
+      '" data-cb-filter="' + escAttr(p.id) + '">' + esc(p.label) + '</button>'
+    ).join('');
+    const sortOpts = [
+      { id: 'title', label: tr('editor.contentBrowserV2.sceneFilters.sortTitle') },
+      { id: 'title_desc', label: tr('editor.contentBrowserV2.sceneFilters.sortTitleDesc') },
+      { id: 'kind', label: tr('editor.contentBrowserV2.sceneFilters.sortKind') }
+    ].map((o) =>
+      '<option value="' + escAttr(o.id) + '"' + (sort === o.id ? ' selected' : '') + '>' + esc(o.label) + '</option>'
+    ).join('');
+    return (
+      '<div id="cb2-scene-filters" class="cb2-scene-filters">' +
+      '<input type="search" id="cb-scene-search" class="cb-search" placeholder="' + escAttr(tr('editor.contentBrowserV2.sceneFilters.searchPlaceholder')) + '" ' +
+      'value="' + escAttr(Editor._sceneListQuery || '') + '" autocomplete="off" />' +
+      '<div class="cb-filter-row" role="group" aria-label="' + escAttr(tr('editor.contentBrowserV2.sceneFilters.filterAria')) + '">' + pills + '</div>' +
+      '<div class="cb-sort-row"><label class="hint" for="cb-scene-sort">' + esc(tr('editor.contentBrowserV2.sceneFilters.sortLabel')) + '</label>' +
+      '<select id="cb-scene-sort" class="cb-sort">' + sortOpts + '</select></div></div>'
     );
   }
 
@@ -280,16 +317,15 @@
 
     return (
       '<div class="cb2-browser-head">' +
-      '<div class="cb-browser-title">CONTENT</div>' +
+      '<div class="cb-browser-title">' + esc(tr('editor.contentBrowserV2.chrome.contentTitle')) + '</div>' +
       '<input type="search" id="cb2-global-search" class="cb-search cb2-global-search" ' +
-      'placeholder="🔍 Поиск по проекту…" value="' + escAttr(query) + '" autocomplete="off" />' +
+      'placeholder="' + escAttr(tr('editor.contentBrowserV2.chrome.globalSearchPlaceholder')) + '" value="' + escAttr(query) + '" autocomplete="off" />' +
       renderCategoryNav(cat) +
       '<div class="cb2-section-head">' +
       '<span class="cb2-section-head__title">' + esc(catDef.label) +
       (count ? ' <span class="hint">(' + count + ')</span>' : '') +
       '</span></div>' +
-      (cat === 'scenes' && typeof Editor.renderSceneContentBrowser === 'function'
-        ? '' : '') +
+      (cat === 'scenes' ? renderSceneFiltersPanel() : '') +
       '</div>'
     );
   }
@@ -345,7 +381,6 @@
         }
         if (ev.target.id === 'cb-scene-search') {
           Editor._sceneListQuery = ev.target.value || '';
-          Editor._contentBrowserQuery = ev.target.value || '';
           if (typeof Editor.Perf?.debouncedSceneListRender === 'function') {
             Editor.Perf.debouncedSceneListRender();
           } else {
@@ -385,44 +420,6 @@
           Editor.renderSceneList?.();
         }
       });
-    }
-
-    let sceneFilters = document.getElementById('cb2-scene-filters');
-    if (cat === 'scenes') {
-      if (!sceneFilters && typeof Editor.renderContentBrowserChrome === 'function') {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = (function () {
-          const filter = Editor._sceneListFilter || 'all';
-          const sort = Editor._sceneListSort || 'title';
-          const pills = [
-            { id: 'all', label: 'Все' },
-            { id: 'text', label: 'Text' },
-            { id: 'visual', label: 'Visual' },
-            { id: 'mixed', label: 'Mixed' }
-          ].map((p) =>
-            '<button type="button" class="cb-filter-pill' + (filter === p.id ? ' is-active' : '') +
-            '" data-cb-filter="' + escAttr(p.id) + '">' + esc(p.label) + '</button>'
-          ).join('');
-          const sortOpts = [
-            { id: 'title', label: 'По имени' },
-            { id: 'title_desc', label: 'Имя (Я→А)' },
-            { id: 'kind', label: 'По типу' }
-          ].map((o) =>
-            '<option value="' + escAttr(o.id) + '"' + (sort === o.id ? ' selected' : '') + '>' + esc(o.label) + '</option>'
-          ).join('');
-          return '<div id="cb2-scene-filters" class="cb2-scene-filters">' +
-            '<input type="search" id="cb-scene-search" class="cb-search" placeholder="🔍 Поиск сцен…" ' +
-            'value="' + escAttr(Editor._sceneListQuery || Editor._contentBrowserQuery || '') + '" />' +
-            '<div class="cb-filter-row">' + pills + '</div>' +
-            '<div class="cb-sort-row"><label class="hint">Сортировка</label>' +
-            '<select id="cb-scene-sort" class="cb-sort">' + sortOpts + '</select></div></div>';
-        })();
-        sceneFilters = tmp.firstElementChild;
-        chrome.appendChild(sceneFilters);
-      }
-      if (sceneFilters) sceneFilters.hidden = false;
-    } else if (sceneFilters) {
-      sceneFilters.hidden = true;
     }
 
     let footer = document.getElementById('cb-create-footer');
@@ -574,15 +571,15 @@
     bindBrowserListV2(list);
   }
 
-  const origOpenScene = Editor.openSceneFromContentBrowser;
-  if (typeof origOpenScene === 'function') {
-    Editor.openSceneFromContentBrowser = function openSceneFromBrowserV2(sceneId) {
+  if (typeof Editor.openSceneFromContentBrowser === 'function' && Editor.hooks?.replace) {
+    let savedPrevOpenScene;
+    savedPrevOpenScene = Editor.hooks.replace('openSceneFromContentBrowser', function openSceneFromBrowserV2(sceneId) {
       const scene = Editor.data?.scenes?.[sceneId];
       const title = scene?.location || scene?.title || sceneId;
-      const ok = origOpenScene.call(this, sceneId);
+      const ok = savedPrevOpenScene ? savedPrevOpenScene.call(this, sceneId) : false;
       if (ok) trackRecentOpen('scene', sceneId, title);
       return ok;
-    };
+    }, 'editor-content-browser-v2');
   }
 
   Object.assign(Editor, {
@@ -608,9 +605,9 @@
     }, 'editor-content-browser-v2');
   }
 
-  if (typeof Editor.openContentCategory === 'function') {
-    const origOpenCat = Editor.openContentCategory.bind(Editor);
-    Editor.openContentCategory = function openContentCategoryV2(categoryId) {
+  if (typeof Editor.openContentCategory === 'function' && Editor.hooks?.replace) {
+    let savedPrevOpenCat;
+    savedPrevOpenCat = Editor.hooks.replace('openContentCategory', function openContentCategoryV2(categoryId) {
       const map = {
         scenes: 'scenes',
         visual_scenes: 'scenes',
@@ -626,8 +623,8 @@
       Editor._contentBrowserCategory = cbCat;
       Editor.switchTab?.('scenes');
       Editor.renderSceneList?.();
-      return origOpenCat(categoryId);
-    };
+      return savedPrevOpenCat ? savedPrevOpenCat.call(this, categoryId) : undefined;
+    }, 'editor-content-browser-v2');
   }
 
   function ensureStyles() {
@@ -667,6 +664,13 @@
         cursor: pointer; font-size: 12px; border-radius: 4px; }
       .cb2-create-menu button:hover { background: var(--highlight); }
       .cb2-scene-filters { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); }
+      .cb2-scene-filters .cb-search { width: 100%; font-size: 12px; padding: 5px 8px; margin-bottom: 6px; box-sizing: border-box; }
+      .cb2-scene-filters .cb-filter-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+      .cb2-scene-filters .cb-filter-pill { border: 1px solid var(--border); background: transparent; border-radius: 12px;
+        padding: 2px 8px; font-size: 11px; cursor: pointer; }
+      .cb2-scene-filters .cb-filter-pill.is-active { background: var(--highlight); font-weight: 600; }
+      .cb2-scene-filters .cb-sort-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+      .cb2-scene-filters .cb-sort { font-size: 11px; max-width: 140px; }
       #cb2-scenes-mount .cb-browser-chrome { display: none; }
       body.editor-app .cb2-browser-chrome ~ #pcm-chrome,
       body.editor-app #cb-browser-chrome.cb2-browser-chrome ~ #pcm-chrome,

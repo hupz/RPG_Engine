@@ -20,6 +20,29 @@ function read(rel) {
   return fs.readFileSync(path.join(root, rel), 'utf8');
 }
 
+function bootI18n(ctx, lang) {
+  const ru = JSON.parse(fs.readFileSync(path.join(root, 'locales/ru.json'), 'utf8'));
+  const en = JSON.parse(fs.readFileSync(path.join(root, 'locales/en.json'), 'utf8'));
+  const primary = lang === 'en' ? en : ru;
+  const fallback = ru;
+  function nestedGet(obj, key) {
+    return String(key).split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), obj);
+  }
+  function t(key, params) {
+    let val = nestedGet(primary, key);
+    if (val == null) val = nestedGet(fallback, key);
+    if (val == null) return String(key);
+    if (params && typeof params === 'object') {
+      Object.entries(params).forEach(([k, v]) => {
+        val = val.replace(new RegExp('\\{' + k + '\\}', 'g'), String(v ?? ''));
+      });
+    }
+    return val;
+  }
+  ctx.t = t;
+  ctx.I18n = { t };
+}
+
 const html = read('editor.html');
 const css = read('css/editor-design-system.css');
 const js = read('js/editor/editor-author-guidance.js');
@@ -110,6 +133,7 @@ const ctx = {
 };
 ctx.globalThis = ctx;
 ctx.window = ctx;
+bootI18n(ctx, 'ru');
 
 vm.runInNewContext(js, ctx, { filename: 'editor-author-guidance.js' });
 

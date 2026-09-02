@@ -66,10 +66,11 @@
     };
   }
 
-  if (typeof Editor.buildEditableGraphModel === 'function' && !Editor._buildEditableGraphModelPhaseG) {
-    Editor._buildEditableGraphModelPhaseG = Editor.buildEditableGraphModel.bind(Editor);
-    Editor.buildEditableGraphModel = function buildEditableGraphModelPhaseG() {
-      const model = Editor._buildEditableGraphModelPhaseG();
+  if (typeof Editor.buildEditableGraphModel === 'function' && Editor.hooks?.replace && !Editor._buildEditableGraphModelPhaseG) {
+    Editor._buildEditableGraphModelPhaseG = true;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('buildEditableGraphModel', function buildEditableGraphModelPhaseG() {
+      const model = savedPrev.call(this);
       if (!this.data?.scenes) return model;
 
       const flowEdges = collectAllFlowEdges(this.data);
@@ -94,7 +95,7 @@
       });
 
       return model;
-    };
+    }, 'editor-flow-phase-g');
   }
 
   if (typeof Editor.renderStoryFlowNodeCard === 'function' && !Editor._renderStoryFlowNodeCardPhaseG) {

@@ -53,15 +53,16 @@
   };
 
   const origPanel = Editor.updateProjectPanel;
-  if (typeof origPanel === 'function') {
-    Editor.updateProjectPanel = function () {
-      origPanel.call(this);
+  if (typeof origPanel === 'function' && Editor.hooks?.replace) {
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('updateProjectPanel', function updateProjectPanelWithTime() {
+      savedPrev.call(this);
       const p = document.getElementById('project-panel');
       if (!p || !this.data) return;
       const block = this.renderTimeSettingsBlock();
       if (!p.innerHTML.includes('⏰ Игровое время')) {
         p.innerHTML += block;
       }
-    };
+    }, 'editor-time-settings');
   }
 })();

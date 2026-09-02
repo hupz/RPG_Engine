@@ -7,112 +7,112 @@
 
   if (typeof Editor === 'undefined') return;
 
-  const GROUP_LABELS = {
-    create: 'Создание',
-    content: 'Контент',
-    tools: 'Инструменты',
-    advanced: 'Расширенные'
+  const GROUP_LABEL_KEYS = {
+    create: 'editor.nav.groups.create',
+    content: 'editor.nav.groups.content',
+    tools: 'editor.nav.groups.tools',
+    advanced: 'editor.nav.groups.advanced'
   };
 
   /** Flat sections — same ids/tabs as editor-nav-layout where possible */
   const REDESIGN_SECTIONS = [
     {
       groupId: 'create', id: 'scenes', tab: 'scenes', icon: '🎬',
-      labelKey: 'editor.nav.scenes', labelFallback: 'Сцены',
+      labelKey: 'editor.nav.scenes',
       writerVisible: true, showSceneList: true, primary: true,
       subTabs: [
-        { tab: 'scene_templates', labelKey: 'editor.tabs.scene_templates', labelFallback: 'Шаблоны', writerVisible: true }
+        { tab: 'scene_templates', labelKey: 'editor.tabs.scene_templates', writerVisible: true }
       ]
     },
     {
       groupId: 'create', id: 'story', tab: 'graph', icon: '🗺️',
-      labelKey: 'editor.tabs.graph', labelFallback: 'Сюжет',
+      labelKey: 'editor.tabs.graph',
       writerVisible: true
     },
     {
       groupId: 'create', id: 'game_ui', tab: 'game_ui', icon: '🖥',
-      labelKey: 'editor.nav.game_ui', labelFallback: 'Игровой UI',
+      labelKey: 'editor.nav.game_ui',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'items', tab: 'items', icon: '🎒',
-      labelKey: 'editor.nav.items', labelFallback: 'Предметы',
+      labelKey: 'editor.nav.items',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'quests', tab: 'quests', icon: '📜',
-      labelKey: 'editor.nav.quests', labelFallback: 'Квесты',
+      labelKey: 'editor.nav.quests',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'npcs', tab: 'npcs', icon: '👤',
-      labelKey: 'editor.nav.npcs', labelFallback: 'Персонажи',
+      labelKey: 'editor.nav.npcs',
       writerVisible: true,
       subTabs: [
-        { tab: 'player_characters', labelFallback: 'Герой', writerVisible: true }
+        { tab: 'player_characters', labelKey: 'editor.tabs.player_characters', writerVisible: true }
       ]
     },
     {
       groupId: 'content', id: 'enemies', tab: 'enemies', icon: '👹',
-      labelKey: 'editor.nav.enemies', labelFallback: 'Враги',
+      labelKey: 'editor.nav.enemies',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'world', tab: 'world', icon: '🌍',
-      labelKey: 'editor.tabs.world', labelFallback: 'Мир',
+      labelKey: 'editor.tabs.world',
       writerVisible: true,
       subTabs: [
-        { tab: 'worldmap', labelKey: 'editor.tabs.worldmap', labelFallback: 'Карта путешествий', writerVisible: true }
+        { tab: 'worldmap', labelKey: 'editor.tabs.worldmap', writerVisible: true }
       ]
     },
     {
       groupId: 'advanced', id: 'classes', tab: 'classes', icon: '🏅',
-      labelKey: 'editor.nav.classes', labelFallback: 'Классы',
+      labelKey: 'editor.nav.classes',
       subTabs: [
-        { tab: 'balance', labelKey: 'editor.tabs.balance', labelFallback: 'Баланс' },
-        { tab: 'beasts', labelKey: 'editor.tabs.beasts', labelFallback: 'Звери' },
-        { tab: 'progression', labelKey: 'editor.tabs.progression', labelFallback: 'Прогрессия' }
+        { tab: 'balance', labelKey: 'editor.tabs.balance' },
+        { tab: 'beasts', labelKey: 'editor.tabs.beasts' },
+        { tab: 'progression', labelKey: 'editor.tabs.progression' }
       ]
     },
     {
       groupId: 'advanced', id: 'abilities', tab: 'abilities', icon: '✨',
-      labelKey: 'editor.nav.abilities', labelFallback: 'Умения'
+      labelKey: 'editor.nav.abilities'
     },
     {
       groupId: 'advanced', id: 'craft', tab: 'recipes', icon: '🔨',
-      labelKey: 'editor.nav.craft', labelFallback: 'Крафт',
+      labelKey: 'editor.nav.craft',
       subTabs: [
-        { tab: 'ingredients', labelKey: 'editor.tabs.ingredients', labelFallback: 'Ингредиенты' },
-        { tab: 'recipes', labelKey: 'editor.tabs.recipes', labelFallback: 'Рецепты' }
+        { tab: 'ingredients', labelKey: 'editor.tabs.ingredients' },
+        { tab: 'recipes', labelKey: 'editor.tabs.recipes' }
       ]
     },
     {
       groupId: 'advanced', id: 'achievements', tab: 'achievements', icon: '🏆',
-      labelKey: 'editor.nav.achievements', labelFallback: 'Достижения',
+      labelKey: 'editor.nav.achievements',
       writerVisible: true
     },
     {
       groupId: 'advanced', id: 'assets', tab: 'audio', icon: '🎵',
-      labelKey: 'editor.nav.assets', labelFallback: 'Ассеты',
+      labelKey: 'editor.nav.assets',
       subTabs: [
-        { tab: 'media', labelKey: 'editor.tabs.media', labelFallback: 'Медиа', writerVisible: true },
-        { tab: 'audio', labelKey: 'editor.tabs.audio', labelFallback: 'Звук', writerVisible: true },
-        { tab: 'theme', labelKey: 'editor.tabs.theme', labelFallback: 'Тема' }
+        { tab: 'media', labelKey: 'editor.tabs.media', writerVisible: true },
+        { tab: 'audio', labelKey: 'editor.tabs.audio', writerVisible: true },
+        { tab: 'theme', labelKey: 'editor.tabs.theme' }
       ]
     },
     {
       groupId: 'advanced', id: 'settings', tab: 'json', icon: '⚙️',
-      labelKey: 'editor.nav.settings', labelFallback: 'Настройки',
+      labelKey: 'editor.nav.settings',
       subTabs: [
-        { tab: 'json', labelKey: 'editor.tabs.json', labelFallback: 'Данные' },
-        { tab: 'variables', labelKey: 'editor.tabs.variables', labelFallback: 'Переменные', writerVisible: true },
-        { tab: 'prefabs', labelKey: 'editor.tabs.prefabs', labelFallback: 'Префабы', writerVisible: true },
-        { tab: 'actions', labelKey: 'editor.tabs.actions', labelFallback: 'Действия' },
-        { tab: 'snippets', labelKey: 'editor.tabs.snippets', labelFallback: 'Сниппеты', writerVisible: true },
-        { tab: 'reputation', labelKey: 'editor.tabs.reputation', labelFallback: 'Репутация' },
-        { tab: 'analytics', labelKey: 'editor.tabs.analytics', labelFallback: 'Аналитика' },
-        { tab: 'climate', labelKey: 'editor.tabs.climate', labelFallback: 'Климат' },
-        { tab: 'races', labelKey: 'editor.tabs.races', labelFallback: 'Расы' }
+        { tab: 'json', labelKey: 'editor.tabs.json' },
+        { tab: 'variables', labelKey: 'editor.tabs.variables', writerVisible: true },
+        { tab: 'prefabs', labelKey: 'editor.tabs.prefabs', writerVisible: true },
+        { tab: 'actions', labelKey: 'editor.tabs.actions' },
+        { tab: 'snippets', labelKey: 'editor.tabs.snippets', writerVisible: true },
+        { tab: 'reputation', labelKey: 'editor.tabs.reputation' },
+        { tab: 'analytics', labelKey: 'editor.tabs.analytics' },
+        { tab: 'climate', labelKey: 'editor.tabs.climate' },
+        { tab: 'races', labelKey: 'editor.tabs.races' }
       ]
     }
   ];
@@ -121,8 +121,8 @@
     {
       id: 'validate',
       icon: '🔍',
-      label: 'Проверить',
-      title: 'Проверить проект',
+      labelKey: 'editor.nav.tools.validate.label',
+      titleKey: 'editor.nav.tools.validate.title',
       run() {
         if (typeof Editor.runProjectValidation === 'function') Editor.runProjectValidation();
       }
@@ -130,8 +130,8 @@
     {
       id: 'preview',
       icon: '▶',
-      label: 'Preview',
-      title: 'Play current scene or project start in isolated test mode',
+      labelKey: 'editor.nav.tools.preview.label',
+      titleKey: 'editor.nav.tools.preview.title',
       run() {
         if (typeof Editor.openPreviewMenu === 'function') Editor.openPreviewMenu();
         else if (typeof Editor.testCurrentScene === 'function') Editor.testCurrentScene();
@@ -141,13 +141,22 @@
     {
       id: 'export',
       icon: '💾',
-      label: 'Экспорт',
-      title: 'Сохранить или экспортировать проект',
+      labelKey: 'editor.nav.tools.export.label',
+      titleKey: 'editor.nav.tools.export.title',
       run() {
         const btn = document.getElementById('export-menu-toggle');
         if (btn) btn.click();
       }
     }
+  ];
+
+  const NAV_COMMAND_SECTIONS = [
+    { id: 'nav.scenes', tab: 'scenes', titleKey: 'editor.nav.scenes', keywords: ['scene', 'scenes'] },
+    { id: 'nav.story', tab: 'graph', titleKey: 'editor.nav.commands.story', keywords: ['story', 'graph'] },
+    { id: 'nav.game_ui', tab: 'game_ui', titleKey: 'editor.nav.game_ui', keywords: ['ui', 'hud'] },
+    { id: 'nav.quests', tab: 'quests', titleKey: 'editor.nav.quests', keywords: ['quest', 'quests'] },
+    { id: 'nav.items', tab: 'items', titleKey: 'editor.nav.items', keywords: ['item', 'items'] },
+    { id: 'nav.npcs', tab: 'npcs', titleKey: 'editor.nav.npcs', keywords: ['npc', 'character'] }
   ];
 
   const TAB_TO_SECTION = {};
@@ -162,11 +171,26 @@
     return typeof t === 'function' ? t(key) : key;
   }
 
+  function groupLabel(groupId) {
+    return tr(GROUP_LABEL_KEYS[groupId] || groupId);
+  }
+
+  function resolveTool(tool) {
+    return {
+      id: tool.id,
+      icon: tool.icon,
+      label: tr(tool.labelKey),
+      title: tr(tool.titleKey),
+      run: tool.run
+    };
+  }
+
   function labelFor(entry) {
-    const translated = entry.labelKey ? tr(entry.labelKey) : '';
+    if (!entry.labelKey) return entry.id || '';
+    const translated = tr(entry.labelKey);
     let label = (translated && translated !== entry.labelKey)
       ? translated
-      : (entry.labelFallback || entry.labelKey || entry.id || '');
+      : (entry.id || '');
     if (entry.icon && typeof label === 'string' && label.startsWith(entry.icon)) {
       label = label.slice(entry.icon.length).trim();
     }
@@ -238,10 +262,11 @@
       if (!isGroupVisible(groupId)) return;
 
       html += '<div class="editor-nav-group" data-nav-group="' + groupId + '">';
-      html += '<div class="editor-nav-group__label">' + GROUP_LABELS[groupId] + '</div>';
+      html += '<div class="editor-nav-group__label">' + groupLabel(groupId) + '</div>';
 
       if (groupId === 'tools') {
-        TOOL_ACTIONS.forEach((tool) => {
+        TOOL_ACTIONS.forEach((toolDef) => {
+          const tool = resolveTool(toolDef);
           html += '<button type="button" class="editor-nav-item editor-nav-item--tool" data-tool-id="' + tool.id + '"' +
             ' title="' + escAttr(tool.title) + '" aria-label="' + escAttr(tool.title) + '">' +
             '<span class="editor-nav-icon" aria-hidden="true">' + tool.icon + '</span>' +
@@ -278,8 +303,8 @@
 
     navList.querySelectorAll('[data-tool-id]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const tool = TOOL_ACTIONS.find((t) => t.id === btn.dataset.toolId);
-        if (tool) tool.run();
+        const toolDef = TOOL_ACTIONS.find((t) => t.id === btn.dataset.toolId);
+        if (toolDef) toolDef.run();
       });
     });
   }
@@ -298,15 +323,17 @@
     let cta = '';
 
     if (!hasProject) {
-      message = 'Загрузите проект или создайте новый на дашборде.';
+      message = tr('editor.nav.onboarding.noProject');
     } else if (scenes.length === 0) {
-      message = 'Создайте первую сцену — с неё начинается игра.';
-      cta = '<button type="button" class="btn btn-primary btn-sm" onclick="Editor.openSceneWizard()">+ Первая сцена</button>';
+      message = tr('editor.nav.onboarding.noScenes');
+      cta = '<button type="button" class="btn btn-primary btn-sm" onclick="Editor.openSceneWizard()">' +
+        escAttr(tr('editor.nav.onboarding.firstSceneBtn')) + '</button>';
     } else if (Editor.currentTab === 'scenes' && !current && openCount === 0) {
-      message = 'Откройте сцену из списка слева или создайте новую.';
-      cta = '<button type="button" class="btn btn-secondary btn-sm" onclick="Editor.openSceneWizard()">+ Новая сцена</button>';
+      message = tr('editor.nav.onboarding.openScene');
+      cta = '<button type="button" class="btn btn-secondary btn-sm" onclick="Editor.openSceneWizard()">' +
+        escAttr(tr('editor.nav.onboarding.newSceneBtn')) + '</button>';
     } else if (Editor.currentTab === 'scenes' && data.startScene && current === data.startScene) {
-      message = 'Начните с стартовой сцены — отредактируйте текст и выборы.';
+      message = tr('editor.nav.onboarding.startScene');
     } else {
       host.hidden = true;
       host.innerHTML = '';
@@ -348,29 +375,24 @@
 
   function registerNavCommands() {
     if (!Editor.commands?.register) return;
-    TOOL_ACTIONS.forEach((tool) => {
+    const toolsCategory = tr('editor.nav.commands.categoryTools');
+    const navigationCategory = tr('editor.commandPaletteV2.categories.navigation');
+    TOOL_ACTIONS.forEach((toolDef) => {
+      const tool = resolveTool(toolDef);
       Editor.commands.register({
         id: 'nav.tool.' + tool.id,
         title: tool.icon + ' ' + tool.label,
-        category: 'Инструменты',
-        keywords: [tool.id, tool.label, 'навигация'],
-        action: tool.run
+        category: toolsCategory,
+        keywords: [tool.id, tool.label],
+        action: toolDef.run
       });
     });
-    const navSections = [
-      { id: 'nav.scenes', tab: 'scenes', title: 'Сцены', kw: ['сцена', 'scene'] },
-      { id: 'nav.story', tab: 'graph', title: 'Сюжет / карта истории', kw: ['сюжет', 'story', 'граф'] },
-      { id: 'nav.game_ui', tab: 'game_ui', title: 'Игровой UI', kw: ['ui', 'hud'] },
-      { id: 'nav.quests', tab: 'quests', title: 'Квесты', kw: ['quest'] },
-      { id: 'nav.items', tab: 'items', title: 'Предметы', kw: ['item'] },
-      { id: 'nav.npcs', tab: 'npcs', title: 'Персонажи', kw: ['npc', 'персонаж'] }
-    ];
-    navSections.forEach((n) => {
+    NAV_COMMAND_SECTIONS.forEach((n) => {
       Editor.commands.register({
         id: n.id,
-        title: n.title,
-        category: 'Навигация',
-        keywords: n.kw,
+        title: tr(n.titleKey),
+        category: navigationCategory,
+        keywords: n.keywords,
         action() {
           if (typeof Editor.switchTab === 'function') Editor.switchTab(n.tab);
         }
@@ -435,7 +457,7 @@
     getNavGroups() {
       return ['create', 'content', 'tools', 'advanced'].map((id) => ({
         id,
-        label: GROUP_LABELS[id],
+        label: groupLabel(id),
         visible: isGroupVisible(id)
       }));
     },
@@ -445,7 +467,7 @@
     },
 
     getNavToolActions() {
-      return TOOL_ACTIONS.slice();
+      return TOOL_ACTIONS.map(resolveTool);
     },
 
     initEditorNav() {
@@ -461,9 +483,8 @@
   });
 
   // Re-use nav-layout helpers for subnav — patch visibility checks to use redesign sections
-  const origApplyNav = Editor.applyNavEditorMode;
-  if (typeof origApplyNav === 'function') {
-    Editor.applyNavEditorMode = function patchedApplyNavEditorMode() {
+  if (typeof Editor.applyNavEditorMode === 'function' && Editor.hooks?.replace) {
+    Editor.hooks.replace('applyNavEditorMode', function patchedApplyNavEditorMode() {
       document.querySelectorAll('.editor-nav-item[data-section-id]').forEach((btn) => {
         const section = findSectionById(btn.dataset.sectionId);
         if (!section) return;
@@ -491,7 +512,7 @@
         Editor.syncNavLayout(Editor.currentTab);
       }
       syncOnboarding();
-    };
+    }, 'editor-nav-redesign');
   }
 
   if (Editor.hooks) {
@@ -528,10 +549,10 @@
     nav.addEventListener('click', (ev) => {
       const toolBtn = ev.target.closest('.editor-nav-item[data-tool-id]');
       if (toolBtn) {
-        const tool = TOOL_ACTIONS.find((t) => t.id === toolBtn.dataset.toolId);
-        if (tool && typeof tool.run === 'function') {
+        const toolDef = TOOL_ACTIONS.find((t) => t.id === toolBtn.dataset.toolId);
+        if (toolDef && typeof toolDef.run === 'function') {
           ev.preventDefault();
-          tool.run();
+          toolDef.run();
         }
         return;
       }

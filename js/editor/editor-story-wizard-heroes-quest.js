@@ -4,48 +4,21 @@
 (function attachStoryWizardHeroesQuest(global) {
   'use strict';
 
-  const NPC_ROLES = Object.freeze([
-    { id: 'quest_giver', label: 'Квестодатель', icon: '📜' },
-    { id: 'merchant', label: 'Торговец', icon: '🛒' },
-    { id: 'informant', label: 'Источник информации', icon: '💡' },
-    { id: 'antagonist', label: 'Противник', icon: '⚔️' }
-  ]);
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
-  const ROLE_PHRASES = Object.freeze({
-    quest_giver: 'Мне нужна твоя помощь, путник. У меня есть дело для тебя.',
-    merchant: 'Загляни — товар свежий, цены честные.',
-    informant: 'Слышал кое-что важное. Может, пригодится.',
-    antagonist: 'Тебе здесь не рады. Убирайся, пока цел.'
+  const NPC_ROLE_IDS = Object.freeze(['quest_giver', 'merchant', 'informant', 'antagonist']);
+
+  const NPC_ROLE_ICONS = Object.freeze({
+    quest_giver: '📜', merchant: '🛒', informant: '💡', antagonist: '⚔️'
   });
 
-  const DEFAULT_NPCS_BY_GENRE = Object.freeze({
-    fantasy: [
-      { name: 'Старейшина', role: 'quest_giver', description: 'Правит деревней и даёт поручения' },
-      { name: 'Торговец', role: 'merchant', description: 'Продаёт зелья и снаряжение' },
-      { name: 'Странник', role: 'informant', description: 'Знает тропы и слухи' }
-    ],
-    horror: [
-      { name: 'Хозяин дома', role: 'quest_giver', description: 'Просит разобраться с тенями' },
-      { name: 'Сторож', role: 'informant', description: 'Видел странное у колодца' },
-      { name: 'Незнакомец', role: 'antagonist', description: 'Пугает и мешает расследованию' }
-    ],
-    detective: [
-      { name: 'Инспектор', role: 'quest_giver', description: 'Поручает первое дело' },
-      { name: 'Свидетель', role: 'informant', description: 'Видел подозрительное' },
-      { name: 'Лавочник', role: 'merchant', description: 'Торгует уликами и кофе' }
-    ],
-    survival: [
-      { name: 'Старший лагеря', role: 'quest_giver', description: 'Организует выживание группы' },
-      { name: 'Разведчик', role: 'informant', description: 'Знает безопасные тропы' },
-      { name: 'Мародёр', role: 'antagonist', description: 'Угрожает запасами' }
-    ]
-  });
+  const REWARD_KIND_IDS = Object.freeze(['gold', 'item', 'reputation']);
 
-  const REWARD_KINDS = Object.freeze([
-    { id: 'gold', label: 'Золото' },
-    { id: 'item', label: 'Предмет' },
-    { id: 'reputation', label: 'Репутация' }
-  ]);
+  const DEFAULT_NPC_GENRES = Object.freeze(['fantasy', 'horror', 'detective', 'survival']);
 
   function slugId(editor, name, bucket) {
     if (editor && typeof editor.slugifyId === 'function') {
@@ -54,18 +27,39 @@
     return String(name || 'id').toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 32) || 'id';
   }
 
+  function localeValue(key) {
+    if (typeof I18n !== 'undefined' && I18n._strings) {
+      return key.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), I18n._strings);
+    }
+    return undefined;
+  }
+
+  function defaultNpcsForGenre(genre) {
+    const g = DEFAULT_NPC_GENRES.includes(genre) ? genre : 'fantasy';
+    const list = localeValue('editor.storyWizard.heroesQuest.defaultNpcs.' + g);
+    if (Array.isArray(list)) return JSON.parse(JSON.stringify(list));
+    return [
+      { name: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.0.name'), role: 'quest_giver', description: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.0.description') },
+      { name: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.1.name'), role: 'merchant', description: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.1.description') },
+      { name: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.2.name'), role: 'informant', description: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.2.description') }
+    ];
+  }
+
   function initHeroesQuestDraft(draft) {
     if (!draft.hero) {
-      draft.hero = { name: 'Странник', description: 'Главный герой вашей истории' };
+      draft.hero = {
+        name: tr('editor.storyWizard.heroesQuest.defaults.heroName'),
+        description: tr('editor.storyWizard.heroesQuest.defaults.heroDescription')
+      };
     }
     if (!Array.isArray(draft.npcs) || !draft.npcs.length) {
       const genre = draft.genre || 'fantasy';
-      draft.npcs = JSON.parse(JSON.stringify(DEFAULT_NPCS_BY_GENRE[genre] || DEFAULT_NPCS_BY_GENRE.fantasy));
+      draft.npcs = defaultNpcsForGenre(genre);
     }
     if (!draft.quest) {
       draft.quest = {
         goal: 'talk',
-        title: 'Первое задание',
+        title: tr('editor.storyWizard.heroesQuest.defaults.questTitle'),
         npcId: '',
         itemId: '',
         enemyId: '',
@@ -109,7 +103,9 @@
   }
 
   function defaultPhrase(role) {
-    return ROLE_PHRASES[role] || '…';
+    const key = 'editor.storyWizard.heroesQuest.phrases.' + role;
+    const val = tr(key);
+    return val === key ? tr('editor.storyWizard.heroesQuest.phrases.fallback') : val;
   }
 
   function attachNpcToScene(editor, sceneId, npcId, npcName, phrase) {
@@ -143,7 +139,7 @@
     if (draft.heroesApplied) removeWizardNpcs(editor, draft);
 
     const balance = editor.data.meta?.storyBalance || { gold: 15, hp: 20 };
-    const heroName = (draft.hero.name || 'Странник').trim();
+    const heroName = (draft.hero.name || tr('editor.storyWizard.heroesQuest.defaults.heroName')).trim();
     const heroId = slugId(editor, heroName, editor.data.playerCharacters);
     editor.data.playerCharacters[heroId] = {
       id: heroId,
@@ -159,14 +155,14 @@
     const createdNpcIds = [];
 
     (draft.npcs || []).forEach((npcDraft) => {
-      const name = (npcDraft.name || 'Персонаж').trim();
+      const name = (npcDraft.name || tr('editor.storyWizard.heroesQuest.defaults.npcFallback')).trim();
       if (!name) return;
       const id = slugId(editor, name, editor.data.npcs);
       const phrase = defaultPhrase(npcDraft.role);
       editor.data.npcs[id] = {
         id,
         name,
-        icon: (NPC_ROLES.find((r) => r.id === npcDraft.role) || {}).icon || '👤',
+        icon: NPC_ROLE_ICONS[npcDraft.role] || '👤',
         description: npcDraft.description || '',
         location: editor.data.scenes[sceneMap[npcDraft.role]]?.location || '',
         attitude: npcDraft.role === 'antagonist' ? 'hostile' : 'friendly',
@@ -205,20 +201,20 @@
     if (!editor.data.reputation) editor.data.reputation = {};
 
     const itemNames = {
-      fantasy: 'Старый амулет',
-      horror: 'Потёртая записка',
-      detective: 'Улика',
-      survival: 'Запас провизии'
+      fantasy: tr('editor.storyWizard.heroesQuest.items.fantasy'),
+      horror: tr('editor.storyWizard.heroesQuest.items.horror'),
+      detective: tr('editor.storyWizard.heroesQuest.items.detective'),
+      survival: tr('editor.storyWizard.heroesQuest.items.survival')
     };
     const enemyNames = {
-      fantasy: 'Разбойник',
-      horror: 'Тень',
-      detective: 'Подозреваемый',
-      survival: 'Дикий зверь'
+      fantasy: tr('editor.storyWizard.heroesQuest.enemies.fantasy'),
+      horror: tr('editor.storyWizard.heroesQuest.enemies.horror'),
+      detective: tr('editor.storyWizard.heroesQuest.enemies.detective'),
+      survival: tr('editor.storyWizard.heroesQuest.enemies.survival')
     };
 
     if (['find', 'collect', 'deliver'].includes(q.goal) && !q.itemId) {
-      const iname = itemNames[genre] || 'Предмет';
+      const iname = itemNames[genre] || tr('editor.storyWizard.heroesQuest.items.fallback');
       const iid = slugId(editor, iname, editor.data.items);
       if (!editor.data.items[iid]) {
         editor.data.items[iid] = { id: iid, name: iname, type: 'misc', desc: iname };
@@ -226,7 +222,7 @@
       q.itemId = iid;
     }
     if (q.goal === 'kill' && !q.enemyId) {
-      const ename = enemyNames[genre] || 'Враг';
+      const ename = enemyNames[genre] || tr('editor.storyWizard.heroesQuest.enemies.fallback');
       const eid = slugId(editor, ename, editor.data.enemies);
       if (!editor.data.enemies[eid]) {
         editor.data.enemies[eid] = {
@@ -240,15 +236,20 @@
       q.sceneId = ids[ids.length - 1] || editor.data.startScene;
     }
     if (!editor.data.reputation.village) {
-      editor.data.reputation.village = { name: 'Местные жители' };
+      editor.data.reputation.village = { name: tr('editor.storyWizard.heroesQuest.defaults.reputationVillage') };
     }
     if (q.rewardKind === 'reputation' && !q.rewardRepId) {
       q.rewardRepId = 'village';
     }
     if (q.rewardKind === 'item' && !q.rewardItemId) {
-      const rid = slugId(editor, 'Награда', editor.data.items);
+      const rid = slugId(editor, tr('editor.storyWizard.heroesQuest.defaults.rewardPlaceholder'), editor.data.items);
       if (!editor.data.items[rid]) {
-        editor.data.items[rid] = { id: rid, name: 'Награда за подвиг', type: 'misc', desc: 'За выполненное задание' };
+        editor.data.items[rid] = {
+          id: rid,
+          name: tr('editor.storyWizard.heroesQuest.defaults.rewardItemName'),
+          type: 'misc',
+          desc: tr('editor.storyWizard.heroesQuest.defaults.rewardItemDesc')
+        };
       }
       q.rewardItemId = rid;
     }
@@ -260,7 +261,7 @@
     const balance = editor?.data?.meta?.storyBalance || {};
     return {
       goal: q.goal || 'talk',
-      title: q.title || 'Первое задание',
+      title: q.title || tr('editor.storyWizard.heroesQuest.defaults.questTitle'),
       npcId: q.npcId || giver?.id || '',
       itemId: q.itemId || '',
       enemyId: q.enemyId || '',
@@ -285,7 +286,9 @@
     scene.choices = scene.choices.filter((c) => !(c.questSet && c.questSet.questId === questId));
     const dest = scene.choices[0]?.to || scene.id;
     scene.choices.unshift({
-      text: 'Принять: ' + (title || 'задание'),
+      text: tr('editor.storyWizard.heroesQuest.defaults.acceptQuest', {
+        title: title || tr('editor.storyWizard.heroesQuest.defaults.acceptQuestFallback')
+      }),
       to: dest,
       icon: '📜',
       once: true,
@@ -369,11 +372,18 @@
   }
 
   function listNpcRoles() {
-    return NPC_ROLES.slice();
+    return NPC_ROLE_IDS.map((id) => ({
+      id,
+      label: tr('editor.storyWizard.heroesQuest.roles.' + id),
+      icon: NPC_ROLE_ICONS[id]
+    }));
   }
 
   function listRewardKinds() {
-    return REWARD_KINDS.slice();
+    return REWARD_KIND_IDS.map((id) => ({
+      id,
+      label: tr('editor.storyWizard.heroesQuest.rewards.' + id)
+    }));
   }
 
   function listQuestGoals() {
@@ -382,8 +392,9 @@
   }
 
   const api = {
-    NPC_ROLES,
-    ROLE_PHRASES,
+    NPC_ROLE_IDS,
+    NPC_ROLE_ICONS,
+    REWARD_KIND_IDS,
     initHeroesQuestDraft,
     applyHeroesStep,
     applyQuestStep,

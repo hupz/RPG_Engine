@@ -4,33 +4,56 @@
 // ============================================================
 (function attachCommandPaletteV2() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined' || !Editor.commands) return;
 
   const Commands = Editor.commands;
 
-  const CATEGORIES = Object.freeze({
-    navigation: 'Навигация',
-    create: 'Создание',
-    project: 'Проект',
-    preview: 'Превью',
-    validation: 'Проверка',
-    export: 'Экспорт',
-    objects: 'Объекты',
-    recent: 'Недавние'
+  const CATEGORY_KEYS = Object.freeze({
+    navigation: 'editor.commandPaletteV2.categories.navigation',
+    create: 'editor.commandPaletteV2.categories.create',
+    project: 'editor.commandPaletteV2.categories.project',
+    preview: 'editor.commandPaletteV2.categories.preview',
+    validation: 'editor.commandPaletteV2.categories.validation',
+    export: 'editor.commandPaletteV2.categories.export',
+    objects: 'editor.commandPaletteV2.categories.objects',
+    recent: 'editor.commandPaletteV2.categories.recent'
   });
 
-  const TYPE_LABELS = Object.freeze({
-    scene: 'Сцена',
-    visual_scene: 'Сцена',
-    quest: 'Квест',
-    item: 'Предмет',
-    npc: 'NPC',
-    player_character: 'Герой',
-    enemy: 'Враг',
-    ui_screen: 'Game UI',
-    asset: 'Ассет'
+  const TYPE_LABEL_KEYS = Object.freeze({
+    scene: 'editor.commandPaletteV2.typeLabels.scene',
+    visual_scene: 'editor.commandPaletteV2.typeLabels.visual_scene',
+    quest: 'editor.commandPaletteV2.typeLabels.quest',
+    item: 'editor.commandPaletteV2.typeLabels.item',
+    npc: 'editor.commandPaletteV2.typeLabels.npc',
+    player_character: 'editor.commandPaletteV2.typeLabels.player_character',
+    enemy: 'editor.commandPaletteV2.typeLabels.enemy',
+    ui_screen: 'editor.commandPaletteV2.typeLabels.ui_screen',
+    asset: 'editor.commandPaletteV2.typeLabels.asset'
   });
+
+  const CATEGORIES = {};
+  Object.keys(CATEGORY_KEYS).forEach((id) => {
+    Object.defineProperty(CATEGORIES, id, {
+      get() { return tr(CATEGORY_KEYS[id]); },
+      enumerable: true
+    });
+  });
+  Object.freeze(CATEGORIES);
+
+  const TYPE_LABELS = {};
+  Object.keys(TYPE_LABEL_KEYS).forEach((id) => {
+    Object.defineProperty(TYPE_LABELS, id, {
+      get() { return tr(TYPE_LABEL_KEYS[id]); },
+      enumerable: true
+    });
+  });
+  Object.freeze(TYPE_LABELS);
 
   function safe(fn) {
     return function () {
@@ -148,7 +171,7 @@
       if (item.group === 'objects' && item.title && !item.subtitle) {
         const m = String(item.id || '').match(/^entity:([^:]+):/);
         const kind = m ? m[1] : item.kind;
-        item.subtitle = TYPE_LABELS[kind] || item.kind || 'Объект';
+        item.subtitle = TYPE_LABELS[kind] || item.kind || tr('editor.commandPaletteV2.defaultObject');
       }
       if (item.group === 'recent') item.category = CATEGORIES.recent;
       if (item.group === 'objects') item.category = CATEGORIES.objects;
@@ -170,7 +193,7 @@
   Commands.registerMany([
     {
       id: 'nav.go_scene',
-      title: 'Перейти к сцене',
+      title: tr('editor.commandPaletteV2.commands.goScene'),
       category: CATEGORIES.navigation,
       keywords: ['go', 'scene', 'сцена', 'goto'],
       action: safe(function () {
@@ -185,7 +208,7 @@
     },
     {
       id: 'nav.content_browser',
-      title: 'Открыть Content Browser',
+      title: tr('editor.commandPaletteV2.commands.contentBrowser'),
       category: CATEGORIES.navigation,
       keywords: ['content', 'browser', 'контент', 'список'],
       action: safe(function () {
@@ -195,7 +218,7 @@
     },
     {
       id: 'nav.project_graph',
-      title: 'Открыть карту сюжета',
+      title: tr('editor.commandPaletteV2.commands.projectGraph'),
       category: CATEGORIES.navigation,
       keywords: ['graph', 'story', 'граф', 'сюжет'],
       action: safe(function () {
@@ -204,7 +227,7 @@
     },
     {
       id: 'ui16.create.scene',
-      title: 'Создать сцену',
+      title: tr('editor.commandPaletteV2.commands.createScene'),
       category: CATEGORIES.create,
       keywords: ['create', 'scene', 'новая сцена'],
       action: safe(function () {
@@ -214,7 +237,7 @@
     },
     {
       id: 'ui16.create.item',
-      title: 'Создать предмет',
+      title: tr('editor.commandPaletteV2.commands.createItem'),
       category: CATEGORIES.create,
       keywords: ['create', 'item', 'предмет'],
       action: safe(function () {
@@ -228,7 +251,7 @@
     },
     {
       id: 'ui16.create.quest',
-      title: 'Создать квест',
+      title: tr('editor.commandPaletteV2.commands.createQuest'),
       category: CATEGORIES.create,
       keywords: ['create', 'quest', 'квест'],
       action: safe(function () {
@@ -243,7 +266,7 @@
     },
     {
       id: 'ui16.validate.project',
-      title: 'Проверить проект',
+      title: tr('editor.commandPaletteV2.commands.projectValidate'),
       category: CATEGORIES.validation,
       keywords: ['validate', 'lint', 'проверка', 'ошибки'],
       action: safe(function () {
@@ -254,7 +277,7 @@
     },
     {
       id: 'ui16.preview.project',
-      title: 'Превью проекта',
+      title: tr('editor.commandPaletteV2.commands.previewProject'),
       category: CATEGORIES.preview,
       keywords: ['preview', 'play', 'test', 'превью', 'тест'],
       action: safe(function () {
@@ -267,7 +290,7 @@
     },
     {
       id: 'ui16.export.project',
-      title: 'Экспорт проекта',
+      title: tr('editor.commandPaletteV2.commands.exportProject'),
       category: CATEGORIES.export,
       keywords: ['export', 'save', 'экспорт', 'сохранить'],
       action: safe(function () {
@@ -310,8 +333,8 @@
     }
   });
 
-  if (typeof Editor.openProjectSearch === 'function') {
-    Editor.openProjectSearch = function openProjectSearchViaPalette(prefill) {
+  if (typeof Editor.openProjectSearch === 'function' && Editor.hooks?.replace) {
+    Editor.hooks.replace('openProjectSearch', function openProjectSearchViaPalette(prefill) {
       if (typeof Editor.openCommandPalette === 'function') {
         Editor.openCommandPalette(prefill);
         return;
@@ -319,7 +342,7 @@
       Editor._searchOpen = true;
       Editor._searchQuery = prefill != null ? String(prefill) : '';
       Editor.renderProjectSearchModal?.();
-    };
+    }, 'editor-command-palette-v2');
   }
 
   Editor.getCommandPaletteCategories = function () {

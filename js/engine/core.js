@@ -1487,6 +1487,11 @@ Object.assign(GameEngine, {
 
     /** Нет сохранения или в нём нет готового персонажа */
     needsCharacterCreation() {
+      if (typeof this.resolveStartupSaveSlot === 'function') {
+        const slot = this.resolveStartupSaveSlot();
+        this.setActiveSaveSlot(slot);
+        return !this.isSaveSlotOccupied(slot);
+      }
       const raw = localStorage.getItem(this.getSaveKey());
       if (!raw) return true;
       try {
@@ -1514,15 +1519,24 @@ Object.assign(GameEngine, {
     continueNormalStartup() {
       document.getElementById('char-creator-screen')?.classList.add('hidden');
       document.getElementById('main')?.classList.remove('hidden');
-      const saved = localStorage.getItem(this.getSaveKey());
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          if (data.charName?.trim() && data.className) {
-            this.loadGame();
-            return;
-          }
-        } catch (_) { /* ignore */ }
+      if (typeof this.resolveStartupSaveSlot === 'function') {
+        const slot = this.resolveStartupSaveSlot();
+        this.setActiveSaveSlot(slot);
+        if (this.isSaveSlotOccupied(slot)) {
+          this.loadGame(slot);
+          return;
+        }
+      } else {
+        const saved = localStorage.getItem(this.getSaveKey());
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            if (data.charName?.trim() && data.className) {
+              this.loadGame();
+              return;
+            }
+          } catch (_) { /* ignore */ }
+        }
       }
       document.getElementById('class-screen')?.classList.remove('hidden');
       this.renderClassSelection();
@@ -1549,7 +1563,11 @@ Object.assign(GameEngine, {
           this.applyGameData(data, 'file-picker');
           this.log('✅ Контент загружен: ' + (data.meta?.title || file.name), 'log-heal');
         } catch (err) {
-          alert('❌ Ошибка чтения JSON: ' + err.message);
+          const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+          await GameDialogs.alert(
+            tr('common.error'),
+            tr('game.dialog.jsonReadError', { message: err.message })
+          );
         }
       };
       input.click();
@@ -1572,6 +1590,9 @@ Object.assign(GameEngine, {
     },
 
     getSaveKey() {
+      if (typeof this.getSaveKeyForSlot === 'function') {
+        return this.getSaveKeyForSlot(this.getActiveSaveSlot?.() || 1);
+      }
       return this.getActiveCampaign().saveKey;
     },
 
@@ -1580,14 +1601,19 @@ Object.assign(GameEngine, {
     },
 
     hasCampaignSave(campaign) {
+      const slots = typeof this.SAVE_SLOTS === 'number' ? this.SAVE_SLOTS : 1;
       try {
-        const raw = localStorage.getItem(campaign.saveKey);
-        if (!raw) return false;
-        const save = JSON.parse(raw);
-        return !!(save.charName?.trim() && save.className);
+        for (let slot = 1; slot <= slots; slot++) {
+          const key = slot === 1 ? campaign.saveKey : `${campaign.saveKey}#slot${slot}`;
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const save = JSON.parse(raw);
+          if (save.charName?.trim() && save.className) return true;
+        }
       } catch (_) {
         return false;
       }
+      return false;
     },
 
     loadScriptOnce(src, globalName) {
@@ -1838,9 +1864,11 @@ Object.assign(GameEngine, {
       }
     },
 
-    returnToCampaignPicker() {
-      if (this.state.charName?.trim() && !confirm('Вернуться к выбору игры? Несохранённый прогресс может быть потерян.')) {
-        return;
+    async returnToCampaignPicker() {
+      const tr = (k, p) => (typeof t === 'function' ? t(k, p) : k);
+      if (this.state.charName?.trim()) {
+        const ok = await GameDialogs.confirm('', tr('game.dialog.returnToPicker'));
+        if (!ok) return;
       }
       document.getElementById('char-creator-screen')?.classList.add('hidden');
       document.getElementById('game-content')?.classList.add('hidden');
@@ -2478,6 +2506,7 @@ Object.assign(GameEngine, {
       this.state.supplies = 0;
       this.state.inventory = [...(cls.startingItems || [])];
       this.state.flags = {};
+      this.state.variables = {};
       this.applyStartingFlags();
       this.state.questStages = {};
       this.state.sceneVisits = {};
