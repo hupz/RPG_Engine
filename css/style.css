@@ -2629,6 +2629,77 @@ body.campaign-selecting #char-creator-screen {
 }
 #levelup-modal { z-index: 1100; }
 #loot-modal { z-index: 1050; }
+#save-slots-modal { z-index: 1200; }
+.save-slots-box {
+  max-width: 560px;
+  width: 94%;
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+}
+.save-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.save-slot-row {
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  background: var(--card-bg, var(--paper));
+}
+.save-slot-row-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.save-slot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.save-slot-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+.save-slot-active {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--info);
+  font-weight: 600;
+}
+.save-slot-empty {
+  color: var(--ink-light);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+.save-slot-meta {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.save-slot-char {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+}
+.save-slot-detail,
+.save-slot-date {
+  color: var(--ink-light);
+}
+.save-slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.save-slot-btn {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
 .game-dialog-overlay { z-index: 1250; }
 .game-dialog-box { max-width: 480px; }
 .game-dialog-actions {

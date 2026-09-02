@@ -1025,8 +1025,15 @@ const ACTION_REGISTRY = {
     name: 'Сохранить игру',
     category: 'utility',
     params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    execute(engine) {
-      engine.saveGame?.();
+    async execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1 && slot <= (engine.SAVE_SLOTS || 5)) {
+          return engine.saveToSlot(slot, { skipConfirm: false, quiet: false });
+        }
+      }
+      engine.saveGame?.({ force: true });
       return true;
     }
   },
@@ -1036,7 +1043,16 @@ const ACTION_REGISTRY = {
     name: 'Загрузить игру',
     category: 'utility',
     params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    execute(engine) {
+    execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1) return engine.loadGame(slot);
+      }
+      if (typeof engine.openSaveSlotsPanel === 'function') {
+        engine.openSaveSlotsPanel();
+        return true;
+      }
       if (typeof engine.loadGame === 'function') {
         engine.loadGame();
         return true;

@@ -349,9 +349,7 @@
         <h3>📁 <span data-i18n="game.panelMenu">Меню</span></h3>
         <div class="panel-menu-actions">
           <button type="button" class="choice" onclick="GameEngine.loadGameDataFromFile()" data-i18n="game.menuLoadContent">📂 Загрузить контент JSON</button>
-          <button type="button" class="choice" onclick="GameEngine.saveGame({ force: true })" data-i18n="game.menuSaveGame">💾 Сохранить игру</button>
-          <button type="button" class="choice" onclick="GameEngine.loadGame()" data-i18n="game.menuLoadGame">📂 Загрузить игру</button>
-          <button type="button" class="choice panel-menu-danger" onclick="GameEngine.deleteSave()" data-i18n="game.menuDeleteSave">🗑️ Удалить сохранение</button>
+          <button type="button" class="choice" onclick="GameEngine.openSaveSlotsPanel()" data-i18n="game.saveSlots.open">💾 Сохранить / загрузить</button>
           <button type="button" class="choice" onclick="GameEngine.returnToCampaignPicker()" data-i18n="game.menuCampaignPicker">🏠 К выбору игры</button>
           <button type="button" class="choice" onclick="GameEngine.resetGame()" data-i18n="game.menuReset">🔄 Начать заново</button>
         </div>
@@ -428,6 +426,14 @@
     <div class="modal-title" data-i18n="game.lootTitle">Добыча</div>
     <div id="loot-modal-body" class="loot-modal-body"></div>
     <button type="button" class="btn btn-primary loot-modal-take" onclick="GameEngine.claimCombatLoot()" data-i18n="game.lootTake">Забрать</button>
+  </div>
+</div>
+
+<div id="save-slots-modal" class="modal-overlay hidden" onclick="if(event.target===this)GameEngine.closeSaveSlotsPanel()">
+  <div class="modal-box paper-sheet save-slots-box" onclick="event.stopPropagation()">
+    <span class="modal-close" onclick="GameEngine.closeSaveSlotsPanel()">&times;</span>
+    <div class="modal-title" data-i18n="game.saveSlots.title">Сохранения</div>
+    <div id="save-slots-list" class="save-slots-list"></div>
   </div>
 </div>
 
