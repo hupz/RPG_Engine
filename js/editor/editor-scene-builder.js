@@ -1191,10 +1191,16 @@
     }
   };
 
-  // alias expected by older references / tutorial
-  if (typeof Editor.openTemplateSceneModal !== 'function') {
-    Editor.openTemplateSceneModal = function () { return Editor.openCreateSceneModal(); };
-  }
+  /** Единый вход в мастер шаблонов сцены (legacy alias + палитра + пустое состояние). */
+  Editor.openTemplateSceneModal = function openTemplateSceneModal() {
+    if (!Editor.data || (typeof Editor.isProjectContentEmpty === 'function' && Editor.isProjectContentEmpty())) {
+      if (typeof Editor.openNewProjectModal === 'function') return Editor.openNewProjectModal();
+    }
+    if (typeof Editor.openCreateSceneModal === 'function') return Editor.openCreateSceneModal();
+    if (typeof Editor.openSceneWizard === 'function') return Editor.openSceneWizard();
+    Editor.toast?.info?.('Шаблоны недоступны');
+    return false;
+  };
 
   // Делегирование кликов (не зависит от пересоздания DOM превью)
   if (!window._sceneBuilderClickBound) {

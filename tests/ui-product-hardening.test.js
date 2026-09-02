@@ -33,11 +33,12 @@ assert(hardening.includes('ui24-no-project'), 'no-project CSS hook');
 assert(hardening.includes('ui24-empty-project'), 'empty project CSS hook');
 assert(!hardening.includes('SceneManager'), 'no runtime changes');
 
-assert(guidance.includes('Welcome to your RPG project'), 'author guidance project welcome');
-assert(browserV2.includes('Create First Scene'), 'content browser create CTA');
-assert(browserV2.includes('Choose Template'), 'content browser template CTA');
-assert(browserV2.includes('label: \'Бой\''), 'combat category localized');
-assert(browserV2.includes('label: \'Игровой UI\''), 'game ui category localized');
+assert(guidance.includes('editor.authorGuidance.emptyStates.'), 'author guidance empty states i18n');
+assert(guidance.includes("'project'") || guidance.includes('"project"'), 'author guidance project empty state key');
+assert(browserV2.includes('editor.contentBrowserV2.welcome.createFirstScene'), 'content browser create CTA i18n');
+assert(browserV2.includes('editor.contentBrowserV2.welcome.chooseTemplate'), 'content browser template CTA i18n');
+assert(browserV2.includes('editor.contentBrowserV2.categories.combat'), 'combat category i18n key');
+assert(browserV2.includes('editor.contentBrowserV2.categories.game_ui'), 'game ui category i18n key');
 
 console.log('\n' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed > 0 ? 1 : 0);

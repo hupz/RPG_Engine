@@ -4,6 +4,11 @@
 // ============================================================
 (function attachUiIntegration() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') return;
 
   function markUi12Active() {
@@ -42,7 +47,7 @@
   Editor.openVisualSceneEditor = function openVisualSceneEditor(sceneId) {
     const sid = sceneId || Editor.currentScene;
     if (!sid) {
-      Editor.toast?.warning?.('Выберите сцену');
+      Editor.toast?.warning?.(tr('editor.uiIntegration.selectScene'));
       return false;
     }
     const ok = openSceneWorkspaceSection(sid, 'visual');
@@ -51,14 +56,19 @@
   };
 
   /** Legacy alias — Scene Workspace → Game UI section or tab */
-  Editor.openGameUiEditor = function openGameUiEditor() {
+  function openGameUiEditorUi12() {
     if (Editor.currentScene && typeof Editor.setSceneWorkspaceSection === 'function') {
       Editor.setSceneWorkspaceSection('game_ui');
       return true;
     }
     if (typeof Editor.switchTab === 'function') Editor.switchTab('game_ui');
     return true;
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('openGameUiEditor', openGameUiEditorUi12, 'editor-ui-integration');
+  } else if (typeof Editor.openGameUiEditor !== 'function') {
+    Editor.openGameUiEditor = openGameUiEditorUi12;
+  }
 
   /** Navigate validation issue → workspace section */
   Editor.openValidationIssueInWorkspace = function openValidationIssueInWorkspace(issue) {
@@ -85,9 +95,9 @@
   };
 
   function wrapFocusSceneAfterWizard() {
-    if (typeof Editor.focusSceneAfterWizard !== 'function' || Editor._ui12FocusWrapped) return;
-    const orig = Editor.focusSceneAfterWizard.bind(Editor);
-    Editor.focusSceneAfterWizard = function focusSceneAfterWizardUi12(presetId) {
+    if (typeof Editor.focusSceneAfterWizard !== 'function' || Editor._ui12FocusWrapped || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('focusSceneAfterWizard', function focusSceneAfterWizardUi12(presetId) {
       if (presetId === 'visual' && typeof Editor.setSceneWorkspaceSection === 'function') {
         const sc = Editor.data?.scenes?.[Editor.currentScene];
         if (sc && !sc.visual) sc.visual = { mode: 'overlay', nodes: [] };
@@ -95,8 +105,8 @@
         Editor.renderVisualScenePanel?.();
         return;
       }
-      return orig(presetId);
-    };
+      return savedPrev ? savedPrev.call(this, presetId) : undefined;
+    }, 'editor-ui-integration');
     Editor._ui12FocusWrapped = true;
   }
 

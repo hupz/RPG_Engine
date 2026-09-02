@@ -3,6 +3,11 @@
  */
 (function attachValidationPhaseH() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
@@ -16,78 +21,38 @@
         return { ok: !!r.ok, issues: r.issues || [], errors: (r.issues || []).filter((i) => i.severity === 'error'), warnings: (r.issues || []).filter((i) => i.severity === 'warning') };
       }
       return { ok: true, issues: [], errors: [], warnings: [] };
-    },
-
-    async guardExportWithValidation(opts) {
-      opts = opts || {};
-      const result = this.validateProjectExportReady();
-      this._lastExportValidation = result;
-      if (result.ok) return true;
-      const errCount = result.errors.length;
-      const warnCount = result.warnings.length;
-      if (opts.force) return true;
-      if (typeof this.refreshValidationUI === 'function') this.refreshValidationUI();
-      const msg =
-        'Перед экспортом найдены проблемы:\n' +
-        'Ошибок: ' + errCount + (warnCount ? ', предупреждений: ' + warnCount : '') +
-        '\n\nЭкспорт с ошибками может сломать игру. Продолжить?';
-      const confirmOpts = {
-        message: msg,
-        confirmLabel: 'Продолжить',
-        cancelLabel: 'Отмена',
-        danger: errCount > 0
-      };
-      if (errCount > 0) {
-        if (typeof this.showProjectValidationResults === 'function') {
-          this.showProjectValidationResults({
-            ok: false,
-            issues: result.issues,
-            errors: result.errors,
-            warnings: result.warnings
-          });
-        }
-        if (typeof Editor.confirmDialog === 'function') {
-          return await Editor.confirmDialog(confirmOpts);
-        }
-        return false;
-      }
-      if (warnCount > 0) {
-        if (typeof Editor.confirmDialog === 'function') {
-          return await Editor.confirmDialog(confirmOpts);
-        }
-        return false;
-      }
-      return true;
     }
   });
 
   function wrapExport(name) {
-    const orig = Editor[name];
-    if (typeof orig !== 'function' || Editor['_' + name + 'PhaseH']) return;
-    Editor['_' + name + 'PhaseH'] = orig;
-    Editor[name] = async function exportWithValidationGate() {
+    if (typeof Editor[name] !== 'function' || Editor['_' + name + 'PhaseH'] || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace(name, async function exportWithValidationGate(...args) {
       if (!(await Editor.guardExportWithValidation())) return;
-      return orig.apply(this, arguments);
-    };
+      return savedPrev.apply(this, args);
+    }, 'editor-validation-phase-h');
+    Editor['_' + name + 'PhaseH'] = true;
   }
 
   wrapExport('exportJSON');
   wrapExport('openExportHtmlModal');
 
-  if (typeof Editor.exportHTML === 'function') {
-    const origHtml = Editor.exportHTML;
-    Editor.exportHTML = async function exportHTMLWithGate() {
+  if (typeof Editor.exportHTML === 'function' && Editor.hooks?.replace && !Editor._exportHTMLPhaseH) {
+    let savedPrevHtml;
+    savedPrevHtml = Editor.hooks.replace('exportHTML', async function exportHTMLWithGate(...args) {
       if (!(await Editor.guardExportWithValidation())) return;
-      return origHtml.apply(this, arguments);
-    };
+      return savedPrevHtml.apply(this, args);
+    }, 'editor-validation-phase-h');
+    Editor._exportHTMLPhaseH = true;
   }
 
-  if (typeof Editor.exportGameStandalone === 'function') {
-    const origFolder = Editor.exportGameStandalone;
-    Editor.exportGameStandalone = async function exportFolderWithGate() {
+  if (typeof Editor.exportGameStandalone === 'function' && Editor.hooks?.replace && !Editor._exportGameStandalonePhaseH) {
+    let savedPrevFolder;
+    savedPrevFolder = Editor.hooks.replace('exportGameStandalone', async function exportFolderWithGate(...args) {
       if (!(await Editor.guardExportWithValidation())) return;
-      return origFolder.apply(this, arguments);
-    };
+      return savedPrevFolder.apply(this, args);
+    }, 'editor-validation-phase-h');
+    Editor._exportGameStandalonePhaseH = true;
   }
 
   if (Editor.hooks?.after) {
@@ -111,13 +76,13 @@
     }
     const r = Editor.validateProjectExportReady();
     if (r.ok && !r.warnings.length) {
-      hint.textContent = '✓ Проект готов к экспорту (Phase H)';
+      hint.textContent = tr('editor.validationPhaseH.exportReady');
       hint.style.color = '#2e7d32';
     } else if (r.ok) {
-      hint.textContent = '⚠ Экспорт возможен с предупреждениями: ' + r.warnings.length;
+      hint.textContent = tr('editor.validationPhaseH.exportWithWarnings', { count: r.warnings.length });
       hint.style.color = '#f57c00';
     } else {
-      hint.textContent = '✗ Экспорт заблокирован: ' + r.errors.length + ' ошибок';
+      hint.textContent = tr('editor.validationPhaseH.exportBlocked', { count: r.errors.length });
       hint.style.color = '#c62828';
     }
   };

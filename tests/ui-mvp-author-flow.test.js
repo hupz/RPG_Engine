@@ -53,7 +53,7 @@ assert(hardening.includes('openProjectTemplatePicker'), 'template picker API');
 assert(hardening.includes('ui24-empty-project'), 'empty project shell flag');
 
 const browserV2 = read('js/editor/editor-content-browser-v2.js');
-assert(browserV2.includes('Welcome to your RPG project'), 'empty project welcome copy');
+assert(browserV2.includes('editor.contentBrowserV2.welcome.title'), 'empty project welcome i18n key');
 assert(browserV2.includes('openProjectTemplatePicker'), 'template button routes to picker');
 
 // --- Headless integration context ---

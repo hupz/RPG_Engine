@@ -113,8 +113,9 @@ console.log('\nPhase H — export pipeline');
   assert(!exportSrc.includes('editor-visual-scene.js'), 'export excludes editor modules');
 
   const val = fs.readFileSync(path.join(root, 'js/editor/editor-validation-phase-h.js'), 'utf8');
-  assert(val.includes('guardExportWithValidation'), 'export validation gate');
+  const exportFlow = fs.readFileSync(path.join(root, 'js/editor/editor-export-flow.js'), 'utf8');
   assert(val.includes('validateProjectExportReady'), 'export readiness API');
+  assert(exportFlow.includes('guardExportWithValidation'), 'export validation gate in export-flow');
 
   const html = fs.readFileSync(path.join(root, 'editor.html'), 'utf8');
   assert(html.includes('editor-validation-phase-h.js'), 'editor loads phase-h validation');

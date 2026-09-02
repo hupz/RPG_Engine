@@ -259,13 +259,25 @@
 
   if (!Editor._createQuest114Wrapped) {
     Editor._createQuest114Wrapped = true;
-    Editor.createQuestWizard = Editor.createQuest?.bind(Editor);
-    Editor.createQuest = function createQuestWorkflow() {
-      if (typeof Editor.openQuestCreationWorkflow === 'function') {
-        return Editor.openQuestCreationWorkflow();
-      }
-      return Editor.createQuestWizard?.();
-    };
+    if (typeof Editor.createQuest === 'function') {
+      Editor.createQuestWizard = Editor.createQuest.bind(Editor);
+    }
+    if (Editor.hooks?.replace) {
+      Editor.hooks.replace('createQuest', function createQuestWorkflow() {
+        if (typeof Editor.openQuestCreationWorkflow === 'function') {
+          return Editor.openQuestCreationWorkflow();
+        }
+        return Editor.createQuestWizard?.();
+      }, 'editor-quest-authoring-phase-114');
+    } else {
+      // hooks-exempt: fallback when Editor.hooks unavailable
+      Editor.createQuest = function createQuestWorkflow() {
+        if (typeof Editor.openQuestCreationWorkflow === 'function') {
+          return Editor.openQuestCreationWorkflow();
+        }
+        return Editor.createQuestWizard?.();
+      };
+    }
   }
 
   if (Editor.hooks?.after) {

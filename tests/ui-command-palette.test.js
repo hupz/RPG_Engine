@@ -152,7 +152,18 @@ ctx.globalThis = ctx;
 ctx.window = ctx;
 ctx.window._cmdPaletteKeyBound = false;
 
+function primeTestI18n(context) {
+  vm.runInContext(fs.readFileSync(path.join(root, 'locales/ru.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.join(root, 'js/i18n.js'), 'utf8'), context);
+  const ru = JSON.parse(JSON.stringify(context.I18N_LOCALES.ru));
+  context.I18n._strings = ru;
+  context.I18n._fallback = ru;
+  context.I18n._loaded = true;
+  context.I18n._lang = 'ru';
+}
+
 vm.createContext(ctx);
+primeTestI18n(ctx);
 vm.runInContext(fs.readFileSync(path.join(root, 'js/editor/editor-hooks.js'), 'utf8'), ctx);
 vm.runInContext(palette, ctx);
 vm.runInContext(paletteV2, ctx);

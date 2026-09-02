@@ -5,184 +5,95 @@
 (function attachStoryWizardContent(global) {
   'use strict';
 
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
   const TR = {
     а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
     к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f',
     х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya'
   };
 
-  const GENRE_PRESETS = Object.freeze({
-    fantasy: {
-      id: 'fantasy',
-      label: 'Фэнтези',
-      defaultTitle: 'Сказание о приключении',
-      description: 'Рыцари, магия и древние тайны ждут героя.',
-      coverColor: '#4a3728',
-      startingGold: 15,
-      startingHp: 20
-    },
-    horror: {
-      id: 'horror',
-      label: 'Хоррор',
-      defaultTitle: 'Тени забытого дома',
-      description: 'Мрак, страх и необъяснимое на каждом шагу.',
-      coverColor: '#1a1a2e',
-      startingGold: 5,
-      startingHp: 16
-    },
-    detective: {
-      id: 'detective',
-      label: 'Детектив',
-      defaultTitle: 'Дело без ответа',
-      description: 'Улики, свидетели и разгадка в финале.',
-      coverColor: '#2c3e50',
-      startingGold: 25,
-      startingHp: 18
-    },
-    survival: {
-      id: 'survival',
-      label: 'Выживание',
-      defaultTitle: 'После бури',
-      description: 'Ресурсы на исходе — нужно дойти до безопасного места.',
-      coverColor: '#3d4a2c',
-      startingGold: 8,
-      startingHp: 22
-    }
-  });
+  const GENRE_IDS = Object.freeze(['fantasy', 'horror', 'detective', 'survival']);
 
-  const SYSTEM_LABELS = Object.freeze({
-    generic: 'Универсальные правила',
-    dnd5e: 'Классические приключения',
-    pf2e: 'Путьfinder'
+  const GENRE_PRESETS = Object.freeze({
+    fantasy: { id: 'fantasy', coverColor: '#4a3728', startingGold: 15, startingHp: 20 },
+    horror: { id: 'horror', coverColor: '#1a1a2e', startingGold: 5, startingHp: 16 },
+    detective: { id: 'detective', coverColor: '#2c3e50', startingGold: 25, startingHp: 18 },
+    survival: { id: 'survival', coverColor: '#3d4a2c', startingGold: 8, startingHp: 22 }
   });
 
   const SYSTEM_IDS = Object.freeze(['generic', 'dnd5e', 'pf2e']);
 
-  const GENRE_SCENE_NAMES = Object.freeze({
-    fantasy: {
-      start: 'У ворот королевства',
-      hub: 'Перекрёсток стражей',
-      branch1: 'Тёмный лес',
-      branch2: 'Руины башни',
-      branch3: 'Деревня эльфов',
-      village: 'Деревня Ольдвуд',
-      tavern: 'Таверна «Золотой кубок»',
-      shop: 'Лавка алхимика',
-      forge: 'Кузница старого Грома',
-      road1: 'Королевская дорога',
-      road2: 'Мост через реку',
-      road3: 'Поляна у ручья',
-      road4: 'Ворота крепости',
-      exit: 'Окраина земель'
-    },
-    horror: {
-      start: 'Порог заброшенного дома',
-      hub: 'Пустой холл',
-      branch1: 'Подвал',
-      branch2: 'Мансарда',
-      branch3: 'Сад с могилами',
-      village: 'Мёртвая деревня',
-      tavern: 'Закрытая постоялая',
-      shop: 'Пустая лавка',
-      forge: 'Заржавевшая кузня',
-      road1: 'Туманная тропа',
-      road2: 'Сломанный мост',
-      road3: 'Болото',
-      road4: 'Старый склеп',
-      exit: 'Ворота кладбища'
-    },
-    detective: {
-      start: 'Приёмная детектива',
-      hub: 'Городская площадь',
-      branch1: 'Кабинет мэра',
-      branch2: 'Склад улик',
-      branch3: 'Кафе свидетелей',
-      village: 'Старый квартал',
-      tavern: 'Бар «Красная лампа»',
-      shop: 'Ломбард',
-      forge: 'Мастерская часовщика',
-      road1: 'Улица фонарей',
-      road2: 'Переулок у доков',
-      road3: 'Архив полиции',
-      road4: 'Судебный зал',
-      exit: 'Вокзал'
-    },
-    survival: {
-      start: 'Лагерь после бури',
-      hub: 'Разрушенный мост',
-      branch1: 'Заросшая тропа',
-      branch2: 'Заброшенная хижина',
-      branch3: 'Ручей с пресной водой',
-      village: 'Посёлок ущелья',
-      tavern: 'Убежище у костра',
-      shop: 'Запасной склад',
-      forge: 'Сарай с инструментами',
-      road1: 'Горная тропа',
-      road2: 'Обвал на пути',
-      road3: 'Пещера у скалы',
-      road4: 'Спасательный пункт',
-      exit: 'Безопасная поляна'
-    }
-  });
+  const SCENE_NAME_KEYS = Object.freeze([
+    'start', 'hub', 'branch1', 'branch2', 'branch3', 'village', 'tavern', 'shop', 'forge',
+    'road1', 'road2', 'road3', 'road4', 'exit'
+  ]);
 
   const WORLD_SKELETONS = Object.freeze([
     {
       id: 'hub_branches',
-      label: 'Хаб и три ветки',
-      description: 'Центральная точка и три пути — классика ветвящегося сюжета.',
       startKey: 'start',
       nodes: [
-        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'hub', choice: 'Начать путь', icon: '🌅' }] },
+        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'hub', choiceKey: 'startPath', icon: '🌅' }] },
         {
           key: 'hub', template: 'tpl_hub_simple', nameKey: 'hub',
           links: [
-            { to: 'branch1', choice: 'Первый путь', icon: '🌲' },
-            { to: 'branch2', choice: 'Второй путь', icon: '🏚️' },
-            { to: 'branch3', choice: 'Третий путь', icon: '🏘️' }
+            { to: 'branch1', choiceKey: 'path1', icon: '🌲' },
+            { to: 'branch2', choiceKey: 'path2', icon: '🏚️' },
+            { to: 'branch3', choiceKey: 'path3', icon: '🏘️' }
           ]
         },
-        { key: 'branch1', template: 'tpl_explore', nameKey: 'branch1', links: [{ to: 'hub', choice: 'Вернуться', icon: '↩️' }] },
-        { key: 'branch2', template: 'tpl_location', nameKey: 'branch2', links: [{ to: 'hub', choice: 'Вернуться', icon: '↩️' }] },
-        { key: 'branch3', template: 'tpl_dialogue', nameKey: 'branch3', links: [{ to: 'hub', choice: 'Вернуться', icon: '↩️' }] }
+        { key: 'branch1', template: 'tpl_explore', nameKey: 'branch1', links: [{ to: 'hub', choiceKey: 'return', icon: '↩️' }] },
+        { key: 'branch2', template: 'tpl_location', nameKey: 'branch2', links: [{ to: 'hub', choiceKey: 'return', icon: '↩️' }] },
+        { key: 'branch3', template: 'tpl_dialogue', nameKey: 'branch3', links: [{ to: 'hub', choiceKey: 'return', icon: '↩️' }] }
       ]
     },
     {
       id: 'linear_road',
-      label: 'Линейная дорога',
-      description: 'Последовательный путь из пяти локаций — для сюжета без развилок.',
       startKey: 'start',
       nodes: [
-        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'road1', choice: 'В путь', icon: '🌅' }] },
-        { key: 'road1', template: 'tpl_location', nameKey: 'road1', links: [{ to: 'road2', choice: 'Идти дальше', icon: '➡️' }] },
-        { key: 'road2', template: 'tpl_explore', nameKey: 'road2', links: [{ to: 'road3', choice: 'Идти дальше', icon: '➡️' }] },
-        { key: 'road3', template: 'tpl_dialogue', nameKey: 'road3', links: [{ to: 'road4', choice: 'Идти дальше', icon: '➡️' }] },
-        { key: 'road4', template: 'tpl_reward', nameKey: 'road4', links: [{ to: 'exit', choice: 'Завершить путь', icon: '🏁' }] },
+        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'road1', choiceKey: 'setOut', icon: '🌅' }] },
+        { key: 'road1', template: 'tpl_location', nameKey: 'road1', links: [{ to: 'road2', choiceKey: 'continue', icon: '➡️' }] },
+        { key: 'road2', template: 'tpl_explore', nameKey: 'road2', links: [{ to: 'road3', choiceKey: 'continue', icon: '➡️' }] },
+        { key: 'road3', template: 'tpl_dialogue', nameKey: 'road3', links: [{ to: 'road4', choiceKey: 'continue', icon: '➡️' }] },
+        { key: 'road4', template: 'tpl_reward', nameKey: 'road4', links: [{ to: 'exit', choiceKey: 'finishPath', icon: '🏁' }] },
         { key: 'exit', template: 'tpl_victory', nameKey: 'exit', links: [] }
       ]
     },
     {
       id: 'ready_village',
-      label: 'Готовая деревня',
-      description: 'Посёлок с таверной, лавкой и кузницей — готовый хаб для истории.',
       startKey: 'start',
       nodes: [
-        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'village', choice: 'Войти в посёлок', icon: '🏘️' }] },
+        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'village', choiceKey: 'enterVillage', icon: '🏘️' }] },
         {
           key: 'village', template: 'tpl_village', nameKey: 'village',
           links: [
-            { to: 'tavern', choice: 'Таверна', icon: '🏚️' },
-            { to: 'shop', choice: 'Лавка', icon: '🛒' },
-            { to: 'forge', choice: 'Кузница', icon: '⚒️' },
-            { to: 'exit', choice: 'Уйти из посёлка', icon: '🚪' }
+            { to: 'tavern', choiceKey: 'tavern', icon: '🏚️' },
+            { to: 'shop', choiceKey: 'shop', icon: '🛒' },
+            { to: 'forge', choiceKey: 'forge', icon: '⚒️' },
+            { to: 'exit', choiceKey: 'leaveVillage', icon: '🚪' }
           ]
         },
-        { key: 'tavern', template: 'tpl_tavern', nameKey: 'tavern', links: [{ to: 'village', choice: 'На площадь', icon: '↩️' }] },
-        { key: 'shop', template: 'tpl_shop', nameKey: 'shop', links: [{ to: 'village', choice: 'На площадь', icon: '↩️' }] },
-        { key: 'forge', template: 'tpl_forge', nameKey: 'forge', links: [{ to: 'village', choice: 'На площадь', icon: '↩️' }] },
-        { key: 'exit', template: 'tpl_location', nameKey: 'exit', links: [{ to: 'village', choice: 'Вернуться', icon: '↩️' }] }
+        { key: 'tavern', template: 'tpl_tavern', nameKey: 'tavern', links: [{ to: 'village', choiceKey: 'toSquare', icon: '↩️' }] },
+        { key: 'shop', template: 'tpl_shop', nameKey: 'shop', links: [{ to: 'village', choiceKey: 'toSquare', icon: '↩️' }] },
+        { key: 'forge', template: 'tpl_forge', nameKey: 'forge', links: [{ to: 'village', choiceKey: 'toSquare', icon: '↩️' }] },
+        { key: 'exit', template: 'tpl_location', nameKey: 'exit', links: [{ to: 'village', choiceKey: 'return', icon: '↩️' }] }
       ]
     }
   ]);
+
+  function genrePresetKey(genreId, field) {
+    return 'editor.storyWizard.content.genres.' + (GENRE_PRESETS[genreId] ? genreId : 'fantasy') + '.' + field;
+  }
+
+  function skeletonChoiceText(skeletonId, choiceKey) {
+    if (!choiceKey) return tr('editor.storyWizard.content.defaultChoiceGo');
+    return tr('editor.storyWizard.content.skeletons.' + skeletonId + '.choices.' + choiceKey);
+  }
 
   function slugifyId(name, existing) {
     let s = String(name || '').trim().toLowerCase();
@@ -201,28 +112,43 @@
   }
 
   function getGenrePreset(genreId) {
-    return GENRE_PRESETS[genreId] || GENRE_PRESETS.fantasy;
+    const id = GENRE_PRESETS[genreId] ? genreId : 'fantasy';
+    const base = GENRE_PRESETS[id];
+    return {
+      id,
+      label: tr(genrePresetKey(id, 'label')),
+      defaultTitle: tr(genrePresetKey(id, 'defaultTitle')),
+      description: tr(genrePresetKey(id, 'description')),
+      coverColor: base.coverColor,
+      startingGold: base.startingGold,
+      startingHp: base.startingHp
+    };
   }
 
   function listGenrePresets() {
-    return Object.values(GENRE_PRESETS);
+    return GENRE_IDS.map((id) => getGenrePreset(id));
   }
 
   function listWorldSkeletons() {
     return WORLD_SKELETONS.map((s) => ({
       id: s.id,
-      label: s.label,
-      description: s.description
+      label: tr('editor.storyWizard.content.skeletons.' + s.id + '.label'),
+      description: tr('editor.storyWizard.content.skeletons.' + s.id + '.description')
     }));
   }
 
   function listSystemOptions() {
-    return SYSTEM_IDS.map((id) => ({ id, label: SYSTEM_LABELS[id] || id }));
+    return SYSTEM_IDS.map((id) => ({
+      id,
+      label: tr('editor.storyWizard.content.systems.' + id)
+    }));
   }
 
   function getSceneName(genreId, nameKey) {
-    const bag = GENRE_SCENE_NAMES[genreId] || GENRE_SCENE_NAMES.fantasy;
-    return bag[nameKey] || nameKey;
+    const g = GENRE_PRESETS[genreId] ? genreId : 'fantasy';
+    const key = 'editor.storyWizard.content.sceneNames.' + g + '.' + nameKey;
+    const val = tr(key);
+    return val === key ? nameKey : val;
   }
 
   function buildPreviewGraph(spec, sceneIds, genreId) {
@@ -236,7 +162,9 @@
           fromLabel,
           to: sceneIds[link.to],
           toLabel: getSceneName(genreId, WORLD_SKELETONS.find((s) => s.id === spec.id)?.nodes.find((n) => n.key === link.to)?.nameKey || link.to),
-          choice: link.choice
+          choice: link.choiceKey
+            ? skeletonChoiceText(spec.id, link.choiceKey)
+            : (link.choice || tr('editor.storyWizard.content.defaultChoiceGo')),
         });
       });
     });
@@ -285,7 +213,9 @@
       const patch = buildPackPatch(node.template, blank) || {};
       const scene = Object.assign({}, blank, patch, { id, location });
       scene.choices = (node.links || []).map((link) => ({
-        text: link.choice || 'Идти',
+        text: link.choiceKey
+          ? skeletonChoiceText(spec.id, link.choiceKey)
+          : (link.choice || tr('editor.storyWizard.content.defaultChoiceGo')),
         to: sceneIds[link.to],
         icon: link.icon || '➡️'
       }));
@@ -438,9 +368,9 @@
 
   const api = {
     GENRE_PRESETS,
-    GENRE_SCENE_NAMES,
+    GENRE_IDS,
+    SCENE_NAME_KEYS,
     WORLD_SKELETONS,
-    SYSTEM_LABELS,
     SYSTEM_IDS,
     getGenrePreset,
     listGenrePresets,

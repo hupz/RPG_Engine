@@ -980,10 +980,10 @@
   }
 
   // Extend openCreateSceneModal list with pack entries if present
-  const origOpen = Editor.openCreateSceneModal;
-  if (typeof origOpen === 'function') {
-    Editor.openCreateSceneModal = function () {
-      origOpen.call(this);
+  if (typeof Editor.openCreateSceneModal === 'function' && Editor.hooks?.replace) {
+    let savedPrevOpen;
+    savedPrevOpen = Editor.hooks.replace('openCreateSceneModal', function openCreateSceneModalWithPack() {
+      savedPrevOpen.call(this);
       const list = document.getElementById('scene-template-picker-list');
       if (!list || list.dataset.packExtended === '1') {
         Editor.updateSceneTemplatePickerChrome?.();
@@ -999,7 +999,7 @@
       }).join('');
       list.insertAdjacentHTML('beforeend', packHtml);
       Editor.updateSceneTemplatePickerChrome?.();
-    };
+    }, 'editor-scene-template-pack');
   }
 
   // Delegation for pack buttons (once)

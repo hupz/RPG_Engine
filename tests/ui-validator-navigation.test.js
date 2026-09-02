@@ -20,6 +20,29 @@ function read(rel) {
   return fs.readFileSync(path.join(root, rel), 'utf8');
 }
 
+function bootI18n(ctx, lang) {
+  const ru = JSON.parse(fs.readFileSync(path.join(root, 'locales/ru.json'), 'utf8'));
+  const en = JSON.parse(fs.readFileSync(path.join(root, 'locales/en.json'), 'utf8'));
+  const primary = lang === 'en' ? en : ru;
+  const fallback = ru;
+  function nestedGet(obj, key) {
+    return String(key).split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), obj);
+  }
+  function t(key, params) {
+    let val = nestedGet(primary, key);
+    if (val == null) val = nestedGet(fallback, key);
+    if (val == null) return String(key);
+    if (params && typeof params === 'object') {
+      Object.entries(params).forEach(([k, v]) => {
+        val = val.replace(new RegExp('\\{' + k + '\\}', 'g'), String(v ?? ''));
+      });
+    }
+    return val;
+  }
+  ctx.t = t;
+  ctx.I18n = { t };
+}
+
 const html = read('editor.html');
 const nav = read('js/editor/editor-validator-navigation.js');
 const ux = read('js/editor/editor-project-validator-ux.js');
@@ -32,7 +55,8 @@ assert(nav.includes('ERRORS'), 'errors group');
 assert(nav.includes('WARNINGS'), 'warnings group');
 assert(nav.includes('parseJsonPath'), 'path parser');
 assert(nav.includes('getSceneValidationIssues'), 'scene validation API');
-assert(nav.includes('guardExportWithValidation'), 'export guard patch');
+assert(nav.includes("hooks.replace('collectProjectIssues'"), 'collect uses hooks.replace');
+assert(nav.includes('enrichIssue'), 'validator nav enriches issues');
 assert(!nav.includes('SceneManager'), 'no runtime dependency');
 
 const data = {
@@ -63,7 +87,18 @@ const ctx = {
   },
   Editor: {
     data,
-    hooks: { register() {} },
+    hooks: {
+      register() {},
+      replace(methodName, fn) {
+        const prev = typeof ctx.Editor[methodName] === 'function'
+          ? ctx.Editor[methodName].bind(ctx.Editor)
+          : null;
+        ctx.Editor[methodName] = function (...args) {
+          return fn.apply(this, args);
+        };
+        return prev;
+      }
+    },
     toast: { success() {}, warning() {}, error() {}, info() {} },
     updateJSONPreview() {},
     escapeHtml(s) { return String(s); },
@@ -129,6 +164,7 @@ const ctx = {
 };
 ctx.globalThis = ctx;
 ctx.window = ctx;
+bootI18n(ctx, 'en');
 
 vm.createContext(ctx);
 vm.runInContext(nav, ctx);
@@ -194,12 +230,12 @@ assert(Array.isArray(patched.info), 'info array present');
 const sceneIssues = ctx.Editor.getSceneValidationIssues('hub');
 assert(sceneIssues.length >= 1, 'scene validation issues');
 
-// export guard policy: errors block, warnings pass (source-level)
-assert(nav.includes('Export blocked'), 'export hard block message');
-assert(nav.includes('return false'), 'export returns false on errors');
-assert(nav.includes('warnCount > 0') && nav.includes('return true'), 'warnings allow export');
-assert(phaseH.includes('guardExportWithValidation'), 'phase-h export gate exists');
-assert(phaseH.includes('wrapExport'), 'export wrappers exist');
+// export guard policy lives in export-flow (single owner)
+const exportFlow = read('js/editor/editor-export-flow.js');
+assert(exportFlow.includes('guardExportWithValidation'), 'export guard in export-flow');
+assert(exportFlow.includes('Export blocked'), 'export hard block message');
+assert(exportFlow.includes('showValidationForExport'), 'enriched validation modal on block');
+assert(phaseH.includes('wrapExport'), 'export wrappers delegate to guard');
 
 // navigation mapping in ui-integration
 const integration = read('js/editor/editor-ui-integration.js');

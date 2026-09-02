@@ -6,6 +6,12 @@
 (function attachStoryWizardPublish() {
   'use strict';
 
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
   function esc(s) {
     return typeof Editor !== 'undefined' && typeof Editor.escapeHtml === 'function'
       ? Editor.escapeHtml(String(s == null ? '' : s))
@@ -82,14 +88,14 @@
   function isQuestReachableFromStart(editor, questId) {
     const data = editor?.data || {};
     if (!questId) {
-      return { ok: false, status: 'warn', detail: 'квест не задан в мастере', sceneIds: [], questId: null };
+      return { ok: false, status: 'warn', detail: tr('editor.storyWizard.publish.questNotSet'), sceneIds: [], questId: null };
     }
     if (!data.quests?.[questId]) {
-      return { ok: false, status: 'warn', detail: 'квест ещё не создан в проекте', sceneIds: [], questId };
+      return { ok: false, status: 'warn', detail: tr('editor.storyWizard.publish.questNotCreated'), sceneIds: [], questId };
     }
     const startId = resolveStartSceneId(editor);
     if (!startId) {
-      return { ok: false, status: 'error', detail: 'нет стартовой сцены', sceneIds: [], questId };
+      return { ok: false, status: 'error', detail: tr('editor.storyWizard.publish.noStartScene'), sceneIds: [], questId };
     }
     const scenes = data.scenes || {};
     const queue = [startId];
@@ -107,7 +113,7 @@
           return {
             ok: true,
             status: 'ok',
-            detail: 'выдаётся в «' + label + '»',
+            detail: tr('editor.storyWizard.publish.questGranted', { label }),
             sceneIds: [sid],
             choiceIndex: ci,
             questId
@@ -133,7 +139,7 @@
     return {
       ok: false,
       status: 'warn',
-      detail: 'ни один выбор с старта не запускает квест',
+      detail: tr('editor.storyWizard.publish.questUnreachable'),
       sceneIds: [startId],
       questId
     };
@@ -149,11 +155,11 @@
     items.push({
       id: 'has_start_scene',
       kind: 'checklist',
-      label: 'Есть стартовая сцена',
+      label: tr('editor.storyWizard.publish.checklist.hasStart'),
       status: startValid ? 'ok' : 'error',
       detail: startValid
-        ? (startAssigned ? '«' + startId + '»' : '«' + startId + '» (по умолчанию)')
-        : 'создайте хотя бы одну сцену и укажите старт',
+        ? tr(startAssigned ? 'editor.storyWizard.publish.checklistDetail.startAssigned' : 'editor.storyWizard.publish.checklistDetail.startDefault', { id: startId })
+        : tr('editor.storyWizard.publish.checklistDetail.noStart'),
       sceneIds: startId ? [startId] : [],
       navigate: { type: 'scene', sceneId: startId, section: 'content' }
     });
@@ -164,7 +170,7 @@
       items.push({
         id: 'first_quest_reachable',
         kind: 'checklist',
-        label: 'Первый квест достижим',
+        label: tr('editor.storyWizard.publish.checklist.firstQuest'),
         status: questReach.status,
         detail: questReach.detail,
         sceneIds: questReach.sceneIds || [],
@@ -182,11 +188,13 @@
     items.push({
       id: 'scene_has_exit',
       kind: 'checklist',
-      label: 'У каждой сцены есть хотя бы один выход',
+      label: tr('editor.storyWizard.publish.checklist.sceneExit'),
       status: deadEnds.length ? 'warn' : 'ok',
       detail: deadEnds.length
-        ? 'без выхода: ' + deadEnds.slice(0, 4).join(', ') + (deadEnds.length > 4 ? '…' : '')
-        : 'все сцены ведут дальше или завершают историю',
+        ? tr('editor.storyWizard.publish.checklistDetail.deadEnds', {
+          list: deadEnds.slice(0, 4).join(', ') + (deadEnds.length > 4 ? '…' : '')
+        })
+        : tr('editor.storyWizard.publish.checklistDetail.allExits'),
       sceneIds: deadEnds,
       navigate: deadEnds[0] ? { type: 'scene', sceneId: deadEnds[0], section: 'choices' } : null
     });
@@ -200,7 +208,7 @@
         items.push({
           id: 'hub_to_final',
           kind: 'checklist',
-          label: 'Финал достижим из хаба',
+          label: tr('editor.storyWizard.publish.checklist.hubFinal'),
           status: hubFinal.status === 'error' ? 'error' : (hubFinal.status === 'warn' ? 'warn' : 'ok'),
           detail: hubFinal.detail,
           sceneIds: hubFinal.sceneIds || [],
@@ -213,9 +221,9 @@
       items.push({
         id: 'hub_to_final',
         kind: 'checklist',
-        label: 'Финал достижим из хаба',
+        label: tr('editor.storyWizard.publish.checklist.hubFinal'),
         status: 'warn',
-        detail: 'карта сюжета недоступна — проверка пропущена',
+        detail: tr('editor.storyWizard.publish.checklistDetail.flowSkipped'),
         sceneIds: [],
         navigate: null
       });
@@ -231,12 +239,12 @@
     const questIds = Object.keys(data.quests || {});
     const heroName = draft?.hero?.name
       || data.playerCharacters?.[Object.keys(data.playerCharacters || {})[0]]?.name
-      || 'Герой';
+      || tr('editor.storyWizard.publish.heroDefault');
     const questTitle = draft?.questId && data.quests?.[draft.questId]
       ? (data.quests[draft.questId].title || draft.questId)
-      : (draft?.quest?.title || '—');
+      : (draft?.quest?.title || tr('editor.storyWizard.publish.dash'));
     return {
-      title: data.meta?.title || draft?.title || 'Моя история',
+      title: data.meta?.title || draft?.title || tr('editor.storyWizard.publish.defaultTitle'),
       sceneCount: sceneIds.length,
       npcCount: npcIds.length,
       questCount: questIds.length,
@@ -254,7 +262,7 @@
     return {
       ok: validator.ok && checklist.every((c) => c.status !== 'error'),
       exportBlocked,
-      exportBlockers: (validator.errors || []).map((e) => e.message || e.objectLabel || 'Ошибка'),
+      exportBlockers: (validator.errors || []).map((e) => e.message || e.objectLabel || tr('editor.storyWizard.publish.errorFallback')),
       issues: validator.issues || [],
       errors: validator.errors || [],
       warnings: validator.warnings || [],
@@ -272,7 +280,7 @@
   function renderChecklistHtml(checklist) {
     if (!checklist.length) return '';
     return `<section class="sw-publish-section">
-      <h4>Чеклист готовности</h4>
+      <h4>${esc(tr('editor.storyWizard.publish.sections.checklist'))}</h4>
       <ul class="sw-publish-rows">
         ${checklist.map((it, idx) =>
           `<li class="sw-publish-row sw-publish-row--${esc(it.status)}">
@@ -293,13 +301,13 @@
     let html = '';
     if (err.length) {
       html += `<section class="sw-publish-section sw-publish-section--errors">
-        <h4>Ошибки (${err.length})</h4>
+        <h4>${esc(tr('editor.storyWizard.publish.sections.errors', { count: err.length }))}</h4>
         <ul class="sw-publish-rows">
           ${err.map((iss, idx) =>
             `<li class="sw-publish-row sw-publish-row--error">
               <button type="button" class="sw-publish-row-btn" data-sw-pub-kind="error" data-sw-pub-idx="${idx}">
                 <span class="sw-publish-row-icon">🔴</span>
-                <span class="sw-publish-row-label">${esc(iss.objectLabel || 'Проект')}</span>
+                <span class="sw-publish-row-label">${esc(iss.objectLabel || tr('editor.storyWizard.publish.projectLabel'))}</span>
                 <span class="sw-publish-row-detail">${esc(iss.message)}</span>
               </button>
             </li>`
@@ -309,13 +317,13 @@
     }
     if (warn.length) {
       html += `<section class="sw-publish-section">
-        <h4>Предупреждения (${warn.length})</h4>
+        <h4>${esc(tr('editor.storyWizard.publish.sections.warnings', { count: warn.length }))}</h4>
         <ul class="sw-publish-rows">
           ${warn.map((iss, idx) =>
             `<li class="sw-publish-row sw-publish-row--warn">
               <button type="button" class="sw-publish-row-btn" data-sw-pub-kind="warning" data-sw-pub-idx="${idx}">
                 <span class="sw-publish-row-icon">🟡</span>
-                <span class="sw-publish-row-label">${esc(iss.objectLabel || 'Проект')}</span>
+                <span class="sw-publish-row-label">${esc(iss.objectLabel || tr('editor.storyWizard.publish.projectLabel'))}</span>
                 <span class="sw-publish-row-detail">${esc(iss.message)}</span>
               </button>
             </li>`
@@ -325,7 +333,7 @@
     }
     if (!err.length && !warn.length) {
       html += `<section class="sw-publish-section sw-publish-ok-banner">
-        <p>✓ Критических проблем валидатора не найдено — можно тестировать и экспортировать.</p>
+        <p>${esc(tr('editor.storyWizard.publish.validatorOk'))}</p>
       </section>`;
     }
     return html;
@@ -336,7 +344,7 @@
     const list = (report.exportBlockers || []).slice(0, 6)
       .map((m) => '<li>' + esc(m) + '</li>').join('');
     return `<div class="sw-publish-blockers" role="alert">
-      <strong>Экспорт заблокирован</strong> — устраните ошибки выше:
+      <strong>${esc(tr('editor.storyWizard.publish.exportBlocked'))}</strong>${esc(tr('editor.storyWizard.publish.exportBlockedHint'))}
       <ul>${list}</ul>
     </div>`;
   }
@@ -345,29 +353,29 @@
     const s = report.summary || buildProjectSummary(editor, draft);
     const improve = [];
     if ((report.warnings || []).length) {
-      improve.push('есть предупреждения валидатора — можно доработать диалоги и условия');
+      improve.push(tr('editor.storyWizard.publish.improve.warnings'));
     }
     if ((report.checklist || []).some((c) => c.status === 'warn')) {
-      improve.push('чеклист готовности не полностью зелёный');
+      improve.push(tr('editor.storyWizard.publish.improve.checklist'));
     }
-    if (!improve.length) improve.push('добавить больше сцен, квестов и визуальных деталей');
+    if (!improve.length) improve.push(tr('editor.storyWizard.publish.improve.default'));
 
     return `<div class="sw-publish-success" data-sw-publish="1">
       <div class="sw-publish-success-icon">🎉</div>
-      <h3>Игра экспортирована</h3>
-      <p class="hint">Файл HTML сохранён на диск — откройте его в браузере и передайте друзьям.</p>
+      <h3>${esc(tr('editor.storyWizard.publish.successTitle'))}</h3>
+      <p class="hint">${esc(tr('editor.storyWizard.publish.successHint'))}</p>
       <ul class="sw-publish-stats">
         <li><strong>${esc(s.title)}</strong></li>
-        <li>Сцен: ${s.sceneCount}</li>
-        <li>Квест: «${esc(s.questTitle)}»</li>
-        <li>Герой: ${esc(s.heroName)} · NPC: ${s.npcCount}</li>
+        <li>${esc(tr('editor.storyWizard.publish.stats.scenes', { count: s.sceneCount }))}</li>
+        <li>${esc(tr('editor.storyWizard.publish.stats.quest', { title: s.questTitle }))}</li>
+        <li>${esc(tr('editor.storyWizard.publish.stats.heroNpc', { hero: s.heroName, count: s.npcCount }))}</li>
       </ul>
       <div class="sw-publish-improve">
-        <h4>Что улучшить позже</h4>
+        <h4>${esc(tr('editor.storyWizard.publish.improveTitle'))}</h4>
         <ul>${improve.map((t) => '<li>' + esc(t) + '</li>').join('')}</ul>
         <div class="sw-publish-level-links">
-          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="cartographer">🗺️ Картограф — карта сюжета</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="engineer">⚙️ Инженер — баланс и механики</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="cartographer">${esc(tr('editor.storyWizard.publish.gotoCartographer'))}</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="engineer">${esc(tr('editor.storyWizard.publish.gotoEngineer'))}</button>
         </div>
       </div>
     </div>`;
@@ -382,21 +390,21 @@
     const s = report.summary;
     return `<div class="sw-publish" data-sw-publish="1">
       <header class="sw-publish-header">
-        <h3>Проверка и публикация</h3>
-        <p class="hint"><strong>${esc(s.title)}</strong> · ${s.sceneCount} сцен · квест «${esc(s.questTitle)}»</p>
+        <h3>${esc(tr('editor.storyWizard.publish.header'))}</h3>
+        <p class="hint">${esc(tr('editor.storyWizard.publish.headerSummary', { title: s.title, count: s.sceneCount, quest: s.questTitle }))}</p>
       </header>
       ${renderChecklistHtml(report.checklist)}
       ${renderIssuesHtml(report)}
       ${renderExportBlockersHtml(report)}
       <div class="sw-publish-toolbar">
-        <button type="button" class="btn btn-secondary" data-sw-pub-action="preview">▶ Играть как герой</button>
+        <button type="button" class="btn btn-secondary" data-sw-pub-action="preview">${esc(tr('editor.storyWizard.publish.playPreview'))}</button>
         <button type="button" class="btn btn-primary" data-sw-pub-action="export"
-          ${report.exportBlocked ? 'disabled title="Сначала исправьте ошибки"' : ''}>
-          📦 Экспортировать HTML
+          ${report.exportBlocked ? 'disabled title="' + escAttr(tr('editor.storyWizard.publish.exportDisabledTitle')) + '"' : ''}>
+          📦 ${esc(tr('editor.storyWizard.publish.exportTitle'))}
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-action="refresh">↻ Обновить отчёт</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-action="refresh">${esc(tr('editor.storyWizard.publish.refreshReport'))}</button>
       </div>
-      <p class="hint sw-publish-note">Превью и экспорт не требуют переключения вкладок. Клик по строке откроет место проблемы в редакторе.</p>
+      <p class="hint sw-publish-note">${esc(tr('editor.storyWizard.publish.note'))}</p>
     </div>`;
   }
 

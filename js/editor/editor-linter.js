@@ -183,13 +183,6 @@
       if (this.currentTab === 'graph' && typeof this.renderStoryGraph === 'function') {
         this.renderStoryGraph();
       }
-    },
-
-    /** Кнопка «Проверить проект» */
-    runProjectValidation() {
-      const result = this.validateProject();
-      this.showValidationModal(result);
-      return result;
     }
   });
 })();

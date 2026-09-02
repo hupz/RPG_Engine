@@ -1,4 +1,4 @@
-/* editor-full bundle — 210 scripts from editor.html — 2026-09-01T21:15:58.683Z */
+/* editor-full bundle — 209 scripts from editor.html — 2026-09-02T11:40:53.188Z */
 
 ;/* —— js/mobile-layout.js —— */
 /**
@@ -1043,7 +1043,7 @@ if (typeof ThemeSystem !== 'undefined') ThemeSystem.applyStoredMode();
 
 
 ;/* —— locales/ru.js —— */
-﻿/* generated from ru.json */
+/* generated from ru.json */
 window.I18N_LOCALES = window.I18N_LOCALES || {};
 window.I18N_LOCALES['ru'] = {
   "lang": {
@@ -1077,8 +1077,44 @@ window.I18N_LOCALES['ru'] = {
     "pageTitle": "MythMill RpgEngine — Редактор",
     "title": "MythMill RpgEngine",
     "titleTooltip": "На дашборд",
-    "dashboard": "Дашборд",
-    "newProject": "Новый проект",
+    "dashboard": {
+      "title": "Дашборд проекта",
+      "emptyHint": "Создайте новый проект или загрузите game_data.json.",
+      "newBtn": "Новый проект",
+      "loadBtn": "Загрузить JSON",
+      "saveJson": "Сохранить в JSON",
+      "exportHtml": "Экспорт в HTML",
+      "quickActions": "Быстрые действия",
+      "newScene": "Новая сцена",
+      "saveJsonFile": "Сохранить JSON",
+      "exportGame": "Экспорт игры",
+      "statsScenes": "Сцен",
+      "statsQuests": "Квестов",
+      "statsEnemies": "Врагов",
+      "statsItems": "Предметов",
+      "statsClasses": "Классов",
+      "statsAbilities": "Умений",
+      "warnTitle": "Предупреждения",
+      "warnBroken": "Битых ссылок: {errors}, тупиков: {deadEnds}.",
+      "warnOk": "Критичных битых ссылок не найдено.",
+      "validateBtn": "Проверить проект",
+      "themePreview": "Тема интерфейса"
+    },
+    "newProject": {
+      "title": "📄 Новый проект",
+      "projectName": "Название проекта",
+      "namePlaceholder": "Моя новая игра",
+      "ruleSystem": "Система правил",
+      "cancel": "Отмена",
+      "create": "Создать проект",
+      "enterName": "Введите название проекта.",
+      "defaultTitle": "Моя новая игра",
+      "defaultDescription": "Новый проект",
+      "startLocation": "Начало",
+      "startText": "Добро пожаловать!",
+      "noTitle": "Без названия",
+      "editMeta": "✏️ Мета"
+    },
     "loadJson": "Загрузить JSON",
     "saveProject": "Сохранить проект",
     "saveProjectTitle": "Сохранить или экспортировать проект",
@@ -1101,7 +1137,24 @@ window.I18N_LOCALES['ru'] = {
     "newScene": "+ Новая сцена",
     "sidebarStats": "Статистика",
     "sidebarProject": "Проект",
-    "writerMode": "Режим писателя",
+    "writerMode": {
+      "label": "Режим писателя",
+      "levelAriaLabel": "Уровень редактора",
+      "levels": {
+        "writer": "✏️ Писатель",
+        "cartographer": "🗺️ Картограф",
+        "engineer": "⚙️ Инженер"
+      },
+      "hints": {
+        "writer": "Текст сцен, выборы, квесты и персонажи — без технических панелей.",
+        "cartographer": "Писатель + карта истории в рабочей области и чеклист связности.",
+        "engineer": "Полный доступ: JSON, баланс, флаги, события входа и отладка."
+      },
+      "cartographerBadge": " · карта",
+      "toggleAdvancedMode": "⚙️ Advanced Mode",
+      "toggleEngineer": "⚙️ Инженер",
+      "toggleWriterMode": "✏️ Writer Mode"
+    },
     "writerModeFull": "Полный режим",
     "writerModeHint": "Скрывает баланс, климат, JSON и другие технические разделы.",
     "tabsLabel": "Разделы редактора",
@@ -1118,7 +1171,40 @@ window.I18N_LOCALES['ru'] = {
       "achievements": "Достижения",
       "assets": "Ассеты",
       "settings": "Настройки",
-      "help": "Справка"
+      "help": "Справка",
+      "game_ui": "Игровой UI",
+      "groups": {
+        "create": "Создание",
+        "content": "Контент",
+        "tools": "Инструменты",
+        "advanced": "Расширенные"
+      },
+      "tools": {
+        "validate": {
+          "label": "Проверить",
+          "title": "Проверить проект"
+        },
+        "preview": {
+          "label": "Preview",
+          "title": "Play current scene or project start in isolated test mode"
+        },
+        "export": {
+          "label": "Экспорт",
+          "title": "Сохранить или экспортировать проект"
+        }
+      },
+      "onboarding": {
+        "noProject": "Загрузите проект или создайте новый на дашборде.",
+        "noScenes": "Создайте первую сцену — с неё начинается игра.",
+        "firstSceneBtn": "+ Первая сцена",
+        "openScene": "Откройте сцену из списка слева или создайте новую.",
+        "newSceneBtn": "+ Новая сцена",
+        "startScene": "Начните с стартовой сцены — отредактируйте текст и выборы."
+      },
+      "commands": {
+        "story": "Сюжет / карта истории",
+        "categoryTools": "Инструменты"
+      }
     },
     "mobileGateTitle": "Редактор доступен только на ПК",
     "mobileGateBody": "Для создания и правки модулей используйте компьютер с шириной экрана от 768px. На телефоне можно играть и тестировать сценарий.",
@@ -1218,30 +1304,11 @@ window.I18N_LOCALES['ru'] = {
       "worldmap": "🗺️ Карта путешествий",
       "graph": "🗺️ Карта сюжета",
       "progression": "📈 Прогрессия",
-      "json": "📄 JSON"
-    },
-    "dashboard": {
-      "title": "Дашборд проекта",
-      "emptyHint": "Создайте новый проект или загрузите game_data.json.",
-      "newBtn": "Новый проект",
-      "loadBtn": "Загрузить JSON",
-      "saveJson": "Сохранить в JSON",
-      "exportHtml": "Экспорт в HTML",
-      "quickActions": "Быстрые действия",
-      "newScene": "Новая сцена",
-      "saveJsonFile": "Сохранить JSON",
-      "exportGame": "Экспорт игры",
-      "statsScenes": "Сцен",
-      "statsQuests": "Квестов",
-      "statsEnemies": "Врагов",
-      "statsItems": "Предметов",
-      "statsClasses": "Классов",
-      "statsAbilities": "Умений",
-      "warnTitle": "Предупреждения",
-      "warnBroken": "Битых ссылок: {errors}, тупиков: {deadEnds}.",
-      "warnOk": "Критичных битых ссылок не найдено.",
-      "validateBtn": "Проверить проект",
-      "themePreview": "Тема интерфейса"
+      "json": "📄 JSON",
+      "player_characters": "🦸 Герой",
+      "variables": "📊 Переменные",
+      "prefabs": "📦 Префабы",
+      "media": "🖼 Медиа"
     },
     "project": {
       "name": "Название",
@@ -1250,21 +1317,6 @@ window.I18N_LOCALES['ru'] = {
       "system": "Система",
       "editMeta": "Мета",
       "noProject": "Нет проекта"
-    },
-    "newProject": {
-      "title": "📄 Новый проект",
-      "projectName": "Название проекта",
-      "namePlaceholder": "Моя новая игра",
-      "ruleSystem": "Система правил",
-      "cancel": "Отмена",
-      "create": "Создать проект",
-      "enterName": "Введите название проекта.",
-      "defaultTitle": "Моя новая игра",
-      "defaultDescription": "Новый проект",
-      "startLocation": "Начало",
-      "startText": "Добро пожаловать!",
-      "noTitle": "Без названия",
-      "editMeta": "✏️ Мета"
     },
     "export": {
       "htmlModalTitle": "Экспорт в HTML",
@@ -1293,6 +1345,898 @@ window.I18N_LOCALES['ru'] = {
       "defaultProject": "Проект",
       "defaultGame": "Игра",
       "migrateNoObject": "Файл не содержит объект JSON проекта"
+    },
+    "uiIntegration": {
+      "selectScene": "Выберите сцену"
+    },
+    "productHardening": {
+      "templatesUnavailable": "Шаблоны недоступны"
+    },
+    "validationPhaseH": {
+      "exportReady": "✓ Проект готов к экспорту (Phase H)",
+      "exportWithWarnings": "⚠ Экспорт возможен с предупреждениями: {count}",
+      "exportBlocked": "✗ Экспорт заблокирован: {count} ошибок"
+    },
+    "touchUi": {
+      "noOtherScenes": "Нет других сцен для связи",
+      "linkModalTitle": "Связать с…",
+      "linkModalHint": "Выберите сцену — будет создан выбор с переходом.",
+      "cancel": "Отмена",
+      "link": "Связать",
+      "moveToast": "Перетащите сцену пальцем, чтобы переместить",
+      "done": "Готово",
+      "moveModeHint": "Режим перемещения: потяните сцену. Нажмите «Готово», чтобы выйти.",
+      "outputs": "Выходов: {count}",
+      "linkAction": "Связать с…",
+      "moveAction": "Переместить",
+      "openScene": "Открыть сцену",
+      "touchLinkHint": "На тач-экране связи создаются через «Связать с…», не перетаскиванием.",
+      "dragNodeToast": "Потяните узел для перемещения"
+    },
+    "assistantUi": {
+      "panelAriaLabel": "Опиши сцену",
+      "panelTitle": "✨ Опиши сцену текстом",
+      "panelHint": "Черновик собирается только из шаблонов, writerSafe-действий и условий каталога — без произвольного JSON.",
+      "inputPlaceholder": "Например: Таверна — диалог с барменом; выбор — пойти в лес или вернуться в деревню",
+      "draftBtn": "Сформировать черновик",
+      "applyBtn": "Применить",
+      "previewHint": "Введите описание и нажмите «Сформировать черновик».",
+      "emptyDescriptionWarning": "Введите описание сцены",
+      "reviewCount": "⚠ Элементов на проверку: {count} (не будут применены молча)",
+      "error": "Ошибка: {errors}",
+      "sceneCreated": "Сцена создана: {sceneId}"
+    },
+    "validatorNavigation": {
+      "issueTitles": {
+        "missing_scene": "Broken Scene Link",
+        "broken_transition": "Broken Scene Link",
+        "element_missing_scene": "Broken Scene Link",
+        "missing_item": "Missing Item Reference",
+        "missing_quest": "Missing Quest Reference",
+        "missing_npc": "Missing Character Reference",
+        "missing_enemy": "Missing Enemy Reference",
+        "missing_asset_ref": "Missing Asset",
+        "missing_asset_src": "Empty Asset Source",
+        "empty_asset": "Empty Asset",
+        "unknown_action": "Unknown Action",
+        "action_not_in_catalog": "Unknown Action",
+        "missing_action_id": "Invalid Action",
+        "malformed_action": "Malformed Action",
+        "action_js_call": "Unsafe Action",
+        "missing_action_param": "Incomplete Action",
+        "malformed_condition": "Invalid Condition",
+        "invalid_quest_stage": "Invalid Quest Stage",
+        "invalid_amount": "Invalid Number",
+        "invalid_combat_params": "Invalid Combat Setup",
+        "no_scenes": "No Scenes",
+        "empty_scene": "Empty Scene",
+        "orphan_scene": "Unreachable Scene",
+        "unreachable_scene": "Unreachable Scene",
+        "duplicate_id": "Duplicate ID",
+        "npc_no_description": "Missing NPC Description",
+        "export_no_scenes": "Export Blocked",
+        "export_old_data_version": "Outdated Data Version",
+        "macro_id_in_json": "Macro in JSON"
+      },
+      "sections": {
+        "content": "Content",
+        "choices": "Choices",
+        "visual": "Visual",
+        "conditions": "Conditions",
+        "game_ui": "Game UI",
+        "advanced": "Advanced"
+      },
+      "severity": {
+        "warning": "Warning",
+        "info": "Suggestion",
+        "default": "Validation Issue"
+      },
+      "descriptions": {
+        "brokenSceneLink": "The {trigger} points to a scene that does not exist ({targetId}).",
+        "triggerElement": "element",
+        "triggerButton": "button \"{text}\"",
+        "triggerObject": "object \"{label}\"",
+        "choiceFallback": "Choice {n}",
+        "missingItem": "An action references item \"{id}\" which is not in the project.",
+        "missingNpc": "An action references character \"{id}\" which is not in the project.",
+        "missingEnemy": "An action references enemy \"{id}\" which is not in the project.",
+        "emptyScene": "This scene has no text, choices, or visual content for the player.",
+        "reviewIssue": "Review this issue in the editor."
+      },
+      "locationSep": " → ",
+      "actions": {
+        "openAndFix": "Open and Fix",
+        "open": "Open",
+        "autoFix": "Auto-fix",
+        "fixed": "Fixed"
+      },
+      "groups": {
+        "errors": "ERRORS",
+        "warnings": "WARNINGS",
+        "info": "INFO",
+        "noIssues": "No issues found"
+      },
+      "modal": {
+        "title": "Project Validation",
+        "close": "Close",
+        "recheck": "Re-check",
+        "autoFixSafe": "Auto-fix safe issues ({count})",
+        "autoFixPreview": "Auto-fix: {preview}",
+        "summaryErrors": "ERRORS {count}",
+        "summaryWarnings": "WARNINGS {count}",
+        "summaryInfo": "INFO {count}"
+      }
+    },
+    "exportFlow": {
+      "formats": {
+        "json": {
+          "label": "Project JSON",
+          "description": "Editable project file for the RPG Engine editor."
+        },
+        "html": {
+          "label": "Standalone HTML",
+          "description": "Single self-contained HTML file with inlined runtime."
+        },
+        "folder": {
+          "label": "Web Folder",
+          "description": "index.html + scripts folder (Chrome / Edge)."
+        }
+      },
+      "confirm": {
+        "message": "Перед экспортом найдены проблемы:\nОшибок: {errors}{warningsPart}\n\nЭкспорт с ошибками может сломать игру. Продолжить?",
+        "warningsPart": ", предупреждений: {warnings}",
+        "confirmLabel": "Продолжить",
+        "cancelLabel": "Отмена"
+      },
+      "toast": {
+        "exportBlocked": "Export blocked: {count} critical error(s)",
+        "noProjectData": "No project data loaded",
+        "exportBlockedFix": "Export blocked: fix critical errors first",
+        "loadProjectFirst": "Load or create a project first"
+      },
+      "panel": {
+        "title": "Export Project",
+        "closeAria": "Close",
+        "projectLabel": "Project",
+        "formatSection": "Export format",
+        "validationSection": "Validation status",
+        "errorsStat": "{count} Errors",
+        "warningsStat": "{count} Warnings",
+        "blockedNote": "Export is blocked until critical errors are fixed.",
+        "warningsNote": "Warnings do not block export.",
+        "passedNote": "Project passed export validation.",
+        "reviewIssues": "Review issues",
+        "cancel": "Cancel",
+        "exportProject": "Export Project",
+        "exportAnyway": "Export Anyway"
+      },
+      "result": {
+        "title": "Export complete",
+        "lead": "Your export finished successfully.",
+        "generatedFiles": "Generated files",
+        "downloadStarted": "Download started in your browser.",
+        "done": "Done",
+        "htmlNote": "Standalone HTML uses the existing inlined runtime build.",
+        "folderNote": "Folder export uses the browser folder picker; open the chosen directory in your file manager.",
+        "folderFiles": "index.html, js/data.js, css/*, js/*, audio files (if used)"
+      },
+      "untitledProject": "Untitled Project",
+      "defaultSlug": "project"
+    },
+    "authorGuidance": {
+      "contextHints": {
+        "visual": "Используйте для интерактивных локаций и объектов на сцене.",
+        "game_ui": "Используйте для HUD и постоянных элементов управления.",
+        "conditions": "Условия определяют, когда что-то доступно игроку.",
+        "choices": "Выборы — это действия игрока в текстовой сцене.",
+        "content": "Текст сцены и модули задают, что видит игрок.",
+        "items": "Предметы выдаются в квестах, сценах и бою.",
+        "quests": "Квесты связывают сцены, цели и награды.",
+        "combat": "Враги используются в боевых сценах и заданиях."
+      },
+      "emptyStates": {
+        "project": {
+          "title": "Welcome to your RPG project",
+          "explanation": "Create your first scene — that is where the game begins.",
+          "primaryLabel": "Create First Scene"
+        },
+        "scene": {
+          "title": "Сцена не открыта",
+          "explanation": "Откройте сцену из списка слева или создайте новую.",
+          "primaryLabel": "Создать сцену"
+        },
+        "content": {
+          "title": "Сцена пуста",
+          "explanation": "Добавьте текст или модуль, чтобы игрок увидел содержание сцены.",
+          "primaryLabel": "Добавить модуль"
+        },
+        "choices": {
+          "title": "Нет выборов",
+          "explanation": "Добавьте варианты ответа, чтобы игрок мог действовать.",
+          "primaryLabel": "Добавить выбор"
+        },
+        "visual": {
+          "title": "Нет visual-контента",
+          "explanation": "Добавьте фон или интерактивный объект на сцену.",
+          "primaryLabel": "Добавить объект"
+        },
+        "game_ui": {
+          "title": "Нет UI-экранов",
+          "explanation": "Создайте HUD или меню — элементы управления для игрока.",
+          "primaryLabel": "Создать экран"
+        },
+        "conditions": {
+          "title": "Нет условий",
+          "explanation": "Условия управляют видимостью сцены, выборов и объектов.",
+          "primaryLabel": "Добавить условие"
+        },
+        "items": {
+          "title": "Нет предметов",
+          "explanation": "Создайте предметы для квестов, наград и инвентаря.",
+          "primaryLabel": "Создать предмет"
+        },
+        "quests": {
+          "title": "Нет квестов",
+          "explanation": "Задайте цель игроку — квест связывает сцены и награды.",
+          "primaryLabel": "Создать квест"
+        },
+        "combat": {
+          "title": "Нет врагов",
+          "explanation": "Создайте врагов для боевых сцен и заданий.",
+          "primaryLabel": "Создать врага"
+        },
+        "content_category": {
+          "title": "Нет объектов",
+          "explanation": "Создайте первый объект в этой категории.",
+          "primaryLabel": "Создать"
+        }
+      },
+      "noProject": {
+        "title": "Нет открытого проекта",
+        "explanation": "Загрузите проект или создайте новый на стартовом экране.",
+        "primaryLabel": "Загрузить проект"
+      },
+      "dismissHintTitle": "Скрыть подсказку",
+      "dismissHintAria": "Скрыть подсказку"
+    },
+    "previewWorkflow": {
+      "defaultProject": "Проект",
+      "noSceneLabel": "—",
+      "returnToEditor": "Возврат в редактор",
+      "noProjectData": "Нет данных проекта",
+      "testIsolationUnavailable": "Изоляция теста недоступна",
+      "previewPrepareFailed": "Не удалось подготовить превью",
+      "previewOpened": "Превью открыто — EDITOR TEST MODE",
+      "genericError": "Ошибка",
+      "warningsAllowed": "Предупреждений: {count} — превью разрешено.",
+      "beforePreview": "Перед превью",
+      "errorOneFound": "ошибка найдено.",
+      "errorsManyFound": "ошибок найдено.",
+      "noErrors": "Ошибок нет.",
+      "fix": "Исправить",
+      "previewAnyway": "Превью всё равно",
+      "continue": "Продолжить",
+      "cancel": "Отмена",
+      "noSceneForPreview": "Нет сцены для превью",
+      "previewWithWarnings": "Превью с {count} предупр.",
+      "menuHeading": "Превью",
+      "playCurrentScene": "Играть текущую сцену",
+      "playFromStart": "Играть с начала проекта",
+      "previewTitle": "Превью в изолированном тестовом режиме",
+      "previewLabel": "Превью",
+      "globalPreviewLabel": "▶ Превью",
+      "currentSceneTitle": "Текущая сцена",
+      "selectScene": "Выберите сцену"
+    },
+    "sceneWorkspacePolish": {
+      "sections": {
+        "overview": {
+          "title": "Обзор",
+          "desc": "Сводка по сцене и быстрые переходы."
+        },
+        "content": {
+          "title": "Контент",
+          "desc": "Текст сцены и сюжетные модули.",
+          "addModule": "+ Добавить модуль"
+        },
+        "choices": {
+          "title": "Выборы",
+          "desc": "Варианты ответа игрока в этой сцене.",
+          "addChoice": "+ Добавить выбор"
+        },
+        "visual": {
+          "title": "Visual",
+          "desc": "Интерактивные объекты и hotspots сцены.",
+          "addObject": "+ Добавить объект"
+        },
+        "gameUi": {
+          "title": "Game UI",
+          "desc": "HUD и UI-экраны, связанные с проектом.",
+          "addUi": "+ Добавить UI-элемент"
+        },
+        "conditions": {
+          "title": "Условия",
+          "desc": "Видимость сцены, выборов и объектов.",
+          "addCondition": "+ Добавить условие"
+        },
+        "advanced": {
+          "title": "Advanced",
+          "desc": "ID, тип сцены и данные для продвинутого режима."
+        }
+      },
+      "breadcrumb": {
+        "ariaLabel": "Навигация по сцене",
+        "project": "Проект",
+        "unsavedTitle": "Несохранённые изменения"
+      }
+    },
+    "commandPaletteV2": {
+      "categories": {
+        "navigation": "Навигация",
+        "create": "Создание",
+        "project": "Проект",
+        "preview": "Превью",
+        "validation": "Проверка",
+        "export": "Экспорт",
+        "objects": "Объекты",
+        "recent": "Недавние"
+      },
+      "typeLabels": {
+        "scene": "Сцена",
+        "visual_scene": "Сцена",
+        "quest": "Квест",
+        "item": "Предмет",
+        "npc": "NPC",
+        "player_character": "Герой",
+        "enemy": "Враг",
+        "ui_screen": "Game UI",
+        "asset": "Ассет"
+      },
+      "defaultObject": "Объект",
+      "commands": {
+        "goScene": "Перейти к сцене",
+        "contentBrowser": "Открыть Content Browser",
+        "projectGraph": "Открыть карту сюжета",
+        "createScene": "Создать сцену",
+        "createItem": "Создать предмет",
+        "createQuest": "Создать квест",
+        "projectValidate": "Проверить проект",
+        "previewProject": "Превью проекта",
+        "exportProject": "Экспорт проекта"
+      }
+    },
+    "contentBrowserV2": {
+      "categories": {
+        "scenes": "Сцены",
+        "quests": "Квесты",
+        "items": "Предметы",
+        "npcs": "NPC",
+        "characters": "Герои",
+        "combat": "Бой",
+        "game_ui": "Игровой UI",
+        "assets": "Ассеты"
+      },
+      "search": {
+        "noMatch": "Ничего не найдено по запросу «{query}»",
+        "resultsTitle": "Результаты поиска ({count})"
+      },
+      "recentTitle": "Недавно открыто",
+      "categoryNavAria": "Категории контента",
+      "welcome": {
+        "title": "Добро пожаловать в ваш RPG-проект",
+        "body": "Начните с первой сцены — квесты, предметы и визуал тоже здесь.",
+        "createFirstScene": "Создать первую сцену",
+        "chooseTemplate": "Выбрать шаблон"
+      },
+      "indexNotLoaded": "Content index не загружен",
+      "empty": {
+        "noObjects": "Нет объектов",
+        "categoryEmpty": "Категория «{label}» пуста. Создайте первый объект.",
+        "categoryEmptyShort": "Категория «{label}» пуста."
+      },
+      "create": {
+        "quest": "+ Создать квест",
+        "item": "+ Создать предмет",
+        "npc": "+ Создать NPC",
+        "player_character": "+ Создать героя",
+        "enemy": "+ Создать врага",
+        "ui_screen": "+ Создать UI-экран",
+        "asset": "+ Добавить ассет",
+        "default": "+ Создать",
+        "toggle": "+ Создать"
+      },
+      "sceneFilters": {
+        "all": "Все",
+        "text": "Text",
+        "visual": "Visual",
+        "mixed": "Mixed",
+        "searchPlaceholder": "🔍 Поиск сцен…",
+        "filterAria": "Фильтр типа сцены",
+        "sortLabel": "Сортировка",
+        "sortTitle": "По имени",
+        "sortTitleDesc": "Имя (Я→А)",
+        "sortKind": "По типу"
+      },
+      "chrome": {
+        "contentTitle": "CONTENT",
+        "globalSearchPlaceholder": "🔍 Поиск по проекту…"
+      }
+    },
+    "campaignWizard": {
+      "steps": {
+        "genre": "Жанр и система",
+        "world": "Каркас мира",
+        "heroes": "Герои и NPC",
+        "quest": "Первый квест",
+        "publish": "Проверка и публикация"
+      },
+      "defaultTitle": "Моя история",
+      "title": "📖 Режим истории",
+      "cancel": "Отмена",
+      "back": "Назад",
+      "skip": "Пропустить",
+      "next": "Далее",
+      "closeWizard": "Закрыть мастер",
+      "finishWithoutExport": "Завершить без экспорта",
+      "selectPlaceholder": "— выберите —",
+      "unknownStep": "Неизвестный шаг",
+      "unknownStepMaster": "Неизвестный шаг мастера.",
+      "publishModuleMissing": "Модуль публикации не загружен.",
+      "genreHint": "Расскажите, какой мир вы создаёте — движок подготовит основу проекта.",
+      "storyTitleLabel": "Название истории",
+      "genreLabel": "Жанр",
+      "systemLabel": "Правила игры",
+      "startingResources": "Стартовый запас: {gold} монет, {hp} здоровья — можно изменить позже.",
+      "blankProjectLink": "Создать пустой проект с нуля…",
+      "worldHint": "Выберите каркас — из готовых шаблонов появятся связанные сцены в духе вашего жанра.",
+      "worldPreviewHint": "Выберите каркас — появится схема сцен.",
+      "startSceneLabel": "Стартовая сцена:",
+      "regenerateWorld": "Сгенерировать заново",
+      "heroesHint": "Назовите героя и ключевых персонажей — движок создаст записи и реплики.",
+      "heroHeading": "🧝 Герой",
+      "nameLabel": "Имя",
+      "heroDescLabel": "Кратко о герое",
+      "npcHeading": "👤 Персонаж {n}",
+      "roleLabel": "Роль",
+      "briefLabel": "Кратко",
+      "phrasePreview": "Реплика: «{phrase}»",
+      "questHint": "Что должен сделать игрок? Выберите цель и участников — этапы соберутся сами.",
+      "questTitleLabel": "Название задания",
+      "npcLabel": "Персонаж",
+      "itemLabel": "Предмет",
+      "enemyLabel": "Противник",
+      "placeLabel": "Место",
+      "rewardHeading": "Награда",
+      "rewardGoldLabel": "Сколько золота",
+      "rewardItemLabel": "Предмет-награда",
+      "repOwnerLabel": "Чья репутация",
+      "repAmountLabel": "На сколько",
+      "toastRegenBlocked": "Вы уже меняли сцены — перегенерация отключена, чтобы не потерять правки.",
+      "toastRegenDone": "Каркас пересобран — нажмите «Далее», чтобы применить.",
+      "toastWorldFailed": "Не удалось собрать каркас мира",
+      "toastWorldValidation": "Каркас не прошёл проверку — сообщите об ошибке разработчикам",
+      "toastHeroesFailed": "Не удалось создать персонажей",
+      "toastQuestFailed": "Не удалось создать квест",
+      "toastQuestValidation": "Проект не прошёл проверку после квеста",
+      "toastStepFailed": "Не удалось применить шаг мастера",
+      "toastSavedResume": "Мастер сохранён — продолжите через «Новый проект»",
+      "toastReportUpdated": "Отчёт обновлён",
+      "toastSavedPublish": "Мастер сохранён — откройте «Новый проект», чтобы вернуться к публикации",
+      "toastPreviewUnavailable": "Превью недоступно — перезагрузите редактор",
+      "toastFixErrors": "Сначала исправьте ошибки в отчёте",
+      "toastExportUnavailable": "Экспорт HTML недоступен",
+      "toastExportSaved": "HTML-файл сохранён",
+      "toastExportFailed": "Не удалось экспортировать HTML",
+      "toastFinished": "Мастер «Режим истории» завершён. Продолжайте наполнять игру в режиме Писателя.",
+      "toastResume": "Продолжаем мастер «Режим истории» с шага «{step}»",
+      "toastSavedLater": "Мастер «Режим истории» сохранён — продолжите через «Новый проект»",
+      "toastUndoDone": "Изменения мастера отменены",
+      "confirmCancel": "Прервать мастер? Прогресс сохранится — продолжите через «Новый проект».\n\nНажмите «Другое…», чтобы выбрать откат созданного.",
+      "confirmCancelFinish": "Завершить позже",
+      "confirmCancelOther": "Другое…",
+      "confirmUndo": "Откатить изменения мастера через историю отмены (undo)?",
+      "confirmUndoYes": "Откатить",
+      "confirmUndoKeep": "Оставить как есть",
+      "confirmNoUndo": "История отмены недоступна. Закрыть мастер и оставить созданное в проекте?",
+      "confirmClose": "Закрыть",
+      "confirmBack": "Назад",
+      "confirmOpen": "Открыть мастер «Режим истории»? Текущий проект может быть заменён на шаге «Жанр и система».",
+      "confirmResume": "Есть незавершённый мастер «Режим истории». Продолжить с шага «{step}»?",
+      "confirmContinue": "Продолжить",
+      "confirmRestart": "Начать заново",
+      "legacyTitle": "📖 Новая история",
+      "legacyCreate": "✨ Создать историю",
+      "legacySteps": {
+        "title": "Название",
+        "scenes": "Сцены",
+        "npc": "NPC",
+        "questCombat": "Квест и бой",
+        "done": "Готово"
+      },
+      "legacyHint0": "Дальше соберём 3 сцены, NPC, квест и простого врага — без кода.",
+      "legacyNoteLabel": "Кратко, о чём игра (для себя)",
+      "legacyScenesHint": "Три локации каркаса. Позже добавите ещё на карте сюжета.",
+      "legacySceneName": "Сцена {n}: название",
+      "legacySceneText": "Текст (что видит игрок)",
+      "legacyNpcHint": "Персонаж, с которого начнётся сюжет (обычно в первой или второй сцене).",
+      "legacyNpcName": "Имя NPC",
+      "legacyNpcLine": "Первая реплика",
+      "legacyQuestTitle": "Название квеста",
+      "legacyQuestHint": "Что сделать (для журнала)",
+      "legacyCombatCheck": "Добавить простого врага и сцену боя",
+      "legacyEnemyName": "Имя врага",
+      "legacyReadyTitle": "Всё готово к сборке",
+      "legacyReadyBody": "Будут созданы: проект «{title}», {sceneCount} сцены, NPC, квест{combatExtra}.",
+      "legacyReadyCombatExtra": ", враг и бой",
+      "legacyDefaultScenes": [
+        {
+          "name": "Начало",
+          "text": "Вы стоите на пороге приключения."
+        },
+        {
+          "name": "Деревня",
+          "text": "Тихая деревня. Здесь можно найти помощь."
+        },
+        {
+          "name": "Опасное место",
+          "text": "Здесь кто-то или что-то угрожает покою."
+        }
+      ],
+      "legacyDefaultNpc": "Старейшина",
+      "legacyDefaultNpcLine": "Добро пожаловать, путник. Мне нужна твоя помощь.",
+      "legacyDefaultQuest": "Первое задание",
+      "legacyDefaultQuestHint": "Поговорите со старейшиной и разберитесь с угрозой.",
+      "legacyDefaultEnemy": "Разбойник",
+      "confirmLegacyOpen": "Создать новую историю? Текущий проект в редакторе будет заменён (файл на диске не трогаем, пока не сохраните).",
+      "legacyCreated": "История «{title}» создана. Откройте карту сюжета или превью сцены.",
+      "quickStoryBtn": "📖 Быстрая история (классика)",
+      "npcHubWhere": "📍 Где встречается",
+      "npcHubAttach": "Привязать к сцене",
+      "npcHubSceneOption": "+ сцена…",
+      "npcHubNotLinked": "Пока нигде не привязан. Укажите NPC на сцене или добавьте ниже.",
+      "npcHubLines": "💬 Реплики",
+      "npcHubNoLines": "Нет реплик",
+      "npcHubAddLine": "+ Реплика",
+      "npcHubQuests": "📜 Связанные квесты",
+      "npcHubNoQuests": "Квестов пока нет — создайте во вкладке «Квесты».",
+      "npcSceneReason": "NPC сцены",
+      "npcDialogReason": "Диалог",
+      "npcComponentReason": "Компонент",
+      "createNpcPrompt": "Имя персонажа:",
+      "createNpcDefault": "Новый житель",
+      "fallbackGenres": {
+        "fantasy": "Фэнтези",
+        "horror": "Хоррор",
+        "detective": "Детектив",
+        "survival": "Выживание"
+      },
+      "fallbackSystems": {
+        "generic": "Универсальные правила",
+        "dnd5e": "Классические приключения"
+      },
+      "fallbackRewardGold": "Золото",
+      "gameData": {
+        "goTo": "Идти: {name}",
+        "acceptQuest": "Принять: {title}",
+        "faceEnemy": "Столкнуться с: {name}",
+        "questStageStart": "Начало",
+        "questStagePath": "В пути",
+        "questStagePathHint": "Продолжайте путь по локациям.",
+        "questStageDone": "Готово",
+        "questStageDoneHint": "Задание выполнено.",
+        "talkTask": "Поговорить с: {name}",
+        "visitTask": "Дойти до: {location}",
+        "npcDesc": "Ключевой персонаж начала истории.",
+        "combatLocation": "Схватка: {name}",
+        "combatText": "{name} преграждает путь!"
+      }
+    },
+    "storyWizard": {
+      "content": {
+        "defaultChoiceGo": "Идти",
+        "systems": {
+          "generic": "Универсальные правила",
+          "dnd5e": "Классические приключения",
+          "pf2e": "Pathfinder"
+        },
+        "genres": {
+          "fantasy": {
+            "label": "Фэнтези",
+            "defaultTitle": "Сказание о приключении",
+            "description": "Рыцари, магия и древние тайны ждут героя."
+          },
+          "horror": {
+            "label": "Хоррор",
+            "defaultTitle": "Тени забытого дома",
+            "description": "Мрак, страх и необъяснимое на каждом шагу."
+          },
+          "detective": {
+            "label": "Детектив",
+            "defaultTitle": "Дело без ответа",
+            "description": "Улики, свидетели и разгадка в финале."
+          },
+          "survival": {
+            "label": "Выживание",
+            "defaultTitle": "После бури",
+            "description": "Ресурсы на исходе — нужно дойти до безопасного места."
+          }
+        },
+        "sceneNames": {
+          "fantasy": {
+            "start": "У ворот королевства",
+            "hub": "Перекрёсток стражей",
+            "branch1": "Тёмный лес",
+            "branch2": "Руины башни",
+            "branch3": "Деревня эльфов",
+            "village": "Деревня Ольдвуд",
+            "tavern": "Таверна «Золотой кубок»",
+            "shop": "Лавка алхимика",
+            "forge": "Кузница старого Грома",
+            "road1": "Королевская дорога",
+            "road2": "Мост через реку",
+            "road3": "Поляна у ручья",
+            "road4": "Ворота крепости",
+            "exit": "Окраина земель"
+          },
+          "horror": {
+            "start": "Порог заброшенного дома",
+            "hub": "Пустой холл",
+            "branch1": "Подвал",
+            "branch2": "Мансарда",
+            "branch3": "Сад с могилами",
+            "village": "Мёртвая деревня",
+            "tavern": "Закрытая постоялая",
+            "shop": "Пустая лавка",
+            "forge": "Заржавевшая кузня",
+            "road1": "Туманная тропа",
+            "road2": "Сломанный мост",
+            "road3": "Болото",
+            "road4": "Старый склеп",
+            "exit": "Ворота кладбища"
+          },
+          "detective": {
+            "start": "Приёмная детектива",
+            "hub": "Городская площадь",
+            "branch1": "Кабинет мэра",
+            "branch2": "Склад улик",
+            "branch3": "Кафе свидетелей",
+            "village": "Старый квартал",
+            "tavern": "Бар «Красная лампа»",
+            "shop": "Ломбард",
+            "forge": "Мастерская часовщика",
+            "road1": "Улица фонарей",
+            "road2": "Переулок у доков",
+            "road3": "Архив полиции",
+            "road4": "Судебный зал",
+            "exit": "Вокзал"
+          },
+          "survival": {
+            "start": "Лагерь после бури",
+            "hub": "Разрушенный мост",
+            "branch1": "Заросшая тропа",
+            "branch2": "Заброшенная хижина",
+            "branch3": "Ручей с пресной водой",
+            "village": "Посёлок ущелья",
+            "tavern": "Убежище у костра",
+            "shop": "Запасной склад",
+            "forge": "Сарай с инструментами",
+            "road1": "Горная тропа",
+            "road2": "Обвал на пути",
+            "road3": "Пещера у скалы",
+            "road4": "Спасательный пункт",
+            "exit": "Безопасная поляна"
+          }
+        },
+        "skeletons": {
+          "hub_branches": {
+            "label": "Хаб и три ветки",
+            "description": "Центральная точка и три пути — классика ветвящегося сюжета.",
+            "choices": {
+              "startPath": "Начать путь",
+              "path1": "Первый путь",
+              "path2": "Второй путь",
+              "path3": "Третий путь",
+              "return": "Вернуться"
+            }
+          },
+          "linear_road": {
+            "label": "Линейная дорога",
+            "description": "Последовательный путь из пяти локаций — для сюжета без развилок.",
+            "choices": {
+              "setOut": "В путь",
+              "continue": "Идти дальше",
+              "finishPath": "Завершить путь",
+              "return": "Вернуться"
+            }
+          },
+          "ready_village": {
+            "label": "Готовая деревня",
+            "description": "Посёлок с таверной, лавкой и кузницей — готовый хаб для истории.",
+            "choices": {
+              "enterVillage": "Войти в посёлок",
+              "tavern": "Таверна",
+              "shop": "Лавка",
+              "forge": "Кузница",
+              "leaveVillage": "Уйти из посёлка",
+              "toSquare": "На площадь",
+              "return": "Вернуться"
+            }
+          }
+        }
+      },
+      "heroesQuest": {
+        "roles": {
+          "quest_giver": "Квестодатель",
+          "merchant": "Торговец",
+          "informant": "Источник информации",
+          "antagonist": "Противник"
+        },
+        "phrases": {
+          "quest_giver": "Мне нужна твоя помощь, путник. У меня есть дело для тебя.",
+          "merchant": "Загляни — товар свежий, цены честные.",
+          "informant": "Слышал кое-что важное. Может, пригодится.",
+          "antagonist": "Тебе здесь не рады. Убирайся, пока цел.",
+          "fallback": "…"
+        },
+        "rewards": {
+          "gold": "Золото",
+          "item": "Предмет",
+          "reputation": "Репутация"
+        },
+        "defaults": {
+          "heroName": "Странник",
+          "heroDescription": "Главный герой вашей истории",
+          "questTitle": "Первое задание",
+          "npcFallback": "Персонаж",
+          "acceptQuest": "Принять: {title}",
+          "acceptQuestFallback": "задание",
+          "rewardItemName": "Награда за подвиг",
+          "rewardItemDesc": "За выполненное задание",
+          "rewardPlaceholder": "Награда",
+          "reputationVillage": "Местные жители"
+        },
+        "items": {
+          "fantasy": "Старый амулет",
+          "horror": "Потёртая записка",
+          "detective": "Улика",
+          "survival": "Запас провизии",
+          "fallback": "Предмет"
+        },
+        "enemies": {
+          "fantasy": "Разбойник",
+          "horror": "Тень",
+          "detective": "Подозреваемый",
+          "survival": "Дикий зверь",
+          "fallback": "Враг"
+        },
+        "defaultNpcs": {
+          "fantasy": [
+            {
+              "name": "Старейшина",
+              "role": "quest_giver",
+              "description": "Правит деревней и даёт поручения"
+            },
+            {
+              "name": "Торговец",
+              "role": "merchant",
+              "description": "Продаёт зелья и снаряжение"
+            },
+            {
+              "name": "Странник",
+              "role": "informant",
+              "description": "Знает тропы и слухи"
+            }
+          ],
+          "horror": [
+            {
+              "name": "Хозяин дома",
+              "role": "quest_giver",
+              "description": "Просит разобраться с тенями"
+            },
+            {
+              "name": "Сторож",
+              "role": "informant",
+              "description": "Видел странное у колодца"
+            },
+            {
+              "name": "Незнакомец",
+              "role": "antagonist",
+              "description": "Пугает и мешает расследованию"
+            }
+          ],
+          "detective": [
+            {
+              "name": "Инспектор",
+              "role": "quest_giver",
+              "description": "Поручает первое дело"
+            },
+            {
+              "name": "Свидетель",
+              "role": "informant",
+              "description": "Видел подозрительное"
+            },
+            {
+              "name": "Лавочник",
+              "role": "merchant",
+              "description": "Торгует уликами и кофе"
+            }
+          ],
+          "survival": [
+            {
+              "name": "Старший лагеря",
+              "role": "quest_giver",
+              "description": "Организует выживание группы"
+            },
+            {
+              "name": "Разведчик",
+              "role": "informant",
+              "description": "Знает безопасные тропы"
+            },
+            {
+              "name": "Мародёр",
+              "role": "antagonist",
+              "description": "Угрожает запасами"
+            }
+          ]
+        }
+      },
+      "publish": {
+        "heroDefault": "Герой",
+        "defaultTitle": "Моя история",
+        "dash": "—",
+        "projectLabel": "Проект",
+        "errorFallback": "Ошибка",
+        "questNotSet": "квест не задан в мастере",
+        "questNotCreated": "квест ещё не создан в проекте",
+        "noStartScene": "нет стартовой сцены",
+        "questGranted": "выдаётся в «{label}»",
+        "questUnreachable": "ни один выбор с старта не запускает квест",
+        "checklist": {
+          "hasStart": "Есть стартовая сцена",
+          "firstQuest": "Первый квест достижим",
+          "sceneExit": "У каждой сцены есть хотя бы один выход",
+          "hubFinal": "Финал достижим из хаба"
+        },
+        "checklistDetail": {
+          "startAssigned": "«{id}»",
+          "startDefault": "«{id}» (по умолчанию)",
+          "noStart": "создайте хотя бы одну сцену и укажите старт",
+          "deadEnds": "без выхода: {list}",
+          "allExits": "все сцены ведут дальше или завершают историю",
+          "flowSkipped": "карта сюжета недоступна — проверка пропущена",
+          "hubFinalOk": "от хаба достижим финал"
+        },
+        "sections": {
+          "checklist": "Чеклист готовности",
+          "errors": "Ошибки ({count})",
+          "warnings": "Предупреждения ({count})"
+        },
+        "validatorOk": "✓ Критических проблем валидатора не найдено — можно тестировать и экспортировать.",
+        "exportBlocked": "Экспорт заблокирован",
+        "exportBlockedHint": " — устраните ошибки выше:",
+        "exportTitle": "Экспортировать HTML",
+        "exportDisabledTitle": "Сначала исправьте ошибки",
+        "header": "Проверка и публикация",
+        "headerSummary": "{title} · {count} сцен · квест «{quest}»",
+        "playPreview": "▶ Играть как герой",
+        "refreshReport": "↻ Обновить отчёт",
+        "note": "Превью и экспорт не требуют переключения вкладок. Клик по строке откроет место проблемы в редакторе.",
+        "successTitle": "Игра экспортирована",
+        "successHint": "Файл HTML сохранён на диск — откройте его в браузере и передайте друзьям.",
+        "stats": {
+          "scenes": "Сцен: {count}",
+          "quest": "Квест: «{title}»",
+          "heroNpc": "Герой: {hero} · NPC: {count}"
+        },
+        "improveTitle": "Что улучшить позже",
+        "improve": {
+          "warnings": "есть предупреждения валидатора — можно доработать диалоги и условия",
+          "checklist": "чеклист готовности не полностью зелёный",
+          "default": "добавить больше сцен, квестов и визуальных деталей"
+        },
+        "gotoCartographer": "🗺️ Картограф — карта сюжета",
+        "gotoEngineer": "⚙️ Инженер — баланс и механики"
+      }
     }
   },
   "game": {
@@ -1362,6 +2306,22 @@ window.I18N_LOCALES['ru'] = {
     "menuDeleteSave": "Удалить сохранение",
     "menuCampaignPicker": "К выбору игры",
     "menuReset": "Начать заново",
+    "saveSlots": {
+      "title": "Сохранения",
+      "open": "Сохранить / загрузить",
+      "slotLabel": "Слот {n}",
+      "empty": "Пусто",
+      "save": "Сохранить",
+      "load": "Загрузить",
+      "delete": "Удалить",
+      "active": "активный",
+      "overwrite": "Перезаписать сохранение в слоте {n}?",
+      "deleteConfirm": "Удалить сохранение в слоте {n}?",
+      "savedAt": "Сохранено: {date}",
+      "playtime": "Время: {time}",
+      "level": "Уровень {level}",
+      "scene": "Локация: {name}"
+    },
     "audioMusic": "Громкость музыки",
     "audioSfx": "Громкость эффектов",
     "audioOn": "Звук вкл",
@@ -1369,6 +2329,19 @@ window.I18N_LOCALES['ru'] = {
     "lootTitle": "Добыча",
     "lootTake": "Забрать",
     "levelUp": "Новый уровень!",
+    "dialog": {
+      "ok": "OK",
+      "confirm": "Да",
+      "cancel": "Отмена",
+      "promptPlaceholder": "Введите значение…",
+      "noticeTitle": "Сообщение",
+      "jsonReadError": "Ошибка чтения JSON: {message}",
+      "returnToPicker": "Вернуться к выбору игры? Несохранённый прогресс может быть потерян.",
+      "resetGame": "Начать новую игру? Текущий прогресс будет сброшен.",
+      "deleteSave": "Удалить сохранение игры?",
+      "abilityNotFound": "Умение не найдено в данных progression.abilities",
+      "cancelCharCreation": "Отменить создание персонажа?"
+    },
     "achievementUnlocked": "Достижение разблокировано!",
     "hintLabel": "Подсказка",
     "mobileExpandSidebar": "Развернуть панель персонажа",
@@ -1508,12 +2481,11 @@ window.I18N_LOCALES['ru'] = {
     "tocTitle": "Содержание"
   },
   "help": {}
-}
-
+};
 
 
 ;/* —— locales/en.js —— */
-﻿/* generated from en.json */
+/* generated from en.json */
 window.I18N_LOCALES = window.I18N_LOCALES || {};
 window.I18N_LOCALES['en'] = {
   "lang": {
@@ -1547,8 +2519,44 @@ window.I18N_LOCALES['en'] = {
     "pageTitle": "MythMill RpgEngine — Editor",
     "title": "MythMill RpgEngine",
     "titleTooltip": "Go to dashboard",
-    "dashboard": "Dashboard",
-    "newProject": "New project",
+    "dashboard": {
+      "title": "Project dashboard",
+      "emptyHint": "Create a new project or load game_data.json.",
+      "newBtn": "New project",
+      "loadBtn": "Load JSON",
+      "saveJson": "Save as JSON",
+      "exportHtml": "Export to HTML",
+      "quickActions": "Quick actions",
+      "newScene": "New scene",
+      "saveJsonFile": "Save JSON",
+      "exportGame": "Export game",
+      "statsScenes": "Scenes",
+      "statsQuests": "Quests",
+      "statsEnemies": "Enemies",
+      "statsItems": "Items",
+      "statsClasses": "Classes",
+      "statsAbilities": "Abilities",
+      "warnTitle": "Warnings",
+      "warnBroken": "Broken links: {errors}, dead ends: {deadEnds}.",
+      "warnOk": "No critical broken links found.",
+      "validateBtn": "Validate project",
+      "themePreview": "UI theme"
+    },
+    "newProject": {
+      "title": "📄 New project",
+      "projectName": "Project name",
+      "namePlaceholder": "My new game",
+      "ruleSystem": "Rule system",
+      "cancel": "Cancel",
+      "create": "Create project",
+      "enterName": "Enter a project name.",
+      "defaultTitle": "My new game",
+      "defaultDescription": "New project",
+      "startLocation": "Start",
+      "startText": "Welcome!",
+      "noTitle": "Untitled",
+      "editMeta": "✏️ Meta"
+    },
     "loadJson": "Load JSON",
     "saveProject": "Save project",
     "saveProjectTitle": "Save or export project",
@@ -1571,7 +2579,24 @@ window.I18N_LOCALES['en'] = {
     "newScene": "+ New scene",
     "sidebarStats": "Statistics",
     "sidebarProject": "Project",
-    "writerMode": "Writer mode",
+    "writerMode": {
+      "label": "Writer mode",
+      "levelAriaLabel": "Editor level",
+      "levels": {
+        "writer": "✏️ Writer",
+        "cartographer": "🗺️ Cartographer",
+        "engineer": "⚙️ Engineer"
+      },
+      "hints": {
+        "writer": "Scene text, choices, quests and characters — without technical panels.",
+        "cartographer": "Writer plus story map in the workspace and connectivity checklist.",
+        "engineer": "Full access: JSON, balance, flags, on-enter events and debugging."
+      },
+      "cartographerBadge": " · map",
+      "toggleAdvancedMode": "⚙️ Advanced Mode",
+      "toggleEngineer": "⚙️ Engineer",
+      "toggleWriterMode": "✏️ Writer Mode"
+    },
     "writerModeFull": "Full mode",
     "writerModeHint": "Hides balance, climate, JSON and other technical sections.",
     "tabsLabel": "Editor sections",
@@ -1588,7 +2613,40 @@ window.I18N_LOCALES['en'] = {
       "achievements": "Achievements",
       "assets": "Assets",
       "settings": "Settings",
-      "help": "Help"
+      "help": "Help",
+      "game_ui": "Game UI",
+      "groups": {
+        "create": "Creation",
+        "content": "Content",
+        "tools": "Tools",
+        "advanced": "Advanced"
+      },
+      "tools": {
+        "validate": {
+          "label": "Validate",
+          "title": "Validate project"
+        },
+        "preview": {
+          "label": "Preview",
+          "title": "Play current scene or project start in isolated test mode"
+        },
+        "export": {
+          "label": "Export",
+          "title": "Save or export project"
+        }
+      },
+      "onboarding": {
+        "noProject": "Load a project or create a new one on the dashboard.",
+        "noScenes": "Create your first scene — that's where the game begins.",
+        "firstSceneBtn": "+ First scene",
+        "openScene": "Open a scene from the list on the left or create a new one.",
+        "newSceneBtn": "+ New scene",
+        "startScene": "Start with the opening scene — edit the text and choices."
+      },
+      "commands": {
+        "story": "Story / story map",
+        "categoryTools": "Tools"
+      }
     },
     "mobileGateTitle": "Editor is desktop only",
     "mobileGateBody": "Use a computer with at least 768px width to create and edit modules. On phones you can play and test your game.",
@@ -1688,30 +2746,11 @@ window.I18N_LOCALES['en'] = {
       "worldmap": "🗺️ Travel map",
       "graph": "🗺️ Story map",
       "progression": "📈 Progression",
-      "json": "📄 JSON"
-    },
-    "dashboard": {
-      "title": "Project dashboard",
-      "emptyHint": "Create a new project or load game_data.json.",
-      "newBtn": "New project",
-      "loadBtn": "Load JSON",
-      "saveJson": "Save as JSON",
-      "exportHtml": "Export to HTML",
-      "quickActions": "Quick actions",
-      "newScene": "New scene",
-      "saveJsonFile": "Save JSON",
-      "exportGame": "Export game",
-      "statsScenes": "Scenes",
-      "statsQuests": "Quests",
-      "statsEnemies": "Enemies",
-      "statsItems": "Items",
-      "statsClasses": "Classes",
-      "statsAbilities": "Abilities",
-      "warnTitle": "Warnings",
-      "warnBroken": "Broken links: {errors}, dead ends: {deadEnds}.",
-      "warnOk": "No critical broken links found.",
-      "validateBtn": "Validate project",
-      "themePreview": "UI theme"
+      "json": "📄 JSON",
+      "player_characters": "🦸 Hero",
+      "variables": "📊 Variables",
+      "prefabs": "📦 Prefabs",
+      "media": "🖼 Media"
     },
     "project": {
       "name": "Title",
@@ -1720,21 +2759,6 @@ window.I18N_LOCALES['en'] = {
       "system": "System",
       "editMeta": "Meta",
       "noProject": "No project"
-    },
-    "newProject": {
-      "title": "📄 New project",
-      "projectName": "Project name",
-      "namePlaceholder": "My new game",
-      "ruleSystem": "Rule system",
-      "cancel": "Cancel",
-      "create": "Create project",
-      "enterName": "Enter a project name.",
-      "defaultTitle": "My new game",
-      "defaultDescription": "New project",
-      "startLocation": "Start",
-      "startText": "Welcome!",
-      "noTitle": "Untitled",
-      "editMeta": "✏️ Meta"
     },
     "export": {
       "htmlModalTitle": "Export to HTML",
@@ -1763,6 +2787,898 @@ window.I18N_LOCALES['en'] = {
       "defaultProject": "Project",
       "defaultGame": "Game",
       "migrateNoObject": "File does not contain a project JSON object"
+    },
+    "uiIntegration": {
+      "selectScene": "Select a scene"
+    },
+    "productHardening": {
+      "templatesUnavailable": "Templates are unavailable"
+    },
+    "validationPhaseH": {
+      "exportReady": "✓ Project is ready for export (Phase H)",
+      "exportWithWarnings": "⚠ Export possible with warnings: {count}",
+      "exportBlocked": "✗ Export blocked: {count} errors"
+    },
+    "touchUi": {
+      "noOtherScenes": "No other scenes to link",
+      "linkModalTitle": "Link to…",
+      "linkModalHint": "Choose a scene — a choice with a transition will be created.",
+      "cancel": "Cancel",
+      "link": "Link",
+      "moveToast": "Drag the scene with your finger to move it",
+      "done": "Done",
+      "moveModeHint": "Move mode: drag the scene. Tap Done to exit.",
+      "outputs": "Exits: {count}",
+      "linkAction": "Link to…",
+      "moveAction": "Move",
+      "openScene": "Open scene",
+      "touchLinkHint": "On touch screens, links are created via Link to…, not by dragging.",
+      "dragNodeToast": "Drag the node to move it"
+    },
+    "assistantUi": {
+      "panelAriaLabel": "Describe scene",
+      "panelTitle": "✨ Describe the scene in text",
+      "panelHint": "The draft is built only from templates, writerSafe actions and catalog conditions — no arbitrary JSON.",
+      "inputPlaceholder": "For example: Tavern — dialogue with the bartender; choice — go to the forest or return to the village",
+      "draftBtn": "Generate draft",
+      "applyBtn": "Apply",
+      "previewHint": "Enter a description and click Generate draft.",
+      "emptyDescriptionWarning": "Enter a scene description",
+      "reviewCount": "⚠ Items to review: {count} (will not be applied silently)",
+      "error": "Error: {errors}",
+      "sceneCreated": "Scene created: {sceneId}"
+    },
+    "validatorNavigation": {
+      "issueTitles": {
+        "missing_scene": "Broken Scene Link",
+        "broken_transition": "Broken Scene Link",
+        "element_missing_scene": "Broken Scene Link",
+        "missing_item": "Missing Item Reference",
+        "missing_quest": "Missing Quest Reference",
+        "missing_npc": "Missing Character Reference",
+        "missing_enemy": "Missing Enemy Reference",
+        "missing_asset_ref": "Missing Asset",
+        "missing_asset_src": "Empty Asset Source",
+        "empty_asset": "Empty Asset",
+        "unknown_action": "Unknown Action",
+        "action_not_in_catalog": "Unknown Action",
+        "missing_action_id": "Invalid Action",
+        "malformed_action": "Malformed Action",
+        "action_js_call": "Unsafe Action",
+        "missing_action_param": "Incomplete Action",
+        "malformed_condition": "Invalid Condition",
+        "invalid_quest_stage": "Invalid Quest Stage",
+        "invalid_amount": "Invalid Number",
+        "invalid_combat_params": "Invalid Combat Setup",
+        "no_scenes": "No Scenes",
+        "empty_scene": "Empty Scene",
+        "orphan_scene": "Unreachable Scene",
+        "unreachable_scene": "Unreachable Scene",
+        "duplicate_id": "Duplicate ID",
+        "npc_no_description": "Missing NPC Description",
+        "export_no_scenes": "Export Blocked",
+        "export_old_data_version": "Outdated Data Version",
+        "macro_id_in_json": "Macro in JSON"
+      },
+      "sections": {
+        "content": "Content",
+        "choices": "Choices",
+        "visual": "Visual",
+        "conditions": "Conditions",
+        "game_ui": "Game UI",
+        "advanced": "Advanced"
+      },
+      "severity": {
+        "warning": "Warning",
+        "info": "Suggestion",
+        "default": "Validation Issue"
+      },
+      "descriptions": {
+        "brokenSceneLink": "The {trigger} points to a scene that does not exist ({targetId}).",
+        "triggerElement": "element",
+        "triggerButton": "button \"{text}\"",
+        "triggerObject": "object \"{label}\"",
+        "choiceFallback": "Choice {n}",
+        "missingItem": "An action references item \"{id}\" which is not in the project.",
+        "missingNpc": "An action references character \"{id}\" which is not in the project.",
+        "missingEnemy": "An action references enemy \"{id}\" which is not in the project.",
+        "emptyScene": "This scene has no text, choices, or visual content for the player.",
+        "reviewIssue": "Review this issue in the editor."
+      },
+      "locationSep": " → ",
+      "actions": {
+        "openAndFix": "Open and Fix",
+        "open": "Open",
+        "autoFix": "Auto-fix",
+        "fixed": "Fixed"
+      },
+      "groups": {
+        "errors": "ERRORS",
+        "warnings": "WARNINGS",
+        "info": "INFO",
+        "noIssues": "No issues found"
+      },
+      "modal": {
+        "title": "Project Validation",
+        "close": "Close",
+        "recheck": "Re-check",
+        "autoFixSafe": "Auto-fix safe issues ({count})",
+        "autoFixPreview": "Auto-fix: {preview}",
+        "summaryErrors": "ERRORS {count}",
+        "summaryWarnings": "WARNINGS {count}",
+        "summaryInfo": "INFO {count}"
+      }
+    },
+    "exportFlow": {
+      "formats": {
+        "json": {
+          "label": "Project JSON",
+          "description": "Editable project file for the RPG Engine editor."
+        },
+        "html": {
+          "label": "Standalone HTML",
+          "description": "Single self-contained HTML file with inlined runtime."
+        },
+        "folder": {
+          "label": "Web Folder",
+          "description": "index.html + scripts folder (Chrome / Edge)."
+        }
+      },
+      "confirm": {
+        "message": "Issues found before export:\nErrors: {errors}{warningsPart}\n\nExporting with errors may break the game. Continue?",
+        "warningsPart": ", warnings: {warnings}",
+        "confirmLabel": "Continue",
+        "cancelLabel": "Cancel"
+      },
+      "toast": {
+        "exportBlocked": "Export blocked: {count} critical error(s)",
+        "noProjectData": "No project data loaded",
+        "exportBlockedFix": "Export blocked: fix critical errors first",
+        "loadProjectFirst": "Load or create a project first"
+      },
+      "panel": {
+        "title": "Export Project",
+        "closeAria": "Close",
+        "projectLabel": "Project",
+        "formatSection": "Export format",
+        "validationSection": "Validation status",
+        "errorsStat": "{count} Errors",
+        "warningsStat": "{count} Warnings",
+        "blockedNote": "Export is blocked until critical errors are fixed.",
+        "warningsNote": "Warnings do not block export.",
+        "passedNote": "Project passed export validation.",
+        "reviewIssues": "Review issues",
+        "cancel": "Cancel",
+        "exportProject": "Export Project",
+        "exportAnyway": "Export Anyway"
+      },
+      "result": {
+        "title": "Export complete",
+        "lead": "Your export finished successfully.",
+        "generatedFiles": "Generated files",
+        "downloadStarted": "Download started in your browser.",
+        "done": "Done",
+        "htmlNote": "Standalone HTML uses the existing inlined runtime build.",
+        "folderNote": "Folder export uses the browser folder picker; open the chosen directory in your file manager.",
+        "folderFiles": "index.html, js/data.js, css/*, js/*, audio files (if used)"
+      },
+      "untitledProject": "Untitled Project",
+      "defaultSlug": "project"
+    },
+    "authorGuidance": {
+      "contextHints": {
+        "visual": "Use for interactive locations and objects on the scene.",
+        "game_ui": "Use for HUD and persistent control elements.",
+        "conditions": "Conditions define when something is available to the player.",
+        "choices": "Choices are the player's actions in a text scene.",
+        "content": "Scene text and modules define what the player sees.",
+        "items": "Items are granted in quests, scenes and combat.",
+        "quests": "Quests connect scenes, goals and rewards.",
+        "combat": "Enemies are used in combat scenes and quests."
+      },
+      "emptyStates": {
+        "project": {
+          "title": "Welcome to your RPG project",
+          "explanation": "Create your first scene — that is where the game begins.",
+          "primaryLabel": "Create First Scene"
+        },
+        "scene": {
+          "title": "No scene open",
+          "explanation": "Open a scene from the list on the left or create a new one.",
+          "primaryLabel": "Create scene"
+        },
+        "content": {
+          "title": "Scene is empty",
+          "explanation": "Add text or a module so the player sees scene content.",
+          "primaryLabel": "Add module"
+        },
+        "choices": {
+          "title": "No choices",
+          "explanation": "Add response options so the player can act.",
+          "primaryLabel": "Add choice"
+        },
+        "visual": {
+          "title": "No visual content",
+          "explanation": "Add a background or interactive object to the scene.",
+          "primaryLabel": "Add object"
+        },
+        "game_ui": {
+          "title": "No UI screens",
+          "explanation": "Create a HUD or menu — control elements for the player.",
+          "primaryLabel": "Create screen"
+        },
+        "conditions": {
+          "title": "No conditions",
+          "explanation": "Conditions control visibility of the scene, choices and objects.",
+          "primaryLabel": "Add condition"
+        },
+        "items": {
+          "title": "No items",
+          "explanation": "Create items for quests, rewards and inventory.",
+          "primaryLabel": "Create item"
+        },
+        "quests": {
+          "title": "No quests",
+          "explanation": "Give the player a goal — a quest connects scenes and rewards.",
+          "primaryLabel": "Create quest"
+        },
+        "combat": {
+          "title": "No enemies",
+          "explanation": "Create enemies for combat scenes and quests.",
+          "primaryLabel": "Create enemy"
+        },
+        "content_category": {
+          "title": "No objects",
+          "explanation": "Create the first object in this category.",
+          "primaryLabel": "Create"
+        }
+      },
+      "noProject": {
+        "title": "No project open",
+        "explanation": "Load a project or create a new one from the start screen.",
+        "primaryLabel": "Load project"
+      },
+      "dismissHintTitle": "Dismiss hint",
+      "dismissHintAria": "Dismiss hint"
+    },
+    "commandPaletteV2": {
+      "categories": {
+        "navigation": "Navigation",
+        "create": "Create",
+        "project": "Project",
+        "preview": "Preview",
+        "validation": "Validation",
+        "export": "Export",
+        "objects": "Objects",
+        "recent": "Recent"
+      },
+      "typeLabels": {
+        "scene": "Scene",
+        "visual_scene": "Scene",
+        "quest": "Quest",
+        "item": "Item",
+        "npc": "NPC",
+        "player_character": "Hero",
+        "enemy": "Enemy",
+        "ui_screen": "Game UI",
+        "asset": "Asset"
+      },
+      "defaultObject": "Object",
+      "commands": {
+        "goScene": "Go to scene",
+        "contentBrowser": "Open Content Browser",
+        "projectGraph": "Open story map",
+        "createScene": "Create scene",
+        "createItem": "Create item",
+        "createQuest": "Create quest",
+        "projectValidate": "Validate project",
+        "previewProject": "Preview project",
+        "exportProject": "Export project"
+      }
+    },
+    "contentBrowserV2": {
+      "categories": {
+        "scenes": "Scenes",
+        "quests": "Quests",
+        "items": "Items",
+        "npcs": "NPCs",
+        "characters": "Heroes",
+        "combat": "Combat",
+        "game_ui": "Game UI",
+        "assets": "Assets"
+      },
+      "search": {
+        "noMatch": "No results for \"{query}\"",
+        "resultsTitle": "Search results ({count})"
+      },
+      "recentTitle": "Recently opened",
+      "categoryNavAria": "Content categories",
+      "welcome": {
+        "title": "Welcome to your RPG project",
+        "body": "Start with your first scene — quests, items, and visuals live here too.",
+        "createFirstScene": "Create First Scene",
+        "chooseTemplate": "Choose Template"
+      },
+      "indexNotLoaded": "Content index not loaded",
+      "empty": {
+        "noObjects": "No objects",
+        "categoryEmpty": "Category \"{label}\" is empty. Create the first object.",
+        "categoryEmptyShort": "Category \"{label}\" is empty."
+      },
+      "create": {
+        "quest": "+ Create quest",
+        "item": "+ Create item",
+        "npc": "+ Create NPC",
+        "player_character": "+ Create hero",
+        "enemy": "+ Create enemy",
+        "ui_screen": "+ Create UI screen",
+        "asset": "+ Add asset",
+        "default": "+ Create",
+        "toggle": "+ Create"
+      },
+      "sceneFilters": {
+        "all": "All",
+        "text": "Text",
+        "visual": "Visual",
+        "mixed": "Mixed",
+        "searchPlaceholder": "🔍 Search scenes…",
+        "filterAria": "Scene type filter",
+        "sortLabel": "Sort",
+        "sortTitle": "By name",
+        "sortTitleDesc": "Name (Z→A)",
+        "sortKind": "By type"
+      },
+      "chrome": {
+        "contentTitle": "CONTENT",
+        "globalSearchPlaceholder": "🔍 Search project…"
+      }
+    },
+    "previewWorkflow": {
+      "defaultProject": "Project",
+      "noSceneLabel": "—",
+      "returnToEditor": "Return to editor",
+      "noProjectData": "No project data",
+      "testIsolationUnavailable": "Test isolation unavailable",
+      "previewPrepareFailed": "Failed to prepare preview",
+      "previewOpened": "Preview opened — EDITOR TEST MODE",
+      "genericError": "Error",
+      "warningsAllowed": "Warnings: {count} — preview allowed.",
+      "beforePreview": "Before preview",
+      "errorOneFound": "error found.",
+      "errorsManyFound": "errors found.",
+      "noErrors": "No errors.",
+      "fix": "Fix",
+      "previewAnyway": "Preview anyway",
+      "continue": "Continue",
+      "cancel": "Cancel",
+      "noSceneForPreview": "No scene for preview",
+      "previewWithWarnings": "Preview with {count} warn.",
+      "menuHeading": "Preview",
+      "playCurrentScene": "Play Current Scene",
+      "playFromStart": "Play From Project Start",
+      "previewTitle": "Preview in isolated test mode",
+      "previewLabel": "Preview",
+      "globalPreviewLabel": "▶ Preview",
+      "currentSceneTitle": "Current scene",
+      "selectScene": "Select a scene"
+    },
+    "sceneWorkspacePolish": {
+      "sections": {
+        "overview": {
+          "title": "Overview",
+          "desc": "Scene summary and quick navigation."
+        },
+        "content": {
+          "title": "Content",
+          "desc": "Scene text and story modules.",
+          "addModule": "+ Add module"
+        },
+        "choices": {
+          "title": "Choices",
+          "desc": "Player response options in this scene.",
+          "addChoice": "+ Add choice"
+        },
+        "visual": {
+          "title": "Visual",
+          "desc": "Interactive objects and scene hotspots.",
+          "addObject": "+ Add object"
+        },
+        "gameUi": {
+          "title": "Game UI",
+          "desc": "HUD and UI screens linked to the project.",
+          "addUi": "+ Add UI element"
+        },
+        "conditions": {
+          "title": "Conditions",
+          "desc": "Visibility of scene, choices and objects.",
+          "addCondition": "+ Add condition"
+        },
+        "advanced": {
+          "title": "Advanced",
+          "desc": "ID, scene type and data for advanced mode."
+        }
+      },
+      "breadcrumb": {
+        "ariaLabel": "Scene navigation",
+        "project": "Project",
+        "unsavedTitle": "Unsaved changes"
+      }
+    },
+    "campaignWizard": {
+      "steps": {
+        "genre": "Genre & system",
+        "world": "World skeleton",
+        "heroes": "Heroes & NPCs",
+        "quest": "First quest",
+        "publish": "Review & publish"
+      },
+      "defaultTitle": "My story",
+      "title": "📖 Story mode",
+      "cancel": "Cancel",
+      "back": "Back",
+      "skip": "Skip",
+      "next": "Next",
+      "closeWizard": "Close wizard",
+      "finishWithoutExport": "Finish without export",
+      "selectPlaceholder": "— select —",
+      "unknownStep": "Unknown step",
+      "unknownStepMaster": "Unknown wizard step.",
+      "publishModuleMissing": "Publish module not loaded.",
+      "genreHint": "Describe the world you are building — the engine will prepare the project foundation.",
+      "storyTitleLabel": "Story title",
+      "genreLabel": "Genre",
+      "systemLabel": "Game rules",
+      "startingResources": "Starting resources: {gold} gold, {hp} HP — you can change these later.",
+      "blankProjectLink": "Create a blank project from scratch…",
+      "worldHint": "Pick a skeleton — linked scenes in your genre will appear from ready templates.",
+      "worldPreviewHint": "Pick a skeleton — a scene diagram will appear.",
+      "startSceneLabel": "Starting scene:",
+      "regenerateWorld": "Regenerate",
+      "heroesHint": "Name the hero and key characters — the engine will create entries and dialogue lines.",
+      "heroHeading": "🧝 Hero",
+      "nameLabel": "Name",
+      "heroDescLabel": "Brief hero description",
+      "npcHeading": "👤 Character {n}",
+      "roleLabel": "Role",
+      "briefLabel": "Brief",
+      "phrasePreview": "Line: «{phrase}»",
+      "questHint": "What should the player do? Pick a goal and participants — stages will assemble themselves.",
+      "questTitleLabel": "Quest title",
+      "npcLabel": "Character",
+      "itemLabel": "Item",
+      "enemyLabel": "Enemy",
+      "placeLabel": "Location",
+      "rewardHeading": "Reward",
+      "rewardGoldLabel": "Gold amount",
+      "rewardItemLabel": "Reward item",
+      "repOwnerLabel": "Whose reputation",
+      "repAmountLabel": "Amount",
+      "toastRegenBlocked": "You already edited scenes — regeneration is disabled to avoid losing changes.",
+      "toastRegenDone": "Skeleton rebuilt — click Next to apply.",
+      "toastWorldFailed": "Failed to build world skeleton",
+      "toastWorldValidation": "Skeleton failed validation — please report this to developers",
+      "toastHeroesFailed": "Failed to create characters",
+      "toastQuestFailed": "Failed to create quest",
+      "toastQuestValidation": "Project failed validation after quest",
+      "toastStepFailed": "Failed to apply wizard step",
+      "toastSavedResume": "Wizard saved — continue via New project",
+      "toastReportUpdated": "Report refreshed",
+      "toastSavedPublish": "Wizard saved — open New project to return to publishing",
+      "toastPreviewUnavailable": "Preview unavailable — reload the editor",
+      "toastFixErrors": "Fix errors in the report first",
+      "toastExportUnavailable": "HTML export unavailable",
+      "toastExportSaved": "HTML file saved",
+      "toastExportFailed": "Failed to export HTML",
+      "toastFinished": "Story mode wizard finished. Keep building your game in Writer mode.",
+      "toastResume": "Resuming Story mode wizard from step «{step}»",
+      "toastSavedLater": "Story mode wizard saved — continue via New project",
+      "toastUndoDone": "Wizard changes rolled back",
+      "confirmCancel": "Abort the wizard? Progress will be saved — continue via New project.\n\nClick Other… to choose rollback of created content.",
+      "confirmCancelFinish": "Finish later",
+      "confirmCancelOther": "Other…",
+      "confirmUndo": "Roll back wizard changes via undo history?",
+      "confirmUndoYes": "Roll back",
+      "confirmUndoKeep": "Keep as is",
+      "confirmNoUndo": "Undo history unavailable. Close wizard and keep created content in the project?",
+      "confirmClose": "Close",
+      "confirmBack": "Back",
+      "confirmOpen": "Open Story mode wizard? The current project may be replaced on the Genre & system step.",
+      "confirmResume": "An unfinished Story mode wizard exists. Continue from step «{step}»?",
+      "confirmContinue": "Continue",
+      "confirmRestart": "Start over",
+      "legacyTitle": "📖 New story",
+      "legacyCreate": "✨ Create story",
+      "legacySteps": {
+        "title": "Title",
+        "scenes": "Scenes",
+        "npc": "NPC",
+        "questCombat": "Quest & combat",
+        "done": "Done"
+      },
+      "legacyHint0": "Next we will assemble 3 scenes, an NPC, a quest and a simple enemy — no code.",
+      "legacyNoteLabel": "Brief story note (for yourself)",
+      "legacyScenesHint": "Three skeleton locations. Add more later on the story map.",
+      "legacySceneName": "Scene {n}: name",
+      "legacySceneText": "Text (what the player sees)",
+      "legacyNpcHint": "Character where the plot begins (usually in the first or second scene).",
+      "legacyNpcName": "NPC name",
+      "legacyNpcLine": "First line",
+      "legacyQuestTitle": "Quest title",
+      "legacyQuestHint": "Objective (for journal)",
+      "legacyCombatCheck": "Add a simple enemy and combat scene",
+      "legacyEnemyName": "Enemy name",
+      "legacyReadyTitle": "Ready to build",
+      "legacyReadyBody": "Will create: project «{title}», {sceneCount} scenes, NPC, quest{combatExtra}.",
+      "legacyReadyCombatExtra": ", enemy and combat",
+      "legacyDefaultScenes": [
+        {
+          "name": "Beginning",
+          "text": "You stand on the threshold of adventure."
+        },
+        {
+          "name": "Village",
+          "text": "A quiet village. Help can be found here."
+        },
+        {
+          "name": "Dangerous place",
+          "text": "Someone or something threatens the peace here."
+        }
+      ],
+      "legacyDefaultNpc": "Elder",
+      "legacyDefaultNpcLine": "Welcome, traveler. I need your help.",
+      "legacyDefaultQuest": "First task",
+      "legacyDefaultQuestHint": "Talk to the elder and deal with the threat.",
+      "legacyDefaultEnemy": "Bandit",
+      "confirmLegacyOpen": "Create a new story? The current editor project will be replaced (the file on disk stays until you save).",
+      "legacyCreated": "Story «{title}» created. Open the story map or scene preview.",
+      "quickStoryBtn": "📖 Quick story (classic)",
+      "npcHubWhere": "📍 Appears in",
+      "npcHubAttach": "Attach to scene",
+      "npcHubSceneOption": "+ scene…",
+      "npcHubNotLinked": "Not linked anywhere yet. Assign the NPC on a scene or add below.",
+      "npcHubLines": "💬 Lines",
+      "npcHubNoLines": "No lines",
+      "npcHubAddLine": "+ Line",
+      "npcHubQuests": "📜 Related quests",
+      "npcHubNoQuests": "No quests yet — create one in the Quests tab.",
+      "npcSceneReason": "Scene NPC",
+      "npcDialogReason": "Dialogue",
+      "npcComponentReason": "Component",
+      "createNpcPrompt": "Character name:",
+      "createNpcDefault": "New villager",
+      "fallbackGenres": {
+        "fantasy": "Fantasy",
+        "horror": "Horror",
+        "detective": "Detective",
+        "survival": "Survival"
+      },
+      "fallbackSystems": {
+        "generic": "Generic rules",
+        "dnd5e": "Classic adventures"
+      },
+      "fallbackRewardGold": "Gold",
+      "gameData": {
+        "goTo": "Go to: {name}",
+        "acceptQuest": "Accept: {title}",
+        "faceEnemy": "Face: {name}",
+        "questStageStart": "Start",
+        "questStagePath": "On the way",
+        "questStagePathHint": "Continue through locations.",
+        "questStageDone": "Done",
+        "questStageDoneHint": "Task completed.",
+        "talkTask": "Talk to: {name}",
+        "visitTask": "Reach: {location}",
+        "npcDesc": "Key character at the start of the story.",
+        "combatLocation": "Fight: {name}",
+        "combatText": "{name} blocks the path!"
+      }
+    },
+    "storyWizard": {
+      "content": {
+        "defaultChoiceGo": "Go",
+        "systems": {
+          "generic": "Generic rules",
+          "dnd5e": "Classic adventures",
+          "pf2e": "Pathfinder"
+        },
+        "genres": {
+          "fantasy": {
+            "label": "Fantasy",
+            "defaultTitle": "A Tale of Adventure",
+            "description": "Knights, magic and ancient secrets await the hero."
+          },
+          "horror": {
+            "label": "Horror",
+            "defaultTitle": "Shadows of the Forgotten House",
+            "description": "Darkness, fear and the inexplicable at every step."
+          },
+          "detective": {
+            "label": "Detective",
+            "defaultTitle": "A Case Without Answers",
+            "description": "Clues, witnesses and a reveal at the end."
+          },
+          "survival": {
+            "label": "Survival",
+            "defaultTitle": "After the Storm",
+            "description": "Resources are running out — reach safety."
+          }
+        },
+        "sceneNames": {
+          "fantasy": {
+            "start": "At the kingdom gates",
+            "hub": "Guards' crossroads",
+            "branch1": "Dark forest",
+            "branch2": "Tower ruins",
+            "branch3": "Elven village",
+            "village": "Oldwood Village",
+            "tavern": "Golden Goblet Tavern",
+            "shop": "Alchemist shop",
+            "forge": "Old Grom's forge",
+            "road1": "Royal road",
+            "road2": "River bridge",
+            "road3": "Stream clearing",
+            "road4": "Fortress gates",
+            "exit": "Edge of the lands"
+          },
+          "horror": {
+            "start": "Threshold of the abandoned house",
+            "hub": "Empty hall",
+            "branch1": "Basement",
+            "branch2": "Attic",
+            "branch3": "Grave garden",
+            "village": "Dead village",
+            "tavern": "Closed inn",
+            "shop": "Empty shop",
+            "forge": "Rusty forge",
+            "road1": "Misty trail",
+            "road2": "Broken bridge",
+            "road3": "Swamp",
+            "road4": "Old crypt",
+            "exit": "Cemetery gates"
+          },
+          "detective": {
+            "start": "Detective's office",
+            "hub": "Town square",
+            "branch1": "Mayor's office",
+            "branch2": "Evidence warehouse",
+            "branch3": "Witness café",
+            "village": "Old quarter",
+            "tavern": "Red Lamp bar",
+            "shop": "Pawn shop",
+            "forge": "Watchmaker's workshop",
+            "road1": "Lantern street",
+            "road2": "Dock alley",
+            "road3": "Police archive",
+            "road4": "Courtroom",
+            "exit": "Train station"
+          },
+          "survival": {
+            "start": "Camp after the storm",
+            "hub": "Broken bridge",
+            "branch1": "Overgrown trail",
+            "branch2": "Abandoned hut",
+            "branch3": "Freshwater stream",
+            "village": "Canyon settlement",
+            "tavern": "Campfire shelter",
+            "shop": "Supply depot",
+            "forge": "Tool shed",
+            "road1": "Mountain trail",
+            "road2": "Rockslide",
+            "road3": "Cave by the cliff",
+            "road4": "Rescue point",
+            "exit": "Safe clearing"
+          }
+        },
+        "skeletons": {
+          "hub_branches": {
+            "label": "Hub and three branches",
+            "description": "Central point and three paths — classic branching plot.",
+            "choices": {
+              "startPath": "Begin the journey",
+              "path1": "First path",
+              "path2": "Second path",
+              "path3": "Third path",
+              "return": "Return"
+            }
+          },
+          "linear_road": {
+            "label": "Linear road",
+            "description": "Sequential path of five locations — for plots without branches.",
+            "choices": {
+              "setOut": "Set out",
+              "continue": "Continue",
+              "finishPath": "Finish the journey",
+              "return": "Return"
+            }
+          },
+          "ready_village": {
+            "label": "Ready-made village",
+            "description": "Settlement with tavern, shop and forge — a ready hub for your story.",
+            "choices": {
+              "enterVillage": "Enter the settlement",
+              "tavern": "Tavern",
+              "shop": "Shop",
+              "forge": "Forge",
+              "leaveVillage": "Leave the settlement",
+              "toSquare": "To the square",
+              "return": "Return"
+            }
+          }
+        }
+      },
+      "heroesQuest": {
+        "roles": {
+          "quest_giver": "Quest giver",
+          "merchant": "Merchant",
+          "informant": "Informant",
+          "antagonist": "Antagonist"
+        },
+        "phrases": {
+          "quest_giver": "I need your help, traveler. I have a task for you.",
+          "merchant": "Stop by — goods are fresh and prices fair.",
+          "informant": "I heard something important. Might be useful.",
+          "antagonist": "You are not welcome here. Leave while you can.",
+          "fallback": "…"
+        },
+        "rewards": {
+          "gold": "Gold",
+          "item": "Item",
+          "reputation": "Reputation"
+        },
+        "defaults": {
+          "heroName": "Wanderer",
+          "heroDescription": "Main hero of your story",
+          "questTitle": "First task",
+          "npcFallback": "Character",
+          "acceptQuest": "Accept: {title}",
+          "acceptQuestFallback": "task",
+          "rewardItemName": "Reward for valor",
+          "rewardItemDesc": "For completing the task",
+          "rewardPlaceholder": "Reward",
+          "reputationVillage": "Local folk"
+        },
+        "items": {
+          "fantasy": "Old amulet",
+          "horror": "Worn note",
+          "detective": "Clue",
+          "survival": "Food supplies",
+          "fallback": "Item"
+        },
+        "enemies": {
+          "fantasy": "Bandit",
+          "horror": "Shadow",
+          "detective": "Suspect",
+          "survival": "Wild beast",
+          "fallback": "Enemy"
+        },
+        "defaultNpcs": {
+          "fantasy": [
+            {
+              "name": "Elder",
+              "role": "quest_giver",
+              "description": "Rules the village and gives errands"
+            },
+            {
+              "name": "Merchant",
+              "role": "merchant",
+              "description": "Sells potions and gear"
+            },
+            {
+              "name": "Wanderer",
+              "role": "informant",
+              "description": "Knows trails and rumors"
+            }
+          ],
+          "horror": [
+            {
+              "name": "House owner",
+              "role": "quest_giver",
+              "description": "Asks to deal with shadows"
+            },
+            {
+              "name": "Caretaker",
+              "role": "informant",
+              "description": "Saw something strange by the well"
+            },
+            {
+              "name": "Stranger",
+              "role": "antagonist",
+              "description": "Frightens and hinders the investigation"
+            }
+          ],
+          "detective": [
+            {
+              "name": "Inspector",
+              "role": "quest_giver",
+              "description": "Assigns the first case"
+            },
+            {
+              "name": "Witness",
+              "role": "informant",
+              "description": "Saw something suspicious"
+            },
+            {
+              "name": "Shopkeeper",
+              "role": "merchant",
+              "description": "Trades clues and coffee"
+            }
+          ],
+          "survival": [
+            {
+              "name": "Camp leader",
+              "role": "quest_giver",
+              "description": "Organizes group survival"
+            },
+            {
+              "name": "Scout",
+              "role": "informant",
+              "description": "Knows safe trails"
+            },
+            {
+              "name": "Marauder",
+              "role": "antagonist",
+              "description": "Threatens supplies"
+            }
+          ]
+        }
+      },
+      "publish": {
+        "heroDefault": "Hero",
+        "defaultTitle": "My story",
+        "dash": "—",
+        "projectLabel": "Project",
+        "errorFallback": "Error",
+        "questNotSet": "quest not set in wizard",
+        "questNotCreated": "quest not yet created in project",
+        "noStartScene": "no starting scene",
+        "questGranted": "granted in «{label}»",
+        "questUnreachable": "no choice from start launches the quest",
+        "checklist": {
+          "hasStart": "Starting scene exists",
+          "firstQuest": "First quest reachable",
+          "sceneExit": "Every scene has at least one exit",
+          "hubFinal": "Ending reachable from hub"
+        },
+        "checklistDetail": {
+          "startAssigned": "«{id}»",
+          "startDefault": "«{id}» (default)",
+          "noStart": "create at least one scene and set the start",
+          "deadEnds": "no exit: {list}",
+          "allExits": "all scenes lead onward or end the story",
+          "flowSkipped": "story map unavailable — check skipped",
+          "hubFinalOk": "ending reachable from hub"
+        },
+        "sections": {
+          "checklist": "Readiness checklist",
+          "errors": "Errors ({count})",
+          "warnings": "Warnings ({count})"
+        },
+        "validatorOk": "✓ No critical validator issues — you can test and export.",
+        "exportBlocked": "Export blocked",
+        "exportBlockedHint": " — fix errors above:",
+        "exportTitle": "Export HTML",
+        "exportDisabledTitle": "Fix errors first",
+        "header": "Review & publish",
+        "headerSummary": "{title} · {count} scenes · quest «{quest}»",
+        "playPreview": "▶ Play as hero",
+        "refreshReport": "↻ Refresh report",
+        "note": "Preview and export do not require switching tabs. Click a row to open the issue in the editor.",
+        "successTitle": "Game exported",
+        "successHint": "HTML file saved to disk — open it in a browser and share with friends.",
+        "stats": {
+          "scenes": "Scenes: {count}",
+          "quest": "Quest: «{title}»",
+          "heroNpc": "Hero: {hero} · NPCs: {count}"
+        },
+        "improveTitle": "Improve later",
+        "improve": {
+          "warnings": "validator warnings remain — refine dialogues and conditions",
+          "checklist": "readiness checklist is not fully green",
+          "default": "add more scenes, quests and visual details"
+        },
+        "gotoCartographer": "🗺️ Cartographer — story map",
+        "gotoEngineer": "⚙️ Engineer — balance and mechanics"
+      }
     }
   },
   "game": {
@@ -1832,6 +3748,22 @@ window.I18N_LOCALES['en'] = {
     "menuDeleteSave": "Delete save",
     "menuCampaignPicker": "Back to campaign picker",
     "menuReset": "Start over",
+    "saveSlots": {
+      "title": "Save slots",
+      "open": "Save / load",
+      "slotLabel": "Slot {n}",
+      "empty": "Empty",
+      "save": "Save",
+      "load": "Load",
+      "delete": "Delete",
+      "active": "active",
+      "overwrite": "Overwrite save in slot {n}?",
+      "deleteConfirm": "Delete save in slot {n}?",
+      "savedAt": "Saved: {date}",
+      "playtime": "Playtime: {time}",
+      "level": "Level {level}",
+      "scene": "Location: {name}"
+    },
     "audioMusic": "Music volume",
     "audioSfx": "SFX volume",
     "audioOn": "Sound on",
@@ -1839,6 +3771,19 @@ window.I18N_LOCALES['en'] = {
     "lootTitle": "Loot",
     "lootTake": "Take",
     "levelUp": "Level up!",
+    "dialog": {
+      "ok": "OK",
+      "confirm": "Yes",
+      "cancel": "Cancel",
+      "promptPlaceholder": "Enter a value…",
+      "noticeTitle": "Notice",
+      "jsonReadError": "Failed to read JSON: {message}",
+      "returnToPicker": "Return to campaign picker? Unsaved progress may be lost.",
+      "resetGame": "Start a new game? Current progress will be reset.",
+      "deleteSave": "Delete the game save?",
+      "abilityNotFound": "Ability not found in progression.abilities data.",
+      "cancelCharCreation": "Cancel character creation?"
+    },
     "achievementUnlocked": "Achievement unlocked!",
     "hintLabel": "Hint",
     "mobileExpandSidebar": "Expand character panel",
@@ -1978,8 +3923,7 @@ window.I18N_LOCALES['en'] = {
     "tocTitle": "Contents"
   },
   "help": {}
-}
-
+};
 
 
 ;/* —— js/i18n.js —— */
@@ -3339,13 +5283,21 @@ const ConditionSystem = {
     return this.explainRuleFailure(rule, ctx);
   },
 
+  /** Значение флага или переменной проекта (флаг имеет приоритет). */
+  resolveFlagOrVariable(name, ctx) {
+    if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.resolveValue) {
+      return RuntimeVariables.resolveValue(name, ctx);
+    }
+    return (ctx?.flags || {})[name];
+  },
+
   evaluateRule(rule, ctx) {
     if (!rule || typeof rule !== 'object') return true;
     const flags = ctx.flags || {};
     const inventory = ctx.inventory || [];
 
     if (rule.flag != null && rule.flag !== '') {
-      const val = flags[rule.flag];
+      const val = this.resolveFlagOrVariable(rule.flag, ctx);
       if (rule.min != null || rule.max != null) {
         const n = Number(val);
         if (Number.isNaN(n)) return false;
@@ -3357,7 +5309,7 @@ const ConditionSystem = {
       if (typeof eq === 'boolean') return !!val === eq;
       return val == eq;
     }
-    if (rule.notFlag) return !flags[rule.notFlag];
+    if (rule.notFlag) return !this.resolveFlagOrVariable(rule.notFlag, ctx);
     if (rule.hasItem) return inventory.includes(rule.hasItem);
     if (rule.notHasItem) return !inventory.includes(rule.notHasItem);
     if (rule.goldMin != null) return (ctx.gold ?? 0) >= rule.goldMin;
@@ -3496,7 +5448,7 @@ const ConditionSystem = {
     const inventory = ctx.inventory || [];
 
     if (rule.flag != null && rule.flag !== '') {
-      const val = flags[rule.flag];
+      const val = this.resolveFlagOrVariable(rule.flag, ctx);
       if (rule.min != null || rule.max != null) {
         const n = Number(val);
         if (Number.isNaN(n)) {
@@ -3798,17 +5750,19 @@ const ConditionSystem = {
     if (rule.flag != null && rule.flag !== '') {
       // Не светим сырой id; смягчённая формулировка
       const label = String(rule.flag).replace(/^rep_/, 'репутация ').replace(/_/g, ' ');
+      const cur = this.resolveFlagOrVariable(rule.flag, ctx);
       return {
         ok,
         title: 'Состояние: ' + label,
         required: rule.min != null ? '≥ ' + rule.min : (rule.equals !== undefined ? String(rule.equals) : 'да'),
-        current: String(flags[rule.flag]),
+        current: String(cur),
         detail: ok ? '✓ Выполнено' : '❌ Не выполнено'
       };
     }
     if (rule.notFlag) {
       const label = String(rule.notFlag).replace(/_/g, ' ');
-      return { ok, title: 'Состояние: ' + label, required: 'выключено', current: flags[rule.notFlag] ? 'включено' : 'выключено', detail: ok ? '✓' : '❌' };
+      const cur = this.resolveFlagOrVariable(rule.notFlag, ctx);
+      return { ok, title: 'Состояние: ' + label, required: 'выключено', current: cur ? 'включено' : 'выключено', detail: ok ? '✓' : '❌' };
     }
     if (rule.choiceUsed) {
       return { ok, title: 'Выбор уже сделан', required: 'да', current: ok ? 'да' : 'нет', detail: ok ? '✓' : '❌ Ещё не сделан' };
@@ -14055,45 +16009,8 @@ if (typeof module !== 'undefined' && module.exports) {
       if (this.currentTab === 'graph' && typeof this.renderStoryGraph === 'function') {
         this.renderStoryGraph();
       }
-    },
-
-    /** Кнопка «Проверить проект» */
-    runProjectValidation() {
-      const result = this.validateProject();
-      this.showValidationModal(result);
-      return result;
     }
   });
-})();
-
-
-;/* —— js/editor/editor-validation.js —— */
-// ============================================================
-// Editor Validation — регистрация API проверки проекта
-// Реализация: editor-linter.js, editor-validator.js
-// ============================================================
-(function editorValidation() {
-  'use strict';
-  if (typeof Editor === 'undefined') return;
-
-  Editor.__validationModule = 'editor-validation';
-
-  if (typeof Editor.runProjectValidation !== 'function') {
-    Editor.runProjectValidation = function () {
-      if (typeof this.validateAll === 'function') return this.validateAll();
-      if (typeof this.validateProjectExtended === 'function') return this.validateProjectExtended();
-      console.warn('[editor-validation] no validator loaded');
-    };
-  }
-
-  if (Editor.hooks && typeof Editor.hooks.register === 'function') {
-    const methods = { runProjectValidation: Editor.runProjectValidation };
-    if (typeof Editor.validateAll === 'function') methods.validateAll = Editor.validateAll;
-    if (typeof Editor.validateProjectExtended === 'function') {
-      methods.validateProjectExtended = Editor.validateProjectExtended;
-    }
-    Editor.hooks.register('editor-validation', methods, { force: false });
-  }
 })();
 
 
@@ -14559,20 +16476,17 @@ if (typeof module !== 'undefined' && module.exports) {
     }
   });
 
-  Editor.validateProject = function validateProject() {
-    return this.validateProjectExtended();
-  };
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('validateProject', function validateProjectLegacy() {
+      return this.validateProjectExtended();
+    }, 'editor-validator');
 
-  const origRun = Editor.runProjectValidation?.bind(Editor);
-  Editor.runProjectValidation = function runProjectValidation() {
-    const result = this.validateProjectExtended();
-    this.refreshValidationUI(result);
-    this.expandValidationPanel();
-    if (typeof origRun === 'function' && typeof this.showValidationModal === 'function') {
-      this.showValidationModal(result);
-    }
-    return result;
-  };
+  } else {
+    // hooks-exempt: fallback when Editor.hooks unavailable (non-editor shell)
+    Editor.validateProject = function validateProject() {
+      return this.validateProjectExtended();
+    };
+  }
 
   const validationMethods = [
     'updateJSONPreview', 'renderAll', 'renderSceneEditor', 'renderSceneList',
@@ -15322,9 +17236,12 @@ if (typeof module !== 'undefined' && module.exports) {
     return result;
   };
 
-  Editor.runProjectValidation = function runProjectValidation() {
+  function runProjectValidationImpl() {
     const result = this.collectProjectIssues();
     this.showProjectValidationResults(result);
+    if (typeof this.refreshValidationUI === 'function') {
+      try { this.refreshValidationUI(); } catch (e) { /* */ }
+    }
     if (result.ok) {
       if (Editor.toast) Editor.toast.success('Проект в порядке');
     } else {
@@ -15335,7 +17252,12 @@ if (typeof module !== 'undefined' && module.exports) {
       }
     }
     return result;
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('runProjectValidation', runProjectValidationImpl, 'editor-project-validator-ux');
+  } else {
+    Editor.runProjectValidation = runProjectValidationImpl;
+  }
 
   Editor.showProjectValidationResults = function showProjectValidationResults(result) {
     result = result || this.collectProjectIssues();
@@ -18037,13 +19959,25 @@ const ReputationSystem = {
 
   if (!Editor._createQuest114Wrapped) {
     Editor._createQuest114Wrapped = true;
-    Editor.createQuestWizard = Editor.createQuest?.bind(Editor);
-    Editor.createQuest = function createQuestWorkflow() {
-      if (typeof Editor.openQuestCreationWorkflow === 'function') {
-        return Editor.openQuestCreationWorkflow();
-      }
-      return Editor.createQuestWizard?.();
-    };
+    if (typeof Editor.createQuest === 'function') {
+      Editor.createQuestWizard = Editor.createQuest.bind(Editor);
+    }
+    if (Editor.hooks?.replace) {
+      Editor.hooks.replace('createQuest', function createQuestWorkflow() {
+        if (typeof Editor.openQuestCreationWorkflow === 'function') {
+          return Editor.openQuestCreationWorkflow();
+        }
+        return Editor.createQuestWizard?.();
+      }, 'editor-quest-authoring-phase-114');
+    } else {
+      // hooks-exempt: fallback when Editor.hooks unavailable
+      Editor.createQuest = function createQuestWorkflow() {
+        if (typeof Editor.openQuestCreationWorkflow === 'function') {
+          return Editor.openQuestCreationWorkflow();
+        }
+        return Editor.createQuestWizard?.();
+      };
+    }
   }
 
   if (Editor.hooks?.after) {
@@ -28191,6 +30125,27 @@ const ACTION_REGISTRY = {
     }
   },
 
+  set_variable: {
+    id: 'set_variable',
+    name: 'Установить переменную проекта',
+    category: 'scene',
+    params: [
+      { name: 'variable', type: 'text', label: 'Переменная' },
+      { name: 'value', type: 'select', options: [true, false, 'toggle'], label: 'Значение' }
+    ],
+    execute(engine, params) {
+      if (!params.variable) return false;
+      if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.setValue) {
+        return RuntimeVariables.setValue(engine, params.variable, params.value);
+      }
+      if (!engine.state.variables) engine.state.variables = {};
+      let val = params.value;
+      if (val === 'toggle') val = !engine.state.variables[params.variable];
+      engine.state.variables[params.variable] = val;
+      return true;
+    }
+  },
+
   check_flag: {
     id: 'check_flag',
     name: 'Проверить состояние',
@@ -28907,7 +30862,9 @@ const ACTION_REGISTRY = {
     params: [{ name: 'message', type: 'textarea', label: 'Текст' }],
     async execute(engine, params, ctx) {
       const msg = params.message || 'Продолжить?';
-      const ok = typeof window !== 'undefined' ? window.confirm(msg) : true;
+      const ok = typeof GameDialogs !== 'undefined'
+        ? await GameDialogs.confirm('', msg)
+        : true;
       if (ok && params.onConfirm != null) {
         await ActionRunner.resolveBranch(engine, params.onConfirm, ctx);
       } else if (!ok && params.onCancel != null) {
@@ -28947,8 +30904,15 @@ const ACTION_REGISTRY = {
     name: 'Сохранить игру',
     category: 'utility',
     params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    execute(engine) {
-      engine.saveGame?.();
+    async execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1 && slot <= (engine.SAVE_SLOTS || 5)) {
+          return engine.saveToSlot(slot, { skipConfirm: false, quiet: false });
+        }
+      }
+      engine.saveGame?.({ force: true });
       return true;
     }
   },
@@ -28958,7 +30922,16 @@ const ACTION_REGISTRY = {
     name: 'Загрузить игру',
     category: 'utility',
     params: [{ name: 'slot', type: 'text', default: 'auto', label: 'Слот' }],
-    execute(engine) {
+    execute(engine, params) {
+      const slotRaw = params?.slot;
+      if (slotRaw && slotRaw !== 'auto') {
+        const slot = parseInt(slotRaw, 10);
+        if (slot >= 1) return engine.loadGame(slot);
+      }
+      if (typeof engine.openSaveSlotsPanel === 'function') {
+        engine.openSaveSlotsPanel();
+        return true;
+      }
       if (typeof engine.loadGame === 'function') {
         engine.loadGame();
         return true;
@@ -29512,6 +31485,13 @@ const ActionEffects = (function () {
       case 'set_flag':
         if (!engine.state.flags) engine.state.flags = {};
         engine.state.flags[effect.flag] = effect.value !== undefined ? effect.value : true;
+        break;
+      case 'set_variable':
+        if (typeof RuntimeVariables !== 'undefined' && RuntimeVariables.setValue) {
+          RuntimeVariables.setValue(engine, effect.variable, effect.value);
+        } else if (engine.state.variables) {
+          engine.state.variables[effect.variable] = effect.value !== undefined ? effect.value : true;
+        }
         break;
       case 'log':
         ctx.log(effect.message || '…', effect.logType || 'log-dice');
@@ -33055,6 +35035,21 @@ if (typeof window !== 'undefined') {
       ]
     },
     {
+      id: 'set_variable',
+      label: 'Установить переменную проекта',
+      category: 'advanced',
+      description: 'Запись в runtime state.variables (каталог переменных проекта).',
+      writerSafe: false,
+      params: [
+        { id: 'variable', type: 'variable', label: 'Переменная', required: true },
+        { id: 'value', type: 'select', label: 'Значение', options: [
+          { value: 'true', label: 'true' },
+          { value: 'false', label: 'false' },
+          { value: 'toggle', label: 'toggle' }
+        ] }
+      ]
+    },
+    {
       id: 'run_script',
       label: 'Выполнить скрипт',
       category: 'advanced',
@@ -34888,8 +36883,35 @@ if (typeof window !== 'undefined') {
 
     // Entity refs inside rules
     const rules = result.rules || [];
+    const varCatalog = data.variables || {};
+    const isKnownRuntimeFlag = (name) => {
+      if (!name) return true;
+      if (data.startingFlags && Object.prototype.hasOwnProperty.call(data.startingFlags, name)) return true;
+      if (/^quest_|^sc_|^ch_|^rep_/.test(name)) return true;
+      if (name !== 'starting' && data.reputation && Object.prototype.hasOwnProperty.call(data.reputation, name)) {
+        return true;
+      }
+      return false;
+    };
     rules.forEach((rule, i) => {
       if (!rule || typeof rule !== 'object') return;
+      const warnMissingProjectVariable = (name, field) => {
+        if (!name || varCatalog[name] || isKnownRuntimeFlag(name)) return;
+        if (!/^[a-z][a-z0-9_]*$/.test(name)) return;
+        push(issue({
+          type: 'unknown_project_variable',
+          severity: SEVERITY.WARNING,
+          message: 'Условие ссылается на «' + name + '», которой нет в каталоге переменных проекта',
+          entityType: ctx.entityType,
+          entityId: ctx.entityId,
+          path: ctx.path + '.rule[' + i + '].' + field,
+          tab: ctx.tab,
+          sceneId: ctx.sceneId,
+          fixHint: 'Добавьте переменную в каталог «Переменные» или используйте флаг из квестов/startingFlags'
+        }));
+      };
+      if (rule.flag) warnMissingProjectVariable(rule.flag, 'flag');
+      if (rule.notFlag) warnMissingProjectVariable(rule.notFlag, 'notFlag');
       if (rule.hasItem && !data.items?.[rule.hasItem]) {
         push(issue({
           type: 'missing_item',
@@ -35344,11 +37366,8 @@ if (typeof window !== 'undefined') {
      * Keeps legacy validateProjectExtended for IDE panel; this returns
      * { valid, errors, warnings, info, summary }.
      */
-    const prevValidateProject = typeof Editor.validateProject === 'function'
-      ? Editor.validateProject.bind(Editor)
-      : null;
-
-    Editor.validateProject = function validateProjectPhase111(data) {
+    let prevValidateProject;
+    function validateProjectPhase111(data) {
       const payload = data != null ? data : this.data;
       const report = validateProject(payload || {}, {
         actionRegistry: typeof ACTION_REGISTRY !== 'undefined' ? ACTION_REGISTRY : null,
@@ -35397,7 +37416,12 @@ if (typeof window !== 'undefined') {
         }
       }
       return report;
-    };
+    }
+    if (Editor.hooks?.replace) {
+      prevValidateProject = Editor.hooks.replace('validateProject', validateProjectPhase111, 'editor-project-validator');
+    } else {
+      Editor.validateProject = validateProjectPhase111;
+    }
 
     Editor.showProjectIntegrityPanel = function showProjectIntegrityPanel(report) {
       report = report || this.validateProject();
@@ -35446,50 +37470,6 @@ if (typeof window !== 'undefined') {
       };
     };
 
-    const prevRun = typeof Editor.runProjectValidation === 'function'
-      ? Editor.runProjectValidation.bind(Editor)
-      : null;
-
-    Editor.runProjectValidation = function runProjectValidationPhase111() {
-      if (typeof this.collectProjectIssues === 'function' &&
-          typeof this.showProjectValidationResults === 'function') {
-        const result = this.collectProjectIssues();
-        this.showProjectValidationResults(result);
-        if (typeof this.refreshValidationUI === 'function') {
-          try { this.refreshValidationUI(); } catch (e) { /* */ }
-        }
-        if (result.ok) {
-          this.toast?.success?.('Проект в порядке');
-        } else {
-          this.toast?.warning?.(
-            'Ошибок: ' + result.errors.length +
-            (result.warnings.length ? ', предупреждений: ' + result.warnings.length : '')
-          );
-        }
-        return result;
-      }
-
-      const report = this.validateProject();
-      if (typeof this.showProjectIntegrityPanel === 'function') {
-        this.showProjectIntegrityPanel(report);
-      }
-      if (typeof this.refreshValidationUI === 'function') {
-        try { this.refreshValidationUI(); } catch (e) { /* */ }
-      }
-      if (report.valid) {
-        this.toast?.success?.('Проект в порядке');
-      } else {
-        this.toast?.warning?.(
-          'Ошибок: ' + report.summary.errors +
-          (report.summary.warnings ? ', предупреждений: ' + report.summary.warnings : '')
-        );
-      }
-      if (prevRun && typeof this.collectProjectIssues !== 'function') {
-        try { prevRun(); } catch (e) { /* */ }
-      }
-      return report;
-    };
-
     if (Editor.commands?.register) {
       Editor.commands.register({
         id: 'project.validate.integrity',
@@ -35518,39 +37498,34 @@ if (typeof window !== 'undefined') {
 // ============================================================
 (function attachValidatorNavigation() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
   if (typeof Editor === 'undefined') return;
 
-  const ISSUE_TITLES = Object.freeze({
-    missing_scene: 'Broken Scene Link',
-    broken_transition: 'Broken Scene Link',
-    element_missing_scene: 'Broken Scene Link',
-    missing_item: 'Missing Item Reference',
-    missing_quest: 'Missing Quest Reference',
-    missing_npc: 'Missing Character Reference',
-    missing_enemy: 'Missing Enemy Reference',
-    missing_asset_ref: 'Missing Asset',
-    missing_asset_src: 'Empty Asset Source',
-    empty_asset: 'Empty Asset',
-    unknown_action: 'Unknown Action',
-    action_not_in_catalog: 'Unknown Action',
-    missing_action_id: 'Invalid Action',
-    malformed_action: 'Malformed Action',
-    action_js_call: 'Unsafe Action',
-    missing_action_param: 'Incomplete Action',
-    malformed_condition: 'Invalid Condition',
-    invalid_quest_stage: 'Invalid Quest Stage',
-    invalid_amount: 'Invalid Number',
-    invalid_combat_params: 'Invalid Combat Setup',
-    no_scenes: 'No Scenes',
-    empty_scene: 'Empty Scene',
-    orphan_scene: 'Unreachable Scene',
-    unreachable_scene: 'Unreachable Scene',
-    duplicate_id: 'Duplicate ID',
-    npc_no_description: 'Missing NPC Description',
-    export_no_scenes: 'Export Blocked',
-    export_old_data_version: 'Outdated Data Version',
-    macro_id_in_json: 'Macro in JSON'
-  });
+  const ISSUE_TITLE_TYPES = Object.freeze([
+    'missing_scene', 'broken_transition', 'element_missing_scene', 'missing_item', 'missing_quest',
+    'missing_npc', 'missing_enemy', 'missing_asset_ref', 'missing_asset_src', 'empty_asset',
+    'unknown_action', 'action_not_in_catalog', 'missing_action_id', 'malformed_action', 'action_js_call',
+    'missing_action_param', 'malformed_condition', 'invalid_quest_stage', 'invalid_amount',
+    'invalid_combat_params', 'no_scenes', 'empty_scene', 'orphan_scene', 'unreachable_scene',
+    'duplicate_id', 'npc_no_description', 'export_no_scenes', 'export_old_data_version', 'macro_id_in_json'
+  ]);
+
+  function issueTitle(type) {
+    return tr('editor.validatorNavigation.issueTitles.' + type);
+  }
+
+  function getIssueTitles() {
+    const out = {};
+    ISSUE_TITLE_TYPES.forEach((type) => {
+      out[type] = issueTitle(type);
+    });
+    return Object.freeze(out);
+  }
 
   function esc(s) {
     return typeof Editor.escapeHtml === 'function' ? Editor.escapeHtml(s) : String(s ?? '');
@@ -35582,25 +37557,17 @@ if (typeof window !== 'undefined') {
   }
 
   function sectionLabel(sectionId) {
-    const map = {
-      content: 'Content',
-      choices: 'Choices',
-      visual: 'Visual',
-      conditions: 'Conditions',
-      game_ui: 'Game UI',
-      advanced: 'Advanced'
-    };
-    return map[sectionId] || sectionId || '';
+    return tr('editor.validatorNavigation.sections.' + sectionId) || sectionId || '';
   }
 
   function getIssueTitle(issue) {
     if (issue.title) return issue.title;
     const raw = issue.raw || issue;
     const type = raw.type || issue.type;
-    if (type && ISSUE_TITLES[type]) return ISSUE_TITLES[type];
-    if (issue.severity === 'warning') return 'Warning';
-    if (issue.severity === 'info') return 'Suggestion';
-    return 'Validation Issue';
+    if (type && ISSUE_TITLE_TYPES.includes(type)) return issueTitle(type);
+    if (issue.severity === 'warning') return tr('editor.validatorNavigation.severity.warning');
+    if (issue.severity === 'info') return tr('editor.validatorNavigation.severity.info');
+    return tr('editor.validatorNavigation.severity.default');
   }
 
   function getIssueDescription(issue, data) {
@@ -35615,28 +37582,32 @@ if (typeof window !== 'undefined') {
     if ((type === 'missing_scene' || type === 'broken_transition' || type === 'element_missing_scene') && targetId) {
       const choiceIdx = raw.choiceIndex ?? issue.choiceIndex ?? pathCtx.choiceIndex;
       const scene = data?.scenes?.[sceneId || pathCtx.sceneId];
-      let trigger = 'element';
+      let trigger = tr('editor.validatorNavigation.descriptions.triggerElement');
       if (choiceIdx != null && scene?.choices?.[choiceIdx]) {
-        trigger = 'button "' + (scene.choices[choiceIdx].text || ('Choice ' + (choiceIdx + 1))) + '"';
+        trigger = tr('editor.validatorNavigation.descriptions.triggerButton', {
+          text: scene.choices[choiceIdx].text || tr('editor.validatorNavigation.descriptions.choiceFallback', { n: choiceIdx + 1 })
+        });
       } else if (pathCtx.nodeId) {
         const node = (scene?.visual?.nodes || []).find((n) => n.id === pathCtx.nodeId);
-        trigger = 'object "' + (node?.label || pathCtx.nodeId) + '"';
+        trigger = tr('editor.validatorNavigation.descriptions.triggerObject', {
+          label: node?.label || pathCtx.nodeId
+        });
       }
-      return 'The ' + trigger + ' points to a scene that does not exist (' + targetId + ').';
+      return tr('editor.validatorNavigation.descriptions.brokenSceneLink', { trigger, targetId });
     }
     if (type === 'missing_item' && (raw.entityId || targetId)) {
-      return 'An action references item "' + (raw.entityId || targetId) + '" which is not in the project.';
+      return tr('editor.validatorNavigation.descriptions.missingItem', { id: raw.entityId || targetId });
     }
     if (type === 'missing_npc' && (raw.entityId || targetId)) {
-      return 'An action references character "' + (raw.entityId || targetId) + '" which is not in the project.';
+      return tr('editor.validatorNavigation.descriptions.missingNpc', { id: raw.entityId || targetId });
     }
     if (type === 'missing_enemy' && (raw.entityId || targetId)) {
-      return 'An action references enemy "' + (raw.entityId || targetId) + '" which is not in the project.';
+      return tr('editor.validatorNavigation.descriptions.missingEnemy', { id: raw.entityId || targetId });
     }
     if (type === 'empty_scene') {
-      return 'This scene has no text, choices, or visual content for the player.';
+      return tr('editor.validatorNavigation.descriptions.emptyScene');
     }
-    return message || 'Review this issue in the editor.';
+    return message || tr('editor.validatorNavigation.descriptions.reviewIssue');
   }
 
   function getIssueLocation(issue, data) {
@@ -35645,6 +37616,7 @@ if (typeof window !== 'undefined') {
     const pathCtx = parseJsonPath(raw.path || issue.path || '');
     const sceneId = raw.sceneId || issue.sceneId || issue.object?.id || pathCtx.sceneId;
     const parts = [];
+    const locSep = tr('editor.validatorNavigation.locationSep');
 
     if (sceneId) parts.push(sceneLabel(data, sceneId));
     const section = issue.section || pathCtx.section
@@ -35661,13 +37633,13 @@ if (typeof window !== 'undefined') {
 
     if (sectionId) {
       let loc = sectionLabel(sectionId);
-      if (pathCtx.nodeId) loc += ' → ' + pathCtx.nodeId;
+      if (pathCtx.nodeId) loc += locSep + pathCtx.nodeId;
       else if (pathCtx.choiceIndex != null) {
         const scene = data?.scenes?.[sceneId];
         const ch = scene?.choices?.[pathCtx.choiceIndex];
-        loc += ' → ' + (ch?.text || ('Choice ' + (pathCtx.choiceIndex + 1)));
+        loc += locSep + (ch?.text || tr('editor.validatorNavigation.descriptions.choiceFallback', { n: pathCtx.choiceIndex + 1 }));
       } else if (issue.path) {
-        loc += ' → ' + issue.path;
+        loc += locSep + issue.path;
       }
       parts.push(loc);
     } else if (issue.path) {
@@ -35687,6 +37659,7 @@ if (typeof window !== 'undefined') {
     const sceneId = raw.sceneId || issue.sceneId || pathCtx.sceneId;
     const entityType = raw.entityType || issue.object?.type;
     const entityId = raw.entityId || issue.object?.id;
+    const openAndFixLabel = tr('editor.validatorNavigation.actions.openAndFix'); // Open and Fix
 
     const openSceneFn = () => {
       if (typeof Editor.openValidationIssueInWorkspace === 'function') {
@@ -35703,13 +37676,13 @@ if (typeof window !== 'undefined') {
     };
 
     if (sceneId && (entityType === 'scene' || raw.type?.includes('scene') || pathCtx.sceneId)) {
-      issue.action = { label: 'Open and Fix', run: openSceneFn };
+      issue.action = { label: openAndFixLabel, run: openSceneFn };
       return issue;
     }
     if (entityType === 'quest' || raw.questId) {
       const qid = raw.questId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('quests');
           if (typeof Editor.selectQuestToEdit === 'function') Editor.selectQuestToEdit(qid);
@@ -35720,7 +37693,7 @@ if (typeof window !== 'undefined') {
     if (entityType === 'npc' || raw.npcId) {
       const nid = raw.npcId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('npcs');
           if (typeof Editor.selectNpcToEdit === 'function') Editor.selectNpcToEdit(nid);
@@ -35731,7 +37704,7 @@ if (typeof window !== 'undefined') {
     if (entityType === 'item' || raw.itemId) {
       const iid = raw.itemId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('items');
           if (typeof Editor.selectItemToEdit === 'function') Editor.selectItemToEdit(iid);
@@ -35742,7 +37715,7 @@ if (typeof window !== 'undefined') {
     if (entityType === 'enemy' || raw.enemyId) {
       const eid = raw.enemyId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('enemies');
           if (typeof Editor.selectEnemyToEdit === 'function') Editor.selectEnemyToEdit(eid);
@@ -35752,7 +37725,7 @@ if (typeof window !== 'undefined') {
     }
     if (raw.tab) {
       issue.action = {
-        label: 'Open',
+        label: tr('editor.validatorNavigation.actions.open'),
         run: () => { if (typeof Editor.switchTab === 'function') Editor.switchTab(raw.tab); }
       };
     }
@@ -35766,7 +37739,7 @@ if (typeof window !== 'undefined') {
     issue.description = getIssueDescription(issue, data);
     issue.location = getIssueLocation(issue, data);
     if (issue.action && !issue.fixable && issue.action.label === 'Открыть') {
-      issue.action.label = 'Open and Fix';
+      issue.action.label = tr('editor.validatorNavigation.actions.openAndFix');
     }
     return issue;
   }
@@ -35777,8 +37750,9 @@ if (typeof window !== 'undefined') {
       ? iss.actions
       : (iss.action ? [iss.action] : []);
     const primary = acts[0];
+    const openAndFixLabel = tr('editor.validatorNavigation.actions.openAndFix'); // Open and Fix
     const primaryLabel = primary
-      ? (primary.label === 'Открыть' || primary.label === 'Исправить' ? 'Open and Fix' : primary.label)
+      ? (primary.label === 'Открыть' || primary.label === 'Исправить' ? openAndFixLabel : primary.label)
       : '';
     const actionBtns = primary
       ? '<button type="button" class="btn btn-primary btn-sm" data-issue-action="' + idx + '" data-action-i="0">' +
@@ -35786,11 +37760,12 @@ if (typeof window !== 'undefined') {
       : '';
     const extraBtns = acts.slice(1).map((a, ai) =>
       '<button type="button" class="btn btn-secondary btn-sm" data-issue-action="' + idx + '" data-action-i="' + (ai + 1) + '">' +
-      esc(a.label || 'Open') + '</button>'
+      esc(a.label || tr('editor.validatorNavigation.actions.open')) + '</button>'
     ).join('');
+    const autoFixLabel = tr('editor.validatorNavigation.actions.autoFix');
     const fixBtn = iss.fixable && typeof iss.fix === 'function'
       ? '<button type="button" class="btn btn-secondary btn-sm" data-issue-fix="' + idx + '" title="' +
-        esc(iss.fixPreview || 'Auto-fix') + '">Auto-fix</button>'
+        esc(iss.fixPreview || autoFixLabel) + '">' + esc(autoFixLabel) + '</button>'
       : '';
     const locationHtml = iss.location
       ? '<div class="pv-issue-location">' + esc(iss.location).replace(/\n/g, '<br>') + '</div>'
@@ -35803,7 +37778,7 @@ if (typeof window !== 'undefined') {
       '<div class="pv-issue-title">' + esc(iss.title || getIssueTitle(iss)) + '</div>' +
       '<div class="pv-issue-desc">' + esc(iss.description || iss.message) + '</div>' +
       locationHtml +
-      (iss.fixPreview ? '<div class="pv-issue-path">Auto-fix: ' + esc(iss.fixPreview) + '</div>' : '') +
+      (iss.fixPreview ? '<div class="pv-issue-path">' + esc(tr('editor.validatorNavigation.modal.autoFixPreview', { preview: iss.fixPreview })) + '</div>' : '') +
       '<div class="pv-issue-actions">' + actionBtns + extraBtns + fixBtn + '</div>' +
       '</div></li>';
   }
@@ -35822,12 +37797,13 @@ if (typeof window !== 'undefined') {
     }
 
     if (!items.length) {
-      return '<ul class="pv-issue-list"><li class="pv-issue pv-issue--ok"><div class="pv-issue-body">✓ No issues found</div></li></ul>';
+      return '<ul class="pv-issue-list"><li class="pv-issue pv-issue--ok"><div class="pv-issue-body">✓ ' +
+        esc(tr('editor.validatorNavigation.groups.noIssues')) + '</div></li></ul>';
     }
 
-    return groupBlock('ERRORS', errors, 'error') +
-      groupBlock('WARNINGS', warnings, 'warning') +
-      groupBlock('INFO', infos, 'info');
+    return groupBlock(tr('editor.validatorNavigation.groups.errors'), errors, 'error') + // ERRORS
+      groupBlock(tr('editor.validatorNavigation.groups.warnings'), warnings, 'warning') + // WARNINGS
+      groupBlock(tr('editor.validatorNavigation.groups.info'), infos, 'info');
   }
 
   function bindValidationModal(modal, items) {
@@ -35863,7 +37839,7 @@ if (typeof window !== 'undefined') {
           try {
             iss.fix();
             Editor.updateJSONPreview?.();
-            Editor.toast?.success?.('Fixed');
+            Editor.toast?.success?.(tr('editor.validatorNavigation.actions.fixed'));
             Editor.runProjectValidation();
           } catch (err) {
             Editor.toast?.error?.(String(err.message || err));
@@ -35874,10 +37850,10 @@ if (typeof window !== 'undefined') {
   }
 
   function patchCollectProjectIssues() {
-    if (!Editor.collectProjectIssues || Editor._validatorNavCollectPatched) return;
-    const orig = Editor.collectProjectIssues.bind(Editor);
-    Editor.collectProjectIssues = function collectProjectIssuesNav() {
-      const result = orig();
+    if (!Editor.collectProjectIssues || Editor._validatorNavCollectHooked || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('collectProjectIssues', function collectProjectIssuesNav() {
+      const result = savedPrev.call(this);
       const data = this.data;
       result.issues = (result.issues || []).map((iss) => enrichProjectIssue(iss, data));
       result.errors = result.issues.filter((i) => i.severity === 'error');
@@ -35886,14 +37862,13 @@ if (typeof window !== 'undefined') {
       result.ok = result.errors.length === 0;
       this._lastProjectIssues = result;
       return result;
-    };
-    Editor._validatorNavCollectPatched = true;
+    }, 'editor-validator-navigation');
+    Editor._validatorNavCollectHooked = true;
   }
 
   function patchShowProjectValidationResults() {
-    if (!Editor.showProjectValidationResults || Editor._validatorNavShowPatched) return;
-    const orig = Editor.showProjectValidationResults.bind(Editor);
-    Editor.showProjectValidationResults = function showProjectValidationResultsNav(result) {
+    if (!Editor.showProjectValidationResults || Editor._validatorNavShowHooked || !Editor.hooks?.replace) return;
+    Editor.hooks.replace('showProjectValidationResults', function showProjectValidationResultsNav(result) {
       result = result || Editor.collectProjectIssues();
       const data = Editor.data;
       const items = (result.issues || []).map((iss) => enrichProjectIssue(iss, data));
@@ -35918,78 +37893,31 @@ if (typeof window !== 'undefined') {
         '<div class="editor-modal-backdrop" data-pv-close="1"></div>' +
         '<div class="editor-modal-panel editor-modal-panel--wide pv-modal-panel">' +
         '<div class="quest-detail-head">' +
-        '<h2>Project Validation</h2>' +
+        '<h2>' + esc(tr('editor.validatorNavigation.modal.title')) + '</h2>' +
         '<button type="button" class="btn-remove" data-pv-close="1">×</button>' +
         '</div>' +
         '<div class="pv-summary">' +
-        '<span class="pv-count pv-count--error">ERRORS ' + result.errors.length + '</span>' +
-        '<span class="pv-count pv-count--warning">WARNINGS ' + result.warnings.length + '</span>' +
-        (infoCount ? '<span class="pv-count pv-count--info">INFO ' + infoCount + '</span>' : '') +
+        '<span class="pv-count pv-count--error">' + esc(tr('editor.validatorNavigation.modal.summaryErrors', { count: result.errors.length })) + '</span>' +
+        '<span class="pv-count pv-count--warning">' + esc(tr('editor.validatorNavigation.modal.summaryWarnings', { count: result.warnings.length })) + '</span>' +
+        (infoCount ? '<span class="pv-count pv-count--info">' + esc(tr('editor.validatorNavigation.modal.summaryInfo', { count: infoCount })) + '</span>' : '') +
         '</div>' +
         listHtml +
         '<div class="pv-footer">' +
-        '<button type="button" class="btn btn-secondary" data-pv-close="1">Close</button>' +
-        '<button type="button" class="btn btn-secondary" data-pv-recheck="1">Re-check</button>' +
+        '<button type="button" class="btn btn-secondary" data-pv-close="1">' + esc(tr('editor.validatorNavigation.modal.close')) + '</button>' +
+        '<button type="button" class="btn btn-secondary" data-pv-recheck="1">' + esc(tr('editor.validatorNavigation.modal.recheck')) + '</button>' +
         '<button type="button" class="btn btn-primary" data-pv-fixall="1"' +
-        (fixableCount ? '' : ' disabled') + '>Auto-fix safe issues (' + fixableCount + ')</button>' +
+        (fixableCount ? '' : ' disabled') + '>' + esc(tr('editor.validatorNavigation.modal.autoFixSafe', { count: fixableCount })) + '</button>' +
         '</div></div>';
       modal.classList.remove('hidden');
       bindValidationModal(modal, items);
-    };
-    Editor._validatorNavShowPatched = true;
-  }
-
-  function patchExportGuard() {
-    if (!Editor.guardExportWithValidation || Editor._validatorNavExportPatched) return;
-    const orig = Editor.guardExportWithValidation.bind(Editor);
-    Editor.guardExportWithValidation = function guardExportWithValidationNav(opts) {
-      opts = opts || {};
-      const result = this.validateProjectExportReady();
-      this._lastExportValidation = result;
-      if (result.ok) return true;
-      if (opts.force) return true;
-
-      const errCount = result.errors.length;
-      const warnCount = result.warnings.length;
-
-      if (typeof this.refreshValidationUI === 'function') {
-        try { this.refreshValidationUI(); } catch (e) { /* */ }
-      }
-
-      if (errCount > 0) {
-        if (typeof this.showProjectValidationResults === 'function') {
-          const normalized = (result.issues || []).map((iss) => {
-            const n = typeof Editor.ValidatorNav?.enrichIssue === 'function'
-              ? Editor.ValidatorNav.enrichIssue(iss, this.data)
-              : iss;
-            return n;
-          });
-          this.showProjectValidationResults({
-            ok: false,
-            issues: normalized,
-            errors: normalized.filter((i) => i.severity === 'error'),
-            warnings: normalized.filter((i) => i.severity === 'warning'),
-            info: normalized.filter((i) => i.severity === 'info')
-          });
-        }
-        if (Editor.toast) {
-          Editor.toast.error('Export blocked: ' + errCount + ' critical error(s)');
-        }
-        return false;
-      }
-
-      if (warnCount > 0 && Editor.toast) {
-        Editor.toast.info('Export allowed with ' + warnCount + ' warning(s)');
-      }
-      return true;
-    };
-    Editor._validatorNavExportPatched = true;
+    }, 'editor-validator-navigation');
+    Editor._validatorNavShowHooked = true;
   }
 
   function patchNavigateToValidationIssue() {
-    if (typeof Editor.navigateToValidationIssue !== 'function' || Editor._validatorNavLegacyPatched) return;
-    const orig = Editor.navigateToValidationIssue.bind(Editor);
-    Editor.navigateToValidationIssue = function navigateToValidationIssueNav(issue) {
+    if (typeof Editor.navigateToValidationIssue !== 'function' || Editor._validatorNavLegacyHooked || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('navigateToValidationIssue', function navigateToValidationIssueNav(issue) {
       const enriched = enrichProjectIssue(normalizeExportIssue(issue), Editor.data);
       if (enriched.action?.run) {
         enriched.action.run();
@@ -36006,9 +37934,9 @@ if (typeof window !== 'undefined') {
           nodeId: raw.nodeId || pathCtx.nodeId
         })) return true;
       }
-      return orig(issue);
-    };
-    Editor._validatorNavLegacyPatched = true;
+      return savedPrev ? savedPrev.call(this, issue) : false;
+    }, 'editor-validator-navigation');
+    Editor._validatorNavLegacyHooked = true;
   }
 
   function normalizeExportIssue(issue) {
@@ -36052,7 +37980,9 @@ if (typeof window !== 'undefined') {
   };
 
   const ValidatorNav = {
-    ISSUE_TITLES,
+    get ISSUE_TITLES() { return getIssueTitles(); },
+    ISSUE_TITLE_TYPES,
+    issueTitle,
     parseJsonPath,
     getIssueTitle,
     getIssueDescription,
@@ -36067,14 +37997,6 @@ if (typeof window !== 'undefined') {
   patchCollectProjectIssues();
   patchShowProjectValidationResults();
   patchNavigateToValidationIssue();
-
-  Editor.applyValidatorExportGuardPatch = function applyValidatorExportGuardPatch() {
-    patchExportGuard();
-  };
-
-  if (typeof Editor.guardExportWithValidation === 'function') {
-    patchExportGuard();
-  }
 
   if (typeof document !== 'undefined' && !document.getElementById('validator-nav-styles')) {
     const st = document.createElement('style');
@@ -43419,10 +45341,10 @@ if (typeof window !== 'undefined') {
   }
 
   // Extend openCreateSceneModal list with pack entries if present
-  const origOpen = Editor.openCreateSceneModal;
-  if (typeof origOpen === 'function') {
-    Editor.openCreateSceneModal = function () {
-      origOpen.call(this);
+  if (typeof Editor.openCreateSceneModal === 'function' && Editor.hooks?.replace) {
+    let savedPrevOpen;
+    savedPrevOpen = Editor.hooks.replace('openCreateSceneModal', function openCreateSceneModalWithPack() {
+      savedPrevOpen.call(this);
       const list = document.getElementById('scene-template-picker-list');
       if (!list || list.dataset.packExtended === '1') {
         Editor.updateSceneTemplatePickerChrome?.();
@@ -43438,7 +45360,7 @@ if (typeof window !== 'undefined') {
       }).join('');
       list.insertAdjacentHTML('beforeend', packHtml);
       Editor.updateSceneTemplatePickerChrome?.();
-    };
+    }, 'editor-scene-template-pack');
   }
 
   // Delegation for pack buttons (once)
@@ -43471,184 +45393,95 @@ if (typeof window !== 'undefined') {
 (function attachStoryWizardContent(global) {
   'use strict';
 
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
   const TR = {
     а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y',
     к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f',
     х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya'
   };
 
-  const GENRE_PRESETS = Object.freeze({
-    fantasy: {
-      id: 'fantasy',
-      label: 'Фэнтези',
-      defaultTitle: 'Сказание о приключении',
-      description: 'Рыцари, магия и древние тайны ждут героя.',
-      coverColor: '#4a3728',
-      startingGold: 15,
-      startingHp: 20
-    },
-    horror: {
-      id: 'horror',
-      label: 'Хоррор',
-      defaultTitle: 'Тени забытого дома',
-      description: 'Мрак, страх и необъяснимое на каждом шагу.',
-      coverColor: '#1a1a2e',
-      startingGold: 5,
-      startingHp: 16
-    },
-    detective: {
-      id: 'detective',
-      label: 'Детектив',
-      defaultTitle: 'Дело без ответа',
-      description: 'Улики, свидетели и разгадка в финале.',
-      coverColor: '#2c3e50',
-      startingGold: 25,
-      startingHp: 18
-    },
-    survival: {
-      id: 'survival',
-      label: 'Выживание',
-      defaultTitle: 'После бури',
-      description: 'Ресурсы на исходе — нужно дойти до безопасного места.',
-      coverColor: '#3d4a2c',
-      startingGold: 8,
-      startingHp: 22
-    }
-  });
+  const GENRE_IDS = Object.freeze(['fantasy', 'horror', 'detective', 'survival']);
 
-  const SYSTEM_LABELS = Object.freeze({
-    generic: 'Универсальные правила',
-    dnd5e: 'Классические приключения',
-    pf2e: 'Путьfinder'
+  const GENRE_PRESETS = Object.freeze({
+    fantasy: { id: 'fantasy', coverColor: '#4a3728', startingGold: 15, startingHp: 20 },
+    horror: { id: 'horror', coverColor: '#1a1a2e', startingGold: 5, startingHp: 16 },
+    detective: { id: 'detective', coverColor: '#2c3e50', startingGold: 25, startingHp: 18 },
+    survival: { id: 'survival', coverColor: '#3d4a2c', startingGold: 8, startingHp: 22 }
   });
 
   const SYSTEM_IDS = Object.freeze(['generic', 'dnd5e', 'pf2e']);
 
-  const GENRE_SCENE_NAMES = Object.freeze({
-    fantasy: {
-      start: 'У ворот королевства',
-      hub: 'Перекрёсток стражей',
-      branch1: 'Тёмный лес',
-      branch2: 'Руины башни',
-      branch3: 'Деревня эльфов',
-      village: 'Деревня Ольдвуд',
-      tavern: 'Таверна «Золотой кубок»',
-      shop: 'Лавка алхимика',
-      forge: 'Кузница старого Грома',
-      road1: 'Королевская дорога',
-      road2: 'Мост через реку',
-      road3: 'Поляна у ручья',
-      road4: 'Ворота крепости',
-      exit: 'Окраина земель'
-    },
-    horror: {
-      start: 'Порог заброшенного дома',
-      hub: 'Пустой холл',
-      branch1: 'Подвал',
-      branch2: 'Мансарда',
-      branch3: 'Сад с могилами',
-      village: 'Мёртвая деревня',
-      tavern: 'Закрытая постоялая',
-      shop: 'Пустая лавка',
-      forge: 'Заржавевшая кузня',
-      road1: 'Туманная тропа',
-      road2: 'Сломанный мост',
-      road3: 'Болото',
-      road4: 'Старый склеп',
-      exit: 'Ворота кладбища'
-    },
-    detective: {
-      start: 'Приёмная детектива',
-      hub: 'Городская площадь',
-      branch1: 'Кабинет мэра',
-      branch2: 'Склад улик',
-      branch3: 'Кафе свидетелей',
-      village: 'Старый квартал',
-      tavern: 'Бар «Красная лампа»',
-      shop: 'Ломбард',
-      forge: 'Мастерская часовщика',
-      road1: 'Улица фонарей',
-      road2: 'Переулок у доков',
-      road3: 'Архив полиции',
-      road4: 'Судебный зал',
-      exit: 'Вокзал'
-    },
-    survival: {
-      start: 'Лагерь после бури',
-      hub: 'Разрушенный мост',
-      branch1: 'Заросшая тропа',
-      branch2: 'Заброшенная хижина',
-      branch3: 'Ручей с пресной водой',
-      village: 'Посёлок ущелья',
-      tavern: 'Убежище у костра',
-      shop: 'Запасной склад',
-      forge: 'Сарай с инструментами',
-      road1: 'Горная тропа',
-      road2: 'Обвал на пути',
-      road3: 'Пещера у скалы',
-      road4: 'Спасательный пункт',
-      exit: 'Безопасная поляна'
-    }
-  });
+  const SCENE_NAME_KEYS = Object.freeze([
+    'start', 'hub', 'branch1', 'branch2', 'branch3', 'village', 'tavern', 'shop', 'forge',
+    'road1', 'road2', 'road3', 'road4', 'exit'
+  ]);
 
   const WORLD_SKELETONS = Object.freeze([
     {
       id: 'hub_branches',
-      label: 'Хаб и три ветки',
-      description: 'Центральная точка и три пути — классика ветвящегося сюжета.',
       startKey: 'start',
       nodes: [
-        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'hub', choice: 'Начать путь', icon: '🌅' }] },
+        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'hub', choiceKey: 'startPath', icon: '🌅' }] },
         {
           key: 'hub', template: 'tpl_hub_simple', nameKey: 'hub',
           links: [
-            { to: 'branch1', choice: 'Первый путь', icon: '🌲' },
-            { to: 'branch2', choice: 'Второй путь', icon: '🏚️' },
-            { to: 'branch3', choice: 'Третий путь', icon: '🏘️' }
+            { to: 'branch1', choiceKey: 'path1', icon: '🌲' },
+            { to: 'branch2', choiceKey: 'path2', icon: '🏚️' },
+            { to: 'branch3', choiceKey: 'path3', icon: '🏘️' }
           ]
         },
-        { key: 'branch1', template: 'tpl_explore', nameKey: 'branch1', links: [{ to: 'hub', choice: 'Вернуться', icon: '↩️' }] },
-        { key: 'branch2', template: 'tpl_location', nameKey: 'branch2', links: [{ to: 'hub', choice: 'Вернуться', icon: '↩️' }] },
-        { key: 'branch3', template: 'tpl_dialogue', nameKey: 'branch3', links: [{ to: 'hub', choice: 'Вернуться', icon: '↩️' }] }
+        { key: 'branch1', template: 'tpl_explore', nameKey: 'branch1', links: [{ to: 'hub', choiceKey: 'return', icon: '↩️' }] },
+        { key: 'branch2', template: 'tpl_location', nameKey: 'branch2', links: [{ to: 'hub', choiceKey: 'return', icon: '↩️' }] },
+        { key: 'branch3', template: 'tpl_dialogue', nameKey: 'branch3', links: [{ to: 'hub', choiceKey: 'return', icon: '↩️' }] }
       ]
     },
     {
       id: 'linear_road',
-      label: 'Линейная дорога',
-      description: 'Последовательный путь из пяти локаций — для сюжета без развилок.',
       startKey: 'start',
       nodes: [
-        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'road1', choice: 'В путь', icon: '🌅' }] },
-        { key: 'road1', template: 'tpl_location', nameKey: 'road1', links: [{ to: 'road2', choice: 'Идти дальше', icon: '➡️' }] },
-        { key: 'road2', template: 'tpl_explore', nameKey: 'road2', links: [{ to: 'road3', choice: 'Идти дальше', icon: '➡️' }] },
-        { key: 'road3', template: 'tpl_dialogue', nameKey: 'road3', links: [{ to: 'road4', choice: 'Идти дальше', icon: '➡️' }] },
-        { key: 'road4', template: 'tpl_reward', nameKey: 'road4', links: [{ to: 'exit', choice: 'Завершить путь', icon: '🏁' }] },
+        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'road1', choiceKey: 'setOut', icon: '🌅' }] },
+        { key: 'road1', template: 'tpl_location', nameKey: 'road1', links: [{ to: 'road2', choiceKey: 'continue', icon: '➡️' }] },
+        { key: 'road2', template: 'tpl_explore', nameKey: 'road2', links: [{ to: 'road3', choiceKey: 'continue', icon: '➡️' }] },
+        { key: 'road3', template: 'tpl_dialogue', nameKey: 'road3', links: [{ to: 'road4', choiceKey: 'continue', icon: '➡️' }] },
+        { key: 'road4', template: 'tpl_reward', nameKey: 'road4', links: [{ to: 'exit', choiceKey: 'finishPath', icon: '🏁' }] },
         { key: 'exit', template: 'tpl_victory', nameKey: 'exit', links: [] }
       ]
     },
     {
       id: 'ready_village',
-      label: 'Готовая деревня',
-      description: 'Посёлок с таверной, лавкой и кузницей — готовый хаб для истории.',
       startKey: 'start',
       nodes: [
-        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'village', choice: 'Войти в посёлок', icon: '🏘️' }] },
+        { key: 'start', template: 'tpl_game_start', nameKey: 'start', links: [{ to: 'village', choiceKey: 'enterVillage', icon: '🏘️' }] },
         {
           key: 'village', template: 'tpl_village', nameKey: 'village',
           links: [
-            { to: 'tavern', choice: 'Таверна', icon: '🏚️' },
-            { to: 'shop', choice: 'Лавка', icon: '🛒' },
-            { to: 'forge', choice: 'Кузница', icon: '⚒️' },
-            { to: 'exit', choice: 'Уйти из посёлка', icon: '🚪' }
+            { to: 'tavern', choiceKey: 'tavern', icon: '🏚️' },
+            { to: 'shop', choiceKey: 'shop', icon: '🛒' },
+            { to: 'forge', choiceKey: 'forge', icon: '⚒️' },
+            { to: 'exit', choiceKey: 'leaveVillage', icon: '🚪' }
           ]
         },
-        { key: 'tavern', template: 'tpl_tavern', nameKey: 'tavern', links: [{ to: 'village', choice: 'На площадь', icon: '↩️' }] },
-        { key: 'shop', template: 'tpl_shop', nameKey: 'shop', links: [{ to: 'village', choice: 'На площадь', icon: '↩️' }] },
-        { key: 'forge', template: 'tpl_forge', nameKey: 'forge', links: [{ to: 'village', choice: 'На площадь', icon: '↩️' }] },
-        { key: 'exit', template: 'tpl_location', nameKey: 'exit', links: [{ to: 'village', choice: 'Вернуться', icon: '↩️' }] }
+        { key: 'tavern', template: 'tpl_tavern', nameKey: 'tavern', links: [{ to: 'village', choiceKey: 'toSquare', icon: '↩️' }] },
+        { key: 'shop', template: 'tpl_shop', nameKey: 'shop', links: [{ to: 'village', choiceKey: 'toSquare', icon: '↩️' }] },
+        { key: 'forge', template: 'tpl_forge', nameKey: 'forge', links: [{ to: 'village', choiceKey: 'toSquare', icon: '↩️' }] },
+        { key: 'exit', template: 'tpl_location', nameKey: 'exit', links: [{ to: 'village', choiceKey: 'return', icon: '↩️' }] }
       ]
     }
   ]);
+
+  function genrePresetKey(genreId, field) {
+    return 'editor.storyWizard.content.genres.' + (GENRE_PRESETS[genreId] ? genreId : 'fantasy') + '.' + field;
+  }
+
+  function skeletonChoiceText(skeletonId, choiceKey) {
+    if (!choiceKey) return tr('editor.storyWizard.content.defaultChoiceGo');
+    return tr('editor.storyWizard.content.skeletons.' + skeletonId + '.choices.' + choiceKey);
+  }
 
   function slugifyId(name, existing) {
     let s = String(name || '').trim().toLowerCase();
@@ -43667,28 +45500,43 @@ if (typeof window !== 'undefined') {
   }
 
   function getGenrePreset(genreId) {
-    return GENRE_PRESETS[genreId] || GENRE_PRESETS.fantasy;
+    const id = GENRE_PRESETS[genreId] ? genreId : 'fantasy';
+    const base = GENRE_PRESETS[id];
+    return {
+      id,
+      label: tr(genrePresetKey(id, 'label')),
+      defaultTitle: tr(genrePresetKey(id, 'defaultTitle')),
+      description: tr(genrePresetKey(id, 'description')),
+      coverColor: base.coverColor,
+      startingGold: base.startingGold,
+      startingHp: base.startingHp
+    };
   }
 
   function listGenrePresets() {
-    return Object.values(GENRE_PRESETS);
+    return GENRE_IDS.map((id) => getGenrePreset(id));
   }
 
   function listWorldSkeletons() {
     return WORLD_SKELETONS.map((s) => ({
       id: s.id,
-      label: s.label,
-      description: s.description
+      label: tr('editor.storyWizard.content.skeletons.' + s.id + '.label'),
+      description: tr('editor.storyWizard.content.skeletons.' + s.id + '.description')
     }));
   }
 
   function listSystemOptions() {
-    return SYSTEM_IDS.map((id) => ({ id, label: SYSTEM_LABELS[id] || id }));
+    return SYSTEM_IDS.map((id) => ({
+      id,
+      label: tr('editor.storyWizard.content.systems.' + id)
+    }));
   }
 
   function getSceneName(genreId, nameKey) {
-    const bag = GENRE_SCENE_NAMES[genreId] || GENRE_SCENE_NAMES.fantasy;
-    return bag[nameKey] || nameKey;
+    const g = GENRE_PRESETS[genreId] ? genreId : 'fantasy';
+    const key = 'editor.storyWizard.content.sceneNames.' + g + '.' + nameKey;
+    const val = tr(key);
+    return val === key ? nameKey : val;
   }
 
   function buildPreviewGraph(spec, sceneIds, genreId) {
@@ -43702,7 +45550,9 @@ if (typeof window !== 'undefined') {
           fromLabel,
           to: sceneIds[link.to],
           toLabel: getSceneName(genreId, WORLD_SKELETONS.find((s) => s.id === spec.id)?.nodes.find((n) => n.key === link.to)?.nameKey || link.to),
-          choice: link.choice
+          choice: link.choiceKey
+            ? skeletonChoiceText(spec.id, link.choiceKey)
+            : (link.choice || tr('editor.storyWizard.content.defaultChoiceGo')),
         });
       });
     });
@@ -43751,7 +45601,9 @@ if (typeof window !== 'undefined') {
       const patch = buildPackPatch(node.template, blank) || {};
       const scene = Object.assign({}, blank, patch, { id, location });
       scene.choices = (node.links || []).map((link) => ({
-        text: link.choice || 'Идти',
+        text: link.choiceKey
+          ? skeletonChoiceText(spec.id, link.choiceKey)
+          : (link.choice || tr('editor.storyWizard.content.defaultChoiceGo')),
         to: sceneIds[link.to],
         icon: link.icon || '➡️'
       }));
@@ -43904,9 +45756,9 @@ if (typeof window !== 'undefined') {
 
   const api = {
     GENRE_PRESETS,
-    GENRE_SCENE_NAMES,
+    GENRE_IDS,
+    SCENE_NAME_KEYS,
     WORLD_SKELETONS,
-    SYSTEM_LABELS,
     SYSTEM_IDS,
     getGenrePreset,
     listGenrePresets,
@@ -43941,48 +45793,21 @@ if (typeof window !== 'undefined') {
 (function attachStoryWizardHeroesQuest(global) {
   'use strict';
 
-  const NPC_ROLES = Object.freeze([
-    { id: 'quest_giver', label: 'Квестодатель', icon: '📜' },
-    { id: 'merchant', label: 'Торговец', icon: '🛒' },
-    { id: 'informant', label: 'Источник информации', icon: '💡' },
-    { id: 'antagonist', label: 'Противник', icon: '⚔️' }
-  ]);
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
-  const ROLE_PHRASES = Object.freeze({
-    quest_giver: 'Мне нужна твоя помощь, путник. У меня есть дело для тебя.',
-    merchant: 'Загляни — товар свежий, цены честные.',
-    informant: 'Слышал кое-что важное. Может, пригодится.',
-    antagonist: 'Тебе здесь не рады. Убирайся, пока цел.'
+  const NPC_ROLE_IDS = Object.freeze(['quest_giver', 'merchant', 'informant', 'antagonist']);
+
+  const NPC_ROLE_ICONS = Object.freeze({
+    quest_giver: '📜', merchant: '🛒', informant: '💡', antagonist: '⚔️'
   });
 
-  const DEFAULT_NPCS_BY_GENRE = Object.freeze({
-    fantasy: [
-      { name: 'Старейшина', role: 'quest_giver', description: 'Правит деревней и даёт поручения' },
-      { name: 'Торговец', role: 'merchant', description: 'Продаёт зелья и снаряжение' },
-      { name: 'Странник', role: 'informant', description: 'Знает тропы и слухи' }
-    ],
-    horror: [
-      { name: 'Хозяин дома', role: 'quest_giver', description: 'Просит разобраться с тенями' },
-      { name: 'Сторож', role: 'informant', description: 'Видел странное у колодца' },
-      { name: 'Незнакомец', role: 'antagonist', description: 'Пугает и мешает расследованию' }
-    ],
-    detective: [
-      { name: 'Инспектор', role: 'quest_giver', description: 'Поручает первое дело' },
-      { name: 'Свидетель', role: 'informant', description: 'Видел подозрительное' },
-      { name: 'Лавочник', role: 'merchant', description: 'Торгует уликами и кофе' }
-    ],
-    survival: [
-      { name: 'Старший лагеря', role: 'quest_giver', description: 'Организует выживание группы' },
-      { name: 'Разведчик', role: 'informant', description: 'Знает безопасные тропы' },
-      { name: 'Мародёр', role: 'antagonist', description: 'Угрожает запасами' }
-    ]
-  });
+  const REWARD_KIND_IDS = Object.freeze(['gold', 'item', 'reputation']);
 
-  const REWARD_KINDS = Object.freeze([
-    { id: 'gold', label: 'Золото' },
-    { id: 'item', label: 'Предмет' },
-    { id: 'reputation', label: 'Репутация' }
-  ]);
+  const DEFAULT_NPC_GENRES = Object.freeze(['fantasy', 'horror', 'detective', 'survival']);
 
   function slugId(editor, name, bucket) {
     if (editor && typeof editor.slugifyId === 'function') {
@@ -43991,18 +45816,39 @@ if (typeof window !== 'undefined') {
     return String(name || 'id').toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 32) || 'id';
   }
 
+  function localeValue(key) {
+    if (typeof I18n !== 'undefined' && I18n._strings) {
+      return key.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), I18n._strings);
+    }
+    return undefined;
+  }
+
+  function defaultNpcsForGenre(genre) {
+    const g = DEFAULT_NPC_GENRES.includes(genre) ? genre : 'fantasy';
+    const list = localeValue('editor.storyWizard.heroesQuest.defaultNpcs.' + g);
+    if (Array.isArray(list)) return JSON.parse(JSON.stringify(list));
+    return [
+      { name: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.0.name'), role: 'quest_giver', description: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.0.description') },
+      { name: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.1.name'), role: 'merchant', description: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.1.description') },
+      { name: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.2.name'), role: 'informant', description: tr('editor.storyWizard.heroesQuest.defaultNpcs.fantasy.2.description') }
+    ];
+  }
+
   function initHeroesQuestDraft(draft) {
     if (!draft.hero) {
-      draft.hero = { name: 'Странник', description: 'Главный герой вашей истории' };
+      draft.hero = {
+        name: tr('editor.storyWizard.heroesQuest.defaults.heroName'),
+        description: tr('editor.storyWizard.heroesQuest.defaults.heroDescription')
+      };
     }
     if (!Array.isArray(draft.npcs) || !draft.npcs.length) {
       const genre = draft.genre || 'fantasy';
-      draft.npcs = JSON.parse(JSON.stringify(DEFAULT_NPCS_BY_GENRE[genre] || DEFAULT_NPCS_BY_GENRE.fantasy));
+      draft.npcs = defaultNpcsForGenre(genre);
     }
     if (!draft.quest) {
       draft.quest = {
         goal: 'talk',
-        title: 'Первое задание',
+        title: tr('editor.storyWizard.heroesQuest.defaults.questTitle'),
         npcId: '',
         itemId: '',
         enemyId: '',
@@ -44046,7 +45892,9 @@ if (typeof window !== 'undefined') {
   }
 
   function defaultPhrase(role) {
-    return ROLE_PHRASES[role] || '…';
+    const key = 'editor.storyWizard.heroesQuest.phrases.' + role;
+    const val = tr(key);
+    return val === key ? tr('editor.storyWizard.heroesQuest.phrases.fallback') : val;
   }
 
   function attachNpcToScene(editor, sceneId, npcId, npcName, phrase) {
@@ -44080,7 +45928,7 @@ if (typeof window !== 'undefined') {
     if (draft.heroesApplied) removeWizardNpcs(editor, draft);
 
     const balance = editor.data.meta?.storyBalance || { gold: 15, hp: 20 };
-    const heroName = (draft.hero.name || 'Странник').trim();
+    const heroName = (draft.hero.name || tr('editor.storyWizard.heroesQuest.defaults.heroName')).trim();
     const heroId = slugId(editor, heroName, editor.data.playerCharacters);
     editor.data.playerCharacters[heroId] = {
       id: heroId,
@@ -44096,14 +45944,14 @@ if (typeof window !== 'undefined') {
     const createdNpcIds = [];
 
     (draft.npcs || []).forEach((npcDraft) => {
-      const name = (npcDraft.name || 'Персонаж').trim();
+      const name = (npcDraft.name || tr('editor.storyWizard.heroesQuest.defaults.npcFallback')).trim();
       if (!name) return;
       const id = slugId(editor, name, editor.data.npcs);
       const phrase = defaultPhrase(npcDraft.role);
       editor.data.npcs[id] = {
         id,
         name,
-        icon: (NPC_ROLES.find((r) => r.id === npcDraft.role) || {}).icon || '👤',
+        icon: NPC_ROLE_ICONS[npcDraft.role] || '👤',
         description: npcDraft.description || '',
         location: editor.data.scenes[sceneMap[npcDraft.role]]?.location || '',
         attitude: npcDraft.role === 'antagonist' ? 'hostile' : 'friendly',
@@ -44142,20 +45990,20 @@ if (typeof window !== 'undefined') {
     if (!editor.data.reputation) editor.data.reputation = {};
 
     const itemNames = {
-      fantasy: 'Старый амулет',
-      horror: 'Потёртая записка',
-      detective: 'Улика',
-      survival: 'Запас провизии'
+      fantasy: tr('editor.storyWizard.heroesQuest.items.fantasy'),
+      horror: tr('editor.storyWizard.heroesQuest.items.horror'),
+      detective: tr('editor.storyWizard.heroesQuest.items.detective'),
+      survival: tr('editor.storyWizard.heroesQuest.items.survival')
     };
     const enemyNames = {
-      fantasy: 'Разбойник',
-      horror: 'Тень',
-      detective: 'Подозреваемый',
-      survival: 'Дикий зверь'
+      fantasy: tr('editor.storyWizard.heroesQuest.enemies.fantasy'),
+      horror: tr('editor.storyWizard.heroesQuest.enemies.horror'),
+      detective: tr('editor.storyWizard.heroesQuest.enemies.detective'),
+      survival: tr('editor.storyWizard.heroesQuest.enemies.survival')
     };
 
     if (['find', 'collect', 'deliver'].includes(q.goal) && !q.itemId) {
-      const iname = itemNames[genre] || 'Предмет';
+      const iname = itemNames[genre] || tr('editor.storyWizard.heroesQuest.items.fallback');
       const iid = slugId(editor, iname, editor.data.items);
       if (!editor.data.items[iid]) {
         editor.data.items[iid] = { id: iid, name: iname, type: 'misc', desc: iname };
@@ -44163,7 +46011,7 @@ if (typeof window !== 'undefined') {
       q.itemId = iid;
     }
     if (q.goal === 'kill' && !q.enemyId) {
-      const ename = enemyNames[genre] || 'Враг';
+      const ename = enemyNames[genre] || tr('editor.storyWizard.heroesQuest.enemies.fallback');
       const eid = slugId(editor, ename, editor.data.enemies);
       if (!editor.data.enemies[eid]) {
         editor.data.enemies[eid] = {
@@ -44177,15 +46025,20 @@ if (typeof window !== 'undefined') {
       q.sceneId = ids[ids.length - 1] || editor.data.startScene;
     }
     if (!editor.data.reputation.village) {
-      editor.data.reputation.village = { name: 'Местные жители' };
+      editor.data.reputation.village = { name: tr('editor.storyWizard.heroesQuest.defaults.reputationVillage') };
     }
     if (q.rewardKind === 'reputation' && !q.rewardRepId) {
       q.rewardRepId = 'village';
     }
     if (q.rewardKind === 'item' && !q.rewardItemId) {
-      const rid = slugId(editor, 'Награда', editor.data.items);
+      const rid = slugId(editor, tr('editor.storyWizard.heroesQuest.defaults.rewardPlaceholder'), editor.data.items);
       if (!editor.data.items[rid]) {
-        editor.data.items[rid] = { id: rid, name: 'Награда за подвиг', type: 'misc', desc: 'За выполненное задание' };
+        editor.data.items[rid] = {
+          id: rid,
+          name: tr('editor.storyWizard.heroesQuest.defaults.rewardItemName'),
+          type: 'misc',
+          desc: tr('editor.storyWizard.heroesQuest.defaults.rewardItemDesc')
+        };
       }
       q.rewardItemId = rid;
     }
@@ -44197,7 +46050,7 @@ if (typeof window !== 'undefined') {
     const balance = editor?.data?.meta?.storyBalance || {};
     return {
       goal: q.goal || 'talk',
-      title: q.title || 'Первое задание',
+      title: q.title || tr('editor.storyWizard.heroesQuest.defaults.questTitle'),
       npcId: q.npcId || giver?.id || '',
       itemId: q.itemId || '',
       enemyId: q.enemyId || '',
@@ -44222,7 +46075,9 @@ if (typeof window !== 'undefined') {
     scene.choices = scene.choices.filter((c) => !(c.questSet && c.questSet.questId === questId));
     const dest = scene.choices[0]?.to || scene.id;
     scene.choices.unshift({
-      text: 'Принять: ' + (title || 'задание'),
+      text: tr('editor.storyWizard.heroesQuest.defaults.acceptQuest', {
+        title: title || tr('editor.storyWizard.heroesQuest.defaults.acceptQuestFallback')
+      }),
       to: dest,
       icon: '📜',
       once: true,
@@ -44306,11 +46161,18 @@ if (typeof window !== 'undefined') {
   }
 
   function listNpcRoles() {
-    return NPC_ROLES.slice();
+    return NPC_ROLE_IDS.map((id) => ({
+      id,
+      label: tr('editor.storyWizard.heroesQuest.roles.' + id),
+      icon: NPC_ROLE_ICONS[id]
+    }));
   }
 
   function listRewardKinds() {
-    return REWARD_KINDS.slice();
+    return REWARD_KIND_IDS.map((id) => ({
+      id,
+      label: tr('editor.storyWizard.heroesQuest.rewards.' + id)
+    }));
   }
 
   function listQuestGoals() {
@@ -44319,8 +46181,9 @@ if (typeof window !== 'undefined') {
   }
 
   const api = {
-    NPC_ROLES,
-    ROLE_PHRASES,
+    NPC_ROLE_IDS,
+    NPC_ROLE_ICONS,
+    REWARD_KIND_IDS,
     initHeroesQuestDraft,
     applyHeroesStep,
     applyQuestStep,
@@ -44352,6 +46215,12 @@ if (typeof window !== 'undefined') {
 // ============================================================
 (function attachStoryWizardPublish() {
   'use strict';
+
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   function esc(s) {
     return typeof Editor !== 'undefined' && typeof Editor.escapeHtml === 'function'
@@ -44429,14 +46298,14 @@ if (typeof window !== 'undefined') {
   function isQuestReachableFromStart(editor, questId) {
     const data = editor?.data || {};
     if (!questId) {
-      return { ok: false, status: 'warn', detail: 'квест не задан в мастере', sceneIds: [], questId: null };
+      return { ok: false, status: 'warn', detail: tr('editor.storyWizard.publish.questNotSet'), sceneIds: [], questId: null };
     }
     if (!data.quests?.[questId]) {
-      return { ok: false, status: 'warn', detail: 'квест ещё не создан в проекте', sceneIds: [], questId };
+      return { ok: false, status: 'warn', detail: tr('editor.storyWizard.publish.questNotCreated'), sceneIds: [], questId };
     }
     const startId = resolveStartSceneId(editor);
     if (!startId) {
-      return { ok: false, status: 'error', detail: 'нет стартовой сцены', sceneIds: [], questId };
+      return { ok: false, status: 'error', detail: tr('editor.storyWizard.publish.noStartScene'), sceneIds: [], questId };
     }
     const scenes = data.scenes || {};
     const queue = [startId];
@@ -44454,7 +46323,7 @@ if (typeof window !== 'undefined') {
           return {
             ok: true,
             status: 'ok',
-            detail: 'выдаётся в «' + label + '»',
+            detail: tr('editor.storyWizard.publish.questGranted', { label }),
             sceneIds: [sid],
             choiceIndex: ci,
             questId
@@ -44480,7 +46349,7 @@ if (typeof window !== 'undefined') {
     return {
       ok: false,
       status: 'warn',
-      detail: 'ни один выбор с старта не запускает квест',
+      detail: tr('editor.storyWizard.publish.questUnreachable'),
       sceneIds: [startId],
       questId
     };
@@ -44496,11 +46365,11 @@ if (typeof window !== 'undefined') {
     items.push({
       id: 'has_start_scene',
       kind: 'checklist',
-      label: 'Есть стартовая сцена',
+      label: tr('editor.storyWizard.publish.checklist.hasStart'),
       status: startValid ? 'ok' : 'error',
       detail: startValid
-        ? (startAssigned ? '«' + startId + '»' : '«' + startId + '» (по умолчанию)')
-        : 'создайте хотя бы одну сцену и укажите старт',
+        ? tr(startAssigned ? 'editor.storyWizard.publish.checklistDetail.startAssigned' : 'editor.storyWizard.publish.checklistDetail.startDefault', { id: startId })
+        : tr('editor.storyWizard.publish.checklistDetail.noStart'),
       sceneIds: startId ? [startId] : [],
       navigate: { type: 'scene', sceneId: startId, section: 'content' }
     });
@@ -44511,7 +46380,7 @@ if (typeof window !== 'undefined') {
       items.push({
         id: 'first_quest_reachable',
         kind: 'checklist',
-        label: 'Первый квест достижим',
+        label: tr('editor.storyWizard.publish.checklist.firstQuest'),
         status: questReach.status,
         detail: questReach.detail,
         sceneIds: questReach.sceneIds || [],
@@ -44529,11 +46398,13 @@ if (typeof window !== 'undefined') {
     items.push({
       id: 'scene_has_exit',
       kind: 'checklist',
-      label: 'У каждой сцены есть хотя бы один выход',
+      label: tr('editor.storyWizard.publish.checklist.sceneExit'),
       status: deadEnds.length ? 'warn' : 'ok',
       detail: deadEnds.length
-        ? 'без выхода: ' + deadEnds.slice(0, 4).join(', ') + (deadEnds.length > 4 ? '…' : '')
-        : 'все сцены ведут дальше или завершают историю',
+        ? tr('editor.storyWizard.publish.checklistDetail.deadEnds', {
+          list: deadEnds.slice(0, 4).join(', ') + (deadEnds.length > 4 ? '…' : '')
+        })
+        : tr('editor.storyWizard.publish.checklistDetail.allExits'),
       sceneIds: deadEnds,
       navigate: deadEnds[0] ? { type: 'scene', sceneId: deadEnds[0], section: 'choices' } : null
     });
@@ -44547,7 +46418,7 @@ if (typeof window !== 'undefined') {
         items.push({
           id: 'hub_to_final',
           kind: 'checklist',
-          label: 'Финал достижим из хаба',
+          label: tr('editor.storyWizard.publish.checklist.hubFinal'),
           status: hubFinal.status === 'error' ? 'error' : (hubFinal.status === 'warn' ? 'warn' : 'ok'),
           detail: hubFinal.detail,
           sceneIds: hubFinal.sceneIds || [],
@@ -44560,9 +46431,9 @@ if (typeof window !== 'undefined') {
       items.push({
         id: 'hub_to_final',
         kind: 'checklist',
-        label: 'Финал достижим из хаба',
+        label: tr('editor.storyWizard.publish.checklist.hubFinal'),
         status: 'warn',
-        detail: 'карта сюжета недоступна — проверка пропущена',
+        detail: tr('editor.storyWizard.publish.checklistDetail.flowSkipped'),
         sceneIds: [],
         navigate: null
       });
@@ -44578,12 +46449,12 @@ if (typeof window !== 'undefined') {
     const questIds = Object.keys(data.quests || {});
     const heroName = draft?.hero?.name
       || data.playerCharacters?.[Object.keys(data.playerCharacters || {})[0]]?.name
-      || 'Герой';
+      || tr('editor.storyWizard.publish.heroDefault');
     const questTitle = draft?.questId && data.quests?.[draft.questId]
       ? (data.quests[draft.questId].title || draft.questId)
-      : (draft?.quest?.title || '—');
+      : (draft?.quest?.title || tr('editor.storyWizard.publish.dash'));
     return {
-      title: data.meta?.title || draft?.title || 'Моя история',
+      title: data.meta?.title || draft?.title || tr('editor.storyWizard.publish.defaultTitle'),
       sceneCount: sceneIds.length,
       npcCount: npcIds.length,
       questCount: questIds.length,
@@ -44601,7 +46472,7 @@ if (typeof window !== 'undefined') {
     return {
       ok: validator.ok && checklist.every((c) => c.status !== 'error'),
       exportBlocked,
-      exportBlockers: (validator.errors || []).map((e) => e.message || e.objectLabel || 'Ошибка'),
+      exportBlockers: (validator.errors || []).map((e) => e.message || e.objectLabel || tr('editor.storyWizard.publish.errorFallback')),
       issues: validator.issues || [],
       errors: validator.errors || [],
       warnings: validator.warnings || [],
@@ -44619,7 +46490,7 @@ if (typeof window !== 'undefined') {
   function renderChecklistHtml(checklist) {
     if (!checklist.length) return '';
     return `<section class="sw-publish-section">
-      <h4>Чеклист готовности</h4>
+      <h4>${esc(tr('editor.storyWizard.publish.sections.checklist'))}</h4>
       <ul class="sw-publish-rows">
         ${checklist.map((it, idx) =>
           `<li class="sw-publish-row sw-publish-row--${esc(it.status)}">
@@ -44640,13 +46511,13 @@ if (typeof window !== 'undefined') {
     let html = '';
     if (err.length) {
       html += `<section class="sw-publish-section sw-publish-section--errors">
-        <h4>Ошибки (${err.length})</h4>
+        <h4>${esc(tr('editor.storyWizard.publish.sections.errors', { count: err.length }))}</h4>
         <ul class="sw-publish-rows">
           ${err.map((iss, idx) =>
             `<li class="sw-publish-row sw-publish-row--error">
               <button type="button" class="sw-publish-row-btn" data-sw-pub-kind="error" data-sw-pub-idx="${idx}">
                 <span class="sw-publish-row-icon">🔴</span>
-                <span class="sw-publish-row-label">${esc(iss.objectLabel || 'Проект')}</span>
+                <span class="sw-publish-row-label">${esc(iss.objectLabel || tr('editor.storyWizard.publish.projectLabel'))}</span>
                 <span class="sw-publish-row-detail">${esc(iss.message)}</span>
               </button>
             </li>`
@@ -44656,13 +46527,13 @@ if (typeof window !== 'undefined') {
     }
     if (warn.length) {
       html += `<section class="sw-publish-section">
-        <h4>Предупреждения (${warn.length})</h4>
+        <h4>${esc(tr('editor.storyWizard.publish.sections.warnings', { count: warn.length }))}</h4>
         <ul class="sw-publish-rows">
           ${warn.map((iss, idx) =>
             `<li class="sw-publish-row sw-publish-row--warn">
               <button type="button" class="sw-publish-row-btn" data-sw-pub-kind="warning" data-sw-pub-idx="${idx}">
                 <span class="sw-publish-row-icon">🟡</span>
-                <span class="sw-publish-row-label">${esc(iss.objectLabel || 'Проект')}</span>
+                <span class="sw-publish-row-label">${esc(iss.objectLabel || tr('editor.storyWizard.publish.projectLabel'))}</span>
                 <span class="sw-publish-row-detail">${esc(iss.message)}</span>
               </button>
             </li>`
@@ -44672,7 +46543,7 @@ if (typeof window !== 'undefined') {
     }
     if (!err.length && !warn.length) {
       html += `<section class="sw-publish-section sw-publish-ok-banner">
-        <p>✓ Критических проблем валидатора не найдено — можно тестировать и экспортировать.</p>
+        <p>${esc(tr('editor.storyWizard.publish.validatorOk'))}</p>
       </section>`;
     }
     return html;
@@ -44683,7 +46554,7 @@ if (typeof window !== 'undefined') {
     const list = (report.exportBlockers || []).slice(0, 6)
       .map((m) => '<li>' + esc(m) + '</li>').join('');
     return `<div class="sw-publish-blockers" role="alert">
-      <strong>Экспорт заблокирован</strong> — устраните ошибки выше:
+      <strong>${esc(tr('editor.storyWizard.publish.exportBlocked'))}</strong>${esc(tr('editor.storyWizard.publish.exportBlockedHint'))}
       <ul>${list}</ul>
     </div>`;
   }
@@ -44692,29 +46563,29 @@ if (typeof window !== 'undefined') {
     const s = report.summary || buildProjectSummary(editor, draft);
     const improve = [];
     if ((report.warnings || []).length) {
-      improve.push('есть предупреждения валидатора — можно доработать диалоги и условия');
+      improve.push(tr('editor.storyWizard.publish.improve.warnings'));
     }
     if ((report.checklist || []).some((c) => c.status === 'warn')) {
-      improve.push('чеклист готовности не полностью зелёный');
+      improve.push(tr('editor.storyWizard.publish.improve.checklist'));
     }
-    if (!improve.length) improve.push('добавить больше сцен, квестов и визуальных деталей');
+    if (!improve.length) improve.push(tr('editor.storyWizard.publish.improve.default'));
 
     return `<div class="sw-publish-success" data-sw-publish="1">
       <div class="sw-publish-success-icon">🎉</div>
-      <h3>Игра экспортирована</h3>
-      <p class="hint">Файл HTML сохранён на диск — откройте его в браузере и передайте друзьям.</p>
+      <h3>${esc(tr('editor.storyWizard.publish.successTitle'))}</h3>
+      <p class="hint">${esc(tr('editor.storyWizard.publish.successHint'))}</p>
       <ul class="sw-publish-stats">
         <li><strong>${esc(s.title)}</strong></li>
-        <li>Сцен: ${s.sceneCount}</li>
-        <li>Квест: «${esc(s.questTitle)}»</li>
-        <li>Герой: ${esc(s.heroName)} · NPC: ${s.npcCount}</li>
+        <li>${esc(tr('editor.storyWizard.publish.stats.scenes', { count: s.sceneCount }))}</li>
+        <li>${esc(tr('editor.storyWizard.publish.stats.quest', { title: s.questTitle }))}</li>
+        <li>${esc(tr('editor.storyWizard.publish.stats.heroNpc', { hero: s.heroName, count: s.npcCount }))}</li>
       </ul>
       <div class="sw-publish-improve">
-        <h4>Что улучшить позже</h4>
+        <h4>${esc(tr('editor.storyWizard.publish.improveTitle'))}</h4>
         <ul>${improve.map((t) => '<li>' + esc(t) + '</li>').join('')}</ul>
         <div class="sw-publish-level-links">
-          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="cartographer">🗺️ Картограф — карта сюжета</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="engineer">⚙️ Инженер — баланс и механики</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="cartographer">${esc(tr('editor.storyWizard.publish.gotoCartographer'))}</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-goto="engineer">${esc(tr('editor.storyWizard.publish.gotoEngineer'))}</button>
         </div>
       </div>
     </div>`;
@@ -44729,21 +46600,21 @@ if (typeof window !== 'undefined') {
     const s = report.summary;
     return `<div class="sw-publish" data-sw-publish="1">
       <header class="sw-publish-header">
-        <h3>Проверка и публикация</h3>
-        <p class="hint"><strong>${esc(s.title)}</strong> · ${s.sceneCount} сцен · квест «${esc(s.questTitle)}»</p>
+        <h3>${esc(tr('editor.storyWizard.publish.header'))}</h3>
+        <p class="hint">${esc(tr('editor.storyWizard.publish.headerSummary', { title: s.title, count: s.sceneCount, quest: s.questTitle }))}</p>
       </header>
       ${renderChecklistHtml(report.checklist)}
       ${renderIssuesHtml(report)}
       ${renderExportBlockersHtml(report)}
       <div class="sw-publish-toolbar">
-        <button type="button" class="btn btn-secondary" data-sw-pub-action="preview">▶ Играть как герой</button>
+        <button type="button" class="btn btn-secondary" data-sw-pub-action="preview">${esc(tr('editor.storyWizard.publish.playPreview'))}</button>
         <button type="button" class="btn btn-primary" data-sw-pub-action="export"
-          ${report.exportBlocked ? 'disabled title="Сначала исправьте ошибки"' : ''}>
-          📦 Экспортировать HTML
+          ${report.exportBlocked ? 'disabled title="' + escAttr(tr('editor.storyWizard.publish.exportDisabledTitle')) + '"' : ''}>
+          📦 ${esc(tr('editor.storyWizard.publish.exportTitle'))}
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-action="refresh">↻ Обновить отчёт</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-sw-pub-action="refresh">${esc(tr('editor.storyWizard.publish.refreshReport'))}</button>
       </div>
-      <p class="hint sw-publish-note">Превью и экспорт не требуют переключения вкладок. Клик по строке откроет место проблемы в редакторе.</p>
+      <p class="hint sw-publish-note">${esc(tr('editor.storyWizard.publish.note'))}</p>
     </div>`;
   }
 
@@ -47256,6 +49127,12 @@ if (typeof window !== 'undefined') {
 // (миграция бывшего Writer Mode + Advanced Mode)
 // ============================================================
 (function attachEditorWriterMode() {
+  'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') {
     console.warn('editor-writer-mode.js: Editor не определён');
     return;
@@ -47319,17 +49196,13 @@ if (typeof window !== 'undefined') {
     'tabs.engineer': { writer: false, cartographer: false, engineer: true }
   });
 
-  const LEVEL_LABELS = Object.freeze({
-    writer: '✏️ Писатель',
-    cartographer: '🗺️ Картограф',
-    engineer: '⚙️ Инженер'
-  });
+  function levelLabel(level) {
+    return tr('editor.writerMode.levels.' + level);
+  }
 
-  const LEVEL_HINTS = Object.freeze({
-    writer: 'Текст сцен, выборы, квесты и персонажи — без технических панелей.',
-    cartographer: 'Писатель + карта истории в рабочей области и чеклист связности.',
-    engineer: 'Полный доступ: JSON, баланс, флаги, события входа и отладка.'
-  });
+  function levelHint(level) {
+    return tr('editor.writerMode.hints.' + level);
+  }
 
   function normalizeLevel(mode) {
     const m = String(mode == null ? 'writer' : mode).toLowerCase();
@@ -47362,7 +49235,7 @@ if (typeof window !== 'undefined') {
       .editor-level-switch__btn + .editor-level-switch__btn {
         border-left: 1px solid var(--border, #ccc);
       }
-      body.editor-cartographer-mode .editor-nav-writer-badge::after { content: ' · карта'; }
+      body.editor-cartographer-mode .editor-nav-writer-badge::after { content: '${tr('editor.writerMode.cartographerBadge').replace(/'/g, "\\'")}'; }
     `;
     document.head.appendChild(st);
   }
@@ -47378,14 +49251,14 @@ if (typeof window !== 'undefined') {
       wrap.id = 'editor-level-switch';
       wrap.className = 'editor-level-switch';
       wrap.setAttribute('role', 'group');
-      wrap.setAttribute('aria-label', 'Уровень редактора');
+      wrap.setAttribute('aria-label', tr('editor.writerMode.levelAriaLabel'));
       LEVELS.forEach((level) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'editor-level-switch__btn';
         btn.dataset.editorLevel = level;
-        btn.textContent = LEVEL_LABELS[level].replace(/^[^\s]+\s/, '');
-        btn.title = LEVEL_HINTS[level];
+        btn.textContent = levelLabel(level).replace(/^[^\s]+\s/, '');
+        btn.title = levelHint(level);
         btn.addEventListener('click', () => {
           Editor.applyEditorLevel(level);
         });
@@ -47411,7 +49284,7 @@ if (typeof window !== 'undefined') {
 
     getEditorLevelLabel(level) {
       level = normalizeLevel(level || this.getEditorLevel());
-      return LEVEL_LABELS[level] || LEVEL_LABELS.writer;
+      return levelLabel(level || this.getEditorLevel()) || levelLabel('writer');
     },
 
     getEditorLevelProjectKey() {
@@ -47489,9 +49362,9 @@ if (typeof window !== 'undefined') {
 
     getEditorModeToggleLabel() {
       const level = this.getEditorLevel();
-      if (level === 'writer') return '⚙️ Advanced Mode';
-      if (level === 'cartographer') return '⚙️ Инженер';
-      return '✏️ Writer Mode';
+      if (level === 'writer') return tr('editor.writerMode.toggleAdvancedMode');
+      if (level === 'cartographer') return tr('editor.writerMode.toggleEngineer');
+      return tr('editor.writerMode.toggleWriterMode');
     },
 
     updateEditorModeToggleButton() {
@@ -47587,7 +49460,7 @@ if (typeof window !== 'undefined') {
         this.updateEditorModeToggleButton();
 
         const hint = document.getElementById('writer-mode-hint');
-        if (hint) hint.textContent = LEVEL_HINTS[level];
+        if (hint) hint.textContent = levelHint(level);
 
         if (typeof this.syncNavLayout === 'function') {
           try { this.syncNavLayout(this.currentTab || 'scenes'); } catch (e) { /* */ }
@@ -47674,6 +49547,11 @@ if (typeof window !== 'undefined') {
 // ============================================================
 (function attachEditorTouchUi() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') {
     console.warn('editor-touch-ui: Editor не определён');
@@ -47750,7 +49628,7 @@ if (typeof window !== 'undefined') {
     const scenes = Editor.data?.scenes || {};
     const ids = Object.keys(scenes).filter((id) => id !== fromId);
     if (!ids.length) {
-      Editor.toast.warning('Нет других сцен для связи');
+      Editor.toast.warning(tr('editor.touchUi.noOtherScenes'));
       return;
     }
     const opts = ids.map((id) => {
@@ -47764,12 +49642,12 @@ if (typeof window !== 'undefined') {
       modal.innerHTML = `
         <div class="editor-modal-backdrop" data-pick="cancel"></div>
         <div class="editor-modal-panel editor-confirm-panel" role="dialog" aria-modal="true">
-          <h2>Связать с…</h2>
-          <p class="hint">Выберите сцену — будет создан выбор с переходом.</p>
+          <h2>${Editor.escapeHtml(tr('editor.touchUi.linkModalTitle'))}</h2>
+          <p class="hint">${Editor.escapeHtml(tr('editor.touchUi.linkModalHint'))}</p>
           <select class="editor-prompt-input" style="width:100%;min-height:44px;">${opts}</select>
           <div class="editor-confirm-actions" style="margin-top:12px;">
-            <button type="button" class="btn btn-secondary" data-pick="cancel">Отмена</button>
-            <button type="button" class="btn btn-primary" data-pick="ok">Связать</button>
+            <button type="button" class="btn btn-secondary" data-pick="cancel">${Editor.escapeHtml(tr('editor.touchUi.cancel'))}</button>
+            <button type="button" class="btn btn-primary" data-pick="ok">${Editor.escapeHtml(tr('editor.touchUi.link'))}</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
@@ -47791,7 +49669,7 @@ if (typeof window !== 'undefined') {
   function enableStoryGraphMoveMode(sceneId) {
     if (!Editor._sg) Editor._sg = {};
     Editor._sg._moveModeId = sceneId;
-    Editor.toast.info('Перетащите сцену пальцем, чтобы переместить');
+    Editor.toast.info(tr('editor.touchUi.moveToast'));
     const side = document.getElementById('sg-side');
     if (side && !document.getElementById(MOVE_HINT_ID)) {
       const done = document.createElement('button');
@@ -47800,7 +49678,7 @@ if (typeof window !== 'undefined') {
       done.id = 'sg-move-mode-done';
       done.style.width = '100%';
       done.style.marginBottom = '8px';
-      done.textContent = 'Готово';
+      done.textContent = tr('editor.touchUi.done');
       done.addEventListener('click', () => {
         Editor._sg._moveModeId = null;
         document.getElementById(MOVE_HINT_ID)?.remove();
@@ -47810,7 +49688,7 @@ if (typeof window !== 'undefined') {
       const hint = document.createElement('p');
       hint.id = MOVE_HINT_ID;
       hint.className = 'sg-move-mode-hint';
-      hint.textContent = 'Режим перемещения: потяните сцену. Нажмите «Готово», чтобы выйти.';
+      hint.textContent = tr('editor.touchUi.moveModeHint');
       side.prepend(hint);
       side.prepend(done);
     }
@@ -47825,13 +49703,13 @@ if (typeof window !== 'undefined') {
     side.innerHTML = `
       <h4>${Editor.escapeHtml(sc.location || nodeId)}</h4>
       <p class="hint">ID: <code>${Editor.escapeHtml(nodeId)}</code></p>
-      <p class="hint">Выходов: ${outs}</p>
+      <p class="hint">${Editor.escapeHtml(tr('editor.touchUi.outputs', { count: outs }))}</p>
       ${touchBarHtml([
-        { id: 'link', label: 'Связать с…', cls: 'btn-primary' },
-        { id: 'move', label: 'Переместить', cls: 'btn-secondary' },
-        { id: 'open', label: 'Открыть сцену', cls: 'btn-secondary' }
+        { id: 'link', label: tr('editor.touchUi.linkAction'), cls: 'btn-primary' },
+        { id: 'move', label: tr('editor.touchUi.moveAction'), cls: 'btn-secondary' },
+        { id: 'open', label: tr('editor.touchUi.openScene'), cls: 'btn-secondary' }
       ])}
-      <p class="hint" style="margin-top:12px;">На тач-экране связи создаются через «Связать с…», не перетаскиванием.</p>`;
+      <p class="hint" style="margin-top:12px;">${Editor.escapeHtml(tr('editor.touchUi.touchLinkHint'))}</p>`;
     bindTouchBar(side, {
       link: () => pickStoryGraphTarget(nodeId),
       move: () => enableStoryGraphMoveMode(nodeId),
@@ -47851,13 +49729,13 @@ if (typeof window !== 'undefined') {
       else host.prepend(bar);
     }
     bar.innerHTML = touchBarHtml([
-      { id: 'link', label: 'Связать с…', cls: 'btn-primary' },
-      { id: 'move', label: 'Переместить', cls: 'btn-secondary' }
+      { id: 'link', label: tr('editor.touchUi.linkAction'), cls: 'btn-primary' },
+      { id: 'move', label: tr('editor.touchUi.moveAction'), cls: 'btn-secondary' }
     ]).replace('editor-touch-bar', 'editor-touch-bar visual-touch-bar-inner');
     bar.className = 'visual-touch-bar';
     bar.innerHTML = `
-      <button type="button" class="btn btn-primary" data-visual-touch="link">Связать с…</button>
-      <button type="button" class="btn btn-secondary" data-visual-touch="move">Переместить</button>`;
+      <button type="button" class="btn btn-primary" data-visual-touch="link">${Editor.escapeHtml(tr('editor.touchUi.linkAction'))}</button>
+      <button type="button" class="btn btn-secondary" data-visual-touch="move">${Editor.escapeHtml(tr('editor.touchUi.moveAction'))}</button>`;
     bar._nodeId = nodeId;
     if (!bar._bound) {
       bar._bound = true;
@@ -47867,7 +49745,7 @@ if (typeof window !== 'undefined') {
         const action = btn.getAttribute('data-visual-touch');
         if (action === 'move') {
           Editor._visualTouchMoveId = bar._nodeId;
-          Editor.toast.info('Потяните узел для перемещения');
+          Editor.toast.info(tr('editor.touchUi.dragNodeToast'));
         } else if (action === 'link') {
           Editor.visualOpenClickActionPicker?.(bar._nodeId);
         }
@@ -49255,6 +51133,11 @@ if (typeof window !== 'undefined') {
 // ============================================================
 (function attachPreviewWorkflow() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
@@ -49265,6 +51148,12 @@ if (typeof window !== 'undefined') {
     return typeof Editor.escapeHtml === 'function'
       ? Editor.escapeHtml(String(s == null ? '' : s))
       : String(s == null ? '' : s);
+  }
+
+  function escAttr(s) {
+    return typeof Editor.escapeAttr === 'function'
+      ? Editor.escapeAttr(String(s == null ? '' : s))
+      : esc(s);
   }
 
   function isAdvanced() {
@@ -49292,11 +51181,11 @@ if (typeof window !== 'undefined') {
 
   function getPreviewProjectLabel() {
     const d = Editor.data || {};
-    return d.meta?.title || d.meta?.name || d.title || 'Project';
+    return d.meta?.title || d.meta?.name || d.title || tr('editor.previewWorkflow.defaultProject');
   }
 
   function getPreviewSceneLabel(sceneId) {
-    if (!sceneId) return '—';
+    if (!sceneId) return tr('editor.previewWorkflow.noSceneLabel');
     const scene = Editor.data?.scenes?.[sceneId];
     return scene?.location || scene?.title || sceneId;
   }
@@ -49415,13 +51304,13 @@ if (typeof window !== 'undefined') {
     if (state.workspaceSection && typeof Editor.setSceneWorkspaceSection === 'function') {
       Editor.setSceneWorkspaceSection(state.workspaceSection);
     }
-    Editor.toast?.info?.('Возврат в редактор');
+    Editor.toast?.info?.(tr('editor.previewWorkflow.returnToEditor'));
     return true;
   }
 
   function launchIsolatedPreview(sceneId, sessionExtras) {
     if (!Editor.data) {
-      Editor.toast?.warning?.('Нет данных проекта');
+      Editor.toast?.warning?.(tr('editor.previewWorkflow.noProjectData'));
       return false;
     }
     sessionExtras = sessionExtras || {};
@@ -49448,12 +51337,12 @@ if (typeof window !== 'undefined') {
         EditorTestKeys.writeTestData(Editor.data);
         EditorTestKeys.writeSession(session);
       } else {
-        Editor.toast?.error?.('Изоляция теста недоступна');
+        Editor.toast?.error?.(tr('editor.previewWorkflow.testIsolationUnavailable'));
         return false;
       }
     } catch (e) {
       console.error('[previewWorkflow]', e);
-      Editor.toast?.error?.('Не удалось подготовить превью');
+      Editor.toast?.error?.(tr('editor.previewWorkflow.previewPrepareFailed'));
       return false;
     }
 
@@ -49461,7 +51350,7 @@ if (typeof window !== 'undefined') {
     if (typeof window !== 'undefined' && window.open) {
       window.open(url, '_blank', 'noopener');
     }
-    Editor.toast?.success?.('Превью открыто — EDITOR TEST MODE');
+    Editor.toast?.success?.(tr('editor.previewWorkflow.previewOpened'));
     return true;
   }
 
@@ -49482,30 +51371,32 @@ if (typeof window !== 'undefined') {
     }
 
     const errLines = validation.errors.slice(0, 8).map((e) =>
-      '<li>' + esc(e.message || e.type || 'Ошибка') + '</li>'
+      '<li>' + esc(e.message || e.type || tr('editor.previewWorkflow.genericError')) + '</li>'
     ).join('');
     const warnNote = validation.warningCount
-      ? '<p class="hint">Предупреждений: ' + validation.warningCount + ' — превью разрешено.</p>'
+      ? '<p class="hint">' + esc(tr('editor.previewWorkflow.warningsAllowed', { count: validation.warningCount })) + '</p>'
       : '';
 
     modal.innerHTML =
       '<div class="epw-validation-modal__card" role="dialog" aria-labelledby="epw-val-title">' +
-      '<h3 id="epw-val-title">Перед превью</h3>' +
+      '<h3 id="epw-val-title">' + esc(tr('editor.previewWorkflow.beforePreview')) + '</h3>' +
       (validation.errorCount
         ? '<p><strong>' + validation.errorCount + '</strong> ' +
-          (validation.errorCount === 1 ? 'ошибка' : 'ошибок') + ' найдено.</p>' +
+          esc(validation.errorCount === 1
+            ? tr('editor.previewWorkflow.errorOneFound', { count: validation.errorCount })
+            : tr('editor.previewWorkflow.errorsManyFound', { count: validation.errorCount })) + '</p>' +
           '<ul class="epw-validation-list">' + errLines + '</ul>'
-        : '<p>Ошибок нет.</p>') +
+        : '<p>' + esc(tr('editor.previewWorkflow.noErrors')) + '</p>') +
       warnNote +
       '<div class="epw-validation-modal__actions">' +
-      '<button type="button" class="btn btn-secondary" data-epw-val="fix">Исправить</button>' +
+      '<button type="button" class="btn btn-secondary" data-epw-val="fix">' + esc(tr('editor.previewWorkflow.fix')) + '</button>' +
       (validation.errorCount && isAdvanced()
-        ? '<button type="button" class="btn btn-ghost" data-epw-val="anyway">Превью всё равно</button>'
+        ? '<button type="button" class="btn btn-ghost" data-epw-val="anyway">' + esc(tr('editor.previewWorkflow.previewAnyway')) + '</button>'
         : '') +
       (validation.errorCount === 0
-        ? '<button type="button" class="btn btn-primary" data-epw-val="continue">Продолжить</button>'
+        ? '<button type="button" class="btn btn-primary" data-epw-val="continue">' + esc(tr('editor.previewWorkflow.continue')) + '</button>'
         : '') +
-      '<button type="button" class="btn btn-ghost" data-epw-val="cancel">Отмена</button>' +
+      '<button type="button" class="btn btn-ghost" data-epw-val="cancel">' + esc(tr('editor.previewWorkflow.cancel')) + '</button>' +
       '</div></div>';
 
     modal.hidden = false;
@@ -49529,7 +51420,7 @@ if (typeof window !== 'undefined') {
 
     const sceneId = resolvePreviewSceneId(opts);
     if (!sceneId) {
-      Editor.toast?.warning?.('Нет сцены для превью');
+      Editor.toast?.warning?.(tr('editor.previewWorkflow.noSceneForPreview'));
       return false;
     }
 
@@ -49560,7 +51451,7 @@ if (typeof window !== 'undefined') {
     }
 
     if (validation.warningCount > 0) {
-      Editor.toast?.info?.('Превью с ' + validation.warningCount + ' предупр.');
+      Editor.toast?.info?.(tr('editor.previewWorkflow.previewWithWarnings', { count: validation.warningCount }));
     }
 
     return doLaunch();
@@ -49569,11 +51460,11 @@ if (typeof window !== 'undefined') {
   function renderPreviewMenuHtml() {
     return (
       '<div class="epw-preview-menu" role="menu" data-epw-menu="1">' +
-      '<p class="epw-preview-menu__heading">Preview</p>' +
+      '<p class="epw-preview-menu__heading">' + esc(tr('editor.previewWorkflow.menuHeading')) + '</p>' +
       '<button type="button" class="epw-preview-menu__item" role="menuitem" data-epw-mode="current">' +
-      'Play Current Scene</button>' +
+      esc(tr('editor.previewWorkflow.playCurrentScene')) + '</button>' +
       '<button type="button" class="epw-preview-menu__item" role="menuitem" data-epw-mode="start">' +
-      'Play From Project Start</button>' +
+      esc(tr('editor.previewWorkflow.playFromStart')) + '</button>' +
       '</div>'
     );
   }
@@ -49583,13 +51474,13 @@ if (typeof window !== 'undefined') {
     return (
       '<div class="epw-preview-cluster" data-epw-cluster="1">' +
       '<details class="epw-preview-dropdown">' +
-      '<summary class="btn btn-primary btn-sm epw-preview-trigger" title="Preview in isolated test mode">' +
-      '<span class="epw-preview-trigger__label">Preview</span>' +
+      '<summary class="btn btn-primary btn-sm epw-preview-trigger" title="' + escAttr(tr('editor.previewWorkflow.previewTitle')) + '">' +
+      '<span class="epw-preview-trigger__label">' + esc(tr('editor.previewWorkflow.previewLabel')) + '</span>' +
       '<span class="epw-preview-trigger__caret" aria-hidden="true">▾</span>' +
       '</summary>' +
       renderPreviewMenuHtml() +
       '</details>' +
-      '<span class="epw-preview-context hint" title="Current scene">' + esc(sceneLabel) + '</span>' +
+      '<span class="epw-preview-context hint" title="' + escAttr(tr('editor.previewWorkflow.currentSceneTitle')) + '">' + esc(sceneLabel) + '</span>' +
       '</div>'
     );
   }
@@ -49618,8 +51509,8 @@ if (typeof window !== 'undefined') {
     wrap.dataset.epwGlobal = '1';
     wrap.innerHTML =
       '<details class="epw-preview-dropdown epw-preview-dropdown--global">' +
-      '<summary class="btn btn-secondary epw-preview-trigger" title="Preview in isolated test mode">' +
-      '<span class="epw-preview-trigger__label">▶ Preview</span>' +
+      '<summary class="btn btn-secondary epw-preview-trigger" title="' + escAttr(tr('editor.previewWorkflow.previewTitle')) + '">' +
+      '<span class="epw-preview-trigger__label">' + esc(tr('editor.previewWorkflow.globalPreviewLabel')) + '</span>' +
       '<span class="epw-preview-trigger__caret" aria-hidden="true">▾</span>' +
       '</summary>' +
       renderPreviewMenuHtml() +
@@ -49696,21 +51587,28 @@ if (typeof window !== 'undefined') {
   });
 
   // Route legacy APIs through unified flow
-  const origTestFromHere = Editor.testFromHere;
-  if (typeof origTestFromHere === 'function') {
-    Editor.testFromHere = function testFromHereUnified(opts) {
-      if (Editor._epwBypassWrap) return origTestFromHere.call(this, opts);
+  if (typeof Editor.testFromHere === 'function' && Editor.hooks?.replace) {
+    let savedPrevTestFromHere;
+    savedPrevTestFromHere = Editor.hooks.replace('testFromHere', function testFromHereUnified(opts) {
+      if (Editor._epwBypassWrap) {
+        return savedPrevTestFromHere ? savedPrevTestFromHere.call(this, opts) : undefined;
+      }
       return previewScene(Object.assign({ mode: 'current' }, opts || {}));
-    };
+    }, 'editor-preview-workflow');
   }
 
-  Editor.testCurrentScene = function testCurrentSceneUnified() {
+  function testCurrentSceneUnified() {
     if (!Editor.currentScene) {
-      Editor.toast?.warning?.('Выберите сцену');
+      Editor.toast?.warning?.(tr('editor.previewWorkflow.selectScene'));
       return false;
     }
     return previewScene({ mode: 'current', sceneId: Editor.currentScene });
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('testCurrentScene', testCurrentSceneUnified, 'editor-preview-workflow');
+  } else {
+    Editor.testCurrentScene = testCurrentSceneUnified;
+  }
 
   if (Editor.hooks?.after) {
     Editor.hooks.after('injectSceneWorkspaceChrome', function () {
@@ -52283,20 +54181,24 @@ if (typeof window !== 'undefined') {
       // доп. поля action type уже могут быть в renderAbilityEditor
       return html;
     });
-  } else if (typeof Editor.renderGlobalAbilityEditor === 'function') {
-    const orig = Editor.renderGlobalAbilityEditor.bind(Editor);
-    Editor.renderGlobalAbilityEditor = function (id, ab, idx) {
-      return enhanceGlobalAbilityHtml(orig(id, ab, idx), id, ab, idx);
-    };
+  } else if (typeof Editor.renderGlobalAbilityEditor === 'function' && Editor.hooks?.replace) {
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('renderGlobalAbilityEditor', function (id, ab, idx) {
+      return enhanceGlobalAbilityHtml(savedPrev(id, ab, idx), id, ab, idx);
+    }, 'editor-abilities');
   }
 
-  // Полный редактор умения (заменяет базовый в editor-scene-crud.js)
-  Editor.renderGlobalAbilityEditor = function (id, ab, idx) {
+  function renderGlobalAbilityEditorRich(id, ab, idx) {
     if (typeof Editor.renderRichGlobalAbilityEditor === 'function') {
       return Editor.renderRichGlobalAbilityEditor(id, ab, idx);
     }
     return '';
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('renderGlobalAbilityEditor', renderGlobalAbilityEditorRich, 'editor-abilities');
+  } else if (typeof Editor.renderGlobalAbilityEditor !== 'function') {
+    Editor.renderGlobalAbilityEditor = renderGlobalAbilityEditorRich;
+  }
 
   const _origUpdateGlobalEffectType = Editor.updateGlobalAbilityEffectType?.bind(Editor);
   Editor.updateGlobalAbilityEffectType = function (id, type) {
@@ -53622,20 +55524,49 @@ if (typeof window !== 'undefined') {
 // P4.1: Режим истории — StoryWizard (5 шагов) + P3: мастер «Новая история»
 // ============================================================
 (function attachCampaignWizardAndNpcCard() {
+  'use strict';
+
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
+  function swStepLabel(step) {
+    return tr('editor.campaignWizard.steps.' + (step?.id || 'genre'));
+  }
+
   if (typeof Editor === 'undefined') {
     console.warn('editor-campaign-wizard.js: Editor не определён');
     return;
+  }
+
+  function localeValue(key) {
+    if (typeof I18n !== 'undefined' && I18n._strings) {
+      return key.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), I18n._strings);
+    }
+    return undefined;
+  }
+
+  function legacyDefaultScenes() {
+    const list = localeValue('editor.campaignWizard.legacyDefaultScenes');
+    if (Array.isArray(list)) return JSON.parse(JSON.stringify(list));
+    return [
+      { name: tr('editor.campaignWizard.legacyDefaultScenes.0.name'), text: tr('editor.campaignWizard.legacyDefaultScenes.0.text') },
+      { name: tr('editor.campaignWizard.legacyDefaultScenes.1.name'), text: tr('editor.campaignWizard.legacyDefaultScenes.1.text') },
+      { name: tr('editor.campaignWizard.legacyDefaultScenes.2.name'), text: tr('editor.campaignWizard.legacyDefaultScenes.2.text') }
+    ];
   }
 
   const STORY_WIZARD_STORAGE = 'rpg_editor_story_wizard';
   const STORY_WIZARD_VERSION = 1;
 
   const STORY_WIZARD_STEPS = Object.freeze([
-    { id: 'genre', label: 'Жанр и система', skippable: false },
-    { id: 'world', label: 'Каркас мира', skippable: false },
-    { id: 'heroes', label: 'Герои и NPC', skippable: true },
-    { id: 'quest', label: 'Первый квест', skippable: true },
-    { id: 'publish', label: 'Проверка и публикация', skippable: false }
+    { id: 'genre', skippable: false },
+    { id: 'world', skippable: false },
+    { id: 'heroes', skippable: true },
+    { id: 'quest', skippable: true },
+    { id: 'publish', skippable: false }
   ]);
 
   function cloneJson(v) {
@@ -53645,9 +55576,9 @@ if (typeof window !== 'undefined') {
   function createStoryWizardDraft() {
     const preset = (typeof StoryWizardContent !== 'undefined')
       ? StoryWizardContent.getGenrePreset('fantasy')
-      : { defaultTitle: 'Моя история' };
+      : { defaultTitle: tr('editor.campaignWizard.defaultTitle') };
     const draft = {
-      title: preset.defaultTitle || 'Моя история',
+      title: preset.defaultTitle || tr('editor.campaignWizard.defaultTitle'),
       genre: 'fantasy',
       system: typeof SystemRegistry !== 'undefined' ? SystemRegistry.getDefault() : 'generic',
       heroNote: '',
@@ -53747,7 +55678,7 @@ if (typeof window !== 'undefined') {
   function storyWizardProgressHtml(activeStep) {
     return STORY_WIZARD_STEPS.map((s, i) => {
       const cls = i === activeStep ? ' is-active' : (i < activeStep ? ' is-done' : '');
-      return `<span class="sw-step${cls}">${i + 1}. ${Editor.escapeHtml(s.label)}</span>`;
+      return `<span class="sw-step${cls}">${i + 1}. ${Editor.escapeHtml(swStepLabel(s))}</span>`;
     }).join('<span class="sw-step-sep">→</span>');
   }
 
@@ -53786,17 +55717,17 @@ if (typeof window !== 'undefined') {
     const opts = options.map((o) =>
       `<option value="${Editor.escapeAttr(o.id)}"${String(value) === String(o.id) ? ' selected' : ''}>${Editor.escapeHtml(o.label)}</option>`
     ).join('');
-    return `<select id="${Editor.escapeAttr(id)}"><option value="">— выберите —</option>${opts}</select>`;
+    return `<select id="${Editor.escapeAttr(id)}"><option value="">${Editor.escapeHtml(tr('editor.campaignWizard.selectPlaceholder'))}</option>${opts}</select>`;
   }
 
   function renderWorldPreviewHtml(preview) {
-    if (!preview || !preview.scenes) return '<p class="hint">Выберите каркас — появится схема сцен.</p>';
+    if (!preview || !preview.scenes) return '<p class="hint">' + Editor.escapeHtml(tr('editor.campaignWizard.worldPreviewHint')) + '</p>';
     const lines = preview.edges.map((e) =>
       `<li><span>${Editor.escapeHtml(e.fromLabel)}</span> → <span>${Editor.escapeHtml(e.toLabel)}</span>${e.choice ? ' <em class="hint">(' + Editor.escapeHtml(e.choice) + ')</em>' : ''}</li>`
     ).join('');
     const start = preview.scenes.find((s) => s.id === preview.startSceneId);
     return `<div class="sw-world-preview">
-      <p class="hint">Стартовая сцена: <strong>${Editor.escapeHtml(start?.label || preview.startSceneId || '—')}</strong></p>
+      <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.startSceneLabel'))} <strong>${Editor.escapeHtml(start?.label || preview.startSceneId || tr('editor.storyWizard.publish.dash'))}</strong></p>
       <ul class="sw-scene-graph">${lines || '<li>—</li>'}</ul>
     </div>`;
   }
@@ -53804,17 +55735,17 @@ if (typeof window !== 'undefined') {
   function renderStoryWizardStepBody(stepIndex, draft) {
     const step = STORY_WIZARD_STEPS[stepIndex];
     const SW = swContent();
-    if (!step) return '<p class="hint">Неизвестный шаг</p>';
+    if (!step) return '<p class="hint">' + Editor.escapeHtml(tr('editor.campaignWizard.unknownStep')) + '</p>';
     if (step.id === 'genre') {
       const genres = SW ? SW.listGenrePresets() : [
-        { id: 'fantasy', label: 'Фэнтези' },
-        { id: 'horror', label: 'Хоррор' },
-        { id: 'detective', label: 'Детектив' },
-        { id: 'survival', label: 'Выживание' }
+        { id: 'fantasy', label: tr('editor.campaignWizard.fallbackGenres.fantasy') },
+        { id: 'horror', label: tr('editor.campaignWizard.fallbackGenres.horror') },
+        { id: 'detective', label: tr('editor.campaignWizard.fallbackGenres.detective') },
+        { id: 'survival', label: tr('editor.campaignWizard.fallbackGenres.survival') }
       ];
       const systems = SW ? SW.listSystemOptions() : [
-        { id: 'generic', label: 'Универсальные правила' },
-        { id: 'dnd5e', label: 'Классические приключения' }
+        { id: 'generic', label: tr('editor.campaignWizard.fallbackSystems.generic') },
+        { id: 'dnd5e', label: tr('editor.campaignWizard.fallbackSystems.dnd5e') }
       ];
       const preset = SW ? SW.getGenrePreset(draft.genre) : null;
       const genreOpts = genres.map((g) =>
@@ -53824,16 +55755,16 @@ if (typeof window !== 'undefined') {
         `<option value="${Editor.escapeAttr(s.id)}"${draft.system === s.id ? ' selected' : ''}>${Editor.escapeHtml(s.label)}</option>`
       ).join('');
       return `
-        <p class="hint">Расскажите, какой мир вы создаёте — движок подготовит основу проекта.</p>
-        <div class="form-group"><label>Название истории</label>
+        <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.genreHint'))}</p>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.storyTitleLabel'))}</label>
           <input type="text" id="sw-title" value="${Editor.escapeAttr(draft.title)}"></div>
-        <div class="form-group"><label>Жанр</label>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.genreLabel'))}</label>
           <select id="sw-genre">${genreOpts}</select></div>
-        <div class="form-group"><label>Правила игры</label>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.systemLabel'))}</label>
           <select id="sw-system">${sysOpts}</select></div>
         ${preset ? `<p class="hint sw-genre-blurb">${Editor.escapeHtml(preset.description)}</p>
-        <p class="hint">Стартовый запас: ${preset.startingGold} монет, ${preset.startingHp} здоровья — можно изменить позже.</p>` : ''}
-        <p class="hint"><button type="button" class="btn btn-link" id="sw-blank-project">Создать пустой проект с нуля…</button></p>`;
+        <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.startingResources', { gold: preset.startingGold, hp: preset.startingHp }))}</p>` : ''}
+        <p class="hint"><button type="button" class="btn btn-link" id="sw-blank-project">${Editor.escapeHtml(tr('editor.campaignWizard.blankProjectLink'))}</button></p>`;
     }
     if (step.id === 'world') {
       const skeletons = SW ? SW.listWorldSkeletons() : [];
@@ -53846,21 +55777,21 @@ if (typeof window !== 'undefined') {
         </label>`).join('');
       const preview = draft.worldPreview || null;
       return `
-        <p class="hint">Выберите каркас — из готовых шаблонов появятся связанные сцены в духе вашего жанра.</p>
+        <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.worldHint'))}</p>
         <div class="sw-skeleton-grid">${cards}</div>
         ${renderWorldPreviewHtml(preview)}
-        <button type="button" class="btn btn-secondary" id="sw-regenerate-world">Сгенерировать заново</button>`;
+        <button type="button" class="btn btn-secondary" id="sw-regenerate-world">${Editor.escapeHtml(tr('editor.campaignWizard.regenerateWorld'))}</button>`;
     }
     if (step.id === 'heroes') {
       const HQ = swHQ();
       if (HQ) HQ.initHeroesQuestDraft(draft);
       const roles = HQ ? HQ.listNpcRoles() : [];
-      let body = `<p class="hint">Назовите героя и ключевых персонажей — движок создаст записи и реплики.</p>
+      let body = `<p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.heroesHint'))}</p>
         <div class="sw-hero-card project-info">
-          <h4>🧝 Герой</h4>
-          <div class="form-group"><label>Имя</label>
+          <h4>${Editor.escapeHtml(tr('editor.campaignWizard.heroHeading'))}</h4>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.nameLabel'))}</label>
             <input type="text" id="sw-hero-name" value="${Editor.escapeAttr(draft.hero?.name || '')}"></div>
-          <div class="form-group"><label>Кратко о герое</label>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.heroDescLabel'))}</label>
             <input type="text" id="sw-hero-desc" value="${Editor.escapeAttr(draft.hero?.description || '')}"></div>
         </div>`;
       (draft.npcs || []).forEach((npc, i) => {
@@ -53869,14 +55800,14 @@ if (typeof window !== 'undefined') {
           `<option value="${Editor.escapeAttr(r.id)}"${npc.role === r.id ? ' selected' : ''}>${Editor.escapeHtml(r.label)}</option>`
         ).join('');
         body += `<div class="sw-npc-card project-info">
-          <h4>👤 Персонаж ${i + 1}</h4>
-          <div class="form-group"><label>Имя</label>
+          <h4>${Editor.escapeHtml(tr('editor.campaignWizard.npcHeading', { n: i + 1 }))}</h4>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.nameLabel'))}</label>
             <input type="text" id="sw-npc-name-${i}" value="${Editor.escapeAttr(npc.name || '')}"></div>
-          <div class="form-group"><label>Роль</label>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.roleLabel'))}</label>
             <select id="sw-npc-role-${i}">${roleOpts}</select></div>
-          <div class="form-group"><label>Кратко</label>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.briefLabel'))}</label>
             <input type="text" id="sw-npc-desc-${i}" value="${Editor.escapeAttr(npc.description || '')}"></div>
-          <p class="hint sw-npc-phrase-preview">Реплика: «${Editor.escapeHtml(phrase)}»</p>
+          <p class="hint sw-npc-phrase-preview">${Editor.escapeHtml(tr('editor.campaignWizard.phrasePreview', { phrase }))}</p>
         </div>`;
       });
       return body;
@@ -53888,8 +55819,8 @@ if (typeof window !== 'undefined') {
       const q = draft.quest || {};
       const npcIds = (draft.npcs || []).map((n) => n.id).filter(Boolean);
       const npcOpts = npcIds.length ? swEntityOptions(Editor, 'npc', npcIds) : swEntityOptions(Editor, 'npc');
-      let body = `<p class="hint">Что должен сделать игрок? Выберите цель и участников — этапы соберутся сами.</p>
-        <div class="form-group"><label>Название задания</label>
+      let body = `<p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.questHint'))}</p>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.questTitleLabel'))}</label>
           <input type="text" id="sw-quest-title" value="${Editor.escapeAttr(q.title || '')}"></div>
         <div class="sw-quest-goals">`;
       goals.forEach((g) => {
@@ -53900,42 +55831,42 @@ if (typeof window !== 'undefined') {
       body += `</div><div id="sw-quest-details">`;
       const goal = q.goal || 'talk';
       if (goal === 'talk' || goal === 'kill' || goal === 'deliver') {
-        body += `<div class="form-group"><label>Персонаж</label>${swSelectHtml('sw-quest-npc', npcOpts, q.npcId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.npcLabel'))}</label>${swSelectHtml('sw-quest-npc', npcOpts, q.npcId)}</div>`;
       }
       if (goal === 'find' || goal === 'collect' || goal === 'deliver') {
-        body += `<div class="form-group"><label>Предмет</label>${swSelectHtml('sw-quest-item', swEntityOptions(Editor, 'item'), q.itemId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.itemLabel'))}</label>${swSelectHtml('sw-quest-item', swEntityOptions(Editor, 'item'), q.itemId)}</div>`;
       }
       if (goal === 'kill') {
-        body += `<div class="form-group"><label>Противник</label>${swSelectHtml('sw-quest-enemy', swEntityOptions(Editor, 'enemy'), q.enemyId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.enemyLabel'))}</label>${swSelectHtml('sw-quest-enemy', swEntityOptions(Editor, 'enemy'), q.enemyId)}</div>`;
       }
       if (goal === 'visit') {
-        body += `<div class="form-group"><label>Место</label>${swSelectHtml('sw-quest-scene', swEntityOptions(Editor, 'scene', draft.worldSceneIds), q.sceneId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.placeLabel'))}</label>${swSelectHtml('sw-quest-scene', swEntityOptions(Editor, 'scene', draft.worldSceneIds), q.sceneId)}</div>`;
       }
-      body += `</div><div class="sw-reward-section"><h4>Награда</h4>`;
-      const rewards = HQ ? HQ.listRewardKinds() : [{ id: 'gold', label: 'Золото' }];
+      body += `</div><div class="sw-reward-section"><h4>${Editor.escapeHtml(tr('editor.campaignWizard.rewardHeading'))}</h4>`;
+      const rewards = HQ ? HQ.listRewardKinds() : [{ id: 'gold', label: tr('editor.campaignWizard.fallbackRewardGold') }];
       rewards.forEach((rk) => {
         body += `<label class="sw-reward-kind"><input type="radio" name="sw-reward-kind" value="${Editor.escapeAttr(rk.id)}"${q.rewardKind === rk.id ? ' checked' : ''}> ${Editor.escapeHtml(rk.label)}</label>`;
       });
-      body += `<div class="form-group" id="sw-reward-gold-wrap"><label>Сколько золота</label>
+      body += `<div class="form-group" id="sw-reward-gold-wrap"><label>${Editor.escapeHtml(tr('editor.campaignWizard.rewardGoldLabel'))}</label>
         <input type="number" min="0" id="sw-reward-gold" value="${Number(q.rewardGold || 15)}"></div>`;
-      body += `<div class="form-group" id="sw-reward-item-wrap"><label>Предмет-награда</label>
+      body += `<div class="form-group" id="sw-reward-item-wrap"><label>${Editor.escapeHtml(tr('editor.campaignWizard.rewardItemLabel'))}</label>
         ${swSelectHtml('sw-reward-item', swEntityOptions(Editor, 'item'), q.rewardItemId)}</div>`;
-      body += `<div class="form-group" id="sw-reward-rep-wrap"><label>Чья репутация</label>
+      body += `<div class="form-group" id="sw-reward-rep-wrap"><label>${Editor.escapeHtml(tr('editor.campaignWizard.repOwnerLabel'))}</label>
         ${swSelectHtml('sw-reward-rep', swEntityOptions(Editor, 'rep'), q.rewardRepId)}
-        <label>На сколько</label><input type="number" id="sw-reward-rep-amt" value="${Number(q.rewardRepAmount || 5)}"></div>`;
+        <label>${Editor.escapeHtml(tr('editor.campaignWizard.repAmountLabel'))}</label><input type="number" id="sw-reward-rep-amt" value="${Number(q.rewardRepAmount || 5)}"></div>`;
       body += `</div>`;
       return body;
     }
     if (step.id === 'publish') {
       const Pub = swPublish();
       if (!Pub) {
-        return `<div class="empty-state"><p class="hint">Модуль публикации не загружен.</p></div>`;
+        return `<div class="empty-state"><p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.publishModuleMissing'))}</p></div>`;
       }
       const report = Pub.buildPublishReport(Editor, draft);
       Editor._storyWizardPublishReport = report;
       return Pub.renderPublishStepHtml(Editor, draft, report);
     }
-    return `<div class="empty-state" style="padding:16px;"><p class="hint">Неизвестный шаг мастера.</p></div>`;
+    return `<div class="empty-state" style="padding:16px;"><p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.unknownStepMaster'))}</p></div>`;
   }
 
   Object.assign(Editor, {
@@ -53999,7 +55930,7 @@ if (typeof window !== 'undefined') {
       const d = this._storyWizardState?.draft;
       if (!d) return;
       if (d.worldEdited) {
-        Editor.toast?.warning?.('Вы уже меняли сцены — перегенерация отключена, чтобы не потерять правки.');
+        Editor.toast?.warning?.(tr('editor.campaignWizard.toastRegenBlocked'));
         return;
       }
       this._readStoryWizardStepForm();
@@ -54012,7 +55943,7 @@ if (typeof window !== 'undefined') {
       }
       this._refreshStoryWizardWorldPreview();
       this.renderStoryWizardModal();
-      Editor.toast?.info?.('Каркас пересобран — нажмите «Далее», чтобы применить.');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastRegenDone'));
     },
 
     _commitStoryWizardStep(stepIndex) {
@@ -54040,12 +55971,12 @@ if (typeof window !== 'undefined') {
         this._refreshStoryWizardWorldPreview();
         const applied = SW.applyWorldSkeletonToProject(this, d);
         if (!applied.ok) {
-          Editor.toast?.error?.('Не удалось собрать каркас мира');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastWorldFailed'));
           return applied;
         }
         const vr = SW.validateWorldProject(this);
         if (!vr.ok && !vr.skipped) {
-          Editor.toast?.error?.('Каркас не прошёл проверку — сообщите об ошибке разработчикам');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastWorldValidation'));
           return { ok: false, validation: vr };
         }
         const ce = this._storyWizardState.createdEntities;
@@ -54058,7 +55989,7 @@ if (typeof window !== 'undefined') {
         if (!HQ) return { ok: false, reason: 'no_heroes_module' };
         const r = HQ.applyHeroesStep(this, d);
         if (!r.ok) {
-          Editor.toast?.error?.('Не удалось создать персонажей');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastHeroesFailed'));
           return r;
         }
         const ce = this._storyWizardState.createdEntities;
@@ -54071,7 +56002,7 @@ if (typeof window !== 'undefined') {
         if (!HQ) return { ok: false, reason: 'no_heroes_module' };
         const r = HQ.applyQuestStep(this, d);
         if (!r.ok) {
-          Editor.toast?.error?.('Не удалось создать квест');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastQuestFailed'));
           return r;
         }
         const ce = this._storyWizardState.createdEntities;
@@ -54080,7 +56011,7 @@ if (typeof window !== 'undefined') {
         if (SW) {
           const vr = SW.validateWorldProject(this);
           if (!vr.ok && !vr.skipped) {
-            Editor.toast?.error?.('Проект не прошёл проверку после квеста');
+            Editor.toast?.error?.(tr('editor.campaignWizard.toastQuestValidation'));
             return { ok: false, validation: vr };
           }
         }
@@ -54161,19 +56092,19 @@ if (typeof window !== 'undefined') {
       modal.innerHTML = `
         <div class="editor-modal-backdrop" onclick="Editor.requestStoryWizardCancel()"></div>
         <div class="editor-modal-panel editor-modal-panel--wide" onclick="event.stopPropagation()">
-          <h2>📖 Режим истории</h2>
+          <h2>${Editor.escapeHtml(tr('editor.campaignWizard.title'))}</h2>
           ${progress}
           <div class="sw-steps">${storyWizardProgressHtml(step)}</div>
           <div class="sw-body">${renderStoryWizardStepBody(step, draft)}</div>
           <div class="modal-box-footer sw-footer">
-            <button type="button" class="btn btn-secondary" onclick="Editor.requestStoryWizardCancel()">Отмена</button>
-            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardBack()">Назад</button>' : ''}
-            ${canSkip && !isLast ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardSkip()">Пропустить</button>' : ''}
+            <button type="button" class="btn btn-secondary" onclick="Editor.requestStoryWizardCancel()">${Editor.escapeHtml(tr('editor.campaignWizard.cancel'))}</button>
+            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardBack()">' + Editor.escapeHtml(tr('editor.campaignWizard.back')) + '</button>' : ''}
+            ${canSkip && !isLast ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardSkip()">' + Editor.escapeHtml(tr('editor.campaignWizard.skip')) + '</button>' : ''}
             ${isLast
               ? (draft.exportCompleted
-                ? '<button type="button" class="btn btn-primary" onclick="Editor.finishStoryWizard()">Закрыть мастер</button>'
-                : '<button type="button" class="btn btn-secondary" onclick="Editor.finishStoryWizard()">Завершить без экспорта</button>')
-              : '<button type="button" class="btn btn-primary" onclick="Editor.storyWizardNext()">Далее</button>'}
+                ? '<button type="button" class="btn btn-primary" onclick="Editor.finishStoryWizard()">' + Editor.escapeHtml(tr('editor.campaignWizard.closeWizard')) + '</button>'
+                : '<button type="button" class="btn btn-secondary" onclick="Editor.finishStoryWizard()">' + Editor.escapeHtml(tr('editor.campaignWizard.finishWithoutExport')) + '</button>')
+              : '<button type="button" class="btn btn-primary" onclick="Editor.storyWizardNext()">' + Editor.escapeHtml(tr('editor.campaignWizard.next')) + '</button>'}
           </div>
         </div>`;
 
@@ -54252,7 +56183,7 @@ if (typeof window !== 'undefined') {
               if (Pub) {
                 this.closeStoryWizardModal();
                 Pub.gotoEditorLevel(this, level);
-                Editor.toast?.info?.('Мастер сохранён — продолжите через «Новый проект»');
+                Editor.toast?.info?.(tr('editor.campaignWizard.toastSavedResume'));
               }
             }
           });
@@ -54275,37 +56206,37 @@ if (typeof window !== 'undefined') {
         return;
       }
       const finishLater = await Editor.confirmDialog({
-        message: 'Прервать мастер? Прогресс сохранится — продолжите через «Новый проект».\n\nНажмите «Другое…», чтобы выбрать откат созданного.',
-        confirmLabel: 'Завершить позже',
-        cancelLabel: 'Другое…'
+        message: tr('editor.campaignWizard.confirmCancel'),
+        confirmLabel: tr('editor.campaignWizard.confirmCancelFinish'),
+        cancelLabel: tr('editor.campaignWizard.confirmCancelOther')
       });
       if (finishLater) {
         this.saveStoryWizardState();
         this.closeStoryWizard(false);
-        Editor.toast?.info?.('Мастер «Режим истории» сохранён — продолжите через «Новый проект»');
+        Editor.toast?.info?.(tr('editor.campaignWizard.toastSavedLater'));
         return;
       }
       const undoAvail = typeof EditorHistory !== 'undefined' && EditorHistory.getAvailableUndoSteps?.() > 0;
       if (undoAvail) {
         const rollback = await Editor.confirmDialog({
-          message: 'Откатить изменения мастера через историю отмены (undo)?',
+          message: tr('editor.campaignWizard.confirmUndo'),
           danger: true,
-          confirmLabel: 'Откатить',
-          cancelLabel: 'Оставить как есть'
+          confirmLabel: tr('editor.campaignWizard.confirmUndoYes'),
+          cancelLabel: tr('editor.campaignWizard.confirmUndoKeep')
         });
         if (rollback) {
           const steps = EditorHistory.getAvailableUndoSteps();
           for (let i = 0; i < steps && EditorHistory.canUndo(); i++) EditorHistory.undo();
           this._rollbackStoryWizardCreated();
           this.closeStoryWizard(true);
-          Editor.toast?.success?.('Изменения мастера отменены');
+          Editor.toast?.success?.(tr('editor.campaignWizard.toastUndoDone'));
           return;
         }
       } else {
         const keep = await Editor.confirmDialog({
-          message: 'История отмены недоступна. Закрыть мастер и оставить созданное в проекте?',
-          confirmLabel: 'Закрыть',
-          cancelLabel: 'Назад'
+          message: tr('editor.campaignWizard.confirmNoUndo'),
+          confirmLabel: tr('editor.campaignWizard.confirmClose'),
+          cancelLabel: tr('editor.campaignWizard.confirmBack')
         });
         if (keep) {
           this.saveStoryWizardState();
@@ -54321,7 +56252,7 @@ if (typeof window !== 'undefined') {
       opts = opts || {};
       const saved = opts.resume ? StoryWizardFsm.load() : null;
       if (!opts.resume && this.data && !(await Editor.confirmDialog({
-        message: 'Открыть мастер «Режим истории»? Текущий проект может быть заменён на шаге «Жанр и система».'
+        message: tr('editor.campaignWizard.confirmOpen')
       }))) {
         return;
       }
@@ -54330,9 +56261,9 @@ if (typeof window !== 'undefined') {
         this._storyWizardStep = saved.step;
       } else if (saved && !opts.fresh) {
         const cont = await Editor.confirmDialog({
-          message: 'Есть незавершённый мастер «Режим истории». Продолжить с шага «' + (STORY_WIZARD_STEPS[saved.step]?.label || '') + '»?',
-          confirmLabel: 'Продолжить',
-          cancelLabel: 'Начать заново'
+          message: tr('editor.campaignWizard.confirmResume', { step: swStepLabel(STORY_WIZARD_STEPS[saved.step]) }),
+          confirmLabel: tr('editor.campaignWizard.confirmContinue'),
+          cancelLabel: tr('editor.campaignWizard.confirmRestart')
         });
         if (cont) {
           this._storyWizardState = saved;
@@ -54356,7 +56287,7 @@ if (typeof window !== 'undefined') {
       this._readStoryWizardStepForm();
       const commit = this._commitStoryWizardStep(this._storyWizardStep);
       if (!commit.ok) {
-        Editor.toast?.error?.('Не удалось применить шаг мастера');
+        Editor.toast?.error?.(tr('editor.campaignWizard.toastStepFailed'));
         return;
       }
       if (this._storyWizardStep < STORY_WIZARD_STEPS.length - 1) {
@@ -54393,7 +56324,7 @@ if (typeof window !== 'undefined') {
     storyWizardRefreshPublish() {
       this._readStoryWizardStepForm();
       this.renderStoryWizardModal();
-      Editor.toast?.info?.('Отчёт обновлён');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastReportUpdated'));
     },
 
     storyWizardOpenPublishRow(kind, idx) {
@@ -54403,7 +56334,7 @@ if (typeof window !== 'undefined') {
       this.closeStoryWizardModal();
       Pub.navigatePublishRow(this, report, kind, idx);
       this.saveStoryWizardState();
-      Editor.toast?.info?.('Мастер сохранён — откройте «Новый проект», чтобы вернуться к публикации');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastSavedPublish'));
     },
 
     storyWizardPlayPreview() {
@@ -54412,7 +56343,7 @@ if (typeof window !== 'undefined') {
         this.previewScene({ mode: 'start', previewMode: 'start' });
         return;
       }
-      Editor.toast?.warning?.('Превью недоступно — перезагрузите редактор');
+      Editor.toast?.warning?.(tr('editor.campaignWizard.toastPreviewUnavailable'));
     },
 
     async storyWizardExportHtml() {
@@ -54423,7 +56354,7 @@ if (typeof window !== 'undefined') {
       const report = Pub.buildPublishReport(this, draft);
       this._storyWizardPublishReport = report;
       if (report.exportBlocked) {
-        Editor.toast?.warning?.('Сначала исправьте ошибки в отчёте');
+        Editor.toast?.warning?.(tr('editor.campaignWizard.toastFixErrors'));
         this.renderStoryWizardModal();
         return;
       }
@@ -54431,7 +56362,7 @@ if (typeof window !== 'undefined') {
         ? this._exportHTMLPhaseH.bind(this)
         : (typeof this.exportHTML === 'function' ? this.exportHTML.bind(this) : null);
       if (!exportFn) {
-        Editor.toast?.error?.('Экспорт HTML недоступен');
+        Editor.toast?.error?.(tr('editor.campaignWizard.toastExportUnavailable'));
         return;
       }
       try {
@@ -54442,10 +56373,10 @@ if (typeof window !== 'undefined') {
         }
         this.saveStoryWizardState();
         this.renderStoryWizardModal();
-        Editor.toast?.success?.('HTML-файл сохранён');
+        Editor.toast?.success?.(tr('editor.campaignWizard.toastExportSaved'));
       } catch (e) {
         console.error('[storyWizardExport]', e);
-        Editor.toast?.error?.('Не удалось экспортировать HTML');
+        Editor.toast?.error?.(tr('editor.campaignWizard.toastExportFailed'));
       }
     },
 
@@ -54457,7 +56388,7 @@ if (typeof window !== 'undefined') {
       this._storyWizardPreSnapshot = undefined;
       this._storyWizardPublishReport = undefined;
       if (typeof this.showDashboard === 'function') this.showDashboard();
-      Editor.toast?.success?.('Мастер «Режим истории» завершён. Продолжайте наполнять игру в режиме Писателя.');
+      Editor.toast?.success?.(tr('editor.campaignWizard.toastFinished'));
     },
 
     resumeStoryWizardIfNeeded() {
@@ -54466,7 +56397,7 @@ if (typeof window !== 'undefined') {
       this._storyWizardState = saved;
       this._storyWizardStep = saved.step;
       this.renderStoryWizardModal();
-      Editor.toast?.info?.('Продолжаем мастер «Режим истории» с шага «' + (STORY_WIZARD_STEPS[saved.step]?.label || '') + '»');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastResume', { step: swStepLabel(STORY_WIZARD_STEPS[saved.step]) }));
     }
   });
 
@@ -54475,23 +56406,19 @@ if (typeof window !== 'undefined') {
     _campaignWizardDraft: null,
 
     async openCampaignWizard() {
-      if (this.data && !(await Editor.confirmDialog({ message: 'Создать новую историю? Текущий проект в редакторе будет заменён (файл на диске не трогаем, пока не сохраните).' }))) {
+      if (this.data && !(await Editor.confirmDialog({ message: tr('editor.campaignWizard.confirmLegacyOpen') }))) {
         return;
       }
       this._campaignWizardStep = 0;
       this._campaignWizardDraft = {
-        title: 'Моя история',
+        title: tr('editor.campaignWizard.defaultTitle'),
         heroNote: '',
-        scenes: [
-          { name: 'Начало', text: 'Вы стоите на пороге приключения.' },
-          { name: 'Деревня', text: 'Тихая деревня. Здесь можно найти помощь.' },
-          { name: 'Опасное место', text: 'Здесь кто-то или что-то угрожает покою.' }
-        ],
-        npcName: 'Старейшина',
-        npcLine: 'Добро пожаловать, путник. Мне нужна твоя помощь.',
-        questTitle: 'Первое задание',
-        questHint: 'Поговорите со старейшиной и разберитесь с угрозой.',
-        enemyName: 'Разбойник',
+        scenes: legacyDefaultScenes(),
+        npcName: tr('editor.campaignWizard.legacyDefaultNpc'),
+        npcLine: tr('editor.campaignWizard.legacyDefaultNpcLine'),
+        questTitle: tr('editor.campaignWizard.legacyDefaultQuest'),
+        questHint: tr('editor.campaignWizard.legacyDefaultQuestHint'),
+        enemyName: tr('editor.campaignWizard.legacyDefaultEnemy'),
         includeCombat: true
       };
       this.renderCampaignWizardModal();
@@ -54513,7 +56440,13 @@ if (typeof window !== 'undefined') {
       modal.classList.remove('hidden');
       const d = this._campaignWizardDraft;
       const step = this._campaignWizardStep;
-      const steps = ['Название', 'Сцены', 'NPC', 'Квест и бой', 'Готово'];
+      const steps = [
+        tr('editor.campaignWizard.legacySteps.title'),
+        tr('editor.campaignWizard.legacySteps.scenes'),
+        tr('editor.campaignWizard.legacySteps.npc'),
+        tr('editor.campaignWizard.legacySteps.questCombat'),
+        tr('editor.campaignWizard.legacySteps.done')
+      ];
       const stepsHtml = steps.map((s, i) =>
         `<span class="cw-step${i === step ? ' is-active' : ''}${i < step ? ' is-done' : ''}">${i + 1}. ${this.escapeHtml(s)}</span>`
       ).join('<span class="cw-step-sep">→</span>');
@@ -54521,44 +56454,47 @@ if (typeof window !== 'undefined') {
       let body = '';
       if (step === 0) {
         body = `
-          <div class="form-group"><label>Название истории</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.storyTitleLabel'))}</label>
             <input type="text" id="cw-title" value="${this.escapeAttr(d.title)}"></div>
-          <div class="form-group"><label>Кратко, о чём игра (для себя)</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyNoteLabel'))}</label>
             <textarea id="cw-note" rows="2">${this.escapeHtml(d.heroNote || '')}</textarea></div>
-          <p class="hint">Дальше соберём 3 сцены, NPC, квест и простого врага — без кода.</p>`;
+          <p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyHint0'))}</p>`;
       } else if (step === 1) {
-        body = `<p class="hint">Три локации каркаса. Позже добавите ещё на карте сюжета.</p>`;
+        body = `<p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyScenesHint'))}</p>`;
         d.scenes.forEach((sc, i) => {
           body += `<div class="project-info" style="margin:8px 0;">
-            <div class="form-group"><label>Сцена ${i + 1}: название</label>
+            <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacySceneName', { n: i + 1 }))}</label>
               <input type="text" id="cw-sc-name-${i}" value="${this.escapeAttr(sc.name)}"></div>
-            <div class="form-group"><label>Текст (что видит игрок)</label>
+            <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacySceneText'))}</label>
               <textarea id="cw-sc-text-${i}" rows="2">${this.escapeHtml(sc.text)}</textarea></div>
           </div>`;
         });
       } else if (step === 2) {
         body = `
-          <p class="hint">Персонаж, с которого начнётся сюжет (обычно в первой или второй сцене).</p>
-          <div class="form-group"><label>Имя NPC</label>
+          <p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyNpcHint'))}</p>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyNpcName'))}</label>
             <input type="text" id="cw-npc-name" value="${this.escapeAttr(d.npcName)}"></div>
-          <div class="form-group"><label>Первая реплика</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyNpcLine'))}</label>
             <textarea id="cw-npc-line" rows="2">${this.escapeHtml(d.npcLine)}</textarea></div>`;
       } else if (step === 3) {
         body = `
-          <div class="form-group"><label>Название квеста</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyQuestTitle'))}</label>
             <input type="text" id="cw-quest-title" value="${this.escapeAttr(d.questTitle)}"></div>
-          <div class="form-group"><label>Что сделать (для журнала)</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyQuestHint'))}</label>
             <input type="text" id="cw-quest-hint" value="${this.escapeAttr(d.questHint)}"></div>
           <div class="form-group"><label>
-            <input type="checkbox" id="cw-combat" ${d.includeCombat ? 'checked' : ''}> Добавить простого врага и сцену боя
+            <input type="checkbox" id="cw-combat" ${d.includeCombat ? 'checked' : ''}> ${this.escapeHtml(tr('editor.campaignWizard.legacyCombatCheck'))}
           </label></div>
-          <div class="form-group"><label>Имя врага</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyEnemyName'))}</label>
             <input type="text" id="cw-enemy-name" value="${this.escapeAttr(d.enemyName)}"></div>`;
       } else {
         body = `<div class="empty-state" style="padding:20px;">
-          <h3>Всё готово к сборке</h3>
-          <p class="hint">Будут созданы: проект «${this.escapeHtml(d.title)}», ${d.scenes.length} сцены,
-            NPC, квест${d.includeCombat ? ', враг и бой' : ''}.</p>
+          <h3>${this.escapeHtml(tr('editor.campaignWizard.legacyReadyTitle'))}</h3>
+          <p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyReadyBody', {
+            title: d.title,
+            sceneCount: d.scenes.length,
+            combatExtra: d.includeCombat ? tr('editor.campaignWizard.legacyReadyCombatExtra') : ''
+          }))}</p>
         </div>`;
       }
 
@@ -54566,15 +56502,15 @@ if (typeof window !== 'undefined') {
       modal.innerHTML = `
         <div class="editor-modal-backdrop" onclick="Editor.closeCampaignWizard()"></div>
         <div class="editor-modal-panel editor-modal-panel--wide" onclick="event.stopPropagation()">
-          <h2>📖 Новая история</h2>
+          <h2>${this.escapeHtml(tr('editor.campaignWizard.legacyTitle'))}</h2>
           <div class="cw-steps">${stepsHtml}</div>
           <div class="cw-body">${body}</div>
           <div class="modal-box-footer" style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-            <button type="button" class="btn btn-secondary" onclick="Editor.closeCampaignWizard()">Отмена</button>
-            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.campaignWizardBack()">Назад</button>' : ''}
+            <button type="button" class="btn btn-secondary" onclick="Editor.closeCampaignWizard()">${this.escapeHtml(tr('editor.campaignWizard.cancel'))}</button>
+            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.campaignWizardBack()">' + this.escapeHtml(tr('editor.campaignWizard.back')) + '</button>' : ''}
             ${isLast
-              ? '<button type="button" class="btn btn-primary" onclick="Editor.finishCampaignWizard()">✨ Создать историю</button>'
-              : '<button type="button" class="btn btn-primary" onclick="Editor.campaignWizardNext()">Далее</button>'}
+              ? '<button type="button" class="btn btn-primary" onclick="Editor.finishCampaignWizard()">' + this.escapeHtml(tr('editor.campaignWizard.legacyCreate')) + '</button>'
+              : '<button type="button" class="btn btn-primary" onclick="Editor.campaignWizardNext()">' + this.escapeHtml(tr('editor.campaignWizard.next')) + '</button>'}
           </div>
         </div>`;
     },
@@ -54663,7 +56599,7 @@ if (typeof window !== 'undefined') {
         const next = sceneIds[i + 1];
         const nextName = data.scenes[next].location;
         data.scenes[sceneIds[i]].choices.push({
-          text: 'Идти: ' + nextName,
+          text: tr('editor.campaignWizard.gameData.goTo', { name: nextName }),
           to: next,
           icon: '➡️'
         });
@@ -54675,7 +56611,7 @@ if (typeof window !== 'undefined') {
         id: npcId,
         name: d.npcName,
         icon: '👤',
-        description: 'Ключевой персонаж начала истории.',
+        description: tr('editor.campaignWizard.gameData.npcDesc'),
         location: data.scenes[sceneIds[Math.min(1, sceneIds.length - 1)]]?.location || '',
         attitude: 'friendly',
         dialogues: { default: [{ speaker: d.npcName, text: d.npcLine }] },
@@ -54704,24 +56640,24 @@ if (typeof window !== 'undefined') {
         stages: [
           {
             id: 'stage_0',
-            title: 'Начало',
+            title: tr('editor.campaignWizard.gameData.questStageStart'),
             hint: d.questHint,
             tasks: [
-              { type: 'TalkToNPC', npcId: npcId, description: 'Поговорить с: ' + d.npcName }
+              { type: 'TalkToNPC', npcId: npcId, description: tr('editor.campaignWizard.gameData.talkTask', { name: d.npcName }) }
             ]
           },
           {
             id: 'stage_1',
-            title: 'В пути',
-            hint: 'Продолжайте путь по локациям.',
+            title: tr('editor.campaignWizard.gameData.questStagePath'),
+            hint: tr('editor.campaignWizard.gameData.questStagePathHint'),
             tasks: [
-              { type: 'VisitLocation', sceneId: sceneIds[sceneIds.length - 1], description: 'Дойти до: ' + (data.scenes[sceneIds[sceneIds.length - 1]]?.location || '') }
+              { type: 'VisitLocation', sceneId: sceneIds[sceneIds.length - 1], description: tr('editor.campaignWizard.gameData.visitTask', { location: data.scenes[sceneIds[sceneIds.length - 1]]?.location || '' }) }
             ]
           },
           {
             id: 'stage_done',
-            title: 'Готово',
-            hint: 'Задание выполнено.',
+            title: tr('editor.campaignWizard.gameData.questStageDone'),
+            hint: tr('editor.campaignWizard.gameData.questStageDoneHint'),
             finish: true,
             tasks: []
           }
@@ -54732,7 +56668,7 @@ if (typeof window !== 'undefined') {
       // Выбор: принять квест на hub
       data.scenes[hubId].choices = data.scenes[hubId].choices || [];
       data.scenes[hubId].choices.unshift({
-        text: 'Принять: ' + d.questTitle,
+        text: tr('editor.campaignWizard.gameData.acceptQuest', { title: d.questTitle }),
         to: sceneIds[Math.min(2, sceneIds.length - 1)] || hubId,
         icon: '📜',
         once: true,
@@ -54761,8 +56697,8 @@ if (typeof window !== 'undefined') {
         const afterId = sceneIds[sceneIds.length - 1];
         data.scenes[combatSceneId] = {
           id: combatSceneId,
-          location: 'Схватка: ' + d.enemyName,
-          text: d.enemyName + ' преграждает путь!',
+          location: tr('editor.campaignWizard.gameData.combatLocation', { name: d.enemyName }),
+          text: tr('editor.campaignWizard.gameData.combatText', { name: d.enemyName }),
           combat: [enemyId],
           nextScene: afterId,
           choices: [],
@@ -54770,7 +56706,7 @@ if (typeof window !== 'undefined') {
         };
         // из hub можно пойти в бой
         data.scenes[hubId].choices.push({
-          text: 'Столкнуться с: ' + d.enemyName,
+          text: tr('editor.campaignWizard.gameData.faceEnemy', { name: d.enemyName }),
           to: combatSceneId,
           icon: '⚔️'
         });
@@ -54793,7 +56729,7 @@ if (typeof window !== 'undefined') {
       this.updateProjectPanel?.();
       this.updateJSONPreview();
       if (typeof this.switchTab === 'function') this.switchTab('scenes');
-      Editor.toast.success('История «' + d.title + '» создана. Откройте карту сюжета или превью сцены.');
+      Editor.toast.success(tr('editor.campaignWizard.legacyCreated', { title: d.title }));
     },
 
     // ——— Карточка NPC: где бывает, реплики, квесты ———
@@ -54801,16 +56737,16 @@ if (typeof window !== 'undefined') {
     getNpcSceneAppearances(npcId) {
       const out = [];
       Object.entries(this.data?.scenes || {}).forEach(([sid, sc]) => {
-        if (sc.npcId === npcId) out.push({ sceneId: sid, reason: 'NPC сцены' });
+        if (sc.npcId === npcId) out.push({ sceneId: sid, reason: tr('editor.campaignWizard.npcSceneReason') });
         (sc.dialogue || []).forEach((line) => {
           if (line && (line.speaker === npcId || line.speaker === this.data.npcs?.[npcId]?.name)) {
-            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: 'Диалог' });
+            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: tr('editor.campaignWizard.npcDialogReason') });
           }
         });
         (sc.components || []).forEach((c) => {
           const p = c.params || {};
           if (p.npc === npcId || p.merchant === npcId) {
-            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: 'Компонент' });
+            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: tr('editor.campaignWizard.npcComponentReason') });
           }
         });
       });
@@ -54829,7 +56765,7 @@ if (typeof window !== 'undefined') {
             ${this.escapeHtml(loc)} <span class="hint">(${this.escapeHtml(p.reason)})</span>
           </button>`;
         }).join('')
-        : '<p class="hint">Пока нигде не привязан. Укажите NPC на сцене или добавьте ниже.</p>';
+        : '<p class="hint">' + this.escapeHtml(tr('editor.campaignWizard.npcHubNotLinked')) + '</p>';
 
       const questIds = Array.isArray(n.quests) ? n.quests : [];
       const allQuests = Object.keys(this.data?.quests || {});
@@ -54841,7 +56777,7 @@ if (typeof window !== 'undefined') {
             onchange="Editor.toggleNpcQuest(${JSON.stringify(npcId)},${JSON.stringify(qid)},this.checked)">
           ${this.escapeHtml(title)}
         </label>`;
-      }).join('') || '<p class="hint">Квестов пока нет — создайте во вкладке «Квесты».</p>';
+      }).join('') || '<p class="hint">' + this.escapeHtml(tr('editor.campaignWizard.npcHubNoQuests')) + '</p>';
 
       // Простые реплики default
       let lines = n.dialogues?.default;
@@ -54857,11 +56793,11 @@ if (typeof window !== 'undefined') {
 
       return `
         <div class="npc-hub-card project-info" style="margin-top:14px;">
-          <h4>📍 Где встречается</h4>
+          <h4>${this.escapeHtml(tr('editor.campaignWizard.npcHubWhere'))}</h4>
           <div>${placesHtml}</div>
-          <div class="form-group" style="margin-top:8px;"><label>Привязать к сцене</label>
+          <div class="form-group" style="margin-top:8px;"><label>${this.escapeHtml(tr('editor.campaignWizard.npcHubAttach'))}</label>
             <select onchange="if(this.value)Editor.attachNpcToScene(${JSON.stringify(npcId)},this.value);this.value='';">
-              <option value="">+ сцена…</option>
+              <option value="">${this.escapeHtml(tr('editor.campaignWizard.npcHubSceneOption'))}</option>
               ${Object.keys(this.data?.scenes || {}).map((sid) => {
                 const loc = this.data.scenes[sid]?.location || sid;
                 return `<option value="${this.escapeAttr(sid)}">${this.escapeHtml(loc)}</option>`;
@@ -54870,12 +56806,12 @@ if (typeof window !== 'undefined') {
           </div>
         </div>
         <div class="npc-hub-card project-info" style="margin-top:10px;">
-          <h4>💬 Реплики</h4>
-          ${linesHtml || '<p class="hint">Нет реплик</p>'}
-          <button type="button" class="btn btn-secondary" onclick="Editor.addNpcDialogueLine(${JSON.stringify(npcId)})">+ Реплика</button>
+          <h4>${this.escapeHtml(tr('editor.campaignWizard.npcHubLines'))}</h4>
+          ${linesHtml || '<p class="hint">' + this.escapeHtml(tr('editor.campaignWizard.npcHubNoLines')) + '</p>'}
+          <button type="button" class="btn btn-secondary" onclick="Editor.addNpcDialogueLine(${JSON.stringify(npcId)})">${this.escapeHtml(tr('editor.campaignWizard.npcHubAddLine'))}</button>
         </div>
         <div class="npc-hub-card project-info" style="margin-top:10px;">
-          <h4>📜 Связанные квесты</h4>
+          <h4>${this.escapeHtml(tr('editor.campaignWizard.npcHubQuests'))}</h4>
           ${questHtml}
         </div>`;
     },
@@ -54947,36 +56883,37 @@ if (typeof window !== 'undefined') {
   }
 
   // createNPC — по имени
-  const origCreateNPC = Editor.createNPC?.bind(Editor);
-  if (typeof origCreateNPC === 'function') {
-    Editor.createNPC = async function () {
-      if (typeof this.promptNameAndId === 'function') {
-        this.ensureNpcs?.();
-        const r = await this.promptNameAndId({
-          namePrompt: 'Имя персонажа:',
-          defaultName: 'Новый житель',
-          existing: this.data.npcs || {},
-          allowEditId: false
-        });
-        if (!r) return;
-        this.data.npcs[r.id] = {
-          id: r.id,
-          name: r.name,
-          location: '',
-          icon: '👤',
-          description: '',
-          dialogues: { default: [] },
-          quests: [],
-          shop: false,
-          attitude: 'neutral'
-        };
-        this.editingNpcId = r.id;
-        this.renderNPCs();
-        this.updateJSONPreview();
-        return;
-      }
-      return origCreateNPC();
-    };
+  async function createNpcByNameWizard() {
+    if (typeof this.promptNameAndId === 'function') {
+      this.ensureNpcs?.();
+      const r = await this.promptNameAndId({
+        namePrompt: tr('editor.campaignWizard.createNpcPrompt'),
+        defaultName: tr('editor.campaignWizard.createNpcDefault'),
+        existing: this.data.npcs || {},
+        allowEditId: false
+      });
+      if (!r) return;
+      this.data.npcs[r.id] = {
+        id: r.id,
+        name: r.name,
+        location: '',
+        icon: '👤',
+        description: '',
+        dialogues: { default: [] },
+        quests: [],
+        shop: false,
+        attitude: 'neutral'
+      };
+      this.editingNpcId = r.id;
+      this.renderNPCs();
+      this.updateJSONPreview();
+      return;
+    }
+    return savedPrevCreateNpc ? savedPrevCreateNpc.call(this) : undefined;
+  }
+  let savedPrevCreateNpc;
+  if (typeof Editor.createNPC === 'function' && Editor.hooks?.replace) {
+    savedPrevCreateNpc = Editor.hooks.replace('createNPC', createNpcByNameWizard, 'editor-campaign-wizard');
   }
 
   // Кнопка мастера в дашборд / тулбар
@@ -54994,7 +56931,7 @@ if (typeof window !== 'undefined') {
     btn.id = 'btn-campaign-wizard';
     btn.className = 'btn btn-primary';
     btn.style.cssText = 'margin-top:6px;width:100%;';
-    btn.textContent = '📖 Быстрая история (классика)';
+    btn.textContent = tr('editor.campaignWizard.quickStoryBtn');
     btn.onclick = () => Editor.openCampaignWizard();
     host.appendChild(btn);
   };
@@ -55907,16 +57844,17 @@ if (typeof window !== 'undefined') {
   };
 
   const origPanel = Editor.updateProjectPanel;
-  if (typeof origPanel === 'function') {
-    Editor.updateProjectPanel = function () {
-      origPanel.call(this);
+  if (typeof origPanel === 'function' && Editor.hooks?.replace) {
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('updateProjectPanel', function updateProjectPanelWithTime() {
+      savedPrev.call(this);
       const p = document.getElementById('project-panel');
       if (!p || !this.data) return;
       const block = this.renderTimeSettingsBlock();
       if (!p.innerHTML.includes('⏰ Игровое время')) {
         p.innerHTML += block;
       }
-    };
+    }, 'editor-time-settings');
   }
 })();
 
@@ -56491,6 +58429,7 @@ if (typeof window !== 'undefined') {
     'js/campaign-covers.js',
     'js/engine/core.js',
     'js/engine/ui-renderer.js',
+    'js/engine/game-dialogs.js',
     'js/engine/inventory.js',
     'js/engine/campaign-hooks.js',
     'js/scene-elements.js',
@@ -56606,6 +58545,7 @@ if (typeof window !== 'undefined') {
     'js/analytics.js',
     'js/engine/core.js',
     'js/engine/ui-renderer.js',
+    'js/engine/game-dialogs.js',
     'js/engine/inventory.js',
     'js/scene-elements.js',
     'js/engine/scene-manager.js',
@@ -60759,27 +62699,27 @@ if (typeof module !== 'undefined' && module.exports) {
     }
   });
 
-  const origUpdateProjectPanel = Editor.updateProjectPanel.bind(Editor);
-  Editor.updateProjectPanel = function () {
-    const p = document.getElementById('project-panel');
-    if (!this.data) {
-      if (p) p.innerHTML = 'Нет открытого проекта';
-      return;
-    }
-    if (!p) return;
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('updateProjectPanel', function updateProjectPanelCover() {
+      const p = document.getElementById('project-panel');
+      if (!this.data) {
+        if (p) p.innerHTML = 'Нет открытого проекта';
+        return;
+      }
+      if (!p) return;
 
-    if (typeof this.ensureProjectMetaSystem === 'function') {
-      this.ensureProjectMetaSystem();
-    }
-    const sid = this.data.meta?.system;
-    const sysLabel = typeof this.getRuleSystemLabel === 'function'
-      ? this.getRuleSystemLabel(sid)
-      : (sid || '—');
-    const systemRow = sid
-      ? `<b>Система:</b> ${this.escapeHtml(sysLabel)} (<code>${this.escapeHtml(sid)}</code>)<br>`
-      : '';
+      if (typeof this.ensureProjectMetaSystem === 'function') {
+        this.ensureProjectMetaSystem();
+      }
+      const sid = this.data.meta?.system;
+      const sysLabel = typeof this.getRuleSystemLabel === 'function'
+        ? this.getRuleSystemLabel(sid)
+        : (sid || '—');
+      const systemRow = sid
+        ? `<b>Система:</b> ${this.escapeHtml(sysLabel)} (<code>${this.escapeHtml(sid)}</code>)<br>`
+        : '';
 
-    p.innerHTML = `
+      p.innerHTML = `
       <b>Название:</b> ${this.escapeHtml(this.data.meta?.title || '—')}<br>
       <b>Версия:</b> ${this.escapeHtml(this.data.meta?.version || '—')}<br>
       <b>Автор:</b> ${this.escapeHtml(this.data.meta?.author || '—')}<br>
@@ -60787,11 +62727,46 @@ if (typeof module !== 'undefined' && module.exports) {
       <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="Editor.editMeta()">✏️ Мета</button>
       <div style="margin-top:14px;">${this.renderProjectStartSceneField()}</div>
       <div style="margin-top:14px;">${this.renderProjectCoverSection()}</div>`;
-    this.bindProjectCoverUi();
-    if (typeof this.bindEntityPickers === 'function') {
-      this.bindEntityPickers(p);
-    }
-  };
+      this.bindProjectCoverUi();
+      if (typeof this.bindEntityPickers === 'function') {
+        this.bindEntityPickers(p);
+      }
+    }, 'editor-cover');
+  } else {
+    // hooks-exempt: fallback when Editor.hooks unavailable
+    Editor.updateProjectPanel = function () {
+      const p = document.getElementById('project-panel');
+      if (!this.data) {
+        if (p) p.innerHTML = 'Нет открытого проекта';
+        return;
+      }
+      if (!p) return;
+
+      if (typeof this.ensureProjectMetaSystem === 'function') {
+        this.ensureProjectMetaSystem();
+      }
+      const sid = this.data.meta?.system;
+      const sysLabel = typeof this.getRuleSystemLabel === 'function'
+        ? this.getRuleSystemLabel(sid)
+        : (sid || '—');
+      const systemRow = sid
+        ? `<b>Система:</b> ${this.escapeHtml(sysLabel)} (<code>${this.escapeHtml(sid)}</code>)<br>`
+        : '';
+
+      p.innerHTML = `
+      <b>Название:</b> ${this.escapeHtml(this.data.meta?.title || '—')}<br>
+      <b>Версия:</b> ${this.escapeHtml(this.data.meta?.version || '—')}<br>
+      <b>Автор:</b> ${this.escapeHtml(this.data.meta?.author || '—')}<br>
+      ${systemRow}
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="Editor.editMeta()">✏️ Мета</button>
+      <div style="margin-top:14px;">${this.renderProjectStartSceneField()}</div>
+      <div style="margin-top:14px;">${this.renderProjectCoverSection()}</div>`;
+      this.bindProjectCoverUi();
+      if (typeof this.bindEntityPickers === 'function') {
+        this.bindEntityPickers(p);
+      }
+    };
+  }
 
   function afterExportInvalidate() {
     if (typeof Editor.invalidateProjectCoverCache === 'function') {
@@ -62770,10 +64745,16 @@ if (typeof module !== 'undefined' && module.exports) {
     }
   };
 
-  // alias expected by older references / tutorial
-  if (typeof Editor.openTemplateSceneModal !== 'function') {
-    Editor.openTemplateSceneModal = function () { return Editor.openCreateSceneModal(); };
-  }
+  /** Единый вход в мастер шаблонов сцены (legacy alias + палитра + пустое состояние). */
+  Editor.openTemplateSceneModal = function openTemplateSceneModal() {
+    if (!Editor.data || (typeof Editor.isProjectContentEmpty === 'function' && Editor.isProjectContentEmpty())) {
+      if (typeof Editor.openNewProjectModal === 'function') return Editor.openNewProjectModal();
+    }
+    if (typeof Editor.openCreateSceneModal === 'function') return Editor.openCreateSceneModal();
+    if (typeof Editor.openSceneWizard === 'function') return Editor.openSceneWizard();
+    Editor.toast?.info?.('Шаблоны недоступны');
+    return false;
+  };
 
   // Делегирование кликов (не зависит от пересоздания DOM превью)
   if (!window._sceneBuilderClickBound) {
@@ -70658,10 +72639,11 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     };
   }
 
-  if (typeof Editor.buildEditableGraphModel === 'function' && !Editor._buildEditableGraphModelPhaseG) {
-    Editor._buildEditableGraphModelPhaseG = Editor.buildEditableGraphModel.bind(Editor);
-    Editor.buildEditableGraphModel = function buildEditableGraphModelPhaseG() {
-      const model = Editor._buildEditableGraphModelPhaseG();
+  if (typeof Editor.buildEditableGraphModel === 'function' && Editor.hooks?.replace && !Editor._buildEditableGraphModelPhaseG) {
+    Editor._buildEditableGraphModelPhaseG = true;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('buildEditableGraphModel', function buildEditableGraphModelPhaseG() {
+      const model = savedPrev.call(this);
       if (!this.data?.scenes) return model;
 
       const flowEdges = collectAllFlowEdges(this.data);
@@ -70686,7 +72668,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       });
 
       return model;
-    };
+    }, 'editor-flow-phase-g');
   }
 
   if (typeof Editor.renderStoryFlowNodeCard === 'function' && !Editor._renderStoryFlowNodeCardPhaseG) {
@@ -70937,6 +72919,11 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
  */
 (function attachValidationPhaseH() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
@@ -70950,78 +72937,38 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
         return { ok: !!r.ok, issues: r.issues || [], errors: (r.issues || []).filter((i) => i.severity === 'error'), warnings: (r.issues || []).filter((i) => i.severity === 'warning') };
       }
       return { ok: true, issues: [], errors: [], warnings: [] };
-    },
-
-    async guardExportWithValidation(opts) {
-      opts = opts || {};
-      const result = this.validateProjectExportReady();
-      this._lastExportValidation = result;
-      if (result.ok) return true;
-      const errCount = result.errors.length;
-      const warnCount = result.warnings.length;
-      if (opts.force) return true;
-      if (typeof this.refreshValidationUI === 'function') this.refreshValidationUI();
-      const msg =
-        'Перед экспортом найдены проблемы:\n' +
-        'Ошибок: ' + errCount + (warnCount ? ', предупреждений: ' + warnCount : '') +
-        '\n\nЭкспорт с ошибками может сломать игру. Продолжить?';
-      const confirmOpts = {
-        message: msg,
-        confirmLabel: 'Продолжить',
-        cancelLabel: 'Отмена',
-        danger: errCount > 0
-      };
-      if (errCount > 0) {
-        if (typeof this.showProjectValidationResults === 'function') {
-          this.showProjectValidationResults({
-            ok: false,
-            issues: result.issues,
-            errors: result.errors,
-            warnings: result.warnings
-          });
-        }
-        if (typeof Editor.confirmDialog === 'function') {
-          return await Editor.confirmDialog(confirmOpts);
-        }
-        return false;
-      }
-      if (warnCount > 0) {
-        if (typeof Editor.confirmDialog === 'function') {
-          return await Editor.confirmDialog(confirmOpts);
-        }
-        return false;
-      }
-      return true;
     }
   });
 
   function wrapExport(name) {
-    const orig = Editor[name];
-    if (typeof orig !== 'function' || Editor['_' + name + 'PhaseH']) return;
-    Editor['_' + name + 'PhaseH'] = orig;
-    Editor[name] = async function exportWithValidationGate() {
+    if (typeof Editor[name] !== 'function' || Editor['_' + name + 'PhaseH'] || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace(name, async function exportWithValidationGate(...args) {
       if (!(await Editor.guardExportWithValidation())) return;
-      return orig.apply(this, arguments);
-    };
+      return savedPrev.apply(this, args);
+    }, 'editor-validation-phase-h');
+    Editor['_' + name + 'PhaseH'] = true;
   }
 
   wrapExport('exportJSON');
   wrapExport('openExportHtmlModal');
 
-  if (typeof Editor.exportHTML === 'function') {
-    const origHtml = Editor.exportHTML;
-    Editor.exportHTML = async function exportHTMLWithGate() {
+  if (typeof Editor.exportHTML === 'function' && Editor.hooks?.replace && !Editor._exportHTMLPhaseH) {
+    let savedPrevHtml;
+    savedPrevHtml = Editor.hooks.replace('exportHTML', async function exportHTMLWithGate(...args) {
       if (!(await Editor.guardExportWithValidation())) return;
-      return origHtml.apply(this, arguments);
-    };
+      return savedPrevHtml.apply(this, args);
+    }, 'editor-validation-phase-h');
+    Editor._exportHTMLPhaseH = true;
   }
 
-  if (typeof Editor.exportGameStandalone === 'function') {
-    const origFolder = Editor.exportGameStandalone;
-    Editor.exportGameStandalone = async function exportFolderWithGate() {
+  if (typeof Editor.exportGameStandalone === 'function' && Editor.hooks?.replace && !Editor._exportGameStandalonePhaseH) {
+    let savedPrevFolder;
+    savedPrevFolder = Editor.hooks.replace('exportGameStandalone', async function exportFolderWithGate(...args) {
       if (!(await Editor.guardExportWithValidation())) return;
-      return origFolder.apply(this, arguments);
-    };
+      return savedPrevFolder.apply(this, args);
+    }, 'editor-validation-phase-h');
+    Editor._exportGameStandalonePhaseH = true;
   }
 
   if (Editor.hooks?.after) {
@@ -71045,13 +72992,13 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     }
     const r = Editor.validateProjectExportReady();
     if (r.ok && !r.warnings.length) {
-      hint.textContent = '✓ Проект готов к экспорту (Phase H)';
+      hint.textContent = tr('editor.validationPhaseH.exportReady');
       hint.style.color = '#2e7d32';
     } else if (r.ok) {
-      hint.textContent = '⚠ Экспорт возможен с предупреждениями: ' + r.warnings.length;
+      hint.textContent = tr('editor.validationPhaseH.exportWithWarnings', { count: r.warnings.length });
       hint.style.color = '#f57c00';
     } else {
-      hint.textContent = '✗ Экспорт заблокирован: ' + r.errors.length + ' ошибок';
+      hint.textContent = tr('editor.validationPhaseH.exportBlocked', { count: r.errors.length });
       hint.style.color = '#c62828';
     }
   };
@@ -71065,45 +73012,60 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 // ============================================================
 (function attachExportFlow() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
   if (typeof Editor === 'undefined') return;
 
   const EXPORT_FORMATS = [
+    // i18n labels: Project JSON, Standalone HTML, Web Folder
     {
       id: 'json',
-      label: 'Project JSON',
-      description: 'Editable project file for the RPG Engine editor.',
+      labelKey: 'editor.exportFlow.formats.json.label',
+      descriptionKey: 'editor.exportFlow.formats.json.description',
       icon: '📁',
       isAvailable() { return true; }
     },
     {
       id: 'html',
-      label: 'Standalone HTML',
-      description: 'Single self-contained HTML file with inlined runtime.',
+      labelKey: 'editor.exportFlow.formats.html.label',
+      descriptionKey: 'editor.exportFlow.formats.html.description',
       icon: '🌐',
       isAvailable() { return typeof Editor.exportHTML === 'function'; }
     },
     {
       id: 'folder',
-      label: 'Web Folder',
-      description: 'index.html + scripts folder (Chrome / Edge).',
+      labelKey: 'editor.exportFlow.formats.folder.label',
+      descriptionKey: 'editor.exportFlow.formats.folder.description',
       icon: '📦',
       isAvailable() { return typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function'; }
     }
   ];
+
+  function formatLabel(fmt) {
+    return tr(fmt.labelKey);
+  }
+
+  function formatDescription(fmt) {
+    return tr(fmt.descriptionKey);
+  }
 
   function esc(s) {
     return typeof Editor.escapeHtml === 'function' ? Editor.escapeHtml(String(s ?? '')) : String(s ?? '');
   }
 
   function slugifyFilename(title) {
-    return String(title || 'project')
+    return String(title || tr('editor.exportFlow.defaultSlug'))
       .replace(/[^\wа-яёА-ЯЁ\-]+/gi, '_')
       .replace(/^_+|_+$/g, '')
-      .slice(0, 48) || 'project';
+      .slice(0, 48) || tr('editor.exportFlow.defaultSlug');
   }
 
   function getProjectTitle() {
-    return Editor.data?.meta?.title || Editor.data?.meta?.name || 'Untitled Project';
+    return Editor.data?.meta?.title || Editor.data?.meta?.name || tr('editor.exportFlow.untitledProject');
   }
 
   function getExportValidation() {
@@ -71113,8 +73075,117 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     return { ok: true, issues: [], errors: [], warnings: [] };
   }
 
+  /** Внутренний bypass: UI-22 уже проверил проект, не запускать гейт повторно на exportJSON/HTML/folder. */
+  let exportGateBypassDepth = 0;
+
+  function runWithExportGateBypass(fn) {
+    exportGateBypassDepth++;
+    try {
+      return fn();
+    } finally {
+      exportGateBypassDepth--;
+    }
+  }
+
+  async function runWithExportGateBypassAsync(fn) {
+    exportGateBypassDepth++;
+    try {
+      return await fn();
+    } finally {
+      exportGateBypassDepth--;
+    }
+  }
+
+  function showValidationForExport(result) {
+    if (typeof Editor.showProjectValidationResults !== 'function') return;
+    let issues = result.issues || [];
+    if (typeof Editor.ValidatorNav?.enrichIssue === 'function') {
+      issues = issues.map((iss) => Editor.ValidatorNav.enrichIssue(iss, Editor.data));
+    }
+    Editor.showProjectValidationResults({
+      ok: false,
+      issues,
+      errors: issues.filter((i) => i.severity === 'error'),
+      warnings: issues.filter((i) => i.severity === 'warning'),
+      info: issues.filter((i) => i.severity === 'info')
+    });
+  }
+
+  /**
+   * Единый гейт экспорта: ошибки — модалка валидации; предупреждения — confirm.
+   * @param {{ force?: boolean, skipGate?: boolean }} opts
+   */
+  async function guardExportWithValidation(opts) {
+    opts = opts || {};
+    if (opts.force || opts.skipGate || exportGateBypassDepth > 0) return true;
+
+    const result = getExportValidation();
+    Editor._lastExportValidation = result;
+
+    const errCount = result.errors?.length || 0;
+    const warnCount = result.warnings?.length || 0;
+
+    if (result.ok && warnCount === 0) return true;
+
+    if (typeof Editor.refreshValidationUI === 'function') {
+      try { Editor.refreshValidationUI(); } catch (e) { /* */ }
+    }
+
+    const warningsPart = warnCount
+      ? tr('editor.exportFlow.confirm.warningsPart', { warnings: warnCount })
+      : '';
+    const confirmMsg = tr('editor.exportFlow.confirm.message', {
+      errors: errCount,
+      warningsPart
+    });
+    const confirmOpts = {
+      message: confirmMsg,
+      confirmLabel: tr('editor.exportFlow.confirm.confirmLabel'),
+      cancelLabel: tr('editor.exportFlow.confirm.cancelLabel'),
+      danger: errCount > 0
+    };
+
+    if (errCount > 0) {
+      showValidationForExport(result);
+      if (Editor.toast) {
+        Editor.toast.error(tr('editor.exportFlow.toast.exportBlocked', { count: errCount })); // Export blocked
+      }
+      if (typeof Editor.confirmDialog === 'function') {
+        return await Editor.confirmDialog(confirmOpts);
+      }
+      return false;
+    }
+
+    if (warnCount > 0) {
+      if (typeof Editor.confirmDialog === 'function') {
+        return await Editor.confirmDialog(confirmOpts);
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  /** Можно ли экспортировать без диалога (нет блокирующих ошибок). */
+  function isExportAllowed(opts) {
+    opts = opts || {};
+    const result = getExportValidation();
+    const errCount = result.errors?.length || 0;
+    if (errCount > 0) return false;
+    if (opts.strict) {
+      return !!result.ok && !(result.warnings?.length);
+    }
+    return true;
+  }
+
   function getAvailableFormats() {
-    return EXPORT_FORMATS.filter((f) => f.isAvailable());
+    return EXPORT_FORMATS.filter((f) => f.isAvailable()).map((f) => ({
+      id: f.id,
+      label: formatLabel(f),
+      description: formatDescription(f),
+      icon: f.icon,
+      isAvailable: f.isAvailable
+    }));
   }
 
   function renderValidationSummary(validation) {
@@ -71127,14 +73198,17 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       blocked,
       html:
         '<div class="efx-validation' + (blocked ? ' efx-validation--blocked' : '') + '">' +
-        '<span class="efx-validation__stat efx-validation__stat--error">' + errors + ' Errors</span>' +
-        '<span class="efx-validation__stat efx-validation__stat--warning">' + warnings + ' Warnings</span>' +
+        '<span class="efx-validation__stat efx-validation__stat--error">' +
+        esc(tr('editor.exportFlow.panel.errorsStat', { count: errors })) + '</span>' +
+        '<span class="efx-validation__stat efx-validation__stat--warning">' +
+        esc(tr('editor.exportFlow.panel.warningsStat', { count: warnings })) + '</span>' +
         (blocked
-          ? '<p class="efx-validation__note">Export is blocked until critical errors are fixed.</p>'
+          ? '<p class="efx-validation__note">' + esc(tr('editor.exportFlow.panel.blockedNote')) + '</p>'
           : (warnings > 0
-            ? '<p class="efx-validation__note">Warnings do not block export.</p>'
-            : '<p class="efx-validation__note">Project passed export validation.</p>')) +
-        '<button type="button" class="btn btn-ghost btn-sm" data-efx-review="1">Review issues</button>' +
+            ? '<p class="efx-validation__note">' + esc(tr('editor.exportFlow.panel.warningsNote')) + '</p>'
+            : '<p class="efx-validation__note">' + esc(tr('editor.exportFlow.panel.passedNote')) + '</p>')) +
+        '<button type="button" class="btn btn-ghost btn-sm" data-efx-review="1">' +
+        esc(tr('editor.exportFlow.panel.reviewIssues')) + '</button>' +
         '</div>'
     };
   }
@@ -71158,29 +73232,33 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     const validation = state.validation || getExportValidation();
     const summary = renderValidationSummary(validation);
     const selected = state.format || getAvailableFormats()[0]?.id || 'json';
-    const canExport = !summary.blocked && !!Editor.data;
-    const exportLabel = summary.warnings > 0 && !summary.blocked ? 'Export Anyway' : 'Export Project';
+    const canExport = isExportAllowed() && !!Editor.data;
+    const exportLabel = summary.warnings > 0 && !summary.blocked
+      ? tr('editor.exportFlow.panel.exportAnyway')
+      : tr('editor.exportFlow.panel.exportProject');
 
     return (
       '<div class="efx-panel" data-efx-view="export">' +
       '<div class="efx-head">' +
-      '<h2>Export Project</h2>' +
-      '<button type="button" class="btn-remove" data-efx-close="1" aria-label="Close">×</button>' +
+      '<h2>' + esc(tr('editor.exportFlow.panel.title')) + '</h2>' +
+      '<button type="button" class="btn-remove" data-efx-close="1" aria-label="' +
+      esc(tr('editor.exportFlow.panel.closeAria')) + '">×</button>' +
       '</div>' +
       '<div class="efx-project">' +
-      '<span class="efx-project__label">Project</span>' +
+      '<span class="efx-project__label">' + esc(tr('editor.exportFlow.panel.projectLabel')) + '</span>' +
       '<span class="efx-project__title">' + esc(getProjectTitle()) + '</span>' +
       '</div>' +
       '<div class="efx-section">' +
-      '<h3 class="efx-section__title">Export format</h3>' +
+      '<h3 class="efx-section__title">' + esc(tr('editor.exportFlow.panel.formatSection')) + '</h3>' +
       '<div class="efx-formats">' + renderFormatOptions(selected) + '</div>' +
       '</div>' +
       '<div class="efx-section">' +
-      '<h3 class="efx-section__title">Validation status</h3>' +
+      '<h3 class="efx-section__title">' + esc(tr('editor.exportFlow.panel.validationSection')) + '</h3>' +
       summary.html +
       '</div>' +
       '<div class="efx-actions">' +
-      '<button type="button" class="btn btn-secondary" data-efx-close="1">Cancel</button>' +
+      '<button type="button" class="btn btn-secondary" data-efx-close="1">' +
+      esc(tr('editor.exportFlow.panel.cancel')) + '</button>' +
       '<button type="button" class="btn btn-primary" data-efx-run="1"' +
       (canExport ? '' : ' disabled') + '>' + esc(exportLabel) + '</button>' +
       '</div></div>'
@@ -71192,19 +73270,21 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     return (
       '<div class="efx-panel" data-efx-view="result">' +
       '<div class="efx-head">' +
-      '<h2>Export complete</h2>' +
-      '<button type="button" class="btn-remove" data-efx-close="1" aria-label="Close">×</button>' +
+      '<h2>' + esc(tr('editor.exportFlow.result.title')) + '</h2>' + // Export complete
+      '<button type="button" class="btn-remove" data-efx-close="1" aria-label="' +
+      esc(tr('editor.exportFlow.panel.closeAria')) + '">×</button>' +
       '</div>' +
-      '<p class="efx-result__lead">Your export finished successfully.</p>' +
+      '<p class="efx-result__lead">' + esc(tr('editor.exportFlow.result.lead')) + '</p>' +
       '<div class="efx-result__files">' +
-      '<h3 class="efx-section__title">Generated files</h3>' +
+      '<h3 class="efx-section__title">' + esc(tr('editor.exportFlow.result.generatedFiles')) + '</h3>' + // Generated files
       (files.length
         ? '<ul class="efx-file-list">' + files.map((f) => '<li><code>' + esc(f) + '</code></li>').join('') + '</ul>'
-        : '<p class="hint">Download started in your browser.</p>') +
+        : '<p class="hint">' + esc(tr('editor.exportFlow.result.downloadStarted')) + '</p>') +
       (result.note ? '<p class="hint efx-result__note">' + esc(result.note) + '</p>' : '') +
       '</div>' +
       '<div class="efx-actions">' +
-      '<button type="button" class="btn btn-primary" data-efx-close="1">Done</button>' +
+      '<button type="button" class="btn btn-primary" data-efx-close="1">' +
+      esc(tr('editor.exportFlow.result.done')) + '</button>' +
       '</div></div>'
     );
   }
@@ -71244,53 +73324,45 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   async function runExport(format) {
     if (!Editor.data) {
-      Editor.toast?.warning?.('No project data loaded');
+      Editor.toast?.warning?.(tr('editor.exportFlow.toast.noProjectData'));
       return null;
     }
 
     const validation = getExportValidation();
     if ((validation.errors?.length || 0) > 0) {
-      Editor.toast?.error?.('Export blocked: fix critical errors first');
-      if (typeof Editor.showProjectValidationResults === 'function') {
-        Editor.showProjectValidationResults({
-          ok: false,
-          issues: validation.issues || [],
-          errors: validation.errors || [],
-          warnings: validation.warnings || []
-        });
-      }
+      Editor.toast?.error?.(tr('editor.exportFlow.toast.exportBlockedFix'));
+      showValidationForExport(validation);
       return null;
     }
 
-    Editor._exportFlowValidated = true;
     const title = slugifyFilename(getProjectTitle());
     const result = { format, files: [], note: '' };
 
     try {
+      return await runWithExportGateBypassAsync(async () => {
       if (format === 'json') {
         if (typeof Editor.exportJSON !== 'function') throw new Error('exportJSON unavailable');
-        Editor.exportJSON();
+        await Promise.resolve(Editor.exportJSON());
         result.files = [title + '.json'];
       } else if (format === 'html') {
         if (typeof Editor.exportHTML !== 'function') throw new Error('exportHTML unavailable');
         await Editor.exportHTML();
         result.files = [title + '.html'];
-        result.note = 'Standalone HTML uses the existing inlined runtime build.';
+        result.note = tr('editor.exportFlow.result.htmlNote');
       } else if (format === 'folder') {
         if (typeof Editor.exportGameStandalone !== 'function') throw new Error('exportGameStandalone unavailable');
         await Editor.exportGameStandalone();
-        result.files = ['index.html', 'js/data.js', 'css/*', 'js/*', 'audio files (if used)'];
-        result.note = 'Folder export uses the browser folder picker; open the chosen directory in your file manager.';
+        result.files = [tr('editor.exportFlow.result.folderFiles')];
+        result.note = tr('editor.exportFlow.result.folderNote');
       } else {
         throw new Error('Unknown export format: ' + format);
       }
       return result;
+      });
     } catch (e) {
       console.error('[ExportFlow]', e);
       Editor.toast?.error?.(String(e.message || e));
       return null;
-    } finally {
-      Editor._exportFlowValidated = false;
     }
   }
 
@@ -71327,7 +73399,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     opts = opts || {};
     if (typeof document === 'undefined') return false;
     if (!Editor.data) {
-      Editor.toast?.warning?.('Load or create a project first');
+      Editor.toast?.warning?.(tr('editor.exportFlow.toast.loadProjectFirst'));
       return false;
     }
     const modal = ensureModal();
@@ -71335,16 +73407,6 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     bindModal(modal);
     modal.classList.remove('hidden');
     return true;
-  }
-
-  function patchExportGuardBypass() {
-    if (!Editor.guardExportWithValidation || Editor._exportFlowGuardPatched) return;
-    const orig = Editor.guardExportWithValidation.bind(Editor);
-    Editor.guardExportWithValidation = async function guardExportWithValidationFlow(opts) {
-      if (Editor._exportFlowValidated) return true;
-      return await orig(opts || {});
-    };
-    Editor._exportFlowGuardPatched = true;
   }
 
   function ensureStyles() {
@@ -71383,18 +73445,28 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   const ExportFlow = {
     EXPORT_FORMATS,
+    formatLabel,
+    formatDescription,
     getAvailableFormats,
     getExportValidation,
+    guardExportWithValidation,
+    isExportAllowed,
     openExportSurface,
-    runExport
+    runExport,
+    runWithExportGateBypass,
+    runWithExportGateBypassAsync
   };
 
   Editor.ExportFlow = ExportFlow;
   Editor.openExportMenu = openExportSurface;
   Editor.openExportSurface = openExportSurface;
+  Editor.isExportAllowed = isExportAllowed;
 
-  patchExportGuardBypass();
-  Editor.applyValidatorExportGuardPatch?.();
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('guardExportWithValidation', guardExportWithValidation, 'editor-export-flow');
+  } else {
+    Editor.guardExportWithValidation = guardExportWithValidation;
+  }
 
   if (typeof document !== 'undefined') {
     ensureStyles();
@@ -74384,9 +76456,16 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     if (typeof Editor.createBlankScene === 'function') {
       Editor.createBlankSceneDirect = Editor.createBlankScene.bind(Editor);
     }
-    Editor.createScene = function createSceneViaWizard() {
-      return Editor.openSceneWizard();
-    };
+    if (Editor.hooks?.replace) {
+      Editor.hooks.replace('createScene', function createSceneViaWizard() {
+        return Editor.openSceneWizard();
+      }, 'editor-scene-authoring-phase-112');
+    } else {
+      // hooks-exempt: fallback when Editor.hooks unavailable
+      Editor.createScene = function createSceneViaWizard() {
+        return Editor.openSceneWizard();
+      };
+    }
   })();
 
   Editor.closeTemplateSceneModal = function closeTemplateSceneModal() {
@@ -74964,10 +77043,81 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
  */
 (function attachEditorAssistantUi() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined' || !Editor.assistant) return;
 
+  const esc = (s) => (typeof Editor.escapeHtml === 'function' ? Editor.escapeHtml(String(s ?? '')) : String(s ?? ''));
+  const escAttr = (s) => (typeof Editor.escapeAttr === 'function' ? Editor.escapeAttr(String(s ?? '')) : String(s ?? '').replace(/"/g, '&quot;'));
+
+  const STORAGE_KEY = 'rpg_editor_scene_assistant';
   let currentPlan = null;
+  let saveInputTimer = null;
+
+  function readState() {
+    if (!Editor.workspace) Editor.workspace = {};
+    if (!Editor.workspace.sceneAssistant) {
+      Editor.workspace.sceneAssistant = { description: '' };
+    }
+    return Editor.workspace.sceneAssistant;
+  }
+
+  function loadFromStorage() {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.description === 'string') {
+        readState().description = parsed.description;
+      }
+    } catch (e) { /* */ }
+  }
+
+  function saveToStorage(description) {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ description: description || '' }));
+    } catch (e) { /* */ }
+  }
+
+  function scheduleSaveInput(value) {
+    readState().description = value;
+    if (saveInputTimer) clearTimeout(saveInputTimer);
+    saveInputTimer = setTimeout(() => {
+      saveToStorage(value);
+      saveInputTimer = null;
+    }, 300);
+  }
+
+  function flushInputSave(value) {
+    if (saveInputTimer) {
+      clearTimeout(saveInputTimer);
+      saveInputTimer = null;
+    }
+    readState().description = value;
+    saveToStorage(value);
+  }
+
+  function clearSavedInput() {
+    readState().description = '';
+    saveToStorage('');
+  }
+
+  function restorePreview(preview, applyBtn) {
+    if (!currentPlan?.ok || !preview) return;
+    preview.innerHTML = Editor.assistant.formatDraftDiff(currentPlan);
+    if (currentPlan.needsReviewCount > 0) {
+      preview.innerHTML += '<p class="scene-assistant-review">' + esc(tr('editor.assistantUi.reviewCount', { count: currentPlan.needsReviewCount })) + '</p>';
+    }
+    if (applyBtn) applyBtn.disabled = false;
+  }
+
+  loadFromStorage();
 
   function ensureStyles() {
     if (document.getElementById('editor-assistant-styles')) return;
@@ -75032,16 +77182,16 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     }
 
     mount.innerHTML = `
-      <section class="scene-assistant-panel" aria-label="Опиши сцену">
-        <h3>✨ Опиши сцену текстом</h3>
-        <p class="hint">Черновик собирается только из шаблонов, writerSafe-действий и условий каталога — без произвольного JSON.</p>
-        <textarea id="scene-assistant-input" placeholder="Например: Таверна — диалог с барменом; выбор — пойти в лес или вернуться в деревню"></textarea>
+      <section class="scene-assistant-panel" aria-label="${escAttr(tr('editor.assistantUi.panelAriaLabel'))}">
+        <h3>${esc(tr('editor.assistantUi.panelTitle'))}</h3>
+        <p class="hint">${esc(tr('editor.assistantUi.panelHint'))}</p>
+        <textarea id="scene-assistant-input" placeholder="${escAttr(tr('editor.assistantUi.inputPlaceholder'))}"></textarea>
         <div class="scene-assistant-actions">
-          <button type="button" class="btn btn-secondary" id="scene-assistant-draft-btn">Сформировать черновик</button>
-          <button type="button" class="btn btn-primary" id="scene-assistant-apply-btn" disabled>Применить</button>
+          <button type="button" class="btn btn-secondary" id="scene-assistant-draft-btn">${esc(tr('editor.assistantUi.draftBtn'))}</button>
+          <button type="button" class="btn btn-primary" id="scene-assistant-apply-btn" disabled>${esc(tr('editor.assistantUi.applyBtn'))}</button>
         </div>
         <div class="scene-assistant-preview" id="scene-assistant-preview">
-          <p class="hint">Введите описание и нажмите «Сформировать черновик».</p>
+          <p class="hint">${esc(tr('editor.assistantUi.previewHint'))}</p>
         </div>
       </section>`;
 
@@ -75050,21 +77200,30 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     const applyBtn = document.getElementById('scene-assistant-apply-btn');
     const preview = document.getElementById('scene-assistant-preview');
 
+    if (input) {
+      input.value = readState().description || '';
+      input.addEventListener('input', () => scheduleSaveInput(input.value));
+      input.addEventListener('blur', () => flushInputSave(input.value));
+    }
+
+    restorePreview(preview, applyBtn);
+
     draftBtn?.addEventListener('click', () => {
       const text = input?.value?.trim() || '';
       if (!text) {
-        Editor.toast?.warning?.('Введите описание сцены');
+        Editor.toast?.warning?.(tr('editor.assistantUi.emptyDescriptionWarning'));
         return;
       }
+      flushInputSave(input?.value || '');
       currentPlan = Editor.assistant.draftScene(text);
       if (!currentPlan.ok) {
-        preview.innerHTML = '<p class="hint">Ошибка: ' + (currentPlan.errors || []).join(', ') + '</p>';
+        preview.innerHTML = '<p class="hint">' + esc(tr('editor.assistantUi.error', { errors: (currentPlan.errors || []).join(', ') })) + '</p>';
         applyBtn.disabled = true;
         return;
       }
       preview.innerHTML = Editor.assistant.formatDraftDiff(currentPlan);
       if (currentPlan.needsReviewCount > 0) {
-        preview.innerHTML += '<p class="scene-assistant-review">⚠ Элементов на проверку: ' + currentPlan.needsReviewCount + ' (не будут применены молча)</p>';
+        preview.innerHTML += '<p class="scene-assistant-review">' + esc(tr('editor.assistantUi.reviewCount', { count: currentPlan.needsReviewCount })) + '</p>';
       }
       applyBtn.disabled = false;
     });
@@ -75075,13 +77234,16 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       if (result.ok) {
         currentPlan = null;
         if (input) input.value = '';
+        clearSavedInput();
         applyBtn.disabled = true;
-        preview.innerHTML = '<p class="hint">Сцена создана: <code>' + (result.sceneId || '') + '</code></p>';
+        preview.innerHTML = '<p class="hint">' + tr('editor.assistantUi.sceneCreated', { sceneId: '<code>' + esc(result.sceneId || '') + '</code>' }) + '</p>';
       }
     });
   }
 
   Editor.renderSceneAssistantPanel = renderPanel;
+  Editor.getSceneAssistantInputState = readState;
+  Editor.flushSceneAssistantInputSave = flushInputSave;
 
   if (Editor.hooks && typeof Editor.hooks.after === 'function') {
     Editor.hooks.after('switchTab', function (_r, args) {
@@ -75092,6 +77254,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       renderPanel();
     });
     Editor.hooks.after('loadData', function () {
+      loadFromStorage();
       renderPanel();
     });
   }
@@ -76845,112 +79008,112 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   if (typeof Editor === 'undefined') return;
 
-  const GROUP_LABELS = {
-    create: 'Создание',
-    content: 'Контент',
-    tools: 'Инструменты',
-    advanced: 'Расширенные'
+  const GROUP_LABEL_KEYS = {
+    create: 'editor.nav.groups.create',
+    content: 'editor.nav.groups.content',
+    tools: 'editor.nav.groups.tools',
+    advanced: 'editor.nav.groups.advanced'
   };
 
   /** Flat sections — same ids/tabs as editor-nav-layout where possible */
   const REDESIGN_SECTIONS = [
     {
       groupId: 'create', id: 'scenes', tab: 'scenes', icon: '🎬',
-      labelKey: 'editor.nav.scenes', labelFallback: 'Сцены',
+      labelKey: 'editor.nav.scenes',
       writerVisible: true, showSceneList: true, primary: true,
       subTabs: [
-        { tab: 'scene_templates', labelKey: 'editor.tabs.scene_templates', labelFallback: 'Шаблоны', writerVisible: true }
+        { tab: 'scene_templates', labelKey: 'editor.tabs.scene_templates', writerVisible: true }
       ]
     },
     {
       groupId: 'create', id: 'story', tab: 'graph', icon: '🗺️',
-      labelKey: 'editor.tabs.graph', labelFallback: 'Сюжет',
+      labelKey: 'editor.tabs.graph',
       writerVisible: true
     },
     {
       groupId: 'create', id: 'game_ui', tab: 'game_ui', icon: '🖥',
-      labelKey: 'editor.nav.game_ui', labelFallback: 'Игровой UI',
+      labelKey: 'editor.nav.game_ui',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'items', tab: 'items', icon: '🎒',
-      labelKey: 'editor.nav.items', labelFallback: 'Предметы',
+      labelKey: 'editor.nav.items',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'quests', tab: 'quests', icon: '📜',
-      labelKey: 'editor.nav.quests', labelFallback: 'Квесты',
+      labelKey: 'editor.nav.quests',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'npcs', tab: 'npcs', icon: '👤',
-      labelKey: 'editor.nav.npcs', labelFallback: 'Персонажи',
+      labelKey: 'editor.nav.npcs',
       writerVisible: true,
       subTabs: [
-        { tab: 'player_characters', labelFallback: 'Герой', writerVisible: true }
+        { tab: 'player_characters', labelKey: 'editor.tabs.player_characters', writerVisible: true }
       ]
     },
     {
       groupId: 'content', id: 'enemies', tab: 'enemies', icon: '👹',
-      labelKey: 'editor.nav.enemies', labelFallback: 'Враги',
+      labelKey: 'editor.nav.enemies',
       writerVisible: true
     },
     {
       groupId: 'content', id: 'world', tab: 'world', icon: '🌍',
-      labelKey: 'editor.tabs.world', labelFallback: 'Мир',
+      labelKey: 'editor.tabs.world',
       writerVisible: true,
       subTabs: [
-        { tab: 'worldmap', labelKey: 'editor.tabs.worldmap', labelFallback: 'Карта путешествий', writerVisible: true }
+        { tab: 'worldmap', labelKey: 'editor.tabs.worldmap', writerVisible: true }
       ]
     },
     {
       groupId: 'advanced', id: 'classes', tab: 'classes', icon: '🏅',
-      labelKey: 'editor.nav.classes', labelFallback: 'Классы',
+      labelKey: 'editor.nav.classes',
       subTabs: [
-        { tab: 'balance', labelKey: 'editor.tabs.balance', labelFallback: 'Баланс' },
-        { tab: 'beasts', labelKey: 'editor.tabs.beasts', labelFallback: 'Звери' },
-        { tab: 'progression', labelKey: 'editor.tabs.progression', labelFallback: 'Прогрессия' }
+        { tab: 'balance', labelKey: 'editor.tabs.balance' },
+        { tab: 'beasts', labelKey: 'editor.tabs.beasts' },
+        { tab: 'progression', labelKey: 'editor.tabs.progression' }
       ]
     },
     {
       groupId: 'advanced', id: 'abilities', tab: 'abilities', icon: '✨',
-      labelKey: 'editor.nav.abilities', labelFallback: 'Умения'
+      labelKey: 'editor.nav.abilities'
     },
     {
       groupId: 'advanced', id: 'craft', tab: 'recipes', icon: '🔨',
-      labelKey: 'editor.nav.craft', labelFallback: 'Крафт',
+      labelKey: 'editor.nav.craft',
       subTabs: [
-        { tab: 'ingredients', labelKey: 'editor.tabs.ingredients', labelFallback: 'Ингредиенты' },
-        { tab: 'recipes', labelKey: 'editor.tabs.recipes', labelFallback: 'Рецепты' }
+        { tab: 'ingredients', labelKey: 'editor.tabs.ingredients' },
+        { tab: 'recipes', labelKey: 'editor.tabs.recipes' }
       ]
     },
     {
       groupId: 'advanced', id: 'achievements', tab: 'achievements', icon: '🏆',
-      labelKey: 'editor.nav.achievements', labelFallback: 'Достижения',
+      labelKey: 'editor.nav.achievements',
       writerVisible: true
     },
     {
       groupId: 'advanced', id: 'assets', tab: 'audio', icon: '🎵',
-      labelKey: 'editor.nav.assets', labelFallback: 'Ассеты',
+      labelKey: 'editor.nav.assets',
       subTabs: [
-        { tab: 'media', labelKey: 'editor.tabs.media', labelFallback: 'Медиа', writerVisible: true },
-        { tab: 'audio', labelKey: 'editor.tabs.audio', labelFallback: 'Звук', writerVisible: true },
-        { tab: 'theme', labelKey: 'editor.tabs.theme', labelFallback: 'Тема' }
+        { tab: 'media', labelKey: 'editor.tabs.media', writerVisible: true },
+        { tab: 'audio', labelKey: 'editor.tabs.audio', writerVisible: true },
+        { tab: 'theme', labelKey: 'editor.tabs.theme' }
       ]
     },
     {
       groupId: 'advanced', id: 'settings', tab: 'json', icon: '⚙️',
-      labelKey: 'editor.nav.settings', labelFallback: 'Настройки',
+      labelKey: 'editor.nav.settings',
       subTabs: [
-        { tab: 'json', labelKey: 'editor.tabs.json', labelFallback: 'Данные' },
-        { tab: 'variables', labelKey: 'editor.tabs.variables', labelFallback: 'Переменные', writerVisible: true },
-        { tab: 'prefabs', labelKey: 'editor.tabs.prefabs', labelFallback: 'Префабы', writerVisible: true },
-        { tab: 'actions', labelKey: 'editor.tabs.actions', labelFallback: 'Действия' },
-        { tab: 'snippets', labelKey: 'editor.tabs.snippets', labelFallback: 'Сниппеты', writerVisible: true },
-        { tab: 'reputation', labelKey: 'editor.tabs.reputation', labelFallback: 'Репутация' },
-        { tab: 'analytics', labelKey: 'editor.tabs.analytics', labelFallback: 'Аналитика' },
-        { tab: 'climate', labelKey: 'editor.tabs.climate', labelFallback: 'Климат' },
-        { tab: 'races', labelKey: 'editor.tabs.races', labelFallback: 'Расы' }
+        { tab: 'json', labelKey: 'editor.tabs.json' },
+        { tab: 'variables', labelKey: 'editor.tabs.variables', writerVisible: true },
+        { tab: 'prefabs', labelKey: 'editor.tabs.prefabs', writerVisible: true },
+        { tab: 'actions', labelKey: 'editor.tabs.actions' },
+        { tab: 'snippets', labelKey: 'editor.tabs.snippets', writerVisible: true },
+        { tab: 'reputation', labelKey: 'editor.tabs.reputation' },
+        { tab: 'analytics', labelKey: 'editor.tabs.analytics' },
+        { tab: 'climate', labelKey: 'editor.tabs.climate' },
+        { tab: 'races', labelKey: 'editor.tabs.races' }
       ]
     }
   ];
@@ -76959,8 +79122,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     {
       id: 'validate',
       icon: '🔍',
-      label: 'Проверить',
-      title: 'Проверить проект',
+      labelKey: 'editor.nav.tools.validate.label',
+      titleKey: 'editor.nav.tools.validate.title',
       run() {
         if (typeof Editor.runProjectValidation === 'function') Editor.runProjectValidation();
       }
@@ -76968,8 +79131,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     {
       id: 'preview',
       icon: '▶',
-      label: 'Preview',
-      title: 'Play current scene or project start in isolated test mode',
+      labelKey: 'editor.nav.tools.preview.label',
+      titleKey: 'editor.nav.tools.preview.title',
       run() {
         if (typeof Editor.openPreviewMenu === 'function') Editor.openPreviewMenu();
         else if (typeof Editor.testCurrentScene === 'function') Editor.testCurrentScene();
@@ -76979,13 +79142,22 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     {
       id: 'export',
       icon: '💾',
-      label: 'Экспорт',
-      title: 'Сохранить или экспортировать проект',
+      labelKey: 'editor.nav.tools.export.label',
+      titleKey: 'editor.nav.tools.export.title',
       run() {
         const btn = document.getElementById('export-menu-toggle');
         if (btn) btn.click();
       }
     }
+  ];
+
+  const NAV_COMMAND_SECTIONS = [
+    { id: 'nav.scenes', tab: 'scenes', titleKey: 'editor.nav.scenes', keywords: ['scene', 'scenes'] },
+    { id: 'nav.story', tab: 'graph', titleKey: 'editor.nav.commands.story', keywords: ['story', 'graph'] },
+    { id: 'nav.game_ui', tab: 'game_ui', titleKey: 'editor.nav.game_ui', keywords: ['ui', 'hud'] },
+    { id: 'nav.quests', tab: 'quests', titleKey: 'editor.nav.quests', keywords: ['quest', 'quests'] },
+    { id: 'nav.items', tab: 'items', titleKey: 'editor.nav.items', keywords: ['item', 'items'] },
+    { id: 'nav.npcs', tab: 'npcs', titleKey: 'editor.nav.npcs', keywords: ['npc', 'character'] }
   ];
 
   const TAB_TO_SECTION = {};
@@ -77000,11 +79172,26 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     return typeof t === 'function' ? t(key) : key;
   }
 
+  function groupLabel(groupId) {
+    return tr(GROUP_LABEL_KEYS[groupId] || groupId);
+  }
+
+  function resolveTool(tool) {
+    return {
+      id: tool.id,
+      icon: tool.icon,
+      label: tr(tool.labelKey),
+      title: tr(tool.titleKey),
+      run: tool.run
+    };
+  }
+
   function labelFor(entry) {
-    const translated = entry.labelKey ? tr(entry.labelKey) : '';
+    if (!entry.labelKey) return entry.id || '';
+    const translated = tr(entry.labelKey);
     let label = (translated && translated !== entry.labelKey)
       ? translated
-      : (entry.labelFallback || entry.labelKey || entry.id || '');
+      : (entry.id || '');
     if (entry.icon && typeof label === 'string' && label.startsWith(entry.icon)) {
       label = label.slice(entry.icon.length).trim();
     }
@@ -77076,10 +79263,11 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       if (!isGroupVisible(groupId)) return;
 
       html += '<div class="editor-nav-group" data-nav-group="' + groupId + '">';
-      html += '<div class="editor-nav-group__label">' + GROUP_LABELS[groupId] + '</div>';
+      html += '<div class="editor-nav-group__label">' + groupLabel(groupId) + '</div>';
 
       if (groupId === 'tools') {
-        TOOL_ACTIONS.forEach((tool) => {
+        TOOL_ACTIONS.forEach((toolDef) => {
+          const tool = resolveTool(toolDef);
           html += '<button type="button" class="editor-nav-item editor-nav-item--tool" data-tool-id="' + tool.id + '"' +
             ' title="' + escAttr(tool.title) + '" aria-label="' + escAttr(tool.title) + '">' +
             '<span class="editor-nav-icon" aria-hidden="true">' + tool.icon + '</span>' +
@@ -77116,8 +79304,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
     navList.querySelectorAll('[data-tool-id]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const tool = TOOL_ACTIONS.find((t) => t.id === btn.dataset.toolId);
-        if (tool) tool.run();
+        const toolDef = TOOL_ACTIONS.find((t) => t.id === btn.dataset.toolId);
+        if (toolDef) toolDef.run();
       });
     });
   }
@@ -77136,15 +79324,17 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     let cta = '';
 
     if (!hasProject) {
-      message = 'Загрузите проект или создайте новый на дашборде.';
+      message = tr('editor.nav.onboarding.noProject');
     } else if (scenes.length === 0) {
-      message = 'Создайте первую сцену — с неё начинается игра.';
-      cta = '<button type="button" class="btn btn-primary btn-sm" onclick="Editor.openSceneWizard()">+ Первая сцена</button>';
+      message = tr('editor.nav.onboarding.noScenes');
+      cta = '<button type="button" class="btn btn-primary btn-sm" onclick="Editor.openSceneWizard()">' +
+        escAttr(tr('editor.nav.onboarding.firstSceneBtn')) + '</button>';
     } else if (Editor.currentTab === 'scenes' && !current && openCount === 0) {
-      message = 'Откройте сцену из списка слева или создайте новую.';
-      cta = '<button type="button" class="btn btn-secondary btn-sm" onclick="Editor.openSceneWizard()">+ Новая сцена</button>';
+      message = tr('editor.nav.onboarding.openScene');
+      cta = '<button type="button" class="btn btn-secondary btn-sm" onclick="Editor.openSceneWizard()">' +
+        escAttr(tr('editor.nav.onboarding.newSceneBtn')) + '</button>';
     } else if (Editor.currentTab === 'scenes' && data.startScene && current === data.startScene) {
-      message = 'Начните с стартовой сцены — отредактируйте текст и выборы.';
+      message = tr('editor.nav.onboarding.startScene');
     } else {
       host.hidden = true;
       host.innerHTML = '';
@@ -77186,29 +79376,24 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   function registerNavCommands() {
     if (!Editor.commands?.register) return;
-    TOOL_ACTIONS.forEach((tool) => {
+    const toolsCategory = tr('editor.nav.commands.categoryTools');
+    const navigationCategory = tr('editor.commandPaletteV2.categories.navigation');
+    TOOL_ACTIONS.forEach((toolDef) => {
+      const tool = resolveTool(toolDef);
       Editor.commands.register({
         id: 'nav.tool.' + tool.id,
         title: tool.icon + ' ' + tool.label,
-        category: 'Инструменты',
-        keywords: [tool.id, tool.label, 'навигация'],
-        action: tool.run
+        category: toolsCategory,
+        keywords: [tool.id, tool.label],
+        action: toolDef.run
       });
     });
-    const navSections = [
-      { id: 'nav.scenes', tab: 'scenes', title: 'Сцены', kw: ['сцена', 'scene'] },
-      { id: 'nav.story', tab: 'graph', title: 'Сюжет / карта истории', kw: ['сюжет', 'story', 'граф'] },
-      { id: 'nav.game_ui', tab: 'game_ui', title: 'Игровой UI', kw: ['ui', 'hud'] },
-      { id: 'nav.quests', tab: 'quests', title: 'Квесты', kw: ['quest'] },
-      { id: 'nav.items', tab: 'items', title: 'Предметы', kw: ['item'] },
-      { id: 'nav.npcs', tab: 'npcs', title: 'Персонажи', kw: ['npc', 'персонаж'] }
-    ];
-    navSections.forEach((n) => {
+    NAV_COMMAND_SECTIONS.forEach((n) => {
       Editor.commands.register({
         id: n.id,
-        title: n.title,
-        category: 'Навигация',
-        keywords: n.kw,
+        title: tr(n.titleKey),
+        category: navigationCategory,
+        keywords: n.keywords,
         action() {
           if (typeof Editor.switchTab === 'function') Editor.switchTab(n.tab);
         }
@@ -77273,7 +79458,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     getNavGroups() {
       return ['create', 'content', 'tools', 'advanced'].map((id) => ({
         id,
-        label: GROUP_LABELS[id],
+        label: groupLabel(id),
         visible: isGroupVisible(id)
       }));
     },
@@ -77283,7 +79468,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
 
     getNavToolActions() {
-      return TOOL_ACTIONS.slice();
+      return TOOL_ACTIONS.map(resolveTool);
     },
 
     initEditorNav() {
@@ -77299,9 +79484,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   });
 
   // Re-use nav-layout helpers for subnav — patch visibility checks to use redesign sections
-  const origApplyNav = Editor.applyNavEditorMode;
-  if (typeof origApplyNav === 'function') {
-    Editor.applyNavEditorMode = function patchedApplyNavEditorMode() {
+  if (typeof Editor.applyNavEditorMode === 'function' && Editor.hooks?.replace) {
+    Editor.hooks.replace('applyNavEditorMode', function patchedApplyNavEditorMode() {
       document.querySelectorAll('.editor-nav-item[data-section-id]').forEach((btn) => {
         const section = findSectionById(btn.dataset.sectionId);
         if (!section) return;
@@ -77329,7 +79513,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
         Editor.syncNavLayout(Editor.currentTab);
       }
       syncOnboarding();
-    };
+    }, 'editor-nav-redesign');
   }
 
   if (Editor.hooks) {
@@ -77366,10 +79550,10 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     nav.addEventListener('click', (ev) => {
       const toolBtn = ev.target.closest('.editor-nav-item[data-tool-id]');
       if (toolBtn) {
-        const tool = TOOL_ACTIONS.find((t) => t.id === toolBtn.dataset.toolId);
-        if (tool && typeof tool.run === 'function') {
+        const toolDef = TOOL_ACTIONS.find((t) => t.id === toolBtn.dataset.toolId);
+        if (toolDef && typeof toolDef.run === 'function') {
           ev.preventDefault();
-          tool.run();
+          toolDef.run();
         }
         return;
       }
@@ -77976,41 +80160,46 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 // ============================================================
 (function attachSceneWorkspacePolish() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') return;
 
   const SECTION_META = {
     overview: {
-      title: 'Обзор',
-      desc: 'Сводка по сцене и быстрые переходы.'
+      titleKey: 'editor.sceneWorkspacePolish.sections.overview.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.overview.desc'
     },
     content: {
-      title: 'Контент',
-      desc: 'Текст сцены и сюжетные модули.',
-      primary: { label: '+ Добавить модуль', action: 'content-add-module' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.content.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.content.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.content.addModule', action: 'content-add-module' }
     },
     choices: {
-      title: 'Выборы',
-      desc: 'Варианты ответа игрока в этой сцене.',
-      primary: { label: '+ Добавить выбор', action: 'choices-add' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.choices.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.choices.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.choices.addChoice', action: 'choices-add' }
     },
     visual: {
-      title: 'Visual',
-      desc: 'Интерактивные объекты и hotspots сцены.',
-      primary: { label: '+ Добавить объект', action: 'visual-add-hotspot' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.visual.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.visual.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.visual.addObject', action: 'visual-add-hotspot' }
     },
     game_ui: {
-      title: 'Game UI',
-      desc: 'HUD и UI-экраны, связанные с проектом.',
-      primary: { label: '+ Добавить UI-элемент', action: 'game-ui-add' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.gameUi.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.gameUi.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.gameUi.addUi', action: 'game-ui-add' }
     },
     conditions: {
-      title: 'Условия',
-      desc: 'Видимость сцены, выборов и объектов.',
-      primary: { label: '+ Добавить условие', action: 'conditions-add' }
+      titleKey: 'editor.sceneWorkspacePolish.sections.conditions.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.conditions.desc',
+      primary: { labelKey: 'editor.sceneWorkspacePolish.sections.conditions.addCondition', action: 'conditions-add' }
     },
     advanced: {
-      title: 'Advanced',
-      desc: 'ID, тип сцены и данные для продвинутого режима.'
+      titleKey: 'editor.sceneWorkspacePolish.sections.advanced.title',
+      descKey: 'editor.sceneWorkspacePolish.sections.advanced.desc'
     }
   };
 
@@ -78039,7 +80228,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   function sectionLabel(sectionId) {
     const meta = SECTION_META[sectionId];
-    if (meta) return meta.title;
+    if (meta) return tr(meta.titleKey);
     const list = typeof Editor.getSceneWorkspaceSections === 'function'
       ? Editor.getSceneWorkspaceSections() : [];
     const found = list.find((s) => s.id === sectionId);
@@ -78176,10 +80365,12 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     const scene = Editor.data?.scenes?.[sceneId];
     if (!scene) return '';
     const title = scene.location || scene.title || sceneId;
-    const dirty = isDirty() ? ' <span class="usw-bc__dirty" title="Несохранённые изменения">*</span>' : '';
+    const dirty = isDirty()
+      ? ' <span class="usw-bc__dirty" title="' + escAttr(tr('editor.sceneWorkspacePolish.breadcrumb.unsavedTitle')) + '">*</span>'
+      : '';
     return (
-      '<nav class="usw-breadcrumb" aria-label="Навигация по сцене">' +
-      '<button type="button" class="usw-bc__link" data-usw-bc="project">Проект</button>' +
+      '<nav class="usw-breadcrumb" aria-label="' + escAttr(tr('editor.sceneWorkspacePolish.breadcrumb.ariaLabel')) + '">' +
+      '<button type="button" class="usw-bc__link" data-usw-bc="project">' + esc(tr('editor.sceneWorkspacePolish.breadcrumb.project')) + '</button>' +
       '<span class="usw-bc__sep" aria-hidden="true">›</span>' +
       '<span class="usw-bc__current">' + esc(title) + dirty + '</span>' +
       '<span class="usw-bc__sep" aria-hidden="true">›</span>' +
@@ -78193,13 +80384,13 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     if (!meta) return '';
     const primary = meta.primary
       ? '<button type="button" class="btn btn-primary btn-sm usw-section-header__primary" data-usw-primary="' +
-        escAttr(meta.primary.action) + '">' + esc(meta.primary.label) + '</button>'
+        escAttr(meta.primary.action) + '">' + esc(tr(meta.primary.labelKey)) + '</button>'
       : '';
     return (
       '<header class="usw-section-header" data-usw-section-header="' + escAttr(sectionId) + '">' +
       '<div class="usw-section-header__text">' +
-      '<h3 class="usw-section-header__title">' + esc(meta.title) + '</h3>' +
-      (meta.desc ? '<p class="usw-section-header__desc hint">' + esc(meta.desc) + '</p>' : '') +
+      '<h3 class="usw-section-header__title">' + esc(tr(meta.titleKey)) + '</h3>' +
+      (meta.descKey ? '<p class="usw-section-header__desc hint">' + esc(tr(meta.descKey)) + '</p>' : '') +
       '</div>' +
       (primary ? '<div class="usw-section-header__actions">' + primary + '</div>' : '') +
       '</header>'
@@ -78251,14 +80442,15 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   }
 
   function wrapSetSceneWorkspaceSection() {
-    if (Editor._usw13SectionWrapped || typeof Editor.setSceneWorkspaceSection !== 'function') return;
-    const orig = Editor.setSceneWorkspaceSection.bind(Editor);
-    Editor.setSceneWorkspaceSection = function setSceneWorkspaceSectionPolish(sectionId) {
+    if (Editor._usw13SectionWrapped || typeof Editor.setSceneWorkspaceSection !== 'function' || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('setSceneWorkspaceSection', function setSceneWorkspaceSectionPolish(sectionId) {
       captureSelectionFromInspector();
-      orig(sectionId);
+      const result = savedPrev ? savedPrev.call(this, sectionId) : undefined;
       injectWorkspaceChrome(Editor.currentScene);
       restoreWorkspaceSelection(sectionId);
-    };
+      return result;
+    }, 'editor-scene-workspace-polish');
     Editor._usw13SectionWrapped = true;
   }
 
@@ -78351,96 +80543,95 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 // ============================================================
 (function attachAuthorGuidance() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
-  const CONTEXT_HINTS = Object.freeze({
-    visual: 'Используйте для интерактивных локаций и объектов на сцене.',
-    game_ui: 'Используйте для HUD и постоянных элементов управления.',
-    conditions: 'Условия определяют, когда что-то доступно игроку.',
-    choices: 'Выборы — это действия игрока в текстовой сцене.',
-    content: 'Текст сцены и модули задают, что видит игрок.',
-    items: 'Предметы выдаются в квестах, сценах и бою.',
-    quests: 'Квесты связывают сцены, цели и награды.',
-    combat: 'Враги используются в боевых сценах и заданиях.'
-  });
+  const CONTEXT_HINT_KEYS = Object.freeze([
+    'visual', 'game_ui', 'conditions', 'choices', 'content', 'items', 'quests', 'combat'
+  ]);
 
-  const EMPTY_STATES = Object.freeze({
-    project: {
-      title: 'Welcome to your RPG project',
-      explanation: 'Create your first scene — that is where the game begins.',
-      primaryLabel: 'Create First Scene',
-      action: 'create-scene'
-    },
-    scene: {
-      title: 'Сцена не открыта',
-      explanation: 'Откройте сцену из списка слева или создайте новую.',
-      primaryLabel: 'Создать сцену',
-      action: 'create-scene'
-    },
-    content: {
-      title: 'Сцена пуста',
-      explanation: 'Добавьте текст или модуль, чтобы игрок увидел содержание сцены.',
-      primaryLabel: 'Добавить модуль',
-      action: 'content-add-module',
-      hint: 'content'
-    },
-    choices: {
-      title: 'Нет выборов',
-      explanation: 'Добавьте варианты ответа, чтобы игрок мог действовать.',
-      primaryLabel: 'Добавить выбор',
-      action: 'choices-add',
-      hint: 'choices'
-    },
-    visual: {
-      title: 'Нет visual-контента',
-      explanation: 'Добавьте фон или интерактивный объект на сцену.',
-      primaryLabel: 'Добавить объект',
-      action: 'visual-add-hotspot',
-      hint: 'visual'
-    },
-    game_ui: {
-      title: 'Нет UI-экранов',
-      explanation: 'Создайте HUD или меню — элементы управления для игрока.',
-      primaryLabel: 'Создать экран',
-      action: 'game-ui-add-screen',
-      hint: 'game_ui'
-    },
-    conditions: {
-      title: 'Нет условий',
-      explanation: 'Условия управляют видимостью сцены, выборов и объектов.',
-      primaryLabel: 'Добавить условие',
-      action: 'conditions-add',
-      hint: 'conditions'
-    },
-    items: {
-      title: 'Нет предметов',
-      explanation: 'Создайте предметы для квестов, наград и инвентаря.',
-      primaryLabel: 'Создать предмет',
-      action: 'create-item',
-      hint: 'items'
-    },
-    quests: {
-      title: 'Нет квестов',
-      explanation: 'Задайте цель игроку — квест связывает сцены и награды.',
-      primaryLabel: 'Создать квест',
-      action: 'create-quest',
-      hint: 'quests'
-    },
-    combat: {
-      title: 'Нет врагов',
-      explanation: 'Создайте врагов для боевых сцен и заданий.',
-      primaryLabel: 'Создать врага',
-      action: 'create-enemy',
-      hint: 'combat'
-    },
-    content_category: {
-      title: 'Нет объектов',
-      explanation: 'Создайте первый объект в этой категории.',
-      primaryLabel: 'Создать',
-      action: 'create-content'
-    }
-  });
+  const EMPTY_STATE_KEYS = Object.freeze([
+    'project', 'scene', 'content', 'choices', 'visual', 'game_ui', 'conditions',
+    'items', 'quests', 'combat', 'content_category'
+  ]);
+
+  const EMPTY_STATE_KEY_MAP = {
+    project: 'project',
+    scene: 'scene',
+    content: 'content',
+    choices: 'choices',
+    visual: 'visual',
+    game_ui: 'game_ui',
+    conditions: 'conditions',
+    items: 'items',
+    quests: 'quests',
+    combat: 'combat'
+  };
+
+  function contextHint(key) {
+    return tr('editor.authorGuidance.contextHints.' + key);
+  }
+
+  function emptyStateField(contextKey, field) {
+    return tr('editor.authorGuidance.emptyStates.' + contextKey + '.' + field);
+  }
+
+  function getContextHints() {
+    const out = {};
+    CONTEXT_HINT_KEYS.forEach((key) => {
+      out[key] = contextHint(key);
+    });
+    return Object.freeze(out);
+  }
+
+  function getEmptyStateDef(contextKey) {
+    if (!EMPTY_STATE_KEYS.includes(contextKey)) return null;
+    const base = {
+      title: emptyStateField(contextKey, 'title'),
+      explanation: emptyStateField(contextKey, 'explanation'),
+      primaryLabel: emptyStateField(contextKey, 'primaryLabel')
+    };
+    const actions = {
+      project: 'create-scene',
+      scene: 'create-scene',
+      content: 'content-add-module',
+      choices: 'choices-add',
+      visual: 'visual-add-hotspot',
+      game_ui: 'game-ui-add-screen',
+      conditions: 'conditions-add',
+      items: 'create-item',
+      quests: 'create-quest',
+      combat: 'create-enemy',
+      content_category: 'create-content'
+    };
+    const hints = {
+      content: 'content',
+      choices: 'choices',
+      visual: 'visual',
+      game_ui: 'game_ui',
+      conditions: 'conditions',
+      items: 'items',
+      quests: 'quests',
+      combat: 'combat'
+    };
+    base.action = actions[contextKey];
+    if (hints[contextKey]) base.hint = hints[contextKey];
+    return base;
+  }
+
+  function getEmptyStates() {
+    const out = {};
+    EMPTY_STATE_KEYS.forEach((key) => {
+      const def = getEmptyStateDef(key);
+      if (def) out[key] = def;
+    });
+    return Object.freeze(out);
+  }
 
   function esc(s) {
     return typeof Editor.escapeHtml === 'function'
@@ -78527,14 +80718,14 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   function buildEmptyStateHtml(contextKey, overrides) {
     overrides = overrides || {};
-    const base = EMPTY_STATES[contextKey] || EMPTY_STATES.content;
+    const base = getEmptyStateDef(contextKey) || getEmptyStateDef('content');
     const title = overrides.title || base.title;
     const explanation = overrides.explanation || base.explanation;
     const primaryLabel = overrides.primaryLabel || overrides.ctaLabel || base.primaryLabel;
     const action = overrides.action || base.action;
     const hintKey = overrides.hint || base.hint;
-    const hint = hintKey && CONTEXT_HINTS[hintKey]
-      ? '<p class="ui-guidance-hint ui-guidance-hint--inline">' + esc(CONTEXT_HINTS[hintKey]) + '</p>'
+    const hint = hintKey && contextHint(hintKey)
+      ? '<p class="ui-guidance-hint ui-guidance-hint--inline">' + esc(contextHint(hintKey)) + '</p>'
       : '';
 
     return (
@@ -78582,11 +80773,13 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   function renderGuidanceHintHtml(hintId, text) {
     if (!text || isHintDismissed(hintId)) return '';
+    const dismissTitle = tr('editor.authorGuidance.dismissHintTitle');
+    const dismissAria = tr('editor.authorGuidance.dismissHintAria');
     return (
       '<p class="ui-guidance-hint" data-guidance-hint-id="' + escAttr(hintId) + '">' +
       esc(text) +
       ' <button type="button" class="ui-guidance-dismiss" data-guidance-dismiss="' + escAttr(hintId) +
-      '" title="Скрыть подсказку" aria-label="Скрыть подсказку">×</button></p>'
+      '" title="' + escAttr(dismissTitle) + '" aria-label="' + escAttr(dismissAria) + '">×</button></p>'
     );
   }
 
@@ -78595,7 +80788,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     const host = document.getElementById('usw-section-header-host');
     if (!host || host.hidden) return;
     const hintId = 'section-' + sectionId;
-    const text = CONTEXT_HINTS[sectionId];
+    const text = contextHint(sectionId);
     host.querySelectorAll('.ui-guidance-hint').forEach((el) => el.remove());
     if (!text || isHintDismissed(hintId)) return;
     const wrap = document.createElement('div');
@@ -78628,9 +80821,9 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
         const sceneCount = hasProject ? Object.keys(Editor.data.scenes).length : 0;
         if (!Editor.data) {
           mountEmptyState(container, 'project', {
-            title: 'Нет открытого проекта',
-            explanation: 'Загрузите проект или создайте новый на стартовом экране.',
-            primaryLabel: 'Загрузить проект',
+            title: tr('editor.authorGuidance.noProject.title'),
+            explanation: tr('editor.authorGuidance.noProject.explanation'),
+            primaryLabel: tr('editor.authorGuidance.noProject.primaryLabel'),
             action: 'load-project'
           });
           const btn = container.querySelector('[data-guidance-action="load-project"]');
@@ -78708,14 +80901,12 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   }
 
   const AuthorGuidance = {
-    CONTEXT_HINTS,
-    EMPTY_STATES,
-    getEmptyStateDef(contextKey) {
-      return EMPTY_STATES[contextKey] ? Object.assign({}, EMPTY_STATES[contextKey]) : null;
-    },
-    getContextHint(contextKey) {
-      return CONTEXT_HINTS[contextKey] || '';
-    },
+    get CONTEXT_HINTS() { return getContextHints(); },
+    get EMPTY_STATES() { return getEmptyStates(); },
+    CONTEXT_HINT_KEYS,
+    EMPTY_STATE_KEYS,
+    getEmptyStateDef,
+    getContextHint: contextHint,
     buildEmptyStateHtml,
     mountEmptyState,
     renderGuidanceHintHtml,
@@ -79838,6 +82029,11 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
           if (m) advancedBody += m[0];
         } catch (e) { /* */ }
       }
+      if (!advancedBody.includes('insp8-raw-json')) {
+        try {
+          advancedBody += '<pre class="insp8-raw-json">' + esc(JSON.stringify(selected, null, 2)) + '</pre>';
+        } catch (e2) { /* */ }
+      }
     }
 
     return '<div class="visual-inspector insp8-inspector insp15-inspector" data-insp15="1">' +
@@ -80014,13 +82210,21 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   function applyPatches() {
     if (typeof Editor.buildVisualNodeInspectorHtml === 'function') {
       Editor._buildVisualNodeInspectorHtmlUi8 = Editor._buildVisualNodeInspectorHtmlUi8 ||
-        Editor.buildVisualNodeInspectorHtml;
-      Editor.buildVisualNodeInspectorHtml = buildVisualNodeInspectorV15;
+        Editor.buildVisualNodeInspectorHtml.bind(Editor);
+      if (Editor.hooks?.replace) {
+        Editor.hooks.replace('buildVisualNodeInspectorHtml', function buildVisualNodeInspectorHtmlV15(selected) {
+          return buildVisualNodeInspectorV15(selected);
+        }, 'editor-inspector-properties');
+      }
     }
     if (typeof Editor.buildGameUiNodeInspectorHtml === 'function') {
       Editor._buildGameUiNodeInspectorHtmlUi8 = Editor._buildGameUiNodeInspectorHtmlUi8 ||
-        Editor.buildGameUiNodeInspectorHtml;
-      Editor.buildGameUiNodeInspectorHtml = buildGameUiNodeInspectorV15;
+        Editor.buildGameUiNodeInspectorHtml.bind(Editor);
+      if (Editor.hooks?.replace) {
+        Editor.hooks.replace('buildGameUiNodeInspectorHtml', function buildGameUiNodeInspectorHtmlV15(selected) {
+          return buildGameUiNodeInspectorV15(selected);
+        }, 'editor-inspector-properties');
+      }
     }
     if (Editor.InspectorUI) {
       Object.assign(Editor.InspectorUI, {
@@ -81248,24 +83452,32 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 // ============================================================
 (function attachContentBrowserV2() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
   const IDX = typeof EditorContentIndex !== 'undefined' ? EditorContentIndex : null;
 
   const CATEGORIES = [
-    { id: 'scenes', indexId: 'scenes', label: 'Сцены', icon: '🎬', createType: 'scene', openType: 'scene' },
-    { id: 'quests', indexId: 'quests', label: 'Квесты', icon: '📜', createType: 'quest', openType: 'quest' },
-    { id: 'items', indexId: 'items', label: 'Предметы', icon: '🎒', createType: 'item', openType: 'item' },
-    { id: 'npcs', indexId: 'npcs', label: 'NPC', icon: '👤', createType: 'npc', openType: 'npc' },
-    { id: 'characters', indexId: 'player_characters', label: 'Герои', icon: '🎭', createType: 'player_character', openType: 'player_character' },
-    { id: 'combat', indexId: 'enemies', label: 'Бой', icon: '⚔', createType: 'enemy', openType: 'enemy' },
-    { id: 'game_ui', indexId: 'ui_screens', label: 'Игровой UI', icon: '🖥', createType: 'ui_screen', openType: 'ui_screen' },
-    { id: 'assets', indexId: 'assets', label: 'Ассеты', icon: '📦', createType: 'asset', openType: 'asset' }
+    { id: 'scenes', indexId: 'scenes', get label() { return tr('editor.contentBrowserV2.categories.scenes'); }, icon: '🎬', createType: 'scene', openType: 'scene' },
+    { id: 'quests', indexId: 'quests', get label() { return tr('editor.contentBrowserV2.categories.quests'); }, icon: '📜', createType: 'quest', openType: 'quest' },
+    { id: 'items', indexId: 'items', get label() { return tr('editor.contentBrowserV2.categories.items'); }, icon: '🎒', createType: 'item', openType: 'item' },
+    { id: 'npcs', indexId: 'npcs', get label() { return tr('editor.contentBrowserV2.categories.npcs'); }, icon: '👤', createType: 'npc', openType: 'npc' },
+    { id: 'characters', indexId: 'player_characters', get label() { return tr('editor.contentBrowserV2.categories.characters'); }, icon: '🎭', createType: 'player_character', openType: 'player_character' },
+    { id: 'combat', indexId: 'enemies', get label() { return tr('editor.contentBrowserV2.categories.combat'); }, icon: '⚔', createType: 'enemy', openType: 'enemy' },
+    { id: 'game_ui', indexId: 'ui_screens', get label() { return tr('editor.contentBrowserV2.categories.game_ui'); }, icon: '🖥', createType: 'ui_screen', openType: 'ui_screen' },
+    { id: 'assets', indexId: 'assets', get label() { return tr('editor.contentBrowserV2.categories.assets'); }, icon: '📦', createType: 'asset', openType: 'asset' }
   ];
 
   Editor._contentBrowserCategory = Editor._contentBrowserCategory || 'scenes';
   Editor._contentBrowserQuery = Editor._contentBrowserQuery || '';
+  Editor._sceneListQuery = Editor._sceneListQuery || '';
+  Editor._sceneListFilter = Editor._sceneListFilter || 'all';
+  Editor._sceneListSort = Editor._sceneListSort || 'title';
 
   function esc(s) {
     return typeof Editor.escapeHtml === 'function'
@@ -81372,11 +83584,11 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       : buildIndex();
     const hits = IDX.filterContentEntries(all, { category: 'all', query });
     if (!hits.length) {
-      return '<p class="hint cb-no-match">Ничего не найдено по запросу «' + esc(query) + '»</p>';
+      return '<p class="hint cb-no-match">' + esc(tr('editor.contentBrowserV2.search.noMatch', { query })) + '</p>';
     }
     return (
       '<div class="cb2-global-results">' +
-      '<div class="cb2-global-results__title hint">Результаты поиска (' + hits.length + ')</div>' +
+      '<div class="cb2-global-results__title hint">' + esc(tr('editor.contentBrowserV2.search.resultsTitle', { count: hits.length })) + '</div>' +
       hits.slice(0, 40).map((row) =>
         '<button type="button" class="cb2-row cb2-row--search" data-cb2-open="' + escAttr(row.type) +
         '" data-cb2-id="' + escAttr(row.id) + '" data-cb2-title="' + escAttr(row.title) + '">' +
@@ -81398,7 +83610,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     if (!recent.length) return '';
     return (
       '<div class="cb2-recent">' +
-      '<div class="cb2-recent__title hint">Недавно открыто</div>' +
+      '<div class="cb2-recent__title hint">' + esc(tr('editor.contentBrowserV2.recentTitle')) + '</div>' +
       recent.map((e) =>
         '<button type="button" class="cb2-recent__item" data-cb2-open="' + escAttr(e.type) +
         '" data-cb2-id="' + escAttr(e.id) + '" data-cb2-title="' + escAttr(e.title) + '">' +
@@ -81411,7 +83623,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   function renderCategoryNav(activeId) {
     const cats = visibleCategories();
     return (
-      '<nav class="cb2-cat-nav" aria-label="Категории контента">' +
+      '<nav class="cb2-cat-nav" aria-label="' + escAttr(tr('editor.contentBrowserV2.categoryNavAria')) + '">' +
       cats.map((cat) => {
         const n = getCategoryCount(cat);
         const active = cat.id === activeId ? ' is-active' : '';
@@ -81427,11 +83639,11 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   function renderEmptyProjectWelcome() {
     return (
       '<div class="cb-welcome empty-state cb-empty cb2-welcome" role="status">' +
-      '<h2>Welcome to your RPG project</h2>' +
-      '<p>Start with your first scene — quests, items, and visuals live here too.</p>' +
+      '<h2>' + esc(tr('editor.contentBrowserV2.welcome.title')) + '</h2>' +
+      '<p>' + esc(tr('editor.contentBrowserV2.welcome.body')) + '</p>' +
       '<div class="cb-welcome__actions">' +
-      '<button type="button" class="btn btn-primary btn-sm" data-cb2-create="scene">Create First Scene</button>' +
-      '<button type="button" class="btn btn-ghost btn-sm" data-cb2-template="1">Choose Template</button>' +
+      '<button type="button" class="btn btn-primary btn-sm" data-cb2-create="scene">' + esc(tr('editor.contentBrowserV2.welcome.createFirstScene')) + '</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-cb2-template="1">' + esc(tr('editor.contentBrowserV2.welcome.chooseTemplate')) + '</button>' +
       '</div></div>'
     );
   }
@@ -81451,7 +83663,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
   function renderCategoryList(catId) {
     const cat = categoryDef(catId);
-    if (!IDX) return '<p class="hint">Content index не загружен</p>';
+    if (!IDX) return '<p class="hint">' + esc(tr('editor.contentBrowserV2.indexNotLoaded')) + '</p>';
 
     if (catId === 'scenes') {
       return null;
@@ -81465,19 +83677,19 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
     if (!filtered.length) {
       const createLabel = {
-        quest: '+ Создать квест',
-        item: '+ Создать предмет',
-        npc: '+ Создать NPC',
-        player_character: '+ Создать героя',
-        enemy: '+ Создать врага',
-        ui_screen: '+ Создать UI-экран',
-        asset: '+ Добавить ассет'
-      }[cat.createType] || '+ Создать';
+        quest: tr('editor.contentBrowserV2.create.quest'),
+        item: tr('editor.contentBrowserV2.create.item'),
+        npc: tr('editor.contentBrowserV2.create.npc'),
+        player_character: tr('editor.contentBrowserV2.create.player_character'),
+        enemy: tr('editor.contentBrowserV2.create.enemy'),
+        ui_screen: tr('editor.contentBrowserV2.create.ui_screen'),
+        asset: tr('editor.contentBrowserV2.create.asset')
+      }[cat.createType] || tr('editor.contentBrowserV2.create.default');
       if (typeof Editor.AuthorGuidance !== 'undefined') {
         const wrap = document.createElement('div');
         Editor.renderAuthorEmptyState(wrap, 'content_category', {
-          title: 'Нет объектов',
-          explanation: 'Категория «' + (cat.label || '') + '» пуста. Создайте первый объект.',
+          title: tr('editor.contentBrowserV2.empty.noObjects'),
+          explanation: tr('editor.contentBrowserV2.empty.categoryEmpty', { label: cat.label || '' }),
           primaryLabel: createLabel,
           action: 'create-content',
           createType: cat.createType
@@ -81486,8 +83698,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       }
       return (
         '<div class="cb2-empty empty-state">' +
-        '<p class="cb2-empty__title">Нет объектов</p>' +
-        '<p class="hint">Категория «' + esc(cat.label) + '» пуста.</p>' +
+        '<p class="cb2-empty__title">' + esc(tr('editor.contentBrowserV2.empty.noObjects')) + '</p>' +
+        '<p class="hint">' + esc(tr('editor.contentBrowserV2.empty.categoryEmptyShort', { label: cat.label })) + '</p>' +
         '<button type="button" class="btn btn-primary btn-sm" data-cb2-create="' + escAttr(cat.createType) + '">' +
         esc(createLabel) + '</button></div>'
       );
@@ -81506,13 +83718,42 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     const cats = visibleCategories();
     return (
       '<div class="cb2-create-wrap">' +
-      '<button type="button" class="btn btn-primary btn-sm cb2-create-toggle" id="cb2-create-toggle">+ Create</button>' +
+      '<button type="button" class="btn btn-primary btn-sm cb2-create-toggle" id="cb2-create-toggle">' + esc(tr('editor.contentBrowserV2.create.toggle')) + '</button>' +
       '<div class="cb2-create-menu" id="cb2-create-menu" hidden>' +
       cats.map((cat) =>
         '<button type="button" data-cb2-create="' + escAttr(cat.createType) + '">' +
         esc(cat.icon + ' ' + cat.label) + '</button>'
       ).join('') +
       '</div></div>'
+    );
+  }
+
+  function renderSceneFiltersPanel() {
+    const filter = Editor._sceneListFilter || 'all';
+    const sort = Editor._sceneListSort || 'title';
+    const pills = [
+      { id: 'all', label: tr('editor.contentBrowserV2.sceneFilters.all') },
+      { id: 'text', label: tr('editor.contentBrowserV2.sceneFilters.text') },
+      { id: 'visual', label: tr('editor.contentBrowserV2.sceneFilters.visual') },
+      { id: 'mixed', label: tr('editor.contentBrowserV2.sceneFilters.mixed') }
+    ].map((p) =>
+      '<button type="button" class="cb-filter-pill' + (filter === p.id ? ' is-active' : '') +
+      '" data-cb-filter="' + escAttr(p.id) + '">' + esc(p.label) + '</button>'
+    ).join('');
+    const sortOpts = [
+      { id: 'title', label: tr('editor.contentBrowserV2.sceneFilters.sortTitle') },
+      { id: 'title_desc', label: tr('editor.contentBrowserV2.sceneFilters.sortTitleDesc') },
+      { id: 'kind', label: tr('editor.contentBrowserV2.sceneFilters.sortKind') }
+    ].map((o) =>
+      '<option value="' + escAttr(o.id) + '"' + (sort === o.id ? ' selected' : '') + '>' + esc(o.label) + '</option>'
+    ).join('');
+    return (
+      '<div id="cb2-scene-filters" class="cb2-scene-filters">' +
+      '<input type="search" id="cb-scene-search" class="cb-search" placeholder="' + escAttr(tr('editor.contentBrowserV2.sceneFilters.searchPlaceholder')) + '" ' +
+      'value="' + escAttr(Editor._sceneListQuery || '') + '" autocomplete="off" />' +
+      '<div class="cb-filter-row" role="group" aria-label="' + escAttr(tr('editor.contentBrowserV2.sceneFilters.filterAria')) + '">' + pills + '</div>' +
+      '<div class="cb-sort-row"><label class="hint" for="cb-scene-sort">' + esc(tr('editor.contentBrowserV2.sceneFilters.sortLabel')) + '</label>' +
+      '<select id="cb-scene-sort" class="cb-sort">' + sortOpts + '</select></div></div>'
     );
   }
 
@@ -81524,16 +83765,15 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 
     return (
       '<div class="cb2-browser-head">' +
-      '<div class="cb-browser-title">CONTENT</div>' +
+      '<div class="cb-browser-title">' + esc(tr('editor.contentBrowserV2.chrome.contentTitle')) + '</div>' +
       '<input type="search" id="cb2-global-search" class="cb-search cb2-global-search" ' +
-      'placeholder="🔍 Поиск по проекту…" value="' + escAttr(query) + '" autocomplete="off" />' +
+      'placeholder="' + escAttr(tr('editor.contentBrowserV2.chrome.globalSearchPlaceholder')) + '" value="' + escAttr(query) + '" autocomplete="off" />' +
       renderCategoryNav(cat) +
       '<div class="cb2-section-head">' +
       '<span class="cb2-section-head__title">' + esc(catDef.label) +
       (count ? ' <span class="hint">(' + count + ')</span>' : '') +
       '</span></div>' +
-      (cat === 'scenes' && typeof Editor.renderSceneContentBrowser === 'function'
-        ? '' : '') +
+      (cat === 'scenes' ? renderSceneFiltersPanel() : '') +
       '</div>'
     );
   }
@@ -81589,7 +83829,6 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
         }
         if (ev.target.id === 'cb-scene-search') {
           Editor._sceneListQuery = ev.target.value || '';
-          Editor._contentBrowserQuery = ev.target.value || '';
           if (typeof Editor.Perf?.debouncedSceneListRender === 'function') {
             Editor.Perf.debouncedSceneListRender();
           } else {
@@ -81629,44 +83868,6 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
           Editor.renderSceneList?.();
         }
       });
-    }
-
-    let sceneFilters = document.getElementById('cb2-scene-filters');
-    if (cat === 'scenes') {
-      if (!sceneFilters && typeof Editor.renderContentBrowserChrome === 'function') {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = (function () {
-          const filter = Editor._sceneListFilter || 'all';
-          const sort = Editor._sceneListSort || 'title';
-          const pills = [
-            { id: 'all', label: 'Все' },
-            { id: 'text', label: 'Text' },
-            { id: 'visual', label: 'Visual' },
-            { id: 'mixed', label: 'Mixed' }
-          ].map((p) =>
-            '<button type="button" class="cb-filter-pill' + (filter === p.id ? ' is-active' : '') +
-            '" data-cb-filter="' + escAttr(p.id) + '">' + esc(p.label) + '</button>'
-          ).join('');
-          const sortOpts = [
-            { id: 'title', label: 'По имени' },
-            { id: 'title_desc', label: 'Имя (Я→А)' },
-            { id: 'kind', label: 'По типу' }
-          ].map((o) =>
-            '<option value="' + escAttr(o.id) + '"' + (sort === o.id ? ' selected' : '') + '>' + esc(o.label) + '</option>'
-          ).join('');
-          return '<div id="cb2-scene-filters" class="cb2-scene-filters">' +
-            '<input type="search" id="cb-scene-search" class="cb-search" placeholder="🔍 Поиск сцен…" ' +
-            'value="' + escAttr(Editor._sceneListQuery || Editor._contentBrowserQuery || '') + '" />' +
-            '<div class="cb-filter-row">' + pills + '</div>' +
-            '<div class="cb-sort-row"><label class="hint">Сортировка</label>' +
-            '<select id="cb-scene-sort" class="cb-sort">' + sortOpts + '</select></div></div>';
-        })();
-        sceneFilters = tmp.firstElementChild;
-        chrome.appendChild(sceneFilters);
-      }
-      if (sceneFilters) sceneFilters.hidden = false;
-    } else if (sceneFilters) {
-      sceneFilters.hidden = true;
     }
 
     let footer = document.getElementById('cb-create-footer');
@@ -81818,15 +84019,15 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     bindBrowserListV2(list);
   }
 
-  const origOpenScene = Editor.openSceneFromContentBrowser;
-  if (typeof origOpenScene === 'function') {
-    Editor.openSceneFromContentBrowser = function openSceneFromBrowserV2(sceneId) {
+  if (typeof Editor.openSceneFromContentBrowser === 'function' && Editor.hooks?.replace) {
+    let savedPrevOpenScene;
+    savedPrevOpenScene = Editor.hooks.replace('openSceneFromContentBrowser', function openSceneFromBrowserV2(sceneId) {
       const scene = Editor.data?.scenes?.[sceneId];
       const title = scene?.location || scene?.title || sceneId;
-      const ok = origOpenScene.call(this, sceneId);
+      const ok = savedPrevOpenScene ? savedPrevOpenScene.call(this, sceneId) : false;
       if (ok) trackRecentOpen('scene', sceneId, title);
       return ok;
-    };
+    }, 'editor-content-browser-v2');
   }
 
   Object.assign(Editor, {
@@ -81852,9 +84053,9 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     }, 'editor-content-browser-v2');
   }
 
-  if (typeof Editor.openContentCategory === 'function') {
-    const origOpenCat = Editor.openContentCategory.bind(Editor);
-    Editor.openContentCategory = function openContentCategoryV2(categoryId) {
+  if (typeof Editor.openContentCategory === 'function' && Editor.hooks?.replace) {
+    let savedPrevOpenCat;
+    savedPrevOpenCat = Editor.hooks.replace('openContentCategory', function openContentCategoryV2(categoryId) {
       const map = {
         scenes: 'scenes',
         visual_scenes: 'scenes',
@@ -81870,8 +84071,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       Editor._contentBrowserCategory = cbCat;
       Editor.switchTab?.('scenes');
       Editor.renderSceneList?.();
-      return origOpenCat(categoryId);
-    };
+      return savedPrevOpenCat ? savedPrevOpenCat.call(this, categoryId) : undefined;
+    }, 'editor-content-browser-v2');
   }
 
   function ensureStyles() {
@@ -81911,6 +84112,13 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
         cursor: pointer; font-size: 12px; border-radius: 4px; }
       .cb2-create-menu button:hover { background: var(--highlight); }
       .cb2-scene-filters { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); }
+      .cb2-scene-filters .cb-search { width: 100%; font-size: 12px; padding: 5px 8px; margin-bottom: 6px; box-sizing: border-box; }
+      .cb2-scene-filters .cb-filter-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+      .cb2-scene-filters .cb-filter-pill { border: 1px solid var(--border); background: transparent; border-radius: 12px;
+        padding: 2px 8px; font-size: 11px; cursor: pointer; }
+      .cb2-scene-filters .cb-filter-pill.is-active { background: var(--highlight); font-weight: 600; }
+      .cb2-scene-filters .cb-sort-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+      .cb2-scene-filters .cb-sort { font-size: 11px; max-width: 140px; }
       #cb2-scenes-mount .cb-browser-chrome { display: none; }
       body.editor-app .cb2-browser-chrome ~ #pcm-chrome,
       body.editor-app #cb-browser-chrome.cb2-browser-chrome ~ #pcm-chrome,
@@ -81943,6 +84151,11 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 // ============================================================
 (function attachUiIntegration() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') return;
 
   function markUi12Active() {
@@ -81981,7 +84194,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   Editor.openVisualSceneEditor = function openVisualSceneEditor(sceneId) {
     const sid = sceneId || Editor.currentScene;
     if (!sid) {
-      Editor.toast?.warning?.('Выберите сцену');
+      Editor.toast?.warning?.(tr('editor.uiIntegration.selectScene'));
       return false;
     }
     const ok = openSceneWorkspaceSection(sid, 'visual');
@@ -81990,14 +84203,19 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   };
 
   /** Legacy alias — Scene Workspace → Game UI section or tab */
-  Editor.openGameUiEditor = function openGameUiEditor() {
+  function openGameUiEditorUi12() {
     if (Editor.currentScene && typeof Editor.setSceneWorkspaceSection === 'function') {
       Editor.setSceneWorkspaceSection('game_ui');
       return true;
     }
     if (typeof Editor.switchTab === 'function') Editor.switchTab('game_ui');
     return true;
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('openGameUiEditor', openGameUiEditorUi12, 'editor-ui-integration');
+  } else if (typeof Editor.openGameUiEditor !== 'function') {
+    Editor.openGameUiEditor = openGameUiEditorUi12;
+  }
 
   /** Navigate validation issue → workspace section */
   Editor.openValidationIssueInWorkspace = function openValidationIssueInWorkspace(issue) {
@@ -82024,9 +84242,9 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   };
 
   function wrapFocusSceneAfterWizard() {
-    if (typeof Editor.focusSceneAfterWizard !== 'function' || Editor._ui12FocusWrapped) return;
-    const orig = Editor.focusSceneAfterWizard.bind(Editor);
-    Editor.focusSceneAfterWizard = function focusSceneAfterWizardUi12(presetId) {
+    if (typeof Editor.focusSceneAfterWizard !== 'function' || Editor._ui12FocusWrapped || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('focusSceneAfterWizard', function focusSceneAfterWizardUi12(presetId) {
       if (presetId === 'visual' && typeof Editor.setSceneWorkspaceSection === 'function') {
         const sc = Editor.data?.scenes?.[Editor.currentScene];
         if (sc && !sc.visual) sc.visual = { mode: 'overlay', nodes: [] };
@@ -82034,8 +84252,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
         Editor.renderVisualScenePanel?.();
         return;
       }
-      return orig(presetId);
-    };
+      return savedPrev ? savedPrev.call(this, presetId) : undefined;
+    }, 'editor-ui-integration');
     Editor._ui12FocusWrapped = true;
   }
 
@@ -82098,9 +84316,14 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 // ============================================================
 (function attachProductHardening() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
   if (typeof Editor === 'undefined') return;
 
-  function computeProjectContentEmpty() {
+  function fallbackIsProjectContentEmpty() {
     if (!Editor.data) return true;
     const d = Editor.data;
     const counts = [
@@ -82114,23 +84337,21 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     return counts.every((n) => n === 0);
   }
 
+  function projectHasNoContent() {
+    if (!Editor.data) return true;
+    if (typeof Editor.isProjectContentEmpty === 'function') return Editor.isProjectContentEmpty();
+    return fallbackIsProjectContentEmpty();
+  }
+
   /** Unified template entry — starter project vs scene template */
   Editor.openProjectTemplatePicker = function openProjectTemplatePicker() {
-    if (!Editor.data || computeProjectContentEmpty()) {
+    if (!Editor.data || projectHasNoContent()) {
       if (typeof Editor.openNewProjectModal === 'function') return Editor.openNewProjectModal();
     }
     if (typeof Editor.openCreateSceneModal === 'function') return Editor.openCreateSceneModal();
     if (typeof Editor.openSceneWizard === 'function') return Editor.openSceneWizard();
-    Editor.toast?.info?.('Шаблоны недоступны');
+    Editor.toast?.info?.(tr('editor.productHardening.templatesUnavailable'));
     return false;
-  };
-
-  /** Legacy alias — scene creation goes through canonical wizard */
-  Editor.openTemplateSceneModal = function openTemplateSceneModalRedirect() {
-    if (!Editor.data || computeProjectContentEmpty()) {
-      if (typeof Editor.openNewProjectModal === 'function') return Editor.openNewProjectModal();
-    }
-    return Editor.openSceneWizard();
   };
 
   function markLegacyNavHidden() {
@@ -82147,7 +84368,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   function syncEmptyProjectShell() {
     if (typeof document === 'undefined' || !document.body) return;
     const noProject = !Editor.data;
-    const empty = !!Editor.data && computeProjectContentEmpty();
+    const empty = !!Editor.data && projectHasNoContent();
     document.body.dataset.ui24NoProject = noProject ? '1' : '0';
     document.body.dataset.ui24EmptyProject = empty ? '1' : '0';
     const startScreen = document.getElementById('start-screen');
@@ -82178,11 +84399,12 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   }
 
   function wrapLegacyEntry(name, redirect) {
-    if (typeof Editor[name] !== 'function' || Editor['_ui24' + name]) return;
-    const orig = Editor[name].bind(Editor);
-    Editor[name] = function ui24Redirect() {
-      return redirect.apply(this, arguments) ?? orig.apply(this, arguments);
-    };
+    if (typeof Editor[name] !== 'function' || Editor['_ui24' + name] || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace(name, function ui24Redirect(...args) {
+      const redirected = redirect.apply(this, args);
+      return redirected !== undefined ? redirected : (savedPrev ? savedPrev.apply(this, args) : undefined);
+    }, 'editor-product-hardening');
     Editor['_ui24' + name] = true;
   }
 
@@ -82193,11 +84415,10 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       wrapLegacyEntry('openExportMenu', function () { return Editor.openExportSurface(); });
     }
     if (typeof Editor.openProjectSearch === 'function' && typeof Editor.openCommandPalette === 'function') {
-      const origSearch = Editor.openProjectSearch.bind(Editor);
-      Editor.openProjectSearch = function openProjectSearchUi24(prefill) {
+      Editor.hooks.replace('openProjectSearch', function openProjectSearchUi24(prefill) {
         return Editor.openCommandPalette(prefill);
-      };
-      Editor._ui24OpenProjectSearch = origSearch;
+      }, 'editor-product-hardening');
+      Editor._ui24openProjectSearch = true;
     }
   }
 
@@ -82227,11 +84448,12 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     }
   }
 
-  Editor.isProjectContentEmpty = computeProjectContentEmpty;
+  if (typeof Editor.isProjectContentEmpty !== 'function') {
+    Editor.isProjectContentEmpty = fallbackIsProjectContentEmpty;
+  }
 
   if (Editor.hooks?.register) {
     Editor.hooks.register('editor-product-hardening', {
-      isProjectContentEmpty: computeProjectContentEmpty,
       openProjectTemplatePicker: Editor.openProjectTemplatePicker,
       syncEmptyProjectShell
     }, { force: true });
@@ -83956,33 +86178,56 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
 // ============================================================
 (function attachCommandPaletteV2() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined' || !Editor.commands) return;
 
   const Commands = Editor.commands;
 
-  const CATEGORIES = Object.freeze({
-    navigation: 'Навигация',
-    create: 'Создание',
-    project: 'Проект',
-    preview: 'Превью',
-    validation: 'Проверка',
-    export: 'Экспорт',
-    objects: 'Объекты',
-    recent: 'Недавние'
+  const CATEGORY_KEYS = Object.freeze({
+    navigation: 'editor.commandPaletteV2.categories.navigation',
+    create: 'editor.commandPaletteV2.categories.create',
+    project: 'editor.commandPaletteV2.categories.project',
+    preview: 'editor.commandPaletteV2.categories.preview',
+    validation: 'editor.commandPaletteV2.categories.validation',
+    export: 'editor.commandPaletteV2.categories.export',
+    objects: 'editor.commandPaletteV2.categories.objects',
+    recent: 'editor.commandPaletteV2.categories.recent'
   });
 
-  const TYPE_LABELS = Object.freeze({
-    scene: 'Сцена',
-    visual_scene: 'Сцена',
-    quest: 'Квест',
-    item: 'Предмет',
-    npc: 'NPC',
-    player_character: 'Герой',
-    enemy: 'Враг',
-    ui_screen: 'Game UI',
-    asset: 'Ассет'
+  const TYPE_LABEL_KEYS = Object.freeze({
+    scene: 'editor.commandPaletteV2.typeLabels.scene',
+    visual_scene: 'editor.commandPaletteV2.typeLabels.visual_scene',
+    quest: 'editor.commandPaletteV2.typeLabels.quest',
+    item: 'editor.commandPaletteV2.typeLabels.item',
+    npc: 'editor.commandPaletteV2.typeLabels.npc',
+    player_character: 'editor.commandPaletteV2.typeLabels.player_character',
+    enemy: 'editor.commandPaletteV2.typeLabels.enemy',
+    ui_screen: 'editor.commandPaletteV2.typeLabels.ui_screen',
+    asset: 'editor.commandPaletteV2.typeLabels.asset'
   });
+
+  const CATEGORIES = {};
+  Object.keys(CATEGORY_KEYS).forEach((id) => {
+    Object.defineProperty(CATEGORIES, id, {
+      get() { return tr(CATEGORY_KEYS[id]); },
+      enumerable: true
+    });
+  });
+  Object.freeze(CATEGORIES);
+
+  const TYPE_LABELS = {};
+  Object.keys(TYPE_LABEL_KEYS).forEach((id) => {
+    Object.defineProperty(TYPE_LABELS, id, {
+      get() { return tr(TYPE_LABEL_KEYS[id]); },
+      enumerable: true
+    });
+  });
+  Object.freeze(TYPE_LABELS);
 
   function safe(fn) {
     return function () {
@@ -84100,7 +86345,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       if (item.group === 'objects' && item.title && !item.subtitle) {
         const m = String(item.id || '').match(/^entity:([^:]+):/);
         const kind = m ? m[1] : item.kind;
-        item.subtitle = TYPE_LABELS[kind] || item.kind || 'Объект';
+        item.subtitle = TYPE_LABELS[kind] || item.kind || tr('editor.commandPaletteV2.defaultObject');
       }
       if (item.group === 'recent') item.category = CATEGORIES.recent;
       if (item.group === 'objects') item.category = CATEGORIES.objects;
@@ -84122,7 +86367,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
   Commands.registerMany([
     {
       id: 'nav.go_scene',
-      title: 'Перейти к сцене',
+      title: tr('editor.commandPaletteV2.commands.goScene'),
       category: CATEGORIES.navigation,
       keywords: ['go', 'scene', 'сцена', 'goto'],
       action: safe(function () {
@@ -84137,7 +86382,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'nav.content_browser',
-      title: 'Открыть Content Browser',
+      title: tr('editor.commandPaletteV2.commands.contentBrowser'),
       category: CATEGORIES.navigation,
       keywords: ['content', 'browser', 'контент', 'список'],
       action: safe(function () {
@@ -84147,7 +86392,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'nav.project_graph',
-      title: 'Открыть карту сюжета',
+      title: tr('editor.commandPaletteV2.commands.projectGraph'),
       category: CATEGORIES.navigation,
       keywords: ['graph', 'story', 'граф', 'сюжет'],
       action: safe(function () {
@@ -84156,7 +86401,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'ui16.create.scene',
-      title: 'Создать сцену',
+      title: tr('editor.commandPaletteV2.commands.createScene'),
       category: CATEGORIES.create,
       keywords: ['create', 'scene', 'новая сцена'],
       action: safe(function () {
@@ -84166,7 +86411,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'ui16.create.item',
-      title: 'Создать предмет',
+      title: tr('editor.commandPaletteV2.commands.createItem'),
       category: CATEGORIES.create,
       keywords: ['create', 'item', 'предмет'],
       action: safe(function () {
@@ -84180,7 +86425,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'ui16.create.quest',
-      title: 'Создать квест',
+      title: tr('editor.commandPaletteV2.commands.createQuest'),
       category: CATEGORIES.create,
       keywords: ['create', 'quest', 'квест'],
       action: safe(function () {
@@ -84195,7 +86440,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'ui16.validate.project',
-      title: 'Проверить проект',
+      title: tr('editor.commandPaletteV2.commands.projectValidate'),
       category: CATEGORIES.validation,
       keywords: ['validate', 'lint', 'проверка', 'ошибки'],
       action: safe(function () {
@@ -84206,7 +86451,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'ui16.preview.project',
-      title: 'Превью проекта',
+      title: tr('editor.commandPaletteV2.commands.previewProject'),
       category: CATEGORIES.preview,
       keywords: ['preview', 'play', 'test', 'превью', 'тест'],
       action: safe(function () {
@@ -84219,7 +86464,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     },
     {
       id: 'ui16.export.project',
-      title: 'Экспорт проекта',
+      title: tr('editor.commandPaletteV2.commands.exportProject'),
       category: CATEGORIES.export,
       keywords: ['export', 'save', 'экспорт', 'сохранить'],
       action: safe(function () {
@@ -84262,8 +86507,8 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
     }
   });
 
-  if (typeof Editor.openProjectSearch === 'function') {
-    Editor.openProjectSearch = function openProjectSearchViaPalette(prefill) {
+  if (typeof Editor.openProjectSearch === 'function' && Editor.hooks?.replace) {
+    Editor.hooks.replace('openProjectSearch', function openProjectSearchViaPalette(prefill) {
       if (typeof Editor.openCommandPalette === 'function') {
         Editor.openCommandPalette(prefill);
         return;
@@ -84271,7 +86516,7 @@ if (typeof window !== 'undefined') window.DEMO_MVP_PROOF_DATA = DEMO_MVP_PROOF_D
       Editor._searchOpen = true;
       Editor._searchQuery = prefill != null ? String(prefill) : '';
       Editor.renderProjectSearchModal?.();
-    };
+    }, 'editor-command-palette-v2');
   }
 
   Editor.getCommandPaletteCategories = function () {

@@ -29,8 +29,8 @@ const keys = read('js/editor-test-keys.js');
 const style = read('css/style.css');
 
 assert(html.includes('editor-preview-workflow.js'), 'preview workflow wired');
-assert(epw.includes('Play Current Scene'), 'unified preview menu current scene');
-assert(epw.includes('Play From Project Start'), 'unified preview menu project start');
+assert(epw.includes('editor.previewWorkflow.playCurrentScene'), 'unified preview menu current scene');
+assert(epw.includes('editor.previewWorkflow.playFromStart'), 'unified preview menu project start');
 assert(epw.includes('openPreviewMenu'), 'openPreviewMenu API');
 assert(epw.includes('normalizePreviewMode'), 'mode normalization API');
 assert(epw.includes("mode === 'project'"), 'project mode alias to start');

@@ -4,39 +4,34 @@
 // ============================================================
 (function attachValidatorNavigation() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
   if (typeof Editor === 'undefined') return;
 
-  const ISSUE_TITLES = Object.freeze({
-    missing_scene: 'Broken Scene Link',
-    broken_transition: 'Broken Scene Link',
-    element_missing_scene: 'Broken Scene Link',
-    missing_item: 'Missing Item Reference',
-    missing_quest: 'Missing Quest Reference',
-    missing_npc: 'Missing Character Reference',
-    missing_enemy: 'Missing Enemy Reference',
-    missing_asset_ref: 'Missing Asset',
-    missing_asset_src: 'Empty Asset Source',
-    empty_asset: 'Empty Asset',
-    unknown_action: 'Unknown Action',
-    action_not_in_catalog: 'Unknown Action',
-    missing_action_id: 'Invalid Action',
-    malformed_action: 'Malformed Action',
-    action_js_call: 'Unsafe Action',
-    missing_action_param: 'Incomplete Action',
-    malformed_condition: 'Invalid Condition',
-    invalid_quest_stage: 'Invalid Quest Stage',
-    invalid_amount: 'Invalid Number',
-    invalid_combat_params: 'Invalid Combat Setup',
-    no_scenes: 'No Scenes',
-    empty_scene: 'Empty Scene',
-    orphan_scene: 'Unreachable Scene',
-    unreachable_scene: 'Unreachable Scene',
-    duplicate_id: 'Duplicate ID',
-    npc_no_description: 'Missing NPC Description',
-    export_no_scenes: 'Export Blocked',
-    export_old_data_version: 'Outdated Data Version',
-    macro_id_in_json: 'Macro in JSON'
-  });
+  const ISSUE_TITLE_TYPES = Object.freeze([
+    'missing_scene', 'broken_transition', 'element_missing_scene', 'missing_item', 'missing_quest',
+    'missing_npc', 'missing_enemy', 'missing_asset_ref', 'missing_asset_src', 'empty_asset',
+    'unknown_action', 'action_not_in_catalog', 'missing_action_id', 'malformed_action', 'action_js_call',
+    'missing_action_param', 'malformed_condition', 'invalid_quest_stage', 'invalid_amount',
+    'invalid_combat_params', 'no_scenes', 'empty_scene', 'orphan_scene', 'unreachable_scene',
+    'duplicate_id', 'npc_no_description', 'export_no_scenes', 'export_old_data_version', 'macro_id_in_json'
+  ]);
+
+  function issueTitle(type) {
+    return tr('editor.validatorNavigation.issueTitles.' + type);
+  }
+
+  function getIssueTitles() {
+    const out = {};
+    ISSUE_TITLE_TYPES.forEach((type) => {
+      out[type] = issueTitle(type);
+    });
+    return Object.freeze(out);
+  }
 
   function esc(s) {
     return typeof Editor.escapeHtml === 'function' ? Editor.escapeHtml(s) : String(s ?? '');
@@ -68,25 +63,17 @@
   }
 
   function sectionLabel(sectionId) {
-    const map = {
-      content: 'Content',
-      choices: 'Choices',
-      visual: 'Visual',
-      conditions: 'Conditions',
-      game_ui: 'Game UI',
-      advanced: 'Advanced'
-    };
-    return map[sectionId] || sectionId || '';
+    return tr('editor.validatorNavigation.sections.' + sectionId) || sectionId || '';
   }
 
   function getIssueTitle(issue) {
     if (issue.title) return issue.title;
     const raw = issue.raw || issue;
     const type = raw.type || issue.type;
-    if (type && ISSUE_TITLES[type]) return ISSUE_TITLES[type];
-    if (issue.severity === 'warning') return 'Warning';
-    if (issue.severity === 'info') return 'Suggestion';
-    return 'Validation Issue';
+    if (type && ISSUE_TITLE_TYPES.includes(type)) return issueTitle(type);
+    if (issue.severity === 'warning') return tr('editor.validatorNavigation.severity.warning');
+    if (issue.severity === 'info') return tr('editor.validatorNavigation.severity.info');
+    return tr('editor.validatorNavigation.severity.default');
   }
 
   function getIssueDescription(issue, data) {
@@ -101,28 +88,32 @@
     if ((type === 'missing_scene' || type === 'broken_transition' || type === 'element_missing_scene') && targetId) {
       const choiceIdx = raw.choiceIndex ?? issue.choiceIndex ?? pathCtx.choiceIndex;
       const scene = data?.scenes?.[sceneId || pathCtx.sceneId];
-      let trigger = 'element';
+      let trigger = tr('editor.validatorNavigation.descriptions.triggerElement');
       if (choiceIdx != null && scene?.choices?.[choiceIdx]) {
-        trigger = 'button "' + (scene.choices[choiceIdx].text || ('Choice ' + (choiceIdx + 1))) + '"';
+        trigger = tr('editor.validatorNavigation.descriptions.triggerButton', {
+          text: scene.choices[choiceIdx].text || tr('editor.validatorNavigation.descriptions.choiceFallback', { n: choiceIdx + 1 })
+        });
       } else if (pathCtx.nodeId) {
         const node = (scene?.visual?.nodes || []).find((n) => n.id === pathCtx.nodeId);
-        trigger = 'object "' + (node?.label || pathCtx.nodeId) + '"';
+        trigger = tr('editor.validatorNavigation.descriptions.triggerObject', {
+          label: node?.label || pathCtx.nodeId
+        });
       }
-      return 'The ' + trigger + ' points to a scene that does not exist (' + targetId + ').';
+      return tr('editor.validatorNavigation.descriptions.brokenSceneLink', { trigger, targetId });
     }
     if (type === 'missing_item' && (raw.entityId || targetId)) {
-      return 'An action references item "' + (raw.entityId || targetId) + '" which is not in the project.';
+      return tr('editor.validatorNavigation.descriptions.missingItem', { id: raw.entityId || targetId });
     }
     if (type === 'missing_npc' && (raw.entityId || targetId)) {
-      return 'An action references character "' + (raw.entityId || targetId) + '" which is not in the project.';
+      return tr('editor.validatorNavigation.descriptions.missingNpc', { id: raw.entityId || targetId });
     }
     if (type === 'missing_enemy' && (raw.entityId || targetId)) {
-      return 'An action references enemy "' + (raw.entityId || targetId) + '" which is not in the project.';
+      return tr('editor.validatorNavigation.descriptions.missingEnemy', { id: raw.entityId || targetId });
     }
     if (type === 'empty_scene') {
-      return 'This scene has no text, choices, or visual content for the player.';
+      return tr('editor.validatorNavigation.descriptions.emptyScene');
     }
-    return message || 'Review this issue in the editor.';
+    return message || tr('editor.validatorNavigation.descriptions.reviewIssue');
   }
 
   function getIssueLocation(issue, data) {
@@ -131,6 +122,7 @@
     const pathCtx = parseJsonPath(raw.path || issue.path || '');
     const sceneId = raw.sceneId || issue.sceneId || issue.object?.id || pathCtx.sceneId;
     const parts = [];
+    const locSep = tr('editor.validatorNavigation.locationSep');
 
     if (sceneId) parts.push(sceneLabel(data, sceneId));
     const section = issue.section || pathCtx.section
@@ -147,13 +139,13 @@
 
     if (sectionId) {
       let loc = sectionLabel(sectionId);
-      if (pathCtx.nodeId) loc += ' → ' + pathCtx.nodeId;
+      if (pathCtx.nodeId) loc += locSep + pathCtx.nodeId;
       else if (pathCtx.choiceIndex != null) {
         const scene = data?.scenes?.[sceneId];
         const ch = scene?.choices?.[pathCtx.choiceIndex];
-        loc += ' → ' + (ch?.text || ('Choice ' + (pathCtx.choiceIndex + 1)));
+        loc += locSep + (ch?.text || tr('editor.validatorNavigation.descriptions.choiceFallback', { n: pathCtx.choiceIndex + 1 }));
       } else if (issue.path) {
-        loc += ' → ' + issue.path;
+        loc += locSep + issue.path;
       }
       parts.push(loc);
     } else if (issue.path) {
@@ -173,6 +165,7 @@
     const sceneId = raw.sceneId || issue.sceneId || pathCtx.sceneId;
     const entityType = raw.entityType || issue.object?.type;
     const entityId = raw.entityId || issue.object?.id;
+    const openAndFixLabel = tr('editor.validatorNavigation.actions.openAndFix'); // Open and Fix
 
     const openSceneFn = () => {
       if (typeof Editor.openValidationIssueInWorkspace === 'function') {
@@ -189,13 +182,13 @@
     };
 
     if (sceneId && (entityType === 'scene' || raw.type?.includes('scene') || pathCtx.sceneId)) {
-      issue.action = { label: 'Open and Fix', run: openSceneFn };
+      issue.action = { label: openAndFixLabel, run: openSceneFn };
       return issue;
     }
     if (entityType === 'quest' || raw.questId) {
       const qid = raw.questId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('quests');
           if (typeof Editor.selectQuestToEdit === 'function') Editor.selectQuestToEdit(qid);
@@ -206,7 +199,7 @@
     if (entityType === 'npc' || raw.npcId) {
       const nid = raw.npcId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('npcs');
           if (typeof Editor.selectNpcToEdit === 'function') Editor.selectNpcToEdit(nid);
@@ -217,7 +210,7 @@
     if (entityType === 'item' || raw.itemId) {
       const iid = raw.itemId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('items');
           if (typeof Editor.selectItemToEdit === 'function') Editor.selectItemToEdit(iid);
@@ -228,7 +221,7 @@
     if (entityType === 'enemy' || raw.enemyId) {
       const eid = raw.enemyId || entityId;
       issue.action = {
-        label: 'Open and Fix',
+        label: openAndFixLabel,
         run: () => {
           if (typeof Editor.switchTab === 'function') Editor.switchTab('enemies');
           if (typeof Editor.selectEnemyToEdit === 'function') Editor.selectEnemyToEdit(eid);
@@ -238,7 +231,7 @@
     }
     if (raw.tab) {
       issue.action = {
-        label: 'Open',
+        label: tr('editor.validatorNavigation.actions.open'),
         run: () => { if (typeof Editor.switchTab === 'function') Editor.switchTab(raw.tab); }
       };
     }
@@ -252,7 +245,7 @@
     issue.description = getIssueDescription(issue, data);
     issue.location = getIssueLocation(issue, data);
     if (issue.action && !issue.fixable && issue.action.label === 'Открыть') {
-      issue.action.label = 'Open and Fix';
+      issue.action.label = tr('editor.validatorNavigation.actions.openAndFix');
     }
     return issue;
   }
@@ -263,8 +256,9 @@
       ? iss.actions
       : (iss.action ? [iss.action] : []);
     const primary = acts[0];
+    const openAndFixLabel = tr('editor.validatorNavigation.actions.openAndFix'); // Open and Fix
     const primaryLabel = primary
-      ? (primary.label === 'Открыть' || primary.label === 'Исправить' ? 'Open and Fix' : primary.label)
+      ? (primary.label === 'Открыть' || primary.label === 'Исправить' ? openAndFixLabel : primary.label)
       : '';
     const actionBtns = primary
       ? '<button type="button" class="btn btn-primary btn-sm" data-issue-action="' + idx + '" data-action-i="0">' +
@@ -272,11 +266,12 @@
       : '';
     const extraBtns = acts.slice(1).map((a, ai) =>
       '<button type="button" class="btn btn-secondary btn-sm" data-issue-action="' + idx + '" data-action-i="' + (ai + 1) + '">' +
-      esc(a.label || 'Open') + '</button>'
+      esc(a.label || tr('editor.validatorNavigation.actions.open')) + '</button>'
     ).join('');
+    const autoFixLabel = tr('editor.validatorNavigation.actions.autoFix');
     const fixBtn = iss.fixable && typeof iss.fix === 'function'
       ? '<button type="button" class="btn btn-secondary btn-sm" data-issue-fix="' + idx + '" title="' +
-        esc(iss.fixPreview || 'Auto-fix') + '">Auto-fix</button>'
+        esc(iss.fixPreview || autoFixLabel) + '">' + esc(autoFixLabel) + '</button>'
       : '';
     const locationHtml = iss.location
       ? '<div class="pv-issue-location">' + esc(iss.location).replace(/\n/g, '<br>') + '</div>'
@@ -289,7 +284,7 @@
       '<div class="pv-issue-title">' + esc(iss.title || getIssueTitle(iss)) + '</div>' +
       '<div class="pv-issue-desc">' + esc(iss.description || iss.message) + '</div>' +
       locationHtml +
-      (iss.fixPreview ? '<div class="pv-issue-path">Auto-fix: ' + esc(iss.fixPreview) + '</div>' : '') +
+      (iss.fixPreview ? '<div class="pv-issue-path">' + esc(tr('editor.validatorNavigation.modal.autoFixPreview', { preview: iss.fixPreview })) + '</div>' : '') +
       '<div class="pv-issue-actions">' + actionBtns + extraBtns + fixBtn + '</div>' +
       '</div></li>';
   }
@@ -308,12 +303,13 @@
     }
 
     if (!items.length) {
-      return '<ul class="pv-issue-list"><li class="pv-issue pv-issue--ok"><div class="pv-issue-body">✓ No issues found</div></li></ul>';
+      return '<ul class="pv-issue-list"><li class="pv-issue pv-issue--ok"><div class="pv-issue-body">✓ ' +
+        esc(tr('editor.validatorNavigation.groups.noIssues')) + '</div></li></ul>';
     }
 
-    return groupBlock('ERRORS', errors, 'error') +
-      groupBlock('WARNINGS', warnings, 'warning') +
-      groupBlock('INFO', infos, 'info');
+    return groupBlock(tr('editor.validatorNavigation.groups.errors'), errors, 'error') + // ERRORS
+      groupBlock(tr('editor.validatorNavigation.groups.warnings'), warnings, 'warning') + // WARNINGS
+      groupBlock(tr('editor.validatorNavigation.groups.info'), infos, 'info');
   }
 
   function bindValidationModal(modal, items) {
@@ -349,7 +345,7 @@
           try {
             iss.fix();
             Editor.updateJSONPreview?.();
-            Editor.toast?.success?.('Fixed');
+            Editor.toast?.success?.(tr('editor.validatorNavigation.actions.fixed'));
             Editor.runProjectValidation();
           } catch (err) {
             Editor.toast?.error?.(String(err.message || err));
@@ -360,10 +356,10 @@
   }
 
   function patchCollectProjectIssues() {
-    if (!Editor.collectProjectIssues || Editor._validatorNavCollectPatched) return;
-    const orig = Editor.collectProjectIssues.bind(Editor);
-    Editor.collectProjectIssues = function collectProjectIssuesNav() {
-      const result = orig();
+    if (!Editor.collectProjectIssues || Editor._validatorNavCollectHooked || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('collectProjectIssues', function collectProjectIssuesNav() {
+      const result = savedPrev.call(this);
       const data = this.data;
       result.issues = (result.issues || []).map((iss) => enrichProjectIssue(iss, data));
       result.errors = result.issues.filter((i) => i.severity === 'error');
@@ -372,14 +368,13 @@
       result.ok = result.errors.length === 0;
       this._lastProjectIssues = result;
       return result;
-    };
-    Editor._validatorNavCollectPatched = true;
+    }, 'editor-validator-navigation');
+    Editor._validatorNavCollectHooked = true;
   }
 
   function patchShowProjectValidationResults() {
-    if (!Editor.showProjectValidationResults || Editor._validatorNavShowPatched) return;
-    const orig = Editor.showProjectValidationResults.bind(Editor);
-    Editor.showProjectValidationResults = function showProjectValidationResultsNav(result) {
+    if (!Editor.showProjectValidationResults || Editor._validatorNavShowHooked || !Editor.hooks?.replace) return;
+    Editor.hooks.replace('showProjectValidationResults', function showProjectValidationResultsNav(result) {
       result = result || Editor.collectProjectIssues();
       const data = Editor.data;
       const items = (result.issues || []).map((iss) => enrichProjectIssue(iss, data));
@@ -404,78 +399,31 @@
         '<div class="editor-modal-backdrop" data-pv-close="1"></div>' +
         '<div class="editor-modal-panel editor-modal-panel--wide pv-modal-panel">' +
         '<div class="quest-detail-head">' +
-        '<h2>Project Validation</h2>' +
+        '<h2>' + esc(tr('editor.validatorNavigation.modal.title')) + '</h2>' +
         '<button type="button" class="btn-remove" data-pv-close="1">×</button>' +
         '</div>' +
         '<div class="pv-summary">' +
-        '<span class="pv-count pv-count--error">ERRORS ' + result.errors.length + '</span>' +
-        '<span class="pv-count pv-count--warning">WARNINGS ' + result.warnings.length + '</span>' +
-        (infoCount ? '<span class="pv-count pv-count--info">INFO ' + infoCount + '</span>' : '') +
+        '<span class="pv-count pv-count--error">' + esc(tr('editor.validatorNavigation.modal.summaryErrors', { count: result.errors.length })) + '</span>' +
+        '<span class="pv-count pv-count--warning">' + esc(tr('editor.validatorNavigation.modal.summaryWarnings', { count: result.warnings.length })) + '</span>' +
+        (infoCount ? '<span class="pv-count pv-count--info">' + esc(tr('editor.validatorNavigation.modal.summaryInfo', { count: infoCount })) + '</span>' : '') +
         '</div>' +
         listHtml +
         '<div class="pv-footer">' +
-        '<button type="button" class="btn btn-secondary" data-pv-close="1">Close</button>' +
-        '<button type="button" class="btn btn-secondary" data-pv-recheck="1">Re-check</button>' +
+        '<button type="button" class="btn btn-secondary" data-pv-close="1">' + esc(tr('editor.validatorNavigation.modal.close')) + '</button>' +
+        '<button type="button" class="btn btn-secondary" data-pv-recheck="1">' + esc(tr('editor.validatorNavigation.modal.recheck')) + '</button>' +
         '<button type="button" class="btn btn-primary" data-pv-fixall="1"' +
-        (fixableCount ? '' : ' disabled') + '>Auto-fix safe issues (' + fixableCount + ')</button>' +
+        (fixableCount ? '' : ' disabled') + '>' + esc(tr('editor.validatorNavigation.modal.autoFixSafe', { count: fixableCount })) + '</button>' +
         '</div></div>';
       modal.classList.remove('hidden');
       bindValidationModal(modal, items);
-    };
-    Editor._validatorNavShowPatched = true;
-  }
-
-  function patchExportGuard() {
-    if (!Editor.guardExportWithValidation || Editor._validatorNavExportPatched) return;
-    const orig = Editor.guardExportWithValidation.bind(Editor);
-    Editor.guardExportWithValidation = function guardExportWithValidationNav(opts) {
-      opts = opts || {};
-      const result = this.validateProjectExportReady();
-      this._lastExportValidation = result;
-      if (result.ok) return true;
-      if (opts.force) return true;
-
-      const errCount = result.errors.length;
-      const warnCount = result.warnings.length;
-
-      if (typeof this.refreshValidationUI === 'function') {
-        try { this.refreshValidationUI(); } catch (e) { /* */ }
-      }
-
-      if (errCount > 0) {
-        if (typeof this.showProjectValidationResults === 'function') {
-          const normalized = (result.issues || []).map((iss) => {
-            const n = typeof Editor.ValidatorNav?.enrichIssue === 'function'
-              ? Editor.ValidatorNav.enrichIssue(iss, this.data)
-              : iss;
-            return n;
-          });
-          this.showProjectValidationResults({
-            ok: false,
-            issues: normalized,
-            errors: normalized.filter((i) => i.severity === 'error'),
-            warnings: normalized.filter((i) => i.severity === 'warning'),
-            info: normalized.filter((i) => i.severity === 'info')
-          });
-        }
-        if (Editor.toast) {
-          Editor.toast.error('Export blocked: ' + errCount + ' critical error(s)');
-        }
-        return false;
-      }
-
-      if (warnCount > 0 && Editor.toast) {
-        Editor.toast.info('Export allowed with ' + warnCount + ' warning(s)');
-      }
-      return true;
-    };
-    Editor._validatorNavExportPatched = true;
+    }, 'editor-validator-navigation');
+    Editor._validatorNavShowHooked = true;
   }
 
   function patchNavigateToValidationIssue() {
-    if (typeof Editor.navigateToValidationIssue !== 'function' || Editor._validatorNavLegacyPatched) return;
-    const orig = Editor.navigateToValidationIssue.bind(Editor);
-    Editor.navigateToValidationIssue = function navigateToValidationIssueNav(issue) {
+    if (typeof Editor.navigateToValidationIssue !== 'function' || Editor._validatorNavLegacyHooked || !Editor.hooks?.replace) return;
+    let savedPrev;
+    savedPrev = Editor.hooks.replace('navigateToValidationIssue', function navigateToValidationIssueNav(issue) {
       const enriched = enrichProjectIssue(normalizeExportIssue(issue), Editor.data);
       if (enriched.action?.run) {
         enriched.action.run();
@@ -492,9 +440,9 @@
           nodeId: raw.nodeId || pathCtx.nodeId
         })) return true;
       }
-      return orig(issue);
-    };
-    Editor._validatorNavLegacyPatched = true;
+      return savedPrev ? savedPrev.call(this, issue) : false;
+    }, 'editor-validator-navigation');
+    Editor._validatorNavLegacyHooked = true;
   }
 
   function normalizeExportIssue(issue) {
@@ -538,7 +486,9 @@
   };
 
   const ValidatorNav = {
-    ISSUE_TITLES,
+    get ISSUE_TITLES() { return getIssueTitles(); },
+    ISSUE_TITLE_TYPES,
+    issueTitle,
     parseJsonPath,
     getIssueTitle,
     getIssueDescription,
@@ -553,14 +503,6 @@
   patchCollectProjectIssues();
   patchShowProjectValidationResults();
   patchNavigateToValidationIssue();
-
-  Editor.applyValidatorExportGuardPatch = function applyValidatorExportGuardPatch() {
-    patchExportGuard();
-  };
-
-  if (typeof Editor.guardExportWithValidation === 'function') {
-    patchExportGuard();
-  }
 
   if (typeof document !== 'undefined' && !document.getElementById('validator-nav-styles')) {
     const st = document.createElement('style');

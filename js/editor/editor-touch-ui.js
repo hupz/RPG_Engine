@@ -3,6 +3,11 @@
 // ============================================================
 (function attachEditorTouchUi() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') {
     console.warn('editor-touch-ui: Editor не определён');
@@ -79,7 +84,7 @@
     const scenes = Editor.data?.scenes || {};
     const ids = Object.keys(scenes).filter((id) => id !== fromId);
     if (!ids.length) {
-      Editor.toast.warning('Нет других сцен для связи');
+      Editor.toast.warning(tr('editor.touchUi.noOtherScenes'));
       return;
     }
     const opts = ids.map((id) => {
@@ -93,12 +98,12 @@
       modal.innerHTML = `
         <div class="editor-modal-backdrop" data-pick="cancel"></div>
         <div class="editor-modal-panel editor-confirm-panel" role="dialog" aria-modal="true">
-          <h2>Связать с…</h2>
-          <p class="hint">Выберите сцену — будет создан выбор с переходом.</p>
+          <h2>${Editor.escapeHtml(tr('editor.touchUi.linkModalTitle'))}</h2>
+          <p class="hint">${Editor.escapeHtml(tr('editor.touchUi.linkModalHint'))}</p>
           <select class="editor-prompt-input" style="width:100%;min-height:44px;">${opts}</select>
           <div class="editor-confirm-actions" style="margin-top:12px;">
-            <button type="button" class="btn btn-secondary" data-pick="cancel">Отмена</button>
-            <button type="button" class="btn btn-primary" data-pick="ok">Связать</button>
+            <button type="button" class="btn btn-secondary" data-pick="cancel">${Editor.escapeHtml(tr('editor.touchUi.cancel'))}</button>
+            <button type="button" class="btn btn-primary" data-pick="ok">${Editor.escapeHtml(tr('editor.touchUi.link'))}</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
@@ -120,7 +125,7 @@
   function enableStoryGraphMoveMode(sceneId) {
     if (!Editor._sg) Editor._sg = {};
     Editor._sg._moveModeId = sceneId;
-    Editor.toast.info('Перетащите сцену пальцем, чтобы переместить');
+    Editor.toast.info(tr('editor.touchUi.moveToast'));
     const side = document.getElementById('sg-side');
     if (side && !document.getElementById(MOVE_HINT_ID)) {
       const done = document.createElement('button');
@@ -129,7 +134,7 @@
       done.id = 'sg-move-mode-done';
       done.style.width = '100%';
       done.style.marginBottom = '8px';
-      done.textContent = 'Готово';
+      done.textContent = tr('editor.touchUi.done');
       done.addEventListener('click', () => {
         Editor._sg._moveModeId = null;
         document.getElementById(MOVE_HINT_ID)?.remove();
@@ -139,7 +144,7 @@
       const hint = document.createElement('p');
       hint.id = MOVE_HINT_ID;
       hint.className = 'sg-move-mode-hint';
-      hint.textContent = 'Режим перемещения: потяните сцену. Нажмите «Готово», чтобы выйти.';
+      hint.textContent = tr('editor.touchUi.moveModeHint');
       side.prepend(hint);
       side.prepend(done);
     }
@@ -154,13 +159,13 @@
     side.innerHTML = `
       <h4>${Editor.escapeHtml(sc.location || nodeId)}</h4>
       <p class="hint">ID: <code>${Editor.escapeHtml(nodeId)}</code></p>
-      <p class="hint">Выходов: ${outs}</p>
+      <p class="hint">${Editor.escapeHtml(tr('editor.touchUi.outputs', { count: outs }))}</p>
       ${touchBarHtml([
-        { id: 'link', label: 'Связать с…', cls: 'btn-primary' },
-        { id: 'move', label: 'Переместить', cls: 'btn-secondary' },
-        { id: 'open', label: 'Открыть сцену', cls: 'btn-secondary' }
+        { id: 'link', label: tr('editor.touchUi.linkAction'), cls: 'btn-primary' },
+        { id: 'move', label: tr('editor.touchUi.moveAction'), cls: 'btn-secondary' },
+        { id: 'open', label: tr('editor.touchUi.openScene'), cls: 'btn-secondary' }
       ])}
-      <p class="hint" style="margin-top:12px;">На тач-экране связи создаются через «Связать с…», не перетаскиванием.</p>`;
+      <p class="hint" style="margin-top:12px;">${Editor.escapeHtml(tr('editor.touchUi.touchLinkHint'))}</p>`;
     bindTouchBar(side, {
       link: () => pickStoryGraphTarget(nodeId),
       move: () => enableStoryGraphMoveMode(nodeId),
@@ -180,13 +185,13 @@
       else host.prepend(bar);
     }
     bar.innerHTML = touchBarHtml([
-      { id: 'link', label: 'Связать с…', cls: 'btn-primary' },
-      { id: 'move', label: 'Переместить', cls: 'btn-secondary' }
+      { id: 'link', label: tr('editor.touchUi.linkAction'), cls: 'btn-primary' },
+      { id: 'move', label: tr('editor.touchUi.moveAction'), cls: 'btn-secondary' }
     ]).replace('editor-touch-bar', 'editor-touch-bar visual-touch-bar-inner');
     bar.className = 'visual-touch-bar';
     bar.innerHTML = `
-      <button type="button" class="btn btn-primary" data-visual-touch="link">Связать с…</button>
-      <button type="button" class="btn btn-secondary" data-visual-touch="move">Переместить</button>`;
+      <button type="button" class="btn btn-primary" data-visual-touch="link">${Editor.escapeHtml(tr('editor.touchUi.linkAction'))}</button>
+      <button type="button" class="btn btn-secondary" data-visual-touch="move">${Editor.escapeHtml(tr('editor.touchUi.moveAction'))}</button>`;
     bar._nodeId = nodeId;
     if (!bar._bound) {
       bar._bound = true;
@@ -196,7 +201,7 @@
         const action = btn.getAttribute('data-visual-touch');
         if (action === 'move') {
           Editor._visualTouchMoveId = bar._nodeId;
-          Editor.toast.info('Потяните узел для перемещения');
+          Editor.toast.info(tr('editor.touchUi.dragNodeToast'));
         } else if (action === 'link') {
           Editor.visualOpenClickActionPicker?.(bar._nodeId);
         }

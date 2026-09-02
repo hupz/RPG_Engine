@@ -79,5 +79,13 @@ for (const [rel, needle] of mustUseAfter) {
 const insp = fs.readFileSync(path.join(root, 'js/editor/editor-inspector.js'), 'utf8');
 assert(!/Editor\[methodName\]\s*=/.test(insp), 'inspector no Editor[methodName]=');
 
+const { execSync } = require('child_process');
+try {
+  execSync('node scripts/find-editor-monkey-patches.mjs --check', { cwd: root, stdio: 'pipe' });
+  assert(true, 'find-editor-monkey-patches --check');
+} catch (e) {
+  assert(false, 'find-editor-monkey-patches --check');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -467,9 +467,16 @@
     if (typeof Editor.createBlankScene === 'function') {
       Editor.createBlankSceneDirect = Editor.createBlankScene.bind(Editor);
     }
-    Editor.createScene = function createSceneViaWizard() {
-      return Editor.openSceneWizard();
-    };
+    if (Editor.hooks?.replace) {
+      Editor.hooks.replace('createScene', function createSceneViaWizard() {
+        return Editor.openSceneWizard();
+      }, 'editor-scene-authoring-phase-112');
+    } else {
+      // hooks-exempt: fallback when Editor.hooks unavailable
+      Editor.createScene = function createSceneViaWizard() {
+        return Editor.openSceneWizard();
+      };
+    }
   })();
 
   Editor.closeTemplateSceneModal = function closeTemplateSceneModal() {

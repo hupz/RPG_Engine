@@ -712,9 +712,12 @@
     return result;
   };
 
-  Editor.runProjectValidation = function runProjectValidation() {
+  function runProjectValidationImpl() {
     const result = this.collectProjectIssues();
     this.showProjectValidationResults(result);
+    if (typeof this.refreshValidationUI === 'function') {
+      try { this.refreshValidationUI(); } catch (e) { /* */ }
+    }
     if (result.ok) {
       if (Editor.toast) Editor.toast.success('Проект в порядке');
     } else {
@@ -725,7 +728,12 @@
       }
     }
     return result;
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('runProjectValidation', runProjectValidationImpl, 'editor-project-validator-ux');
+  } else {
+    Editor.runProjectValidation = runProjectValidationImpl;
+  }
 
   Editor.showProjectValidationResults = function showProjectValidationResults(result) {
     result = result || this.collectProjectIssues();

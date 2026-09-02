@@ -1,4 +1,4 @@
-/* index-prod bundle — 70 scripts from index.html — 2026-09-02T10:47:22.789Z */
+/* index-prod bundle — 70 scripts from index.html — 2026-09-02T11:40:55.373Z */
 
 ;/* —— js/engine-version.js —— */
 /**
@@ -17880,7 +17880,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 
 ;/* —— dist/engine.bundle.js —— */
-/* engine bundle generated 2026-09-02T10:47:22.781Z */
+/* engine bundle generated 2026-09-02T11:40:52.479Z */
 
 ;/* —— js/engine-version.js —— */
 /**

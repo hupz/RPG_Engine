@@ -1744,7 +1744,7 @@ body.editor-app {
       <div id="project-panel" style="line-height:1.7;" data-i18n="common.noProject">Нет открытого проекта</div>
       <div class="sidebar-mode-panel">
         <button type="button" class="btn btn-info" id="editor-mode-toggle" style="width:100%;margin-top:10px;"
-          onclick="Editor.toggleEditorMode()" aria-pressed="false" data-i18n="editor.writerMode">✏️ Writer Mode</button>
+          onclick="Editor.toggleEditorMode()" aria-pressed="false" data-i18n="editor.writerMode.label">✏️ Writer Mode</button>
         <p class="hint writer-mode-hint" id="writer-mode-hint" style="margin-top:6px;font-size:11px;" data-i18n="editor.writerModeHint">
           Скрывает баланс, климат, JSON и другие технические разделы.
         </p>
@@ -1893,7 +1893,6 @@ body.editor-app {
 <script src="dist/vendor/mermaid.min.js"></script>
 <script src="js/validate-scenes.js"></script>
 <script src="js/editor/editor-linter.js"></script>
-<script src="js/editor/editor-validation.js"></script>
 <script src="js/editor-validator.js"></script>
 <script src="js/editor/editor-project-validator-ux.js"></script>
 <!-- Phase 1.11 ProjectValidator wired after catalogs (see near action-registry) -->

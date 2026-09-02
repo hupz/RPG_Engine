@@ -93,6 +93,11 @@ npm run verify
 
 В active production path **нет** `QuestSystem`.
 
+Регрессионный гейт `npm run verify` включает `check:editor-monkey-patches` — скрипт
+`scripts/find-editor-monkey-patches.mjs --check` (порядок `editor.html`): повторное
+`Editor.method = function` без `Editor.hooks.*` = нарушение; допустим комментарий
+`// hooks-exempt: …` на строке назначения.
+
 ## 6. Save / Load
 
 1. Есть `questProgress` → использовать.
@@ -228,3 +233,12 @@ Quest tests → 138 passed / 0 failed
 ```
 
 См. также: `docs/DEVELOPER-GUIDE.md`, `js/editor/editor-hooks.js`.
+
+## 9. Локализация редактора (I18n)
+
+- Словари: `locales/ru.json`, `locales/en.json`; в `editor.html` подключаются `locales/ru.js` и `locales/en.js` (сгенерированы из JSON).
+- API: `I18n.t('module.section.key', { param: value })` или глобальный `t()`; в Editor-модулях — локальный `tr()` с тем же контрактом.
+- **Новые UI-строки — только через `I18n.t` / `tr()`**, не литералами в HTML/JS. Исключения: комментарии, `console.*`, технические id/ключи, keywords палитры команд для поиска.
+- Ключи: `editor.<module>.<section>.<name>` (как в существующем словаре). Значения `ru.json` не «улучшать» при переносе — только копировать.
+- Конвейер help: `node scripts/build-locales.js` (дополняет секцию `help` из `editor-help-data.js`; не заменяет ручные ключи редактора).
+- **Фолбэк `I18n.t`:** сначала активная локаль (`localStorage rpgengine_lang`, по умолчанию `ru`), затем `FALLBACK_LANG` (`ru`), затем возврат самого ключа строкой. Переключение на `en` без перевода не падает — показывается ru или ключ.

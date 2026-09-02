@@ -4,6 +4,11 @@
 // ============================================================
 (function attachPreviewWorkflow() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
@@ -14,6 +19,12 @@
     return typeof Editor.escapeHtml === 'function'
       ? Editor.escapeHtml(String(s == null ? '' : s))
       : String(s == null ? '' : s);
+  }
+
+  function escAttr(s) {
+    return typeof Editor.escapeAttr === 'function'
+      ? Editor.escapeAttr(String(s == null ? '' : s))
+      : esc(s);
   }
 
   function isAdvanced() {
@@ -41,11 +52,11 @@
 
   function getPreviewProjectLabel() {
     const d = Editor.data || {};
-    return d.meta?.title || d.meta?.name || d.title || 'Project';
+    return d.meta?.title || d.meta?.name || d.title || tr('editor.previewWorkflow.defaultProject');
   }
 
   function getPreviewSceneLabel(sceneId) {
-    if (!sceneId) return '—';
+    if (!sceneId) return tr('editor.previewWorkflow.noSceneLabel');
     const scene = Editor.data?.scenes?.[sceneId];
     return scene?.location || scene?.title || sceneId;
   }
@@ -164,13 +175,13 @@
     if (state.workspaceSection && typeof Editor.setSceneWorkspaceSection === 'function') {
       Editor.setSceneWorkspaceSection(state.workspaceSection);
     }
-    Editor.toast?.info?.('Возврат в редактор');
+    Editor.toast?.info?.(tr('editor.previewWorkflow.returnToEditor'));
     return true;
   }
 
   function launchIsolatedPreview(sceneId, sessionExtras) {
     if (!Editor.data) {
-      Editor.toast?.warning?.('Нет данных проекта');
+      Editor.toast?.warning?.(tr('editor.previewWorkflow.noProjectData'));
       return false;
     }
     sessionExtras = sessionExtras || {};
@@ -197,12 +208,12 @@
         EditorTestKeys.writeTestData(Editor.data);
         EditorTestKeys.writeSession(session);
       } else {
-        Editor.toast?.error?.('Изоляция теста недоступна');
+        Editor.toast?.error?.(tr('editor.previewWorkflow.testIsolationUnavailable'));
         return false;
       }
     } catch (e) {
       console.error('[previewWorkflow]', e);
-      Editor.toast?.error?.('Не удалось подготовить превью');
+      Editor.toast?.error?.(tr('editor.previewWorkflow.previewPrepareFailed'));
       return false;
     }
 
@@ -210,7 +221,7 @@
     if (typeof window !== 'undefined' && window.open) {
       window.open(url, '_blank', 'noopener');
     }
-    Editor.toast?.success?.('Превью открыто — EDITOR TEST MODE');
+    Editor.toast?.success?.(tr('editor.previewWorkflow.previewOpened'));
     return true;
   }
 
@@ -231,30 +242,32 @@
     }
 
     const errLines = validation.errors.slice(0, 8).map((e) =>
-      '<li>' + esc(e.message || e.type || 'Ошибка') + '</li>'
+      '<li>' + esc(e.message || e.type || tr('editor.previewWorkflow.genericError')) + '</li>'
     ).join('');
     const warnNote = validation.warningCount
-      ? '<p class="hint">Предупреждений: ' + validation.warningCount + ' — превью разрешено.</p>'
+      ? '<p class="hint">' + esc(tr('editor.previewWorkflow.warningsAllowed', { count: validation.warningCount })) + '</p>'
       : '';
 
     modal.innerHTML =
       '<div class="epw-validation-modal__card" role="dialog" aria-labelledby="epw-val-title">' +
-      '<h3 id="epw-val-title">Перед превью</h3>' +
+      '<h3 id="epw-val-title">' + esc(tr('editor.previewWorkflow.beforePreview')) + '</h3>' +
       (validation.errorCount
         ? '<p><strong>' + validation.errorCount + '</strong> ' +
-          (validation.errorCount === 1 ? 'ошибка' : 'ошибок') + ' найдено.</p>' +
+          esc(validation.errorCount === 1
+            ? tr('editor.previewWorkflow.errorOneFound', { count: validation.errorCount })
+            : tr('editor.previewWorkflow.errorsManyFound', { count: validation.errorCount })) + '</p>' +
           '<ul class="epw-validation-list">' + errLines + '</ul>'
-        : '<p>Ошибок нет.</p>') +
+        : '<p>' + esc(tr('editor.previewWorkflow.noErrors')) + '</p>') +
       warnNote +
       '<div class="epw-validation-modal__actions">' +
-      '<button type="button" class="btn btn-secondary" data-epw-val="fix">Исправить</button>' +
+      '<button type="button" class="btn btn-secondary" data-epw-val="fix">' + esc(tr('editor.previewWorkflow.fix')) + '</button>' +
       (validation.errorCount && isAdvanced()
-        ? '<button type="button" class="btn btn-ghost" data-epw-val="anyway">Превью всё равно</button>'
+        ? '<button type="button" class="btn btn-ghost" data-epw-val="anyway">' + esc(tr('editor.previewWorkflow.previewAnyway')) + '</button>'
         : '') +
       (validation.errorCount === 0
-        ? '<button type="button" class="btn btn-primary" data-epw-val="continue">Продолжить</button>'
+        ? '<button type="button" class="btn btn-primary" data-epw-val="continue">' + esc(tr('editor.previewWorkflow.continue')) + '</button>'
         : '') +
-      '<button type="button" class="btn btn-ghost" data-epw-val="cancel">Отмена</button>' +
+      '<button type="button" class="btn btn-ghost" data-epw-val="cancel">' + esc(tr('editor.previewWorkflow.cancel')) + '</button>' +
       '</div></div>';
 
     modal.hidden = false;
@@ -278,7 +291,7 @@
 
     const sceneId = resolvePreviewSceneId(opts);
     if (!sceneId) {
-      Editor.toast?.warning?.('Нет сцены для превью');
+      Editor.toast?.warning?.(tr('editor.previewWorkflow.noSceneForPreview'));
       return false;
     }
 
@@ -309,7 +322,7 @@
     }
 
     if (validation.warningCount > 0) {
-      Editor.toast?.info?.('Превью с ' + validation.warningCount + ' предупр.');
+      Editor.toast?.info?.(tr('editor.previewWorkflow.previewWithWarnings', { count: validation.warningCount }));
     }
 
     return doLaunch();
@@ -318,11 +331,11 @@
   function renderPreviewMenuHtml() {
     return (
       '<div class="epw-preview-menu" role="menu" data-epw-menu="1">' +
-      '<p class="epw-preview-menu__heading">Preview</p>' +
+      '<p class="epw-preview-menu__heading">' + esc(tr('editor.previewWorkflow.menuHeading')) + '</p>' +
       '<button type="button" class="epw-preview-menu__item" role="menuitem" data-epw-mode="current">' +
-      'Play Current Scene</button>' +
+      esc(tr('editor.previewWorkflow.playCurrentScene')) + '</button>' +
       '<button type="button" class="epw-preview-menu__item" role="menuitem" data-epw-mode="start">' +
-      'Play From Project Start</button>' +
+      esc(tr('editor.previewWorkflow.playFromStart')) + '</button>' +
       '</div>'
     );
   }
@@ -332,13 +345,13 @@
     return (
       '<div class="epw-preview-cluster" data-epw-cluster="1">' +
       '<details class="epw-preview-dropdown">' +
-      '<summary class="btn btn-primary btn-sm epw-preview-trigger" title="Preview in isolated test mode">' +
-      '<span class="epw-preview-trigger__label">Preview</span>' +
+      '<summary class="btn btn-primary btn-sm epw-preview-trigger" title="' + escAttr(tr('editor.previewWorkflow.previewTitle')) + '">' +
+      '<span class="epw-preview-trigger__label">' + esc(tr('editor.previewWorkflow.previewLabel')) + '</span>' +
       '<span class="epw-preview-trigger__caret" aria-hidden="true">▾</span>' +
       '</summary>' +
       renderPreviewMenuHtml() +
       '</details>' +
-      '<span class="epw-preview-context hint" title="Current scene">' + esc(sceneLabel) + '</span>' +
+      '<span class="epw-preview-context hint" title="' + escAttr(tr('editor.previewWorkflow.currentSceneTitle')) + '">' + esc(sceneLabel) + '</span>' +
       '</div>'
     );
   }
@@ -367,8 +380,8 @@
     wrap.dataset.epwGlobal = '1';
     wrap.innerHTML =
       '<details class="epw-preview-dropdown epw-preview-dropdown--global">' +
-      '<summary class="btn btn-secondary epw-preview-trigger" title="Preview in isolated test mode">' +
-      '<span class="epw-preview-trigger__label">▶ Preview</span>' +
+      '<summary class="btn btn-secondary epw-preview-trigger" title="' + escAttr(tr('editor.previewWorkflow.previewTitle')) + '">' +
+      '<span class="epw-preview-trigger__label">' + esc(tr('editor.previewWorkflow.globalPreviewLabel')) + '</span>' +
       '<span class="epw-preview-trigger__caret" aria-hidden="true">▾</span>' +
       '</summary>' +
       renderPreviewMenuHtml() +
@@ -445,21 +458,28 @@
   });
 
   // Route legacy APIs through unified flow
-  const origTestFromHere = Editor.testFromHere;
-  if (typeof origTestFromHere === 'function') {
-    Editor.testFromHere = function testFromHereUnified(opts) {
-      if (Editor._epwBypassWrap) return origTestFromHere.call(this, opts);
+  if (typeof Editor.testFromHere === 'function' && Editor.hooks?.replace) {
+    let savedPrevTestFromHere;
+    savedPrevTestFromHere = Editor.hooks.replace('testFromHere', function testFromHereUnified(opts) {
+      if (Editor._epwBypassWrap) {
+        return savedPrevTestFromHere ? savedPrevTestFromHere.call(this, opts) : undefined;
+      }
       return previewScene(Object.assign({ mode: 'current' }, opts || {}));
-    };
+    }, 'editor-preview-workflow');
   }
 
-  Editor.testCurrentScene = function testCurrentSceneUnified() {
+  function testCurrentSceneUnified() {
     if (!Editor.currentScene) {
-      Editor.toast?.warning?.('Выберите сцену');
+      Editor.toast?.warning?.(tr('editor.previewWorkflow.selectScene'));
       return false;
     }
     return previewScene({ mode: 'current', sceneId: Editor.currentScene });
-  };
+  }
+  if (Editor.hooks?.replace) {
+    Editor.hooks.replace('testCurrentScene', testCurrentSceneUnified, 'editor-preview-workflow');
+  } else {
+    Editor.testCurrentScene = testCurrentSceneUnified;
+  }
 
   if (Editor.hooks?.after) {
     Editor.hooks.after('injectSceneWorkspaceChrome', function () {

@@ -4,96 +4,95 @@
 // ============================================================
 (function attachAuthorGuidance() {
   'use strict';
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
 
   if (typeof Editor === 'undefined') return;
 
-  const CONTEXT_HINTS = Object.freeze({
-    visual: 'Используйте для интерактивных локаций и объектов на сцене.',
-    game_ui: 'Используйте для HUD и постоянных элементов управления.',
-    conditions: 'Условия определяют, когда что-то доступно игроку.',
-    choices: 'Выборы — это действия игрока в текстовой сцене.',
-    content: 'Текст сцены и модули задают, что видит игрок.',
-    items: 'Предметы выдаются в квестах, сценах и бою.',
-    quests: 'Квесты связывают сцены, цели и награды.',
-    combat: 'Враги используются в боевых сценах и заданиях.'
-  });
+  const CONTEXT_HINT_KEYS = Object.freeze([
+    'visual', 'game_ui', 'conditions', 'choices', 'content', 'items', 'quests', 'combat'
+  ]);
 
-  const EMPTY_STATES = Object.freeze({
-    project: {
-      title: 'Welcome to your RPG project',
-      explanation: 'Create your first scene — that is where the game begins.',
-      primaryLabel: 'Create First Scene',
-      action: 'create-scene'
-    },
-    scene: {
-      title: 'Сцена не открыта',
-      explanation: 'Откройте сцену из списка слева или создайте новую.',
-      primaryLabel: 'Создать сцену',
-      action: 'create-scene'
-    },
-    content: {
-      title: 'Сцена пуста',
-      explanation: 'Добавьте текст или модуль, чтобы игрок увидел содержание сцены.',
-      primaryLabel: 'Добавить модуль',
-      action: 'content-add-module',
-      hint: 'content'
-    },
-    choices: {
-      title: 'Нет выборов',
-      explanation: 'Добавьте варианты ответа, чтобы игрок мог действовать.',
-      primaryLabel: 'Добавить выбор',
-      action: 'choices-add',
-      hint: 'choices'
-    },
-    visual: {
-      title: 'Нет visual-контента',
-      explanation: 'Добавьте фон или интерактивный объект на сцену.',
-      primaryLabel: 'Добавить объект',
-      action: 'visual-add-hotspot',
-      hint: 'visual'
-    },
-    game_ui: {
-      title: 'Нет UI-экранов',
-      explanation: 'Создайте HUD или меню — элементы управления для игрока.',
-      primaryLabel: 'Создать экран',
-      action: 'game-ui-add-screen',
-      hint: 'game_ui'
-    },
-    conditions: {
-      title: 'Нет условий',
-      explanation: 'Условия управляют видимостью сцены, выборов и объектов.',
-      primaryLabel: 'Добавить условие',
-      action: 'conditions-add',
-      hint: 'conditions'
-    },
-    items: {
-      title: 'Нет предметов',
-      explanation: 'Создайте предметы для квестов, наград и инвентаря.',
-      primaryLabel: 'Создать предмет',
-      action: 'create-item',
-      hint: 'items'
-    },
-    quests: {
-      title: 'Нет квестов',
-      explanation: 'Задайте цель игроку — квест связывает сцены и награды.',
-      primaryLabel: 'Создать квест',
-      action: 'create-quest',
-      hint: 'quests'
-    },
-    combat: {
-      title: 'Нет врагов',
-      explanation: 'Создайте врагов для боевых сцен и заданий.',
-      primaryLabel: 'Создать врага',
-      action: 'create-enemy',
-      hint: 'combat'
-    },
-    content_category: {
-      title: 'Нет объектов',
-      explanation: 'Создайте первый объект в этой категории.',
-      primaryLabel: 'Создать',
-      action: 'create-content'
-    }
-  });
+  const EMPTY_STATE_KEYS = Object.freeze([
+    'project', 'scene', 'content', 'choices', 'visual', 'game_ui', 'conditions',
+    'items', 'quests', 'combat', 'content_category'
+  ]);
+
+  const EMPTY_STATE_KEY_MAP = {
+    project: 'project',
+    scene: 'scene',
+    content: 'content',
+    choices: 'choices',
+    visual: 'visual',
+    game_ui: 'game_ui',
+    conditions: 'conditions',
+    items: 'items',
+    quests: 'quests',
+    combat: 'combat'
+  };
+
+  function contextHint(key) {
+    return tr('editor.authorGuidance.contextHints.' + key);
+  }
+
+  function emptyStateField(contextKey, field) {
+    return tr('editor.authorGuidance.emptyStates.' + contextKey + '.' + field);
+  }
+
+  function getContextHints() {
+    const out = {};
+    CONTEXT_HINT_KEYS.forEach((key) => {
+      out[key] = contextHint(key);
+    });
+    return Object.freeze(out);
+  }
+
+  function getEmptyStateDef(contextKey) {
+    if (!EMPTY_STATE_KEYS.includes(contextKey)) return null;
+    const base = {
+      title: emptyStateField(contextKey, 'title'),
+      explanation: emptyStateField(contextKey, 'explanation'),
+      primaryLabel: emptyStateField(contextKey, 'primaryLabel')
+    };
+    const actions = {
+      project: 'create-scene',
+      scene: 'create-scene',
+      content: 'content-add-module',
+      choices: 'choices-add',
+      visual: 'visual-add-hotspot',
+      game_ui: 'game-ui-add-screen',
+      conditions: 'conditions-add',
+      items: 'create-item',
+      quests: 'create-quest',
+      combat: 'create-enemy',
+      content_category: 'create-content'
+    };
+    const hints = {
+      content: 'content',
+      choices: 'choices',
+      visual: 'visual',
+      game_ui: 'game_ui',
+      conditions: 'conditions',
+      items: 'items',
+      quests: 'quests',
+      combat: 'combat'
+    };
+    base.action = actions[contextKey];
+    if (hints[contextKey]) base.hint = hints[contextKey];
+    return base;
+  }
+
+  function getEmptyStates() {
+    const out = {};
+    EMPTY_STATE_KEYS.forEach((key) => {
+      const def = getEmptyStateDef(key);
+      if (def) out[key] = def;
+    });
+    return Object.freeze(out);
+  }
 
   function esc(s) {
     return typeof Editor.escapeHtml === 'function'
@@ -180,14 +179,14 @@
 
   function buildEmptyStateHtml(contextKey, overrides) {
     overrides = overrides || {};
-    const base = EMPTY_STATES[contextKey] || EMPTY_STATES.content;
+    const base = getEmptyStateDef(contextKey) || getEmptyStateDef('content');
     const title = overrides.title || base.title;
     const explanation = overrides.explanation || base.explanation;
     const primaryLabel = overrides.primaryLabel || overrides.ctaLabel || base.primaryLabel;
     const action = overrides.action || base.action;
     const hintKey = overrides.hint || base.hint;
-    const hint = hintKey && CONTEXT_HINTS[hintKey]
-      ? '<p class="ui-guidance-hint ui-guidance-hint--inline">' + esc(CONTEXT_HINTS[hintKey]) + '</p>'
+    const hint = hintKey && contextHint(hintKey)
+      ? '<p class="ui-guidance-hint ui-guidance-hint--inline">' + esc(contextHint(hintKey)) + '</p>'
       : '';
 
     return (
@@ -235,11 +234,13 @@
 
   function renderGuidanceHintHtml(hintId, text) {
     if (!text || isHintDismissed(hintId)) return '';
+    const dismissTitle = tr('editor.authorGuidance.dismissHintTitle');
+    const dismissAria = tr('editor.authorGuidance.dismissHintAria');
     return (
       '<p class="ui-guidance-hint" data-guidance-hint-id="' + escAttr(hintId) + '">' +
       esc(text) +
       ' <button type="button" class="ui-guidance-dismiss" data-guidance-dismiss="' + escAttr(hintId) +
-      '" title="Скрыть подсказку" aria-label="Скрыть подсказку">×</button></p>'
+      '" title="' + escAttr(dismissTitle) + '" aria-label="' + escAttr(dismissAria) + '">×</button></p>'
     );
   }
 
@@ -248,7 +249,7 @@
     const host = document.getElementById('usw-section-header-host');
     if (!host || host.hidden) return;
     const hintId = 'section-' + sectionId;
-    const text = CONTEXT_HINTS[sectionId];
+    const text = contextHint(sectionId);
     host.querySelectorAll('.ui-guidance-hint').forEach((el) => el.remove());
     if (!text || isHintDismissed(hintId)) return;
     const wrap = document.createElement('div');
@@ -281,9 +282,9 @@
         const sceneCount = hasProject ? Object.keys(Editor.data.scenes).length : 0;
         if (!Editor.data) {
           mountEmptyState(container, 'project', {
-            title: 'Нет открытого проекта',
-            explanation: 'Загрузите проект или создайте новый на стартовом экране.',
-            primaryLabel: 'Загрузить проект',
+            title: tr('editor.authorGuidance.noProject.title'),
+            explanation: tr('editor.authorGuidance.noProject.explanation'),
+            primaryLabel: tr('editor.authorGuidance.noProject.primaryLabel'),
             action: 'load-project'
           });
           const btn = container.querySelector('[data-guidance-action="load-project"]');
@@ -361,14 +362,12 @@
   }
 
   const AuthorGuidance = {
-    CONTEXT_HINTS,
-    EMPTY_STATES,
-    getEmptyStateDef(contextKey) {
-      return EMPTY_STATES[contextKey] ? Object.assign({}, EMPTY_STATES[contextKey]) : null;
-    },
-    getContextHint(contextKey) {
-      return CONTEXT_HINTS[contextKey] || '';
-    },
+    get CONTEXT_HINTS() { return getContextHints(); },
+    get EMPTY_STATES() { return getEmptyStates(); },
+    CONTEXT_HINT_KEYS,
+    EMPTY_STATE_KEYS,
+    getEmptyStateDef,
+    getContextHint: contextHint,
     buildEmptyStateHtml,
     mountEmptyState,
     renderGuidanceHintHtml,

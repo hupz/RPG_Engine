@@ -2,20 +2,49 @@
 // P4.1: Режим истории — StoryWizard (5 шагов) + P3: мастер «Новая история»
 // ============================================================
 (function attachCampaignWizardAndNpcCard() {
+  'use strict';
+
+  function tr(key, params) {
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') return I18n.t(key, params);
+    if (typeof t === 'function') return t(key, params);
+    return key;
+  }
+
+  function swStepLabel(step) {
+    return tr('editor.campaignWizard.steps.' + (step?.id || 'genre'));
+  }
+
   if (typeof Editor === 'undefined') {
     console.warn('editor-campaign-wizard.js: Editor не определён');
     return;
+  }
+
+  function localeValue(key) {
+    if (typeof I18n !== 'undefined' && I18n._strings) {
+      return key.split('.').reduce((o, p) => (o && o[p] !== undefined ? o[p] : undefined), I18n._strings);
+    }
+    return undefined;
+  }
+
+  function legacyDefaultScenes() {
+    const list = localeValue('editor.campaignWizard.legacyDefaultScenes');
+    if (Array.isArray(list)) return JSON.parse(JSON.stringify(list));
+    return [
+      { name: tr('editor.campaignWizard.legacyDefaultScenes.0.name'), text: tr('editor.campaignWizard.legacyDefaultScenes.0.text') },
+      { name: tr('editor.campaignWizard.legacyDefaultScenes.1.name'), text: tr('editor.campaignWizard.legacyDefaultScenes.1.text') },
+      { name: tr('editor.campaignWizard.legacyDefaultScenes.2.name'), text: tr('editor.campaignWizard.legacyDefaultScenes.2.text') }
+    ];
   }
 
   const STORY_WIZARD_STORAGE = 'rpg_editor_story_wizard';
   const STORY_WIZARD_VERSION = 1;
 
   const STORY_WIZARD_STEPS = Object.freeze([
-    { id: 'genre', label: 'Жанр и система', skippable: false },
-    { id: 'world', label: 'Каркас мира', skippable: false },
-    { id: 'heroes', label: 'Герои и NPC', skippable: true },
-    { id: 'quest', label: 'Первый квест', skippable: true },
-    { id: 'publish', label: 'Проверка и публикация', skippable: false }
+    { id: 'genre', skippable: false },
+    { id: 'world', skippable: false },
+    { id: 'heroes', skippable: true },
+    { id: 'quest', skippable: true },
+    { id: 'publish', skippable: false }
   ]);
 
   function cloneJson(v) {
@@ -25,9 +54,9 @@
   function createStoryWizardDraft() {
     const preset = (typeof StoryWizardContent !== 'undefined')
       ? StoryWizardContent.getGenrePreset('fantasy')
-      : { defaultTitle: 'Моя история' };
+      : { defaultTitle: tr('editor.campaignWizard.defaultTitle') };
     const draft = {
-      title: preset.defaultTitle || 'Моя история',
+      title: preset.defaultTitle || tr('editor.campaignWizard.defaultTitle'),
       genre: 'fantasy',
       system: typeof SystemRegistry !== 'undefined' ? SystemRegistry.getDefault() : 'generic',
       heroNote: '',
@@ -127,7 +156,7 @@
   function storyWizardProgressHtml(activeStep) {
     return STORY_WIZARD_STEPS.map((s, i) => {
       const cls = i === activeStep ? ' is-active' : (i < activeStep ? ' is-done' : '');
-      return `<span class="sw-step${cls}">${i + 1}. ${Editor.escapeHtml(s.label)}</span>`;
+      return `<span class="sw-step${cls}">${i + 1}. ${Editor.escapeHtml(swStepLabel(s))}</span>`;
     }).join('<span class="sw-step-sep">→</span>');
   }
 
@@ -166,17 +195,17 @@
     const opts = options.map((o) =>
       `<option value="${Editor.escapeAttr(o.id)}"${String(value) === String(o.id) ? ' selected' : ''}>${Editor.escapeHtml(o.label)}</option>`
     ).join('');
-    return `<select id="${Editor.escapeAttr(id)}"><option value="">— выберите —</option>${opts}</select>`;
+    return `<select id="${Editor.escapeAttr(id)}"><option value="">${Editor.escapeHtml(tr('editor.campaignWizard.selectPlaceholder'))}</option>${opts}</select>`;
   }
 
   function renderWorldPreviewHtml(preview) {
-    if (!preview || !preview.scenes) return '<p class="hint">Выберите каркас — появится схема сцен.</p>';
+    if (!preview || !preview.scenes) return '<p class="hint">' + Editor.escapeHtml(tr('editor.campaignWizard.worldPreviewHint')) + '</p>';
     const lines = preview.edges.map((e) =>
       `<li><span>${Editor.escapeHtml(e.fromLabel)}</span> → <span>${Editor.escapeHtml(e.toLabel)}</span>${e.choice ? ' <em class="hint">(' + Editor.escapeHtml(e.choice) + ')</em>' : ''}</li>`
     ).join('');
     const start = preview.scenes.find((s) => s.id === preview.startSceneId);
     return `<div class="sw-world-preview">
-      <p class="hint">Стартовая сцена: <strong>${Editor.escapeHtml(start?.label || preview.startSceneId || '—')}</strong></p>
+      <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.startSceneLabel'))} <strong>${Editor.escapeHtml(start?.label || preview.startSceneId || tr('editor.storyWizard.publish.dash'))}</strong></p>
       <ul class="sw-scene-graph">${lines || '<li>—</li>'}</ul>
     </div>`;
   }
@@ -184,17 +213,17 @@
   function renderStoryWizardStepBody(stepIndex, draft) {
     const step = STORY_WIZARD_STEPS[stepIndex];
     const SW = swContent();
-    if (!step) return '<p class="hint">Неизвестный шаг</p>';
+    if (!step) return '<p class="hint">' + Editor.escapeHtml(tr('editor.campaignWizard.unknownStep')) + '</p>';
     if (step.id === 'genre') {
       const genres = SW ? SW.listGenrePresets() : [
-        { id: 'fantasy', label: 'Фэнтези' },
-        { id: 'horror', label: 'Хоррор' },
-        { id: 'detective', label: 'Детектив' },
-        { id: 'survival', label: 'Выживание' }
+        { id: 'fantasy', label: tr('editor.campaignWizard.fallbackGenres.fantasy') },
+        { id: 'horror', label: tr('editor.campaignWizard.fallbackGenres.horror') },
+        { id: 'detective', label: tr('editor.campaignWizard.fallbackGenres.detective') },
+        { id: 'survival', label: tr('editor.campaignWizard.fallbackGenres.survival') }
       ];
       const systems = SW ? SW.listSystemOptions() : [
-        { id: 'generic', label: 'Универсальные правила' },
-        { id: 'dnd5e', label: 'Классические приключения' }
+        { id: 'generic', label: tr('editor.campaignWizard.fallbackSystems.generic') },
+        { id: 'dnd5e', label: tr('editor.campaignWizard.fallbackSystems.dnd5e') }
       ];
       const preset = SW ? SW.getGenrePreset(draft.genre) : null;
       const genreOpts = genres.map((g) =>
@@ -204,16 +233,16 @@
         `<option value="${Editor.escapeAttr(s.id)}"${draft.system === s.id ? ' selected' : ''}>${Editor.escapeHtml(s.label)}</option>`
       ).join('');
       return `
-        <p class="hint">Расскажите, какой мир вы создаёте — движок подготовит основу проекта.</p>
-        <div class="form-group"><label>Название истории</label>
+        <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.genreHint'))}</p>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.storyTitleLabel'))}</label>
           <input type="text" id="sw-title" value="${Editor.escapeAttr(draft.title)}"></div>
-        <div class="form-group"><label>Жанр</label>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.genreLabel'))}</label>
           <select id="sw-genre">${genreOpts}</select></div>
-        <div class="form-group"><label>Правила игры</label>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.systemLabel'))}</label>
           <select id="sw-system">${sysOpts}</select></div>
         ${preset ? `<p class="hint sw-genre-blurb">${Editor.escapeHtml(preset.description)}</p>
-        <p class="hint">Стартовый запас: ${preset.startingGold} монет, ${preset.startingHp} здоровья — можно изменить позже.</p>` : ''}
-        <p class="hint"><button type="button" class="btn btn-link" id="sw-blank-project">Создать пустой проект с нуля…</button></p>`;
+        <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.startingResources', { gold: preset.startingGold, hp: preset.startingHp }))}</p>` : ''}
+        <p class="hint"><button type="button" class="btn btn-link" id="sw-blank-project">${Editor.escapeHtml(tr('editor.campaignWizard.blankProjectLink'))}</button></p>`;
     }
     if (step.id === 'world') {
       const skeletons = SW ? SW.listWorldSkeletons() : [];
@@ -226,21 +255,21 @@
         </label>`).join('');
       const preview = draft.worldPreview || null;
       return `
-        <p class="hint">Выберите каркас — из готовых шаблонов появятся связанные сцены в духе вашего жанра.</p>
+        <p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.worldHint'))}</p>
         <div class="sw-skeleton-grid">${cards}</div>
         ${renderWorldPreviewHtml(preview)}
-        <button type="button" class="btn btn-secondary" id="sw-regenerate-world">Сгенерировать заново</button>`;
+        <button type="button" class="btn btn-secondary" id="sw-regenerate-world">${Editor.escapeHtml(tr('editor.campaignWizard.regenerateWorld'))}</button>`;
     }
     if (step.id === 'heroes') {
       const HQ = swHQ();
       if (HQ) HQ.initHeroesQuestDraft(draft);
       const roles = HQ ? HQ.listNpcRoles() : [];
-      let body = `<p class="hint">Назовите героя и ключевых персонажей — движок создаст записи и реплики.</p>
+      let body = `<p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.heroesHint'))}</p>
         <div class="sw-hero-card project-info">
-          <h4>🧝 Герой</h4>
-          <div class="form-group"><label>Имя</label>
+          <h4>${Editor.escapeHtml(tr('editor.campaignWizard.heroHeading'))}</h4>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.nameLabel'))}</label>
             <input type="text" id="sw-hero-name" value="${Editor.escapeAttr(draft.hero?.name || '')}"></div>
-          <div class="form-group"><label>Кратко о герое</label>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.heroDescLabel'))}</label>
             <input type="text" id="sw-hero-desc" value="${Editor.escapeAttr(draft.hero?.description || '')}"></div>
         </div>`;
       (draft.npcs || []).forEach((npc, i) => {
@@ -249,14 +278,14 @@
           `<option value="${Editor.escapeAttr(r.id)}"${npc.role === r.id ? ' selected' : ''}>${Editor.escapeHtml(r.label)}</option>`
         ).join('');
         body += `<div class="sw-npc-card project-info">
-          <h4>👤 Персонаж ${i + 1}</h4>
-          <div class="form-group"><label>Имя</label>
+          <h4>${Editor.escapeHtml(tr('editor.campaignWizard.npcHeading', { n: i + 1 }))}</h4>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.nameLabel'))}</label>
             <input type="text" id="sw-npc-name-${i}" value="${Editor.escapeAttr(npc.name || '')}"></div>
-          <div class="form-group"><label>Роль</label>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.roleLabel'))}</label>
             <select id="sw-npc-role-${i}">${roleOpts}</select></div>
-          <div class="form-group"><label>Кратко</label>
+          <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.briefLabel'))}</label>
             <input type="text" id="sw-npc-desc-${i}" value="${Editor.escapeAttr(npc.description || '')}"></div>
-          <p class="hint sw-npc-phrase-preview">Реплика: «${Editor.escapeHtml(phrase)}»</p>
+          <p class="hint sw-npc-phrase-preview">${Editor.escapeHtml(tr('editor.campaignWizard.phrasePreview', { phrase }))}</p>
         </div>`;
       });
       return body;
@@ -268,8 +297,8 @@
       const q = draft.quest || {};
       const npcIds = (draft.npcs || []).map((n) => n.id).filter(Boolean);
       const npcOpts = npcIds.length ? swEntityOptions(Editor, 'npc', npcIds) : swEntityOptions(Editor, 'npc');
-      let body = `<p class="hint">Что должен сделать игрок? Выберите цель и участников — этапы соберутся сами.</p>
-        <div class="form-group"><label>Название задания</label>
+      let body = `<p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.questHint'))}</p>
+        <div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.questTitleLabel'))}</label>
           <input type="text" id="sw-quest-title" value="${Editor.escapeAttr(q.title || '')}"></div>
         <div class="sw-quest-goals">`;
       goals.forEach((g) => {
@@ -280,42 +309,42 @@
       body += `</div><div id="sw-quest-details">`;
       const goal = q.goal || 'talk';
       if (goal === 'talk' || goal === 'kill' || goal === 'deliver') {
-        body += `<div class="form-group"><label>Персонаж</label>${swSelectHtml('sw-quest-npc', npcOpts, q.npcId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.npcLabel'))}</label>${swSelectHtml('sw-quest-npc', npcOpts, q.npcId)}</div>`;
       }
       if (goal === 'find' || goal === 'collect' || goal === 'deliver') {
-        body += `<div class="form-group"><label>Предмет</label>${swSelectHtml('sw-quest-item', swEntityOptions(Editor, 'item'), q.itemId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.itemLabel'))}</label>${swSelectHtml('sw-quest-item', swEntityOptions(Editor, 'item'), q.itemId)}</div>`;
       }
       if (goal === 'kill') {
-        body += `<div class="form-group"><label>Противник</label>${swSelectHtml('sw-quest-enemy', swEntityOptions(Editor, 'enemy'), q.enemyId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.enemyLabel'))}</label>${swSelectHtml('sw-quest-enemy', swEntityOptions(Editor, 'enemy'), q.enemyId)}</div>`;
       }
       if (goal === 'visit') {
-        body += `<div class="form-group"><label>Место</label>${swSelectHtml('sw-quest-scene', swEntityOptions(Editor, 'scene', draft.worldSceneIds), q.sceneId)}</div>`;
+        body += `<div class="form-group"><label>${Editor.escapeHtml(tr('editor.campaignWizard.placeLabel'))}</label>${swSelectHtml('sw-quest-scene', swEntityOptions(Editor, 'scene', draft.worldSceneIds), q.sceneId)}</div>`;
       }
-      body += `</div><div class="sw-reward-section"><h4>Награда</h4>`;
-      const rewards = HQ ? HQ.listRewardKinds() : [{ id: 'gold', label: 'Золото' }];
+      body += `</div><div class="sw-reward-section"><h4>${Editor.escapeHtml(tr('editor.campaignWizard.rewardHeading'))}</h4>`;
+      const rewards = HQ ? HQ.listRewardKinds() : [{ id: 'gold', label: tr('editor.campaignWizard.fallbackRewardGold') }];
       rewards.forEach((rk) => {
         body += `<label class="sw-reward-kind"><input type="radio" name="sw-reward-kind" value="${Editor.escapeAttr(rk.id)}"${q.rewardKind === rk.id ? ' checked' : ''}> ${Editor.escapeHtml(rk.label)}</label>`;
       });
-      body += `<div class="form-group" id="sw-reward-gold-wrap"><label>Сколько золота</label>
+      body += `<div class="form-group" id="sw-reward-gold-wrap"><label>${Editor.escapeHtml(tr('editor.campaignWizard.rewardGoldLabel'))}</label>
         <input type="number" min="0" id="sw-reward-gold" value="${Number(q.rewardGold || 15)}"></div>`;
-      body += `<div class="form-group" id="sw-reward-item-wrap"><label>Предмет-награда</label>
+      body += `<div class="form-group" id="sw-reward-item-wrap"><label>${Editor.escapeHtml(tr('editor.campaignWizard.rewardItemLabel'))}</label>
         ${swSelectHtml('sw-reward-item', swEntityOptions(Editor, 'item'), q.rewardItemId)}</div>`;
-      body += `<div class="form-group" id="sw-reward-rep-wrap"><label>Чья репутация</label>
+      body += `<div class="form-group" id="sw-reward-rep-wrap"><label>${Editor.escapeHtml(tr('editor.campaignWizard.repOwnerLabel'))}</label>
         ${swSelectHtml('sw-reward-rep', swEntityOptions(Editor, 'rep'), q.rewardRepId)}
-        <label>На сколько</label><input type="number" id="sw-reward-rep-amt" value="${Number(q.rewardRepAmount || 5)}"></div>`;
+        <label>${Editor.escapeHtml(tr('editor.campaignWizard.repAmountLabel'))}</label><input type="number" id="sw-reward-rep-amt" value="${Number(q.rewardRepAmount || 5)}"></div>`;
       body += `</div>`;
       return body;
     }
     if (step.id === 'publish') {
       const Pub = swPublish();
       if (!Pub) {
-        return `<div class="empty-state"><p class="hint">Модуль публикации не загружен.</p></div>`;
+        return `<div class="empty-state"><p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.publishModuleMissing'))}</p></div>`;
       }
       const report = Pub.buildPublishReport(Editor, draft);
       Editor._storyWizardPublishReport = report;
       return Pub.renderPublishStepHtml(Editor, draft, report);
     }
-    return `<div class="empty-state" style="padding:16px;"><p class="hint">Неизвестный шаг мастера.</p></div>`;
+    return `<div class="empty-state" style="padding:16px;"><p class="hint">${Editor.escapeHtml(tr('editor.campaignWizard.unknownStepMaster'))}</p></div>`;
   }
 
   Object.assign(Editor, {
@@ -379,7 +408,7 @@
       const d = this._storyWizardState?.draft;
       if (!d) return;
       if (d.worldEdited) {
-        Editor.toast?.warning?.('Вы уже меняли сцены — перегенерация отключена, чтобы не потерять правки.');
+        Editor.toast?.warning?.(tr('editor.campaignWizard.toastRegenBlocked'));
         return;
       }
       this._readStoryWizardStepForm();
@@ -392,7 +421,7 @@
       }
       this._refreshStoryWizardWorldPreview();
       this.renderStoryWizardModal();
-      Editor.toast?.info?.('Каркас пересобран — нажмите «Далее», чтобы применить.');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastRegenDone'));
     },
 
     _commitStoryWizardStep(stepIndex) {
@@ -420,12 +449,12 @@
         this._refreshStoryWizardWorldPreview();
         const applied = SW.applyWorldSkeletonToProject(this, d);
         if (!applied.ok) {
-          Editor.toast?.error?.('Не удалось собрать каркас мира');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastWorldFailed'));
           return applied;
         }
         const vr = SW.validateWorldProject(this);
         if (!vr.ok && !vr.skipped) {
-          Editor.toast?.error?.('Каркас не прошёл проверку — сообщите об ошибке разработчикам');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastWorldValidation'));
           return { ok: false, validation: vr };
         }
         const ce = this._storyWizardState.createdEntities;
@@ -438,7 +467,7 @@
         if (!HQ) return { ok: false, reason: 'no_heroes_module' };
         const r = HQ.applyHeroesStep(this, d);
         if (!r.ok) {
-          Editor.toast?.error?.('Не удалось создать персонажей');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastHeroesFailed'));
           return r;
         }
         const ce = this._storyWizardState.createdEntities;
@@ -451,7 +480,7 @@
         if (!HQ) return { ok: false, reason: 'no_heroes_module' };
         const r = HQ.applyQuestStep(this, d);
         if (!r.ok) {
-          Editor.toast?.error?.('Не удалось создать квест');
+          Editor.toast?.error?.(tr('editor.campaignWizard.toastQuestFailed'));
           return r;
         }
         const ce = this._storyWizardState.createdEntities;
@@ -460,7 +489,7 @@
         if (SW) {
           const vr = SW.validateWorldProject(this);
           if (!vr.ok && !vr.skipped) {
-            Editor.toast?.error?.('Проект не прошёл проверку после квеста');
+            Editor.toast?.error?.(tr('editor.campaignWizard.toastQuestValidation'));
             return { ok: false, validation: vr };
           }
         }
@@ -541,19 +570,19 @@
       modal.innerHTML = `
         <div class="editor-modal-backdrop" onclick="Editor.requestStoryWizardCancel()"></div>
         <div class="editor-modal-panel editor-modal-panel--wide" onclick="event.stopPropagation()">
-          <h2>📖 Режим истории</h2>
+          <h2>${Editor.escapeHtml(tr('editor.campaignWizard.title'))}</h2>
           ${progress}
           <div class="sw-steps">${storyWizardProgressHtml(step)}</div>
           <div class="sw-body">${renderStoryWizardStepBody(step, draft)}</div>
           <div class="modal-box-footer sw-footer">
-            <button type="button" class="btn btn-secondary" onclick="Editor.requestStoryWizardCancel()">Отмена</button>
-            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardBack()">Назад</button>' : ''}
-            ${canSkip && !isLast ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardSkip()">Пропустить</button>' : ''}
+            <button type="button" class="btn btn-secondary" onclick="Editor.requestStoryWizardCancel()">${Editor.escapeHtml(tr('editor.campaignWizard.cancel'))}</button>
+            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardBack()">' + Editor.escapeHtml(tr('editor.campaignWizard.back')) + '</button>' : ''}
+            ${canSkip && !isLast ? '<button type="button" class="btn btn-secondary" onclick="Editor.storyWizardSkip()">' + Editor.escapeHtml(tr('editor.campaignWizard.skip')) + '</button>' : ''}
             ${isLast
               ? (draft.exportCompleted
-                ? '<button type="button" class="btn btn-primary" onclick="Editor.finishStoryWizard()">Закрыть мастер</button>'
-                : '<button type="button" class="btn btn-secondary" onclick="Editor.finishStoryWizard()">Завершить без экспорта</button>')
-              : '<button type="button" class="btn btn-primary" onclick="Editor.storyWizardNext()">Далее</button>'}
+                ? '<button type="button" class="btn btn-primary" onclick="Editor.finishStoryWizard()">' + Editor.escapeHtml(tr('editor.campaignWizard.closeWizard')) + '</button>'
+                : '<button type="button" class="btn btn-secondary" onclick="Editor.finishStoryWizard()">' + Editor.escapeHtml(tr('editor.campaignWizard.finishWithoutExport')) + '</button>')
+              : '<button type="button" class="btn btn-primary" onclick="Editor.storyWizardNext()">' + Editor.escapeHtml(tr('editor.campaignWizard.next')) + '</button>'}
           </div>
         </div>`;
 
@@ -632,7 +661,7 @@
               if (Pub) {
                 this.closeStoryWizardModal();
                 Pub.gotoEditorLevel(this, level);
-                Editor.toast?.info?.('Мастер сохранён — продолжите через «Новый проект»');
+                Editor.toast?.info?.(tr('editor.campaignWizard.toastSavedResume'));
               }
             }
           });
@@ -655,37 +684,37 @@
         return;
       }
       const finishLater = await Editor.confirmDialog({
-        message: 'Прервать мастер? Прогресс сохранится — продолжите через «Новый проект».\n\nНажмите «Другое…», чтобы выбрать откат созданного.',
-        confirmLabel: 'Завершить позже',
-        cancelLabel: 'Другое…'
+        message: tr('editor.campaignWizard.confirmCancel'),
+        confirmLabel: tr('editor.campaignWizard.confirmCancelFinish'),
+        cancelLabel: tr('editor.campaignWizard.confirmCancelOther')
       });
       if (finishLater) {
         this.saveStoryWizardState();
         this.closeStoryWizard(false);
-        Editor.toast?.info?.('Мастер «Режим истории» сохранён — продолжите через «Новый проект»');
+        Editor.toast?.info?.(tr('editor.campaignWizard.toastSavedLater'));
         return;
       }
       const undoAvail = typeof EditorHistory !== 'undefined' && EditorHistory.getAvailableUndoSteps?.() > 0;
       if (undoAvail) {
         const rollback = await Editor.confirmDialog({
-          message: 'Откатить изменения мастера через историю отмены (undo)?',
+          message: tr('editor.campaignWizard.confirmUndo'),
           danger: true,
-          confirmLabel: 'Откатить',
-          cancelLabel: 'Оставить как есть'
+          confirmLabel: tr('editor.campaignWizard.confirmUndoYes'),
+          cancelLabel: tr('editor.campaignWizard.confirmUndoKeep')
         });
         if (rollback) {
           const steps = EditorHistory.getAvailableUndoSteps();
           for (let i = 0; i < steps && EditorHistory.canUndo(); i++) EditorHistory.undo();
           this._rollbackStoryWizardCreated();
           this.closeStoryWizard(true);
-          Editor.toast?.success?.('Изменения мастера отменены');
+          Editor.toast?.success?.(tr('editor.campaignWizard.toastUndoDone'));
           return;
         }
       } else {
         const keep = await Editor.confirmDialog({
-          message: 'История отмены недоступна. Закрыть мастер и оставить созданное в проекте?',
-          confirmLabel: 'Закрыть',
-          cancelLabel: 'Назад'
+          message: tr('editor.campaignWizard.confirmNoUndo'),
+          confirmLabel: tr('editor.campaignWizard.confirmClose'),
+          cancelLabel: tr('editor.campaignWizard.confirmBack')
         });
         if (keep) {
           this.saveStoryWizardState();
@@ -701,7 +730,7 @@
       opts = opts || {};
       const saved = opts.resume ? StoryWizardFsm.load() : null;
       if (!opts.resume && this.data && !(await Editor.confirmDialog({
-        message: 'Открыть мастер «Режим истории»? Текущий проект может быть заменён на шаге «Жанр и система».'
+        message: tr('editor.campaignWizard.confirmOpen')
       }))) {
         return;
       }
@@ -710,9 +739,9 @@
         this._storyWizardStep = saved.step;
       } else if (saved && !opts.fresh) {
         const cont = await Editor.confirmDialog({
-          message: 'Есть незавершённый мастер «Режим истории». Продолжить с шага «' + (STORY_WIZARD_STEPS[saved.step]?.label || '') + '»?',
-          confirmLabel: 'Продолжить',
-          cancelLabel: 'Начать заново'
+          message: tr('editor.campaignWizard.confirmResume', { step: swStepLabel(STORY_WIZARD_STEPS[saved.step]) }),
+          confirmLabel: tr('editor.campaignWizard.confirmContinue'),
+          cancelLabel: tr('editor.campaignWizard.confirmRestart')
         });
         if (cont) {
           this._storyWizardState = saved;
@@ -736,7 +765,7 @@
       this._readStoryWizardStepForm();
       const commit = this._commitStoryWizardStep(this._storyWizardStep);
       if (!commit.ok) {
-        Editor.toast?.error?.('Не удалось применить шаг мастера');
+        Editor.toast?.error?.(tr('editor.campaignWizard.toastStepFailed'));
         return;
       }
       if (this._storyWizardStep < STORY_WIZARD_STEPS.length - 1) {
@@ -773,7 +802,7 @@
     storyWizardRefreshPublish() {
       this._readStoryWizardStepForm();
       this.renderStoryWizardModal();
-      Editor.toast?.info?.('Отчёт обновлён');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastReportUpdated'));
     },
 
     storyWizardOpenPublishRow(kind, idx) {
@@ -783,7 +812,7 @@
       this.closeStoryWizardModal();
       Pub.navigatePublishRow(this, report, kind, idx);
       this.saveStoryWizardState();
-      Editor.toast?.info?.('Мастер сохранён — откройте «Новый проект», чтобы вернуться к публикации');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastSavedPublish'));
     },
 
     storyWizardPlayPreview() {
@@ -792,7 +821,7 @@
         this.previewScene({ mode: 'start', previewMode: 'start' });
         return;
       }
-      Editor.toast?.warning?.('Превью недоступно — перезагрузите редактор');
+      Editor.toast?.warning?.(tr('editor.campaignWizard.toastPreviewUnavailable'));
     },
 
     async storyWizardExportHtml() {
@@ -803,7 +832,7 @@
       const report = Pub.buildPublishReport(this, draft);
       this._storyWizardPublishReport = report;
       if (report.exportBlocked) {
-        Editor.toast?.warning?.('Сначала исправьте ошибки в отчёте');
+        Editor.toast?.warning?.(tr('editor.campaignWizard.toastFixErrors'));
         this.renderStoryWizardModal();
         return;
       }
@@ -811,7 +840,7 @@
         ? this._exportHTMLPhaseH.bind(this)
         : (typeof this.exportHTML === 'function' ? this.exportHTML.bind(this) : null);
       if (!exportFn) {
-        Editor.toast?.error?.('Экспорт HTML недоступен');
+        Editor.toast?.error?.(tr('editor.campaignWizard.toastExportUnavailable'));
         return;
       }
       try {
@@ -822,10 +851,10 @@
         }
         this.saveStoryWizardState();
         this.renderStoryWizardModal();
-        Editor.toast?.success?.('HTML-файл сохранён');
+        Editor.toast?.success?.(tr('editor.campaignWizard.toastExportSaved'));
       } catch (e) {
         console.error('[storyWizardExport]', e);
-        Editor.toast?.error?.('Не удалось экспортировать HTML');
+        Editor.toast?.error?.(tr('editor.campaignWizard.toastExportFailed'));
       }
     },
 
@@ -837,7 +866,7 @@
       this._storyWizardPreSnapshot = undefined;
       this._storyWizardPublishReport = undefined;
       if (typeof this.showDashboard === 'function') this.showDashboard();
-      Editor.toast?.success?.('Мастер «Режим истории» завершён. Продолжайте наполнять игру в режиме Писателя.');
+      Editor.toast?.success?.(tr('editor.campaignWizard.toastFinished'));
     },
 
     resumeStoryWizardIfNeeded() {
@@ -846,7 +875,7 @@
       this._storyWizardState = saved;
       this._storyWizardStep = saved.step;
       this.renderStoryWizardModal();
-      Editor.toast?.info?.('Продолжаем мастер «Режим истории» с шага «' + (STORY_WIZARD_STEPS[saved.step]?.label || '') + '»');
+      Editor.toast?.info?.(tr('editor.campaignWizard.toastResume', { step: swStepLabel(STORY_WIZARD_STEPS[saved.step]) }));
     }
   });
 
@@ -855,23 +884,19 @@
     _campaignWizardDraft: null,
 
     async openCampaignWizard() {
-      if (this.data && !(await Editor.confirmDialog({ message: 'Создать новую историю? Текущий проект в редакторе будет заменён (файл на диске не трогаем, пока не сохраните).' }))) {
+      if (this.data && !(await Editor.confirmDialog({ message: tr('editor.campaignWizard.confirmLegacyOpen') }))) {
         return;
       }
       this._campaignWizardStep = 0;
       this._campaignWizardDraft = {
-        title: 'Моя история',
+        title: tr('editor.campaignWizard.defaultTitle'),
         heroNote: '',
-        scenes: [
-          { name: 'Начало', text: 'Вы стоите на пороге приключения.' },
-          { name: 'Деревня', text: 'Тихая деревня. Здесь можно найти помощь.' },
-          { name: 'Опасное место', text: 'Здесь кто-то или что-то угрожает покою.' }
-        ],
-        npcName: 'Старейшина',
-        npcLine: 'Добро пожаловать, путник. Мне нужна твоя помощь.',
-        questTitle: 'Первое задание',
-        questHint: 'Поговорите со старейшиной и разберитесь с угрозой.',
-        enemyName: 'Разбойник',
+        scenes: legacyDefaultScenes(),
+        npcName: tr('editor.campaignWizard.legacyDefaultNpc'),
+        npcLine: tr('editor.campaignWizard.legacyDefaultNpcLine'),
+        questTitle: tr('editor.campaignWizard.legacyDefaultQuest'),
+        questHint: tr('editor.campaignWizard.legacyDefaultQuestHint'),
+        enemyName: tr('editor.campaignWizard.legacyDefaultEnemy'),
         includeCombat: true
       };
       this.renderCampaignWizardModal();
@@ -893,7 +918,13 @@
       modal.classList.remove('hidden');
       const d = this._campaignWizardDraft;
       const step = this._campaignWizardStep;
-      const steps = ['Название', 'Сцены', 'NPC', 'Квест и бой', 'Готово'];
+      const steps = [
+        tr('editor.campaignWizard.legacySteps.title'),
+        tr('editor.campaignWizard.legacySteps.scenes'),
+        tr('editor.campaignWizard.legacySteps.npc'),
+        tr('editor.campaignWizard.legacySteps.questCombat'),
+        tr('editor.campaignWizard.legacySteps.done')
+      ];
       const stepsHtml = steps.map((s, i) =>
         `<span class="cw-step${i === step ? ' is-active' : ''}${i < step ? ' is-done' : ''}">${i + 1}. ${this.escapeHtml(s)}</span>`
       ).join('<span class="cw-step-sep">→</span>');
@@ -901,44 +932,47 @@
       let body = '';
       if (step === 0) {
         body = `
-          <div class="form-group"><label>Название истории</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.storyTitleLabel'))}</label>
             <input type="text" id="cw-title" value="${this.escapeAttr(d.title)}"></div>
-          <div class="form-group"><label>Кратко, о чём игра (для себя)</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyNoteLabel'))}</label>
             <textarea id="cw-note" rows="2">${this.escapeHtml(d.heroNote || '')}</textarea></div>
-          <p class="hint">Дальше соберём 3 сцены, NPC, квест и простого врага — без кода.</p>`;
+          <p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyHint0'))}</p>`;
       } else if (step === 1) {
-        body = `<p class="hint">Три локации каркаса. Позже добавите ещё на карте сюжета.</p>`;
+        body = `<p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyScenesHint'))}</p>`;
         d.scenes.forEach((sc, i) => {
           body += `<div class="project-info" style="margin:8px 0;">
-            <div class="form-group"><label>Сцена ${i + 1}: название</label>
+            <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacySceneName', { n: i + 1 }))}</label>
               <input type="text" id="cw-sc-name-${i}" value="${this.escapeAttr(sc.name)}"></div>
-            <div class="form-group"><label>Текст (что видит игрок)</label>
+            <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacySceneText'))}</label>
               <textarea id="cw-sc-text-${i}" rows="2">${this.escapeHtml(sc.text)}</textarea></div>
           </div>`;
         });
       } else if (step === 2) {
         body = `
-          <p class="hint">Персонаж, с которого начнётся сюжет (обычно в первой или второй сцене).</p>
-          <div class="form-group"><label>Имя NPC</label>
+          <p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyNpcHint'))}</p>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyNpcName'))}</label>
             <input type="text" id="cw-npc-name" value="${this.escapeAttr(d.npcName)}"></div>
-          <div class="form-group"><label>Первая реплика</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyNpcLine'))}</label>
             <textarea id="cw-npc-line" rows="2">${this.escapeHtml(d.npcLine)}</textarea></div>`;
       } else if (step === 3) {
         body = `
-          <div class="form-group"><label>Название квеста</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyQuestTitle'))}</label>
             <input type="text" id="cw-quest-title" value="${this.escapeAttr(d.questTitle)}"></div>
-          <div class="form-group"><label>Что сделать (для журнала)</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyQuestHint'))}</label>
             <input type="text" id="cw-quest-hint" value="${this.escapeAttr(d.questHint)}"></div>
           <div class="form-group"><label>
-            <input type="checkbox" id="cw-combat" ${d.includeCombat ? 'checked' : ''}> Добавить простого врага и сцену боя
+            <input type="checkbox" id="cw-combat" ${d.includeCombat ? 'checked' : ''}> ${this.escapeHtml(tr('editor.campaignWizard.legacyCombatCheck'))}
           </label></div>
-          <div class="form-group"><label>Имя врага</label>
+          <div class="form-group"><label>${this.escapeHtml(tr('editor.campaignWizard.legacyEnemyName'))}</label>
             <input type="text" id="cw-enemy-name" value="${this.escapeAttr(d.enemyName)}"></div>`;
       } else {
         body = `<div class="empty-state" style="padding:20px;">
-          <h3>Всё готово к сборке</h3>
-          <p class="hint">Будут созданы: проект «${this.escapeHtml(d.title)}», ${d.scenes.length} сцены,
-            NPC, квест${d.includeCombat ? ', враг и бой' : ''}.</p>
+          <h3>${this.escapeHtml(tr('editor.campaignWizard.legacyReadyTitle'))}</h3>
+          <p class="hint">${this.escapeHtml(tr('editor.campaignWizard.legacyReadyBody', {
+            title: d.title,
+            sceneCount: d.scenes.length,
+            combatExtra: d.includeCombat ? tr('editor.campaignWizard.legacyReadyCombatExtra') : ''
+          }))}</p>
         </div>`;
       }
 
@@ -946,15 +980,15 @@
       modal.innerHTML = `
         <div class="editor-modal-backdrop" onclick="Editor.closeCampaignWizard()"></div>
         <div class="editor-modal-panel editor-modal-panel--wide" onclick="event.stopPropagation()">
-          <h2>📖 Новая история</h2>
+          <h2>${this.escapeHtml(tr('editor.campaignWizard.legacyTitle'))}</h2>
           <div class="cw-steps">${stepsHtml}</div>
           <div class="cw-body">${body}</div>
           <div class="modal-box-footer" style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-            <button type="button" class="btn btn-secondary" onclick="Editor.closeCampaignWizard()">Отмена</button>
-            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.campaignWizardBack()">Назад</button>' : ''}
+            <button type="button" class="btn btn-secondary" onclick="Editor.closeCampaignWizard()">${this.escapeHtml(tr('editor.campaignWizard.cancel'))}</button>
+            ${step > 0 ? '<button type="button" class="btn btn-secondary" onclick="Editor.campaignWizardBack()">' + this.escapeHtml(tr('editor.campaignWizard.back')) + '</button>' : ''}
             ${isLast
-              ? '<button type="button" class="btn btn-primary" onclick="Editor.finishCampaignWizard()">✨ Создать историю</button>'
-              : '<button type="button" class="btn btn-primary" onclick="Editor.campaignWizardNext()">Далее</button>'}
+              ? '<button type="button" class="btn btn-primary" onclick="Editor.finishCampaignWizard()">' + this.escapeHtml(tr('editor.campaignWizard.legacyCreate')) + '</button>'
+              : '<button type="button" class="btn btn-primary" onclick="Editor.campaignWizardNext()">' + this.escapeHtml(tr('editor.campaignWizard.next')) + '</button>'}
           </div>
         </div>`;
     },
@@ -1043,7 +1077,7 @@
         const next = sceneIds[i + 1];
         const nextName = data.scenes[next].location;
         data.scenes[sceneIds[i]].choices.push({
-          text: 'Идти: ' + nextName,
+          text: tr('editor.campaignWizard.gameData.goTo', { name: nextName }),
           to: next,
           icon: '➡️'
         });
@@ -1055,7 +1089,7 @@
         id: npcId,
         name: d.npcName,
         icon: '👤',
-        description: 'Ключевой персонаж начала истории.',
+        description: tr('editor.campaignWizard.gameData.npcDesc'),
         location: data.scenes[sceneIds[Math.min(1, sceneIds.length - 1)]]?.location || '',
         attitude: 'friendly',
         dialogues: { default: [{ speaker: d.npcName, text: d.npcLine }] },
@@ -1084,24 +1118,24 @@
         stages: [
           {
             id: 'stage_0',
-            title: 'Начало',
+            title: tr('editor.campaignWizard.gameData.questStageStart'),
             hint: d.questHint,
             tasks: [
-              { type: 'TalkToNPC', npcId: npcId, description: 'Поговорить с: ' + d.npcName }
+              { type: 'TalkToNPC', npcId: npcId, description: tr('editor.campaignWizard.gameData.talkTask', { name: d.npcName }) }
             ]
           },
           {
             id: 'stage_1',
-            title: 'В пути',
-            hint: 'Продолжайте путь по локациям.',
+            title: tr('editor.campaignWizard.gameData.questStagePath'),
+            hint: tr('editor.campaignWizard.gameData.questStagePathHint'),
             tasks: [
-              { type: 'VisitLocation', sceneId: sceneIds[sceneIds.length - 1], description: 'Дойти до: ' + (data.scenes[sceneIds[sceneIds.length - 1]]?.location || '') }
+              { type: 'VisitLocation', sceneId: sceneIds[sceneIds.length - 1], description: tr('editor.campaignWizard.gameData.visitTask', { location: data.scenes[sceneIds[sceneIds.length - 1]]?.location || '' }) }
             ]
           },
           {
             id: 'stage_done',
-            title: 'Готово',
-            hint: 'Задание выполнено.',
+            title: tr('editor.campaignWizard.gameData.questStageDone'),
+            hint: tr('editor.campaignWizard.gameData.questStageDoneHint'),
             finish: true,
             tasks: []
           }
@@ -1112,7 +1146,7 @@
       // Выбор: принять квест на hub
       data.scenes[hubId].choices = data.scenes[hubId].choices || [];
       data.scenes[hubId].choices.unshift({
-        text: 'Принять: ' + d.questTitle,
+        text: tr('editor.campaignWizard.gameData.acceptQuest', { title: d.questTitle }),
         to: sceneIds[Math.min(2, sceneIds.length - 1)] || hubId,
         icon: '📜',
         once: true,
@@ -1141,8 +1175,8 @@
         const afterId = sceneIds[sceneIds.length - 1];
         data.scenes[combatSceneId] = {
           id: combatSceneId,
-          location: 'Схватка: ' + d.enemyName,
-          text: d.enemyName + ' преграждает путь!',
+          location: tr('editor.campaignWizard.gameData.combatLocation', { name: d.enemyName }),
+          text: tr('editor.campaignWizard.gameData.combatText', { name: d.enemyName }),
           combat: [enemyId],
           nextScene: afterId,
           choices: [],
@@ -1150,7 +1184,7 @@
         };
         // из hub можно пойти в бой
         data.scenes[hubId].choices.push({
-          text: 'Столкнуться с: ' + d.enemyName,
+          text: tr('editor.campaignWizard.gameData.faceEnemy', { name: d.enemyName }),
           to: combatSceneId,
           icon: '⚔️'
         });
@@ -1173,7 +1207,7 @@
       this.updateProjectPanel?.();
       this.updateJSONPreview();
       if (typeof this.switchTab === 'function') this.switchTab('scenes');
-      Editor.toast.success('История «' + d.title + '» создана. Откройте карту сюжета или превью сцены.');
+      Editor.toast.success(tr('editor.campaignWizard.legacyCreated', { title: d.title }));
     },
 
     // ——— Карточка NPC: где бывает, реплики, квесты ———
@@ -1181,16 +1215,16 @@
     getNpcSceneAppearances(npcId) {
       const out = [];
       Object.entries(this.data?.scenes || {}).forEach(([sid, sc]) => {
-        if (sc.npcId === npcId) out.push({ sceneId: sid, reason: 'NPC сцены' });
+        if (sc.npcId === npcId) out.push({ sceneId: sid, reason: tr('editor.campaignWizard.npcSceneReason') });
         (sc.dialogue || []).forEach((line) => {
           if (line && (line.speaker === npcId || line.speaker === this.data.npcs?.[npcId]?.name)) {
-            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: 'Диалог' });
+            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: tr('editor.campaignWizard.npcDialogReason') });
           }
         });
         (sc.components || []).forEach((c) => {
           const p = c.params || {};
           if (p.npc === npcId || p.merchant === npcId) {
-            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: 'Компонент' });
+            if (!out.some((x) => x.sceneId === sid)) out.push({ sceneId: sid, reason: tr('editor.campaignWizard.npcComponentReason') });
           }
         });
       });
@@ -1209,7 +1243,7 @@
             ${this.escapeHtml(loc)} <span class="hint">(${this.escapeHtml(p.reason)})</span>
           </button>`;
         }).join('')
-        : '<p class="hint">Пока нигде не привязан. Укажите NPC на сцене или добавьте ниже.</p>';
+        : '<p class="hint">' + this.escapeHtml(tr('editor.campaignWizard.npcHubNotLinked')) + '</p>';
 
       const questIds = Array.isArray(n.quests) ? n.quests : [];
       const allQuests = Object.keys(this.data?.quests || {});
@@ -1221,7 +1255,7 @@
             onchange="Editor.toggleNpcQuest(${JSON.stringify(npcId)},${JSON.stringify(qid)},this.checked)">
           ${this.escapeHtml(title)}
         </label>`;
-      }).join('') || '<p class="hint">Квестов пока нет — создайте во вкладке «Квесты».</p>';
+      }).join('') || '<p class="hint">' + this.escapeHtml(tr('editor.campaignWizard.npcHubNoQuests')) + '</p>';
 
       // Простые реплики default
       let lines = n.dialogues?.default;
@@ -1237,11 +1271,11 @@
 
       return `
         <div class="npc-hub-card project-info" style="margin-top:14px;">
-          <h4>📍 Где встречается</h4>
+          <h4>${this.escapeHtml(tr('editor.campaignWizard.npcHubWhere'))}</h4>
           <div>${placesHtml}</div>
-          <div class="form-group" style="margin-top:8px;"><label>Привязать к сцене</label>
+          <div class="form-group" style="margin-top:8px;"><label>${this.escapeHtml(tr('editor.campaignWizard.npcHubAttach'))}</label>
             <select onchange="if(this.value)Editor.attachNpcToScene(${JSON.stringify(npcId)},this.value);this.value='';">
-              <option value="">+ сцена…</option>
+              <option value="">${this.escapeHtml(tr('editor.campaignWizard.npcHubSceneOption'))}</option>
               ${Object.keys(this.data?.scenes || {}).map((sid) => {
                 const loc = this.data.scenes[sid]?.location || sid;
                 return `<option value="${this.escapeAttr(sid)}">${this.escapeHtml(loc)}</option>`;
@@ -1250,12 +1284,12 @@
           </div>
         </div>
         <div class="npc-hub-card project-info" style="margin-top:10px;">
-          <h4>💬 Реплики</h4>
-          ${linesHtml || '<p class="hint">Нет реплик</p>'}
-          <button type="button" class="btn btn-secondary" onclick="Editor.addNpcDialogueLine(${JSON.stringify(npcId)})">+ Реплика</button>
+          <h4>${this.escapeHtml(tr('editor.campaignWizard.npcHubLines'))}</h4>
+          ${linesHtml || '<p class="hint">' + this.escapeHtml(tr('editor.campaignWizard.npcHubNoLines')) + '</p>'}
+          <button type="button" class="btn btn-secondary" onclick="Editor.addNpcDialogueLine(${JSON.stringify(npcId)})">${this.escapeHtml(tr('editor.campaignWizard.npcHubAddLine'))}</button>
         </div>
         <div class="npc-hub-card project-info" style="margin-top:10px;">
-          <h4>📜 Связанные квесты</h4>
+          <h4>${this.escapeHtml(tr('editor.campaignWizard.npcHubQuests'))}</h4>
           ${questHtml}
         </div>`;
     },
@@ -1327,36 +1361,37 @@
   }
 
   // createNPC — по имени
-  const origCreateNPC = Editor.createNPC?.bind(Editor);
-  if (typeof origCreateNPC === 'function') {
-    Editor.createNPC = async function () {
-      if (typeof this.promptNameAndId === 'function') {
-        this.ensureNpcs?.();
-        const r = await this.promptNameAndId({
-          namePrompt: 'Имя персонажа:',
-          defaultName: 'Новый житель',
-          existing: this.data.npcs || {},
-          allowEditId: false
-        });
-        if (!r) return;
-        this.data.npcs[r.id] = {
-          id: r.id,
-          name: r.name,
-          location: '',
-          icon: '👤',
-          description: '',
-          dialogues: { default: [] },
-          quests: [],
-          shop: false,
-          attitude: 'neutral'
-        };
-        this.editingNpcId = r.id;
-        this.renderNPCs();
-        this.updateJSONPreview();
-        return;
-      }
-      return origCreateNPC();
-    };
+  async function createNpcByNameWizard() {
+    if (typeof this.promptNameAndId === 'function') {
+      this.ensureNpcs?.();
+      const r = await this.promptNameAndId({
+        namePrompt: tr('editor.campaignWizard.createNpcPrompt'),
+        defaultName: tr('editor.campaignWizard.createNpcDefault'),
+        existing: this.data.npcs || {},
+        allowEditId: false
+      });
+      if (!r) return;
+      this.data.npcs[r.id] = {
+        id: r.id,
+        name: r.name,
+        location: '',
+        icon: '👤',
+        description: '',
+        dialogues: { default: [] },
+        quests: [],
+        shop: false,
+        attitude: 'neutral'
+      };
+      this.editingNpcId = r.id;
+      this.renderNPCs();
+      this.updateJSONPreview();
+      return;
+    }
+    return savedPrevCreateNpc ? savedPrevCreateNpc.call(this) : undefined;
+  }
+  let savedPrevCreateNpc;
+  if (typeof Editor.createNPC === 'function' && Editor.hooks?.replace) {
+    savedPrevCreateNpc = Editor.hooks.replace('createNPC', createNpcByNameWizard, 'editor-campaign-wizard');
   }
 
   // Кнопка мастера в дашборд / тулбар
@@ -1374,7 +1409,7 @@
     btn.id = 'btn-campaign-wizard';
     btn.className = 'btn btn-primary';
     btn.style.cssText = 'margin-top:6px;width:100%;';
-    btn.textContent = '📖 Быстрая история (классика)';
+    btn.textContent = tr('editor.campaignWizard.quickStoryBtn');
     btn.onclick = () => Editor.openCampaignWizard();
     host.appendChild(btn);
   };

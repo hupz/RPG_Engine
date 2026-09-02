@@ -1,4 +1,4 @@
-/* engine bundle generated 2026-09-02T10:47:22.781Z */
+/* engine bundle generated 2026-09-02T11:40:52.479Z */
 
 ;/* —— js/engine-version.js —— */
 /**
